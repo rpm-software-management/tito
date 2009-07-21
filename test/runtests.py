@@ -22,42 +22,41 @@ import os.path
 
 import unittest
 
-# Make sure we run from the source code and not a version of tito
-# installed on the system:
+# Make sure we run from the source:
 TEST_SCRIPT_DIR = os.path.dirname(sys.argv[0])
 sys.path.append(os.path.join(TEST_SCRIPT_DIR, "../src/"))
-SRC_SCRIPT_DIR = sys.path.append(os.path.join(TEST_SCRIPT_DIR, "../bin/"))
+SRC_BIN_DIR = os.path.abspath(os.path.join(TEST_SCRIPT_DIR, "../bin/"))
 
 import spacewalk.releng.cli # prevents a circular import
 from spacewalk.releng.common import *
 
 # A location where we can safely create a test git repository.
 # WARNING: This location will be destroyed if present.
-TEST_GIT_LOCATION = '/tmp/tito-test-git-repo'
-
+TEST_DIR = '/tmp/titotests/'
+SINGLE_GIT = os.path.join(TEST_DIR, 'single-project')
+MULTI_GIT = os.path.join(TEST_DIR, 'multi-project')
 
 def tito(argstring):
     """ Run the tito script from source with given arguments. """
-    run_command("%s/%s %s" % (SRC_SCRIPT_DIR, 'tito', argstring))
+    run_command("%s/%s %s" % (SRC_BIN_DIR, 'tito', argstring))
 
+def cleanup_test_git_repos():
+    """ Delete the test directory if it exists. """
+    if os.path.exists(TEST_DIR):
+        #error_out("Test Git repo already exists: %s" % TEST_DIR)
+        run_command('rm -rf %s' % TEST_DIR)
 
-class InitTests(unittest.TestCase):
+def create_test_git_repo(multi_project=False):
+    """ Create a test git repository. """
+    cleanup_test_git_repos()
 
-    def test_something(self):
-        pass
+    run_command('mkdir -p %s' % TEST_DIR)
+    run_command('mkdir -p %s' % SINGLE_GIT)
+    run_command('mkdir -p %s' % MULTI_GIT)
 
-
-if __name__ == '__main__':
-    print("Running tito tests.")
-
-    if os.path.exists(TEST_GIT_LOCATION):
-        #error_out("Test Git repo already exists: %s" % TEST_GIT_LOCATION)
-        run_command('rm -rf %s' % TEST_GIT_LOCATION)
-
-    run_command('mkdir -p %s' % TEST_GIT_LOCATION)
     run_command('cp -R %s/* %s' % (os.path.join(TEST_SCRIPT_DIR,
-        'fakegitfiles'), TEST_GIT_LOCATION))
-    os.chdir(TEST_GIT_LOCATION)
+        'fakegitfiles'), SINGLE_GIT))
+    os.chdir(SINGLE_GIT)
     run_command('git init')
     run_command('git add a.txt')
     run_command('git commit -a -m "added a.txt"')
@@ -65,6 +64,27 @@ if __name__ == '__main__':
     run_command('git commit -a -m "added b.txt"')
     run_command('git add c.txt')
     run_command('git commit -a -m "added c.txt"')
+
+
+
+class InitTests(unittest.TestCase):
+
+    def test_init(self):
+        # Probably already there but just to make sure:
+        os.chdir(SINGLE_GIT)
+        self.assertFalse(os.path.exists(os.path.join(SINGLE_GIT, "rel-eng")))
+        tito("init")
+        self.assertTrue(os.path.exists(os.path.join(SINGLE_GIT, "rel-eng")))
+        self.assertTrue(os.path.exists(os.path.join(SINGLE_GIT, "rel-eng",
+            "packages")))
+        self.assertTrue(os.path.exists(os.path.join(SINGLE_GIT, "rel-eng",
+            "tito.props")))
+
+
+if __name__ == '__main__':
+    print("Running tito tests.")
+
+    create_test_git_repo()
 
     # Now run the tests, order is important:
     suite = unittest.makeSuite(InitTests)
