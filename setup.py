@@ -51,7 +51,7 @@ setup(
 
     classifiers = [
         'License :: OSI Approved :: GNU General Public License (GPL)',
-        'Development Status :: 5 - Production/Stable',
+        'Development Status :: 2 - Pre-Alpha',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'Intended Audience :: Information Technology',
