@@ -161,7 +161,7 @@ class BaseCliModule(object):
         self._validate_options()
 
         if len(sys.argv) < 2:
-            print(parser.error("Must supply an argument. Try -h for help."))
+            print(self.parser.error("Must supply an argument. Try -h for help."))
 
         self.global_config = self._read_global_config()
 
