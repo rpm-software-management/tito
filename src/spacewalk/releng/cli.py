@@ -132,12 +132,14 @@ class CLI(object):
 class BaseCliModule(object):
     """ Common code used amongst all CLI modules. """
 
-    def __init__(self):
-        self.parser = None
+    def __init__(self, usage):
+        self.parser = OptionParser(usage)
         self.global_config = None
         self.options = None
         self.pkg_config = None
         self.user_config = read_user_config()
+
+        self._add_common_options()
 
     def _add_common_options(self):
         """
@@ -281,11 +283,7 @@ class BaseCliModule(object):
 class BuildModule(BaseCliModule):
 
     def __init__(self):
-        BaseCliModule.__init__(self)
-        usage = "usage: %prog build [options]"
-        self.parser = OptionParser(usage)
-
-        self._add_common_options()
+        BaseCliModule.__init__(self, "usage: %prog build [options]")
 
         self.parser.add_option("--tgz", dest="tgz", action="store_true",
                 help="Build .tar.gz")
@@ -404,11 +402,7 @@ class BuildModule(BaseCliModule):
 class TagModule(BaseCliModule):
 
     def __init__(self):
-        BaseCliModule.__init__(self)
-        usage = "usage: %prog tag [options]"
-        self.parser = OptionParser(usage)
-
-        self._add_common_options()
+        BaseCliModule.__init__(self, "usage: %prog tag [options]")
 
         # Options for tagging new package releases:
         # NOTE: deprecated and no longer needed:
@@ -457,11 +451,7 @@ class InitModule(BaseCliModule):
     """ CLI Module for initializing a project for use with tito. """
 
     def __init__(self):
-        BaseCliModule.__init__(self)
-        usage = "usage: %prog init [options]"
-        self.parser = OptionParser(usage)
-
-        self._add_common_options()
+        BaseCliModule.__init__(self, "usage: %prog init [options]")
 
     def main(self):
         # DO NOT CALL BaseCliModule.main(self)
@@ -495,11 +485,7 @@ class ReportModule(BaseCliModule):
     """ CLI Module For Various Reports. """
 
     def __init__(self):
-        BaseCliModule.__init__(self)
-        usage = "usage: %prog report [options]"
-        self.parser = OptionParser(usage)
-
-        self._add_common_options()
+        BaseCliModule.__init__(self, "usage: %prog report [options]")
 
         self.parser.add_option("--untagged-diffs", dest="untagged_report",
                 action="store_true",
