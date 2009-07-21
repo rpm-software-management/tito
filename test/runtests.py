@@ -4,9 +4,13 @@ import sys
 import os
 import os.path
 
-# Python libraries are one level up from where this script lives:
+import unittest
+
+# Make sure we run from the source code and not a version of tito 
+# installed on the system:
 TEST_SCRIPT_DIR = os.path.dirname(sys.argv[0])
 sys.path.append(os.path.join(TEST_SCRIPT_DIR, "../src/"))
+SRC_SCRIPT_DIR = sys.path.append(os.path.join(TEST_SCRIPT_DIR, "../bin/"))
 
 import spacewalk.releng.cli # prevents a circular import
 from spacewalk.releng.common import *
@@ -14,6 +18,17 @@ from spacewalk.releng.common import *
 # A location where we can safely create a test git repository.
 # WARNING: This location will be destroyed if present.
 TEST_GIT_LOCATION = '/tmp/tito-test-git-repo'
+
+def tito(argstring):
+    """ Run the tito script from source with given arguments. """
+    run_command("%s/%s %s" % (SRC_SCRIPT_DIR, 'tito', argstring))
+
+class InitTests(unittest.TestCase):
+
+    def test_something(self):
+        pass
+
+
 
 if __name__ == '__main__':
     print "Running tito tests."
@@ -33,5 +48,13 @@ if __name__ == '__main__':
     run_command('git commit -a -m "added b.txt"')
     run_command('git add c.txt')
     run_command('git commit -a -m "added c.txt"')
+
+    # Now run the tests, order is important:
+    suite = unittest.makeSuite(InitTests)
+    result = unittest.TestResult()
+    suite.run(result)
+    print result.errors
+    print result.failures
+    print result.wasSuccessful()
 
 
