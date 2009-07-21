@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 #
+# Copyright (c) 2008-2009 Red Hat, Inc.
+#
 # This software is licensed to you under the GNU General Public License,
 # version 2 (GPLv2). There is NO WARRANTY for this software, express or
 # implied, including the implied warranties of MERCHANTABILITY or FITNESS
@@ -11,7 +13,7 @@
 # granted to use or replicate Red Hat trademarks that are incorporated
 # in this software or its documentation.
 """
-Tito Distutils Setup Script
+Tito Setup Script
 """
 
 import os
