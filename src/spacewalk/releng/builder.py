@@ -17,7 +17,6 @@ Code for building Spacewalk/Satellite tarballs, srpms, and rpms.
 import os
 import re
 import sys
-import string
 import commands
 
 from spacewalk.releng.common import *
@@ -363,8 +362,7 @@ class Builder(object):
             branch_dir = os.path.join(self.cvs_workdir, self.project_name,
                     branch)
             os.chdir(branch_dir)
-            cmd = 'make new-sources FILES="%s"' % (
-                string.join(self.sources, " "))
+            cmd = 'make new-sources FILES="%s"' % (" ".join(self.sources))
             debug(cmd)
             output = run_command(cmd)
             debug(output)

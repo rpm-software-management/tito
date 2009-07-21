@@ -22,7 +22,6 @@ import commands
 import ConfigParser
 
 from optparse import OptionParser
-from string import strip
 
 from spacewalk.releng.builder import Builder, NoTgzBuilder
 from spacewalk.releng.tagger import VersionTagger, ReleaseTagger
@@ -85,7 +84,7 @@ def read_user_config():
         tokens = line.split("=")
         if len(tokens) != 2:
             raise Exception("Error parsing ~/.spacewalk-build-rc: %s" % line)
-        config[tokens[0]] = strip(tokens[1])
+        config[tokens[0]] = tokens[1].strip()
     return config
 
 
@@ -161,7 +160,8 @@ class BaseCliModule(object):
         self._validate_options()
 
         if len(sys.argv) < 2:
-            print(self.parser.error("Must supply an argument. Try -h for help."))
+            print(self.parser.error("Must supply an argument. "
+                "Try -h for help."))
 
         self.global_config = self._read_global_config()
 
