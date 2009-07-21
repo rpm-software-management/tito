@@ -628,3 +628,5 @@ CLI_MODULES = {
     "init": InitModule
 }
 
+
+main = lambda: CLI().main()
