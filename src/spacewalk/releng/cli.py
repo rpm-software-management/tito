@@ -629,4 +629,5 @@ CLI_MODULES = {
 }
 
 
-main = lambda: CLI().main()
+if __name__ == "__main__":
+    CLI().main()
