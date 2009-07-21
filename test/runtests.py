@@ -47,7 +47,7 @@ class InitTests(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print "Running tito tests."
+    print("Running tito tests.")
 
     if os.path.exists(TEST_GIT_LOCATION):
         #error_out("Test Git repo already exists: %s" % TEST_GIT_LOCATION)
@@ -69,8 +69,8 @@ if __name__ == '__main__':
     suite = unittest.makeSuite(InitTests)
     result = unittest.TestResult()
     suite.run(result)
-    print result.errors
-    print result.failures
-    print result.wasSuccessful()
+    print(result.errors)
+    print(result.failures)
+    print(result.wasSuccessful())
 
 

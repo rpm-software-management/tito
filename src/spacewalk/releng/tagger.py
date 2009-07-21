@@ -236,8 +236,8 @@ class VersionTagger(object):
         new_version = self._get_spec_version_and_release()
         if new_version.strip() == "":
             error_out("Error getting bumped package version. (can spec file be parsed?")
-        print "Tagging new version of %s: %s -> %s" % (self.project_name,
-            old_version, new_version)
+        print("Tagging new version of %s: %s -> %s" % (self.project_name,
+            old_version, new_version))
         return new_version
 
     def _update_package_metadata(self, new_version, release=False):
@@ -284,7 +284,7 @@ class VersionTagger(object):
                         self.relative_project_dir)
 
         new_tag = self._get_new_tag(new_version)
-        print "Creating new tag [%s]" % new_tag
+        print("Creating new tag [%s]" % new_tag)
         run_command('git tag -m "%s" %s' % (tag_msg, new_tag))
         print("You must run [git push && git push --tags] before this " +
             "tag can be used")
@@ -323,9 +323,9 @@ class VersionTagger(object):
                     debug("Updating %s with new version." %
                             metadata_file)
                 else:
-                    print "WARNING: %s also references %s" % (filename,
-                            self.relative_project_dir)
-                    print "Assuming package has been renamed and removing it."
+                    print("WARNING: %s also references %s" % (filename,
+                            self.relative_project_dir))
+                    print("Assuming package has been renamed and removing it.")
                     run_command("git rm %s" % metadata_file)
 
     def _get_git_user_info(self):

@@ -102,7 +102,7 @@ def lookup_build_dir(user_config):
 
 
 
-class CLI:
+class CLI(object):
     """
     Parent command line interface class.
 
@@ -159,7 +159,7 @@ class BaseCliModule(object):
         self._validate_options()
 
         if len(sys.argv) < 2:
-            print parser.error("Must supply an argument. Try -h for help.")
+            print(parser.error("Must supply an argument. Try -h for help."))
 
         self.global_config = self._read_global_config()
 
@@ -607,7 +607,7 @@ class ReportModule(BaseCliModule):
         print(name_and_version)
         print("#" * len(name_and_version))
         print("")
-        print patch_command
+        print(patch_command)
         print("")
         print(output)
         print("")

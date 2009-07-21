@@ -159,7 +159,7 @@ class Builder(object):
 
         self.ran_tgz = True
         full_path = os.path.join(self.rpmbuild_basedir, self.tgz_filename)
-        print "Wrote: %s" % full_path
+        print("Wrote: %s" % full_path)
         self.sources.append(full_path)
         return full_path
 
@@ -203,7 +203,7 @@ class Builder(object):
         cmd = 'rpmbuild --define "_source_filedigest_algorithm md5"  --define "_binary_filedigest_algorithm md5" %s %s --clean -ba %s' % \
                 (self._get_rpmbuild_dir_options(), define_dist, self.spec_file)
         output = run_command(cmd)
-        print output
+        print(output)
         files_written = self._find_wrote_in_rpmbuild_output(output)
         if len(files_written) < 2:
             error_out("Error parsing rpmbuild output")

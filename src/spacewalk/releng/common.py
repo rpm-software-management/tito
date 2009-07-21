@@ -30,9 +30,9 @@ def error_out(error_msgs):
     """
     if isinstance(error_msgs, list):
         for line in error_msgs:
-            print "ERROR: %s" % line
+            print("ERROR: %s" % line)
     else:
-        print "ERROR: %s" % error_msgs
+        print("ERROR: %s" % error_msgs)
     sys.exit(1)
 
 def find_spec_file(in_dir=None):
@@ -109,7 +109,7 @@ def debug(text):
     Print the text if --debug was specified.
     """
     if os.environ.has_key('DEBUG'):
-        print text
+        print(text)
 
 def get_spec_version_and_release(sourcedir, spec_file_name):
         command = """rpm -q --qf '%%{version}-%%{release}\n' --define "_sourcedir %s" --define 'dist %%undefined' --specfile %s 2> /dev/null | head -1""" % (sourcedir, spec_file_name)
