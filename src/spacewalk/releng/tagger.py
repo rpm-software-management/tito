@@ -26,7 +26,6 @@ import textwrap
 
 from time import strftime
 
-from spacewalk.releng.cli import SCRIPT_DIR
 from spacewalk.releng.common import *
 
 
