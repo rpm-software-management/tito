@@ -114,7 +114,7 @@ def debug(text):
     """
     Print the text if --debug was specified.
     """
-    if 'DEBUG' in os.environ.keys():
+    if 'DEBUG' in os.environ:
         print(text)
 
 

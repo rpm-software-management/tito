@@ -99,7 +99,7 @@ def lookup_build_dir(user_config):
     """
     build_dir = DEFAULT_BUILD_DIR
 
-    if 'RPMBUILD_BASEDIR' in user_config.keys():
+    if 'RPMBUILD_BASEDIR' in user_config:
         build_dir = user_config["RPMBUILD_BASEDIR"]
 
     return build_dir

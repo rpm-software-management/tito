@@ -269,7 +269,7 @@ class Builder(object):
         koji_tags = autobuild_tags.strip().split(" ")
 
         koji_opts = DEFAULT_KOJI_OPTS
-        if 'KOJI_OPTIONS' in self.user_config.keys():
+        if 'KOJI_OPTIONS' in self.user_config:
             koji_opts = self.user_config['KOJI_OPTIONS']
 
         for koji_tag in koji_tags:

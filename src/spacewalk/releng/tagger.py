@@ -154,7 +154,7 @@ class VersionTagger(object):
                 os.write(fd, "\n")
 
                 editor = 'vi'
-                if "EDITOR" in os.environ.keys():
+                if "EDITOR" in os.environ:
                     editor = os.environ["EDITOR"]
 
                 subprocess.call([editor, name])
