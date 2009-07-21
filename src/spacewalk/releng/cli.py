@@ -11,7 +11,8 @@
 # granted to use or replicate Red Hat trademarks that are incorporated
 # in this software or its documentation.
 """
-Command line interface for building Spacewalk and Satellite packages from git tags.
+Command line interface for building Spacewalk and Satellite packages
+from git tags.
 """
 
 import sys
@@ -29,9 +30,9 @@ SCRIPT_DIR = os.path.abspath(os.path.join(os.path.dirname(
 from spacewalk.releng.builder import Builder, NoTgzBuilder
 from spacewalk.releng.tagger import VersionTagger, ReleaseTagger
 from spacewalk.releng.common import DEFAULT_BUILD_DIR
-from spacewalk.releng.common import find_git_root, run_command, \
-        error_out, debug, get_project_name, get_relative_project_dir, \
-        check_tag_exists, get_latest_tagged_version
+from spacewalk.releng.common import (find_git_root, run_command,
+        error_out, debug, get_project_name, get_relative_project_dir,
+        check_tag_exists, get_latest_tagged_version)
 
 BUILD_PROPS_FILENAME = "build.py.props"
 GLOBAL_BUILD_PROPS_FILENAME = "tito.props"
@@ -43,6 +44,7 @@ ASSUMED_NO_TAR_GZ_PROPS = """
 builder = spacewalk.releng.builder.NoTgzBuilder
 tagger = spacewalk.releng.tagger.ReleaseTagger
 """
+
 
 def get_class_by_name(name):
     """
@@ -70,6 +72,7 @@ def get_class_by_name(name):
     c = getattr(mod, class_name)
     return c
 
+
 def read_user_config():
     config = {}
     file_loc = os.path.expanduser("~/.spacewalk-build-rc")
@@ -88,6 +91,7 @@ def read_user_config():
         config[tokens[0]] = strip(tokens[1])
     return config
 
+
 def lookup_build_dir(user_config):
     """
     Read build_dir in from ~/.spacewalk-build-rc if it exists, otherwise
@@ -95,11 +99,10 @@ def lookup_build_dir(user_config):
     """
     build_dir = DEFAULT_BUILD_DIR
 
-    if user_config.has_key('RPMBUILD_BASEDIR'):
+    if 'RPMBUILD_BASEDIR' in user_config.keys():
         build_dir = user_config["RPMBUILD_BASEDIR"]
 
     return build_dir
-
 
 
 class CLI(object):
@@ -111,7 +114,7 @@ class CLI(object):
     """
 
     def main(self):
-        if len(sys.argv) < 2 or not CLI_MODULES.has_key(sys.argv[1]):
+        if len(sys.argv) < 2 or not sys.argv[1] in CLI_MODULES.keys():
             self._usage()
             sys.exit(1)
 
@@ -127,7 +130,6 @@ class CLI(object):
         print("   build    - Build packages.")
         print("   report   - Display various reports on the repo.")
         print("   init     - Initialize directory for use by tito.")
-
 
 
 class BaseCliModule(object):
@@ -148,10 +150,11 @@ class BaseCliModule(object):
         # Options used for many different activities:
         self.parser.add_option("--debug", dest="debug", action="store_true",
                 help="print debug messages", default=False)
-        self.parser.add_option("--offline", dest="offline", action="store_true",
-                help="do not attempt any remote communication (avoid using " +
-                    "this please)",
-                default=False)
+        self.parser.add_option("--offline", dest="offline",
+            action="store_true",
+            help="do not attempt any remote communication (avoid using " +
+                "this please)",
+            default=False)
 
     def main(self):
         (self.options, args) = self.parser.parse_args()
@@ -177,8 +180,8 @@ class BaseCliModule(object):
             # HACK: Try the old filename location, pre-tito rename:
             oldfilename = os.path.join(rel_eng_dir, "global.build.py.props")
             if not os.path.exists(oldfilename):
-                error_out("Unable to locate branch configuration: %s\nPlease run 'tito init'" %
-                        filename)
+                error_out("Unable to locate branch configuration: %s"
+                    "\nPlease run 'tito init'" % filename)
         config = ConfigParser.ConfigParser()
         config.read(filename)
 
@@ -278,7 +281,6 @@ class BaseCliModule(object):
         pass
 
 
-
 class BuildModule(BaseCliModule):
 
     def __init__(self):
@@ -309,18 +311,21 @@ class BuildModule(BaseCliModule):
                 action="store_true", help="%s %s %s" % (
                     "Release package according to repo configuration.",
                     "(import into CVS and submit to build system, or create ",
-                    "src.rpm's and submit directly to koji)"
+                    "src.rpm's and submit directly to koji)",
                 ))
         self.parser.add_option("--cvs-release", dest="cvs_release",
-                action="store_true", help="Release package only in CVS. (if possible)"
+                action="store_true",
+                help="Release package only in CVS. (if possible)",
                 )
         self.parser.add_option("--koji-release", dest="koji_release",
-                action="store_true", help="Release package only in Koji. (if possible)"
+                action="store_true",
+                help="Release package only in Koji. (if possible)",
                 )
         self.parser.add_option("--upload-new-source", dest="cvs_new_sources",
                 action="append",
-                help="Upload a new source tarball to CVS lookaside. (i.e. runs 'make new-sources') Must be " \
-                    "used until 'sources' file is committed to CVS.")
+                help=("Upload a new source tarball to CVS lookaside. "
+                    "(i.e. runs 'make new-sources') Must be "
+                    "used until 'sources' file is committed to CVS."))
 
     def main(self):
         BaseCliModule.main(self)
@@ -392,11 +397,11 @@ class BuildModule(BaseCliModule):
 
         if self.options.release and (self.options.cvs_release or
                 self.options.koji_release):
-            error_out(["Cannot combine --cvs-release/--koji-release with --release.",
+            error_out([
+                "Cannot combine --cvs-release/--koji-release with --release.",
                 "(--release includes both)"])
         if self.options.release and self.options.test:
             error_out("Cannot combine --release with --test.")
-
 
 
 class TagModule(BaseCliModule):
@@ -415,11 +420,13 @@ class TagModule(BaseCliModule):
                 help="Deprecated, no longer required.")
         self.parser.add_option("--keep-version", dest="keep_version",
                 action="store_true",
-                help="Use spec file version/release exactly as specified in spec file to tag package.")
+                help=("Use spec file version/release exactly as "
+                    "specified in spec file to tag package."))
 
         self.parser.add_option("--no-auto-changelog", action="store_true",
                 default=False,
-                help="Don't automatically create a changelog entry for this tag if none is found")
+                help=("Don't automatically create a changelog "
+                    "entry for this tag if none is found"))
 
     def main(self):
         BaseCliModule.main(self)
@@ -449,7 +456,6 @@ class TagModule(BaseCliModule):
         tagger.run(self.options)
 
 
-
 class InitModule(BaseCliModule):
     """ CLI Module for initializing a project for use with tito. """
 
@@ -475,7 +481,8 @@ class InitModule(BaseCliModule):
             out_f = open(filename, 'w')
             out_f.write("[globalconfig]\n")
             out_f.write("default_builder = spacewalk.releng.builder.Builder\n")
-            out_f.write("default_tagger = spacewalk.releng.tagger.VersionTagger\n")
+            out_f.write(
+                "default_tagger = spacewalk.releng.tagger.VersionTagger\n")
             out_f.close()
 
             commands.getoutput('git commit -m "Initialized to use tito. "')
@@ -502,14 +509,14 @@ class ReportModule(BaseCliModule):
                 help= "%s %s %s" % (
                     "Print out diffs for all packages with changes between",
                     "their most recent tag and HEAD. Useful for determining",
-                    "which packages are in need of a re-tag."
+                    "which packages are in need of a re-tag.",
                 ))
         self.parser.add_option("--untagged-commits", dest="untagged_commits",
                 action="store_true",
                 help= "%s %s %s" % (
                     "Print out the list for all packages with changes between",
                     "their most recent tag and HEAD. Useful for determining",
-                    "which packages are in need of a re-tag."
+                    "which packages are in need of a re-tag.",
                 ))
 
     def main(self):
@@ -574,8 +581,8 @@ class ReportModule(BaseCliModule):
         last_tag = "%s-%s" % (package_name, version)
         try:
             os.chdir(project_dir)
-            patch_command = "git log --pretty=oneline --relative %s..%s -- %s" % \
-                    (last_tag, "HEAD", ".")
+            patch_command = ("git log --pretty=oneline "
+                "--relative %s..%s -- %s" % (last_tag, "HEAD", "."))
             output = run_command(patch_command)
             if (output):
                 print("-" * (len(last_tag) + 8))
@@ -617,12 +624,11 @@ class ReportModule(BaseCliModule):
         print("")
 
 
-
 CLI_MODULES = {
     "build": BuildModule,
     "tag": TagModule,
     "report": ReportModule,
-    "init": InitModule
+    "init": InitModule,
 }
 
 

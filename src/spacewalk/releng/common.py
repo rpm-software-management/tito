@@ -24,6 +24,7 @@ from spacewalk.releng.cli import SCRIPT_DIR
 
 DEFAULT_BUILD_DIR = "/tmp/spacewalk-build"
 
+
 def error_out(error_msgs):
     """
     Print the given error message (or list of messages) and exit.
@@ -34,6 +35,7 @@ def error_out(error_msgs):
     else:
         print("ERROR: %s" % error_msgs)
     sys.exit(1)
+
 
 def find_spec_file(in_dir=None):
     """
@@ -48,6 +50,7 @@ def find_spec_file(in_dir=None):
         if f.endswith(".spec"):
             return f
     error_out(["Unable to locate a spec file in %s" % in_dir])
+
 
 def find_git_root():
     """
@@ -64,6 +67,7 @@ def find_git_root():
         cdup = "./"
     return os.path.abspath(cdup)
 
+
 def run_command(command):
     (status, output) = commands.getstatusoutput(command)
     if status > 0:
@@ -73,6 +77,7 @@ def run_command(command):
         sys.stderr.write("Command output: %s\n" % output)
         raise Exception("Error running command")
     return output
+
 
 def check_tag_exists(tag, offline=False):
     """
@@ -104,16 +109,21 @@ def check_tag_exists(tag, offline=False):
         error_out("Tag %s references %s locally but %s upstream." % (tag,
             tag_sha1, upstream_tag_sha1))
 
+
 def debug(text):
     """
     Print the text if --debug was specified.
     """
-    if os.environ.has_key('DEBUG'):
+    if 'DEBUG' os.environ.keys():
         print(text)
 
+
 def get_spec_version_and_release(sourcedir, spec_file_name):
-        command = """rpm -q --qf '%%{version}-%%{release}\n' --define "_sourcedir %s" --define 'dist %%undefined' --specfile %s 2> /dev/null | head -1""" % (sourcedir, spec_file_name)
+        command = ("""rpm -q --qf '%%{version}-%%{release}\n' --define """
+            """"_sourcedir %s" --define 'dist %%undefined' --specfile """
+            """%s 2> /dev/null | head -1""" % (sourcedir, spec_file_name))
         return run_command(command)
+
 
 def get_project_name(tag=None):
     """
@@ -137,6 +147,7 @@ def get_project_name(tag=None):
             spec_file_path)
         return output
 
+
 def get_relative_project_dir(project_name, commit):
     """
     Return the project's sub-directory relative to the git root.
@@ -152,6 +163,7 @@ def get_relative_project_dir(project_name, commit):
     debug("Got package metadata: %s" % tokens)
     return tokens[1]
 
+
 def get_build_commit(tag, test=False):
     """ Return the git commit we should build. """
     if test:
@@ -160,13 +172,14 @@ def get_build_commit(tag, test=False):
         tag_sha1 = run_command(
                 "git ls-remote ./. --tag %s | awk '{ print $1 ; exit }'"
                 % tag)
-        commit_id = run_command('git rev-list --max-count=1 %s' % 
-                tag_sha1)
+        commit_id = run_command('git rev-list --max-count=1 %s' % tag_sha1)
         return commit_id
+
 
 def get_git_head_commit():
     """ Return the SHA1 of the HEAD commit on the current git branch. """
     return commands.getoutput('git rev-parse --verify HEAD')
+
 
 def get_commit_timestamp(sha1_or_tag):
     """
@@ -179,7 +192,8 @@ def get_commit_timestamp(sha1_or_tag):
             % sha1_or_tag)
     return output
 
-def create_tgz(git_root, prefix, commit, relative_dir, rel_eng_dir, 
+
+def create_tgz(git_root, prefix, commit, relative_dir, rel_eng_dir,
     dest_tgz):
     """
     Create a .tar.gz from a projects source in git.
@@ -191,18 +205,13 @@ def create_tgz(git_root, prefix, commit, relative_dir, rel_eng_dir,
             "tar-fixup-stamp-comment.pl")
     if not os.path.exists(timestamp_script):
         error_out("Unable to locate required script: %s" % timestamp_script)
-    archive_cmd = "git archive --format=tar --prefix=%s/ %s:%s | perl %s %s %s | gzip -n -c - | tee %s" % \
-        (
-                prefix,
-                commit,
-                relative_dir,
-                timestamp_script,
-                timestamp,
-                commit,
-                dest_tgz
-        )
+    archive_cmd = ("git archive --format=tar --prefix=%s/ %s:%s "
+        "| perl %s %s %s | gzip -n -c - | tee %s" % (
+        prefix, commit, relative_dir, timestamp_script, timestamp,
+        commit, dest_tgz))
     debug(archive_cmd)
     run_command(archive_cmd)
+
 
 def get_git_repo_url():
     """
@@ -211,6 +220,7 @@ def get_git_repo_url():
     Uses ~/.git/config remote origin url.
     """
     return run_command("git config remote.origin.url")
+
 
 def get_latest_tagged_version(package_name):
     """
@@ -231,5 +241,3 @@ def get_latest_tagged_version(package_name):
         error_out("Error looking up latest tagged version in: %s" % file_path)
 
     return output
-
-

@@ -22,7 +22,7 @@ import os.path
 
 import unittest
 
-# Make sure we run from the source code and not a version of tito 
+# Make sure we run from the source code and not a version of tito
 # installed on the system:
 TEST_SCRIPT_DIR = os.path.dirname(sys.argv[0])
 sys.path.append(os.path.join(TEST_SCRIPT_DIR, "../src/"))
@@ -35,15 +35,16 @@ from spacewalk.releng.common import *
 # WARNING: This location will be destroyed if present.
 TEST_GIT_LOCATION = '/tmp/tito-test-git-repo'
 
+
 def tito(argstring):
     """ Run the tito script from source with given arguments. """
     run_command("%s/%s %s" % (SRC_SCRIPT_DIR, 'tito', argstring))
+
 
 class InitTests(unittest.TestCase):
 
     def test_something(self):
         pass
-
 
 
 if __name__ == '__main__':
@@ -72,5 +73,3 @@ if __name__ == '__main__':
     print(result.errors)
     print(result.failures)
     print(result.wasSuccessful())
-
-

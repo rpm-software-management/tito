@@ -27,7 +27,8 @@ import textwrap
 from time import strftime
 
 from spacewalk.releng.cli import SCRIPT_DIR
-from spacewalk.releng.common import * 
+from spacewalk.releng.common import *
+
 
 class VersionTagger(object):
     """
@@ -37,6 +38,7 @@ class VersionTagger(object):
     Releases will be tagged by incrementing the package version,
     and the actual RPM "release" will always be set to 1.
     """
+
     def __init__(self, global_config=None, keep_version=False):
         self.git_root = find_git_root()
         self.rel_eng_dir = os.path.join(self.git_root, "rel-eng")
@@ -68,7 +70,8 @@ class VersionTagger(object):
         be performed. (i.e. only release tagging, etc)
         """
         if options.tag_release:
-            print("WARNING: --tag-release option no longer necessary, 'tito tag' will accomplish the same thing.")
+            print("WARNING: --tag-release option no longer necessary,"
+                " 'tito tag' will accomplish the same thing.")
         if options.no_auto_changelog:
             self._no_auto_changelog=True
         self._tag_release()
@@ -85,8 +88,8 @@ class VersionTagger(object):
         self._update_package_metadata(new_version)
 
     def _check_today_in_changelog(self):
-        """ 
-        Verify that there is a changelog entry for today's date and the git 
+        """
+        Verify that there is a changelog entry for today's date and the git
         user's name and email address.
 
         i.e. * Thu Nov 27 2008 My Name <me@example.com>
@@ -136,7 +139,8 @@ class VersionTagger(object):
                     output = "new package"
 
                 fd, name = tempfile.mkstemp()
-                os.write(fd, "# No changelog entry found; please edit the following\n")
+                os.write(fd, "# No changelog entry found; please "
+                    "edit the following\n")
                 header = "* %s %s <%s>\n" % (self.today, self.git_user,
                         self.git_email)
 
@@ -150,7 +154,7 @@ class VersionTagger(object):
                 os.write(fd, "\n")
 
                 editor = 'vi'
-                if os.environ.has_key("EDITOR"):
+                if "EDITOR" in os.environ.keys():
                     editor = os.environ["EDITOR"]
 
                 subprocess.call([editor, name])
@@ -235,7 +239,8 @@ class VersionTagger(object):
 
         new_version = self._get_spec_version_and_release()
         if new_version.strip() == "":
-            error_out("Error getting bumped package version. (can spec file be parsed?")
+            error_out("Error getting bumped package version. "
+                "(can spec file be parsed?")
         print("Tagging new version of %s: %s -> %s" % (self.project_name,
             old_version, new_version))
         return new_version
@@ -290,7 +295,8 @@ class VersionTagger(object):
             "tag can be used")
 
     def _check_tag_does_not_exist(self, new_tag):
-        status, output = commands.getstatusoutput('git tag | grep %s' % new_tag)
+        status, output = commands.getstatusoutput(
+            'git tag | grep %s' % new_tag)
         if status == 0:
             raise Exception("Tag %s already exists!" % new_tag)
 
@@ -330,12 +336,12 @@ class VersionTagger(object):
 
     def _get_git_user_info(self):
         """ Return the user.name and user.email git config values. """
-        return (run_command('git config --get user.name'), 
+        return (run_command('git config --get user.name'),
                 run_command('git config --get user.email'))
 
     def _get_spec_version_and_release(self):
         """ Get the package version from the spec file. """
-        return get_spec_version_and_release(self.full_project_dir, 
+        return get_spec_version_and_release(self.full_project_dir,
                 self.spec_file_name)
 
     def _get_new_tag(self, new_version):
@@ -345,7 +351,6 @@ class VersionTagger(object):
         if self.global_config.has_option("globalconfig", "tag_suffix"):
             suffix = self.global_config.get("globalconfig", "tag_suffix")
         return "%s-%s%s" % (self.project_name, new_version, suffix)
-
 
 
 class ReleaseTagger(VersionTagger):
@@ -367,5 +372,3 @@ class ReleaseTagger(VersionTagger):
         self._check_tag_does_not_exist(self._get_new_tag(new_version))
         self._update_changelog(new_version)
         self._update_package_metadata(new_version, release=True)
-
-

@@ -28,6 +28,7 @@ DEFAULT_CVS_BUILD_DIR = "cvswork"
 # List of CVS files to protect when syncing git with a CVS module:
 CVS_PROTECT_FILES = ('branch', 'CVS', '.cvsignore', 'Makefile', 'sources')
 
+
 class Builder(object):
     """
     Parent builder class.
@@ -57,7 +58,7 @@ class Builder(object):
         self.rpmbuild_basedir = build_dir
         self.display_version = self._get_display_version()
 
-        self.git_commit_id = get_build_commit(tag=self.build_tag, 
+        self.git_commit_id = get_build_commit(tag=self.build_tag,
                 test=self.test)
         self.project_name_and_sha1 = "%s-%s" % (self.project_name,
                 self.git_commit_id)
@@ -182,8 +183,9 @@ class Builder(object):
         elif dist:
             define_dist = "--define 'dist %s'" % dist
 
-        cmd = 'rpmbuild --define "_source_filedigest_algorithm md5"  --define "_binary_filedigest_algorithm md5" %s %s --nodeps -bs %s' % \
-                (self._get_rpmbuild_dir_options(), define_dist, self.spec_file)
+        cmd = ('rpmbuild --define "_source_filedigest_algorithm md5"  --define'
+            ' "_binary_filedigest_algorithm md5" %s %s --nodeps -bs %s' % (
+            self._get_rpmbuild_dir_options(), define_dist, self.spec_file))
         output = run_command(cmd)
         print(output)
         self.srpm_location = self._find_wrote_in_rpmbuild_output(output)[0]
@@ -200,8 +202,10 @@ class Builder(object):
         define_dist = ""
         if self.dist:
             define_dist = "--define 'dist %s'" % self.dist
-        cmd = 'rpmbuild --define "_source_filedigest_algorithm md5"  --define "_binary_filedigest_algorithm md5" %s %s --clean -ba %s' % \
-                (self._get_rpmbuild_dir_options(), define_dist, self.spec_file)
+        cmd = ('rpmbuild --define "_source_filedigest_algorithm md5"  '
+            '--define "_binary_filedigest_algorithm md5" %s %s --clean '
+            '-ba %s' % (
+            self._get_rpmbuild_dir_options(), define_dist, self.spec_file))
         output = run_command(cmd)
         print(output)
         files_written = self._find_wrote_in_rpmbuild_output(output)
@@ -265,7 +269,7 @@ class Builder(object):
         koji_tags = autobuild_tags.strip().split(" ")
 
         koji_opts = DEFAULT_KOJI_OPTS
-        if self.user_config.has_key('KOJI_OPTIONS'):
+        if 'KOJI_OPTIONS' in self.user_config.keys():
             koji_opts = self.user_config['KOJI_OPTIONS']
 
         for koji_tag in koji_tags:
@@ -320,7 +324,8 @@ class Builder(object):
         # modify the version/release on the fly when building test rpms
         # that use a git SHA1 for their version.
         self.spec_file_name = find_spec_file(in_dir=self.rpmbuild_gitcopy)
-        self.spec_file = os.path.join(self.rpmbuild_gitcopy, self.spec_file_name)
+        self.spec_file = os.path.join(
+            self.rpmbuild_gitcopy, self.spec_file_name)
 
     def _verify_cvs_module_not_already_checked_out(self):
         """ Exit if CVS module appears to already be checked out. """
@@ -358,7 +363,8 @@ class Builder(object):
             branch_dir = os.path.join(self.cvs_workdir, self.project_name,
                     branch)
             os.chdir(branch_dir)
-            cmd = 'make new-sources FILES="%s"' % string.join(self.sources, " ")
+            cmd = 'make new-sources FILES="%s"' % (
+                string.join(self.sources, " "))
             debug(cmd)
             output = run_command(cmd)
             debug(output)
@@ -390,7 +396,7 @@ class Builder(object):
                 debug("   skipping:  %s (protected file)" % filename)
                 continue
             elif filename.endswith(".spec"):
-                # Skip the spec file, we already copy this explicitly as it 
+                # Skip the spec file, we already copy this explicitly as it
                 # can come from a couple different locations depending on which
                 # builder is in use.
                 continue
@@ -427,7 +433,7 @@ class Builder(object):
 
                 if cvs_add:
                     print("   added: %s" % base_filename)
-                    commands.getstatusoutput("cvs add %s" %  base_filename)
+                    commands.getstatusoutput("cvs add %s" % base_filename)
                 else:
                     print("   copied: %s" % base_filename)
 
@@ -497,15 +503,18 @@ class Builder(object):
         Return True if this repo and branch is configured to build in CVS.
         """
         if not self.global_config.has_section("cvs"):
-            debug("Cannot build from CVS, no 'cvs' section found in global.build.py.props")
+            debug("Cannot build from CVS, no 'cvs' section "
+                "found in global.build.py.props")
             return False
 
         if not self.global_config.has_option("cvs", "cvsroot"):
-            debug("Cannot build from CVS, no 'cvsroot' defined in global.build.py.props")
+            debug("Cannot build from CVS, no 'cvsroot' "
+                "defined in global.build.py.props")
             return False
 
         if not self.global_config.has_option("cvs", "branches"):
-            debug("Cannot build from CVS no branches defined in global.build.py.props")
+            debug("Cannot build from CVS no branches "
+                "defined in global.build.py.props")
             return False
 
         return True
@@ -520,7 +529,8 @@ class Builder(object):
             return False
 
         if not self.global_config.has_option("koji", "autobuild_tags"):
-            debug("Cannot build in Koji, no autobuild_tags defined in global.build.py.props")
+            debug("Cannot build in Koji, no autobuild_tags "
+                "defined in global.build.py.props")
             return False
 
         return True
@@ -561,8 +571,9 @@ class Builder(object):
         """
         Create the build directories. Can safely be called multiple times.
         """
-        commands.getoutput("mkdir -p %s %s %s %s" % (self.rpmbuild_basedir,
-            self.rpmbuild_dir, self.rpmbuild_sourcedir, self.rpmbuild_builddir))
+        commands.getoutput("mkdir -p %s %s %s %s" % (
+            self.rpmbuild_basedir, self.rpmbuild_dir,
+            self.rpmbuild_sourcedir, self.rpmbuild_builddir))
 
     def _setup_test_specfile(self):
         if self.test:
@@ -579,14 +590,15 @@ class Builder(object):
                         self.git_commit_id,
                         self.project_name,
                         self.display_version,
-                        self.tgz_filename
+                        self.tgz_filename,
                     )
             run_command(cmd)
 
     def _get_rpmbuild_dir_options(self):
-        return """--define "_sourcedir %s" --define "_builddir %s" --define "_srcrpmdir %s" --define "_rpmdir %s" """ % \
-            (self.rpmbuild_sourcedir, self.rpmbuild_builddir,
-                    self.rpmbuild_basedir, self.rpmbuild_basedir)
+        return ('--define "_sourcedir %s" --define "_builddir %s" --define '
+            '"_srcrpmdir %s" --define "_rpmdir %s" ' % (
+            self.rpmbuild_sourcedir, self.rpmbuild_builddir,
+            self.rpmbuild_basedir, self.rpmbuild_basedir))
 
     def _get_tgz_name_and_ver(self):
         """
@@ -611,24 +623,24 @@ class Builder(object):
         return version
 
 
-
 class NoTgzBuilder(Builder):
     """
     Builder for packages that do not require the creation of a tarball.
     Usually these packages have source tarballs checked directly into git.
     i.e. most of the packages in spec-tree.
     """
+
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None, dist=None,
             test=False, offline=False):
 
         Builder.__init__(self, name=name, version=version, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
-                global_config=global_config, user_config=user_config, dist=dist,
-                test=test, offline=offline)
+                global_config=global_config, user_config=user_config,
+                dist=dist, test=test, offline=offline)
 
         # When syncing files with CVS, copy everything from git:
-        self.cvs_copy_extensions = ("",)
+        self.cvs_copy_extensions = ("", )
 
     def tgz(self):
         """ Override parent behavior, we already have a tgz. """
@@ -654,9 +666,10 @@ class NoTgzBuilder(Builder):
         dir, use the git copy we create as the sources directory when
         building package so everything can be found:
         """
-        return """--define "_sourcedir %s" --define "_builddir %s" --define "_srcrpmdir %s" --define "_rpmdir %s" """ % \
-            (self.rpmbuild_gitcopy, self.rpmbuild_builddir,
-                    self.rpmbuild_basedir, self.rpmbuild_basedir)
+        return ('--define "_sourcedir %s" --define "_builddir %s" '
+            '--define "_srcrpmdir %s" --define "_rpmdir %s" ' % (
+            self.rpmbuild_gitcopy, self.rpmbuild_builddir,
+            self.rpmbuild_basedir, self.rpmbuild_basedir))
 
     def _setup_test_specfile(self):
         """ Override parent behavior. """
@@ -670,26 +683,26 @@ class NoTgzBuilder(Builder):
                     (
                         script,
                         self.spec_file,
-                        self.git_commit_id
+                        self.git_commit_id,
                     )
             run_command(cmd)
 
 
-
 class CvsBuilder(NoTgzBuilder):
-    """ 
+    """
     CVS Builder
 
     Builder for packages whose sources are managed in dist-cvs/Fedora CVS.
     """
+
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None, dist=None,
             test=False, offline=False):
 
         NoTgzBuilder.__init__(self, name=name, version=version, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
-                global_config=global_config, user_config=user_config, dist=dist,
-                test=test, offline=offline)
+                global_config=global_config, user_config=user_config,
+                dist=dist, test=test, offline=offline)
 
         # TODO: Hack to override here, patches are in a weird place with this
         # builder.
@@ -700,7 +713,8 @@ class CvsBuilder(NoTgzBuilder):
         # Convert new sources to full paths right now, before we chdir:
         if options.cvs_new_sources is not None:
             for new_source in options.cvs_new_sources:
-                self.sources.append(os.path.abspath(os.path.expanduser(new_source)))
+                self.sources.append(
+                    os.path.abspath(os.path.expanduser(new_source)))
         debug("CvsBuilder sources: %s" % self.sources)
         NoTgzBuilder.run(self, options)
 
@@ -716,7 +730,7 @@ class CvsBuilder(NoTgzBuilder):
         arch = run_command("uname -i")
         self._cvs_rpm_common(target=arch, all_branches=True)
 
-    def _cvs_rpm_common(self, target, all_branches=False, dist=None, 
+    def _cvs_rpm_common(self, target, all_branches=False, dist=None,
             reuse_cvs_checkout=False):
         """ Code common to building both rpms and srpms with CVS tools. """
         self._create_build_dirs()
@@ -724,7 +738,8 @@ class CvsBuilder(NoTgzBuilder):
             self.tgz()
 
         if not self._can_build_in_cvs():
-            error_out("Repo not properly configured to build in CVS. (--debug for more info)")
+            error_out("Repo not properly configured to build in CVS. "
+                "(--debug for more info)")
 
         if not reuse_cvs_checkout:
             self._verify_cvs_module_not_already_checked_out()
@@ -770,30 +785,31 @@ class CvsBuilder(NoTgzBuilder):
                 print("Wrote: %s" % final_rpm_path)
                 rpms.append(final_rpm_path)
         if not self.test:
-            print("Please be sure to run --release to commit/tag/build this package in CVS.")
+            print("Please be sure to run --release to "
+                "commit/tag/build this package in CVS.")
         return rpms
-
 
 
 class SatelliteBuilder(NoTgzBuilder):
     """
     Builder for packages that are based off some upstream version in Spacewalk
-    git. Commits applied in Satellite git become patches applied to the 
+    git. Commits applied in Satellite git become patches applied to the
     upstream Spacewalk tarball.
 
-    i.e. satellite-java-0.4.0-5 built from spacewalk-java-0.4.0-1 and any 
+    i.e. satellite-java-0.4.0-5 built from spacewalk-java-0.4.0-1 and any
     patches applied in satellite git.
     i.e. spacewalk-setup-0.4.0-20 built from spacewalk-setup-0.4.0-1 and any
     patches applied in satellite git.
     """
+
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None, dist=None,
             test=False, offline=False):
 
         NoTgzBuilder.__init__(self, name=name, version=version, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
-                global_config=global_config, user_config=user_config, dist=dist,
-                test=test, offline=offline)
+                global_config=global_config, user_config=user_config,
+                dist=dist, test=test, offline=offline)
 
         if not pkg_config or not pkg_config.has_option("buildconfig",
                 "upstream_name"):
@@ -802,7 +818,7 @@ class SatelliteBuilder(NoTgzBuilder):
         else:
             self.upstream_name = pkg_config.get("buildconfig", "upstream_name")
         # Need to assign these after we've exported a copy of the spec file:
-        self.upstream_version = None 
+        self.upstream_version = None
         self.upstream_tag = None
         self.patch_filename = None
         self.patch_file = None
@@ -827,16 +843,16 @@ class SatelliteBuilder(NoTgzBuilder):
         self._create_build_dirs()
 
         self.upstream_version = self._get_upstream_version()
-        self.upstream_tag = "%s-%s-1" % (self.upstream_name, 
+        self.upstream_tag = "%s-%s-1" % (self.upstream_name,
                 self.upstream_version)
 
         print("Building upstream tgz for tag [%s]" % (self.upstream_tag))
         if self.upstream_tag != self.build_tag:
             check_tag_exists(self.upstream_tag, offline=self.offline)
 
-        self.spec_file = os.path.join(self.rpmbuild_sourcedir, 
+        self.spec_file = os.path.join(self.rpmbuild_sourcedir,
                 self.spec_file_name)
-        run_command("cp %s %s" % (os.path.join(self.rpmbuild_gitcopy, 
+        run_command("cp %s %s" % (os.path.join(self.rpmbuild_gitcopy,
             self.spec_file_name), self.spec_file))
 
         # Create the upstream tgz:
@@ -847,12 +863,12 @@ class SatelliteBuilder(NoTgzBuilder):
                 project_name=self.upstream_name, commit=commit)
         tgz_fullpath = os.path.join(self.rpmbuild_sourcedir, tgz_filename)
         print("Creating %s from git tag: %s..." % (tgz_filename, commit))
-        create_tgz(self.git_root, prefix, commit, relative_dir, 
+        create_tgz(self.git_root, prefix, commit, relative_dir,
                 self.rel_eng_dir, tgz_fullpath)
         self.ran_tgz = True
         self.sources.append(tgz_fullpath)
 
-        # If these are equal then the tag we're building was likely created in 
+        # If these are equal then the tag we're building was likely created in
         # Spacewalk and thus we don't need to do any patching.
         if (self.upstream_tag == self.build_tag and not self.test):
             return
@@ -916,13 +932,13 @@ class SatelliteBuilder(NoTgzBuilder):
                 patch_apply_index = array_index + 2 # already added a line
 
             array_index += 1
-        
+
         debug("patch_insert_index = %s" % patch_insert_index)
         debug("patch_apply_index = %s" % patch_apply_index)
         if patch_insert_index == 0 or patch_apply_index == 0:
             error_out("Unable to insert PatchX or %patchX lines in spec file")
 
-        lines.insert(patch_insert_index, "Patch%s: %s\n" % (patch_number, 
+        lines.insert(patch_insert_index, "Patch%s: %s\n" % (patch_number,
             self.patch_filename))
         lines.insert(patch_apply_index, "%%patch%s -p1\n" % (patch_number))
         f.close()
@@ -936,16 +952,16 @@ class SatelliteBuilder(NoTgzBuilder):
     def _get_upstream_version(self):
         """
         Get the upstream version. Checks for "upstreamversion" in the spec file
-        and uses it if found. Otherwise assumes the upstream version is equal 
+        and uses it if found. Otherwise assumes the upstream version is equal
         to the version we're building.
 
         i.e. satellite-java-0.4.15 will be built on spacewalk-java-0.4.15
-        with just the package release being incremented on rebuilds. 
+        with just the package release being incremented on rebuilds.
         """
         # Use upstreamversion if defined in the spec file:
         (status, output) = commands.getstatusoutput(
-            "cat %s | grep 'define upstreamversion' | awk '{ print $3 ; exit }'" %
-            self.spec_file)
+            "cat %s | grep 'define upstreamversion' | "
+            "awk '{ print $3 ; exit }'" % self.spec_file)
         if status == 0 and output != "":
             return output
 
@@ -963,8 +979,7 @@ class SatelliteBuilder(NoTgzBuilder):
         dir, use the git copy we create as the sources directory when
         building package so everything can be found:
         """
-        return """--define "_sourcedir %s" --define "_builddir %s" --define "_srcrpmdir %s" --define "_rpmdir %s" """ % \
-            (self.rpmbuild_sourcedir, self.rpmbuild_builddir,
-                    self.rpmbuild_basedir, self.rpmbuild_basedir)
-
-
+        return ('--define "_sourcedir %s" --define "_builddir %s" '
+            '--define "_srcrpmdir %s" --define "_rpmdir %s" ' % (
+            self.rpmbuild_sourcedir, self.rpmbuild_builddir,
+            self.rpmbuild_basedir, self.rpmbuild_basedir))
