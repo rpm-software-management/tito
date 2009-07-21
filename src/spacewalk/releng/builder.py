@@ -354,7 +354,7 @@ class Builder(object):
         Upload any tarballs to the CVS lookaside directory. (if necessary)
         Uses the "make new-sources" target in common.
         """
-        if len(self.sources) == 0:
+        if not self.sources:
             debug("No sources need to be uploaded.")
             return
 
@@ -553,7 +553,7 @@ class Builder(object):
             if line.startswith(look_for):
                 paths.append(line[len(look_for):])
                 debug("Found wrote line: %s" % paths[-1])
-        if (len(paths) == 0):
+        if not paths:
             error_out("Unable to locate 'Wrote: ' lines in rpmbuild output")
         return paths
 

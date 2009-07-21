@@ -59,7 +59,7 @@ def get_class_by_name(name):
     module = ""
 
     for s in tokens[0:-1]:
-        if len(module) > 0:
+        if module:
             module = module + "."
         module = module + s
 
