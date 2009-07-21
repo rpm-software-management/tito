@@ -1,0 +1,6 @@
+include AUTHORS
+include LICENSE
+include MANIFEST.in
+include COPYING
+recursive-include bin *.*
+recursive-include test *.*
