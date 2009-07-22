@@ -231,8 +231,8 @@ class VersionTagger(object):
             if release:
                 bump_type = "bump-release"
 
-            script_path = os.path.join(SCRIPT_DIR, "bump-version.pl")
-            cmd = "perl %s %s --specfile %s" % \
+            script_path = "bump-version.pl"
+            cmd = "%s %s --specfile %s" % \
                     (script_path, bump_type, self.spec_file)
             run_command(cmd)
 

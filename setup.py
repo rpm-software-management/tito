@@ -39,15 +39,11 @@ setup(
 
     # non-python scripts go here
     scripts = [
+        'bin/tito',
         'bin/bump-version.pl',
         'bin/tar-fixup-stamp-comment.pl',
         'bin/test-setup-specfile.pl',
     ],
-
-    entry_points = {
-        'console_scripts':
-            ['tito = spacewalk.releng.cli:main'],
-    },
 
     classifiers = [
         'License :: OSI Approved :: GNU General Public License (GPL)',

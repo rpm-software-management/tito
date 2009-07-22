@@ -20,8 +20,8 @@ import os.path
 import sys
 import commands
 
-SCRIPT_DIR = os.path.abspath(os.path.join(os.path.dirname(
-    os.path.abspath(sys.argv[0])), "../"))
+#SCRIPT_DIR = os.path.abspath(os.path.join(os.path.dirname(
+#    os.path.abspath(sys.argv[0])), "../"))
 
 DEFAULT_BUILD_DIR = "/tmp/spacewalk-build"
 
@@ -202,8 +202,7 @@ def create_tgz(git_root, prefix, commit, relative_dir, rel_eng_dir,
     os.chdir(os.path.abspath(git_root))
     timestamp = get_commit_timestamp(commit)
 
-    timestamp_script = os.path.join(SCRIPT_DIR,
-            "tar-fixup-stamp-comment.pl")
+    timestamp_script = "tar-fixup-stamp-comment.pl"
     if not os.path.exists(timestamp_script):
         error_out("Unable to locate required script: %s" % timestamp_script)
     archive_cmd = ("git archive --format=tar --prefix=%s/ %s:%s "

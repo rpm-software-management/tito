@@ -579,9 +579,8 @@ class Builder(object):
             # file we're building off. (note that this is a temp copy of the
             # spec) Swap out the actual release for one that includes the git
             # SHA1 we're building for our test package:
-            setup_specfile_script = os.path.join(SCRIPT_DIR,
-                    "test-setup-specfile.pl")
-            cmd = "perl %s %s %s %s-%s %s" % \
+            setup_specfile_script = "test-setup-specfile.pl"
+            cmd = "%s %s %s %s-%s %s" % \
                     (
                         setup_specfile_script,
                         self.spec_file,
@@ -676,8 +675,8 @@ class NoTgzBuilder(Builder):
             # file we're building off. (note that this is a temp copy of the
             # spec) Swap out the actual release for one that includes the git
             # SHA1 we're building for our test package:
-            script = os.path.join(SCRIPT_DIR, "test-setup-specfile.pl")
-            cmd = "perl %s %s %s" % \
+            script = "test-setup-specfile.pl"
+            cmd = "%s %s %s" % \
                     (
                         script,
                         self.spec_file,
