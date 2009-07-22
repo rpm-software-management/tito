@@ -23,8 +23,9 @@ import os.path
 import unittest
 
 # Make sure we run from the source:
-TEST_SCRIPT_DIR = os.path.dirname(sys.argv[0])
-sys.path.append(os.path.join(TEST_SCRIPT_DIR, "../src/"))
+TEST_SCRIPT_DIR = os.path.abspath(os.path.dirname(sys.argv[0]))
+print TEST_SCRIPT_DIR
+SRC_DIR = os.path.normpath(os.path.join(TEST_SCRIPT_DIR, "../src/"))
 SRC_BIN_DIR = os.path.abspath(os.path.join(TEST_SCRIPT_DIR, "../bin/"))
 
 import spacewalk.releng.cli # prevents a circular import
@@ -59,11 +60,10 @@ def create_test_git_repo(multi_project=False):
     os.chdir(SINGLE_GIT)
     run_command('git init')
     run_command('git add a.txt')
-    run_command('git commit -a -m "added a.txt"')
     run_command('git add b.txt')
-    run_command('git commit -a -m "added b.txt"')
     run_command('git add c.txt')
-    run_command('git commit -a -m "added c.txt"')
+    #run_command('git add tito-test-pkg.spec')
+    run_command('git commit -a -m "Initial commit."')
 
 
 
@@ -81,15 +81,21 @@ class InitTests(unittest.TestCase):
             "tito.props")))
 
 
+class TaggerTests(unittest.TestCase):
+
+    def test_tag_new_package(self):
+        tito("tag")
+
+
 if __name__ == '__main__':
     print("Running tito tests.")
 
     create_test_git_repo()
 
+    suites = [
+            unittest.makeSuite(InitTests),
+            unittest.makeSuite(TaggerTests),
+    ]
     # Now run the tests, order is important:
-    suite = unittest.makeSuite(InitTests)
-    result = unittest.TestResult()
-    suite.run(result)
-    print(result.errors)
-    print(result.failures)
-    print(result.wasSuccessful())
+    suite = unittest.TestSuite(suites)
+    unittest.TextTestRunner(verbosity=2).run(suite)
