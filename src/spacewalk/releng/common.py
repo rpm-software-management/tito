@@ -202,7 +202,7 @@ def create_tgz(git_root, prefix, commit, relative_dir, rel_eng_dir,
     os.chdir(os.path.abspath(git_root))
     timestamp = get_commit_timestamp(commit)
 
-    timestamp_script = "/usr/bin/tar-fixup-stamp-comment.pl"
+    timestamp_script = "tar-fixup-stamp-comment.pl"
 
     #if not os.path.exists(timestamp_script):
     #    error_out("Unable to locate required script: %s" % timestamp_script)
@@ -212,10 +212,10 @@ def create_tgz(git_root, prefix, commit, relative_dir, rel_eng_dir,
     if relative_git_dir == '/':
         relative_git_dir = ""
 
-    archive_cmd = ("git archive --format=tar --prefix=%s/ %s:%s "
-        "| perl %s %s %s | gzip -n -c - | tee %s" % (
-        prefix, commit, relative_git_dir, timestamp_script, timestamp,
-        commit, dest_tgz))
+    archive_cmd = ('git archive --format=tar --prefix=%s/ %s:%s '
+        '| grep -a -v "^%s/rel-eng/" | %s %s %s | gzip -n -c - | tee %s' % (
+        prefix, commit, relative_git_dir, prefix, timestamp_script, 
+        timestamp, commit, dest_tgz))
     debug(archive_cmd)
     run_command(archive_cmd)
 
