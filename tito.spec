@@ -46,7 +46,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/tar-fixup-stamp-comment.pl
 %{_bindir}/test-setup-specfile.pl
 %dir %{python_sitelib}/tito
-%{python_sitelib}/tito/*
+%{python_sitelib}/spacewalk/*
 %{python_sitelib}/tito-*.egg-info
 
 
