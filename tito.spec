@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.0.2
+Version: 0.0.1
 Release:        1%{?dist}
 Summary: A tool for managing rpm based git projects.
 
@@ -51,6 +51,6 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
-* Wed Jul 22 2009 Devan Goodwin <dgoodwin@rm-rf.ca> 0.0.2-1
+* Wed Jul 22 2009 Devan Goodwin <dgoodwin@rm-rf.ca> 0.0.1-1
 - Initial packaging.
 
