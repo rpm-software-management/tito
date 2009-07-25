@@ -26,7 +26,7 @@ import textwrap
 
 from time import strftime
 
-from spacewalk.releng.common import *
+from tito.common import *
 
 
 class VersionTagger(object):

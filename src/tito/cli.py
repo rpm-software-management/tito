@@ -23,10 +23,10 @@ import ConfigParser
 
 from optparse import OptionParser
 
-from spacewalk.releng.builder import Builder, NoTgzBuilder
-from spacewalk.releng.tagger import VersionTagger, ReleaseTagger
-from spacewalk.releng.common import DEFAULT_BUILD_DIR
-from spacewalk.releng.common import (find_git_root, run_command,
+from tito.builder import Builder, NoTgzBuilder
+from tito.tagger import VersionTagger, ReleaseTagger
+from tito.common import DEFAULT_BUILD_DIR
+from tito.common import (find_git_root, run_command,
         error_out, debug, get_project_name, get_relative_project_dir,
         check_tag_exists, get_latest_tagged_version, normalize_class_name)
 
@@ -37,8 +37,8 @@ DEFAULT_BUILDER = "default_builder"
 DEFAULT_TAGGER = "default_tagger"
 ASSUMED_NO_TAR_GZ_PROPS = """
 [buildconfig]
-builder = spacewalk.releng.builder.NoTgzBuilder
-tagger = spacewalk.releng.tagger.ReleaseTagger
+builder = tito.builder.NoTgzBuilder
+tagger = tito.tagger.ReleaseTagger
 """
 
 
@@ -471,9 +471,9 @@ class InitModule(BaseCliModule):
             # write out tito.props
             out_f = open(filename, 'w')
             out_f.write("[globalconfig]\n")
-            out_f.write("default_builder = spacewalk.releng.builder.Builder\n")
+            out_f.write("default_builder = %s\n" % DEFAULT_BUILDER)
             out_f.write(
-                "default_tagger = spacewalk.releng.tagger.VersionTagger\n")
+                "default_tagger = %s\n" % DEFAULT_TAGGER)
             out_f.close()
             print("   - wrote %s" % GLOBAL_BUILD_PROPS_FILENAME)
 

@@ -31,8 +31,7 @@ setup(
     license='GPLv2+',
 
     package_dir={
-        'spacewalk': 'src/spacewalk',
-        'spacewalk.releng': 'src/spacewalk/releng',
+        'tito': 'src/tito',
     },
     packages = find_packages('src'),
     include_package_data = True,

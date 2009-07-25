@@ -19,7 +19,7 @@ import re
 import sys
 import commands
 
-from spacewalk.releng.common import *
+from tito.common import *
 
 DEFAULT_KOJI_OPTS = "build --nowait"
 DEFAULT_CVS_BUILD_DIR = "cvswork"
