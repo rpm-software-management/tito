@@ -30,6 +30,7 @@ import unittest
 
 TEST_SCRIPT_DIR = os.path.abspath(os.path.dirname(sys.argv[0]))
 SRC_DIR = os.path.normpath(os.path.join(TEST_SCRIPT_DIR, "src/"))
+sys.path.insert(0, SRC_DIR)
 SRC_BIN_DIR = os.path.abspath(os.path.join(TEST_SCRIPT_DIR, "bin/"))
 
 os.environ['PYTHONPATH'] = SRC_DIR

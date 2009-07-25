@@ -165,6 +165,9 @@ class BaseCliModule(object):
                 "Try -h for help."))
 
         self.global_config = self._read_global_config()
+        if self.global_config.has_option(GLOBALCONFIG_SECTION,
+                "offline"):
+            self.options.offline = True
 
         if self.options.debug:
             os.environ['DEBUG'] = "true"

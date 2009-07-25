@@ -41,7 +41,7 @@ a per branch basis. It will be filtered out when creating .tar.gz's.
 TAGGING PACKAGES
 ================
 
-Before doing most everything you'll need to tag your pacakge(s). 
+Before doing most everything you'll need to tag your package(s). 
 
 Before doing this you'll need to ensure that your package spec files are at the top of the relative source tree for that package.
 
@@ -121,3 +121,8 @@ history, and run:
 
     git tag -d YOURNEWTAG
     git reset --hard HEAD^1
+
+If your project is standalone (no remote reference you communicate with as
+authoritative) you may wish to set offline = "true" in rel-eng/tito.props under
+the globalconfig section, so you do not need to specify --offline with each
+invocation.
