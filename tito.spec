@@ -38,9 +38,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-#%doc AUTHORS
-#%doc LICENSE
-#%doc README
+%doc README
 %{_bindir}/tito
 %{_bindir}/bump-version.pl
 %{_bindir}/tar-fixup-stamp-comment.pl
