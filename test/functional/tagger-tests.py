@@ -66,8 +66,11 @@ rm -rf %{buildroot}
 
 def tito(argstring):
     """ Run the tito script from source with given arguments. """
-    bin_dir = os.environ['TITO_SRC_BIN_DIR']
-    run_command("%s %s" % (os.path.join(bin_dir, 'tito'), argstring))
+    tito_path = 'tito' # assume it's on PATH by default
+    if 'TITO_SRC_BIN_DIR' in os.environ:
+        bin_dir = os.environ['TITO_SRC_BIN_DIR']
+        tito_path = os.path.join(bin_dir, 'tito')
+    run_command("%s %s" % (tito_path, argstring))
 
 def cleanup_test_git_repos():
     """ Delete the test directory if it exists. """
