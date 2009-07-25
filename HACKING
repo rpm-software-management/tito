@@ -1,0 +1,4 @@
+To run all tests, install the python-nose package and from the root of the 
+project:
+
+    nosetests
