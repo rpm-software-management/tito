@@ -66,8 +66,8 @@ rm -rf %{buildroot}
 
 def tito(argstring):
     """ Run the tito script from source with given arguments. """
-    print sys.argv[0]
-    run_command("%s %s" % ('tito', argstring))
+    bin_dir = os.environ['TITO_SRC_BIN_DIR']
+    run_command("%s %s" % (os.path.join(bin_dir, 'tito'), argstring))
 
 def cleanup_test_git_repos():
     """ Delete the test directory if it exists. """
@@ -116,6 +116,10 @@ class TaggerTests(unittest.TestCase):
             "packages")))
         self.assertTrue(os.path.exists(os.path.join(SINGLE_GIT, "rel-eng",
             "tito.props")))
+
+    def tearDown(self):
+        os.chdir('/tmp') # anywhere but the git repo were about to delete
+        cleanup_test_git_repos()
 
     def test_tag_new_package(self):
         #tito("tag")
