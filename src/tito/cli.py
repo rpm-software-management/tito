@@ -542,6 +542,11 @@ class ReportModule(BaseCliModule):
                     continue
                 f = open(os.path.join(package_metadata_dir, md_file))
                 (version, relative_dir) = f.readline().strip().split(" ")
+                
+                # Hack for single project git repos:
+                if relative_dir == '/':
+                    relative_dir = ""
+
                 project_dir = os.path.join(git_root, relative_dir)
                 self._print_log(global_config, md_file, version, project_dir)
 
@@ -563,6 +568,11 @@ class ReportModule(BaseCliModule):
                     continue
                 f = open(os.path.join(package_metadata_dir, md_file))
                 (version, relative_dir) = f.readline().strip().split(" ")
+
+                # Hack for single project git repos:
+                if relative_dir == '/':
+                    relative_dir = ""
+
                 project_dir = os.path.join(git_root, relative_dir)
                 self._print_diff(global_config, md_file, version, project_dir,
                         relative_dir)
