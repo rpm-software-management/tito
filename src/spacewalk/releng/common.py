@@ -248,3 +248,17 @@ def get_latest_tagged_version(package_name):
         error_out("Error looking up latest tagged version in: %s" % file_path)
 
     return output
+
+
+def normalize_class_name(name):
+    """
+    Just a hack to accomodate tito config files with builder/tagger
+    classes referenced in the spacewalk.releng namespace, which has 
+    since been renamed to just tito.
+    """
+    look_for = "spacewalk.releng."
+    if name.startswith(look_for):
+        name = "%s%s" % ("tito.", name[len(look_for):])
+    return name
+
+

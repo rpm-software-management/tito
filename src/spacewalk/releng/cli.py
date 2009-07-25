@@ -28,7 +28,7 @@ from spacewalk.releng.tagger import VersionTagger, ReleaseTagger
 from spacewalk.releng.common import DEFAULT_BUILD_DIR
 from spacewalk.releng.common import (find_git_root, run_command,
         error_out, debug, get_project_name, get_relative_project_dir,
-        check_tag_exists, get_latest_tagged_version)
+        check_tag_exists, get_latest_tagged_version, normalize_class_name)
 
 BUILD_PROPS_FILENAME = "build.py.props"
 GLOBAL_BUILD_PROPS_FILENAME = "tito.props"
@@ -49,6 +49,7 @@ def get_class_by_name(name):
     NOTE: Does not actually create an instance of the object, only returns
     a Class object.
     """
+    name = normalize_class_name(name)
     # Split name into module and class name:
     tokens = name.split(".")
     class_name = tokens[-1]
