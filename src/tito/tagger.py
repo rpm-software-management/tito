@@ -60,6 +60,7 @@ class VersionTagger(object):
             self.git_user, self.git_email))
 
         self._no_auto_changelog = False
+        self._accept_auto_changelog = False
 
     def run(self, options):
         """
@@ -73,6 +74,8 @@ class VersionTagger(object):
                 " 'tito tag' will accomplish the same thing.")
         if options.no_auto_changelog:
             self._no_auto_changelog=True
+        if options.accept_auto_changelog:
+            self._accept_auto_changelog=True
         self._tag_release()
 
     def _tag_release(self):
@@ -152,11 +155,12 @@ class VersionTagger(object):
 
                 os.write(fd, "\n")
 
-                editor = 'vi'
-                if "EDITOR" in os.environ:
-                    editor = os.environ["EDITOR"]
-
-                subprocess.call([editor, name])
+                if not self._accept_auto_changelog:
+                    # Give the user a chance to edit the generated changelog:
+                    editor = 'vi'
+                    if "EDITOR" in os.environ:
+                        editor = os.environ["EDITOR"]
+                    subprocess.call([editor, name])
 
                 os.lseek(fd, 0, 0)
                 file = os.fdopen(fd)
@@ -231,7 +235,7 @@ class VersionTagger(object):
             if release:
                 bump_type = "bump-release"
 
-            script_path = "bump-version.pl"
+            script_path = get_script_path("bump-version.pl")
             cmd = "%s %s --specfile %s" % \
                     (script_path, bump_type, self.spec_file)
             run_command(cmd)

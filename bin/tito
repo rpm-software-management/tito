@@ -17,7 +17,7 @@
 import sys
 import os.path
 
-from spacewalk.releng.cli import CLI
+from tito.cli import CLI
 
 if __name__ == "__main__":
     CLI().main()

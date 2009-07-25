@@ -32,11 +32,11 @@ TEST_SCRIPT_DIR = os.path.abspath(os.path.dirname(sys.argv[0]))
 SRC_DIR = os.path.normpath(os.path.join(TEST_SCRIPT_DIR, "src/"))
 SRC_BIN_DIR = os.path.abspath(os.path.join(TEST_SCRIPT_DIR, "bin/"))
 
-os.environ['TITO_SRC_DIR'] = SRC_DIR
+os.environ['PYTHONPATH'] = SRC_DIR
 os.environ['TITO_SRC_BIN_DIR'] = SRC_BIN_DIR
 
 if __name__ == '__main__':
-    print("Running tito tests.")
+    print("Running tito tests against: %s" % SRC_DIR)
 
     import nose
     nose.main()

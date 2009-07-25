@@ -419,6 +419,9 @@ class TagModule(BaseCliModule):
                 default=False,
                 help=("Don't automatically create a changelog "
                     "entry for this tag if none is found"))
+        self.parser.add_option("--accept-auto-changelog", action="store_true",
+                default=False,
+                help=("Automatically accept the generated changelog."))
 
     def main(self):
         BaseCliModule.main(self)
@@ -471,9 +474,9 @@ class InitModule(BaseCliModule):
             # write out tito.props
             out_f = open(filename, 'w')
             out_f.write("[globalconfig]\n")
-            out_f.write("default_builder = %s\n" % DEFAULT_BUILDER)
+            out_f.write("default_builder = %s\n" % 'tito.builder.Builder')
             out_f.write(
-                "default_tagger = %s\n" % DEFAULT_TAGGER)
+                "default_tagger = %s\n" % 'tito.tagger.VersionTagger')
             out_f.close()
             print("   - wrote %s" % GLOBAL_BUILD_PROPS_FILENAME)
 

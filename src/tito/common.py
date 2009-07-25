@@ -20,9 +20,6 @@ import os.path
 import sys
 import commands
 
-#SCRIPT_DIR = os.path.abspath(os.path.join(os.path.dirname(
-#    os.path.abspath(sys.argv[0])), "../"))
-
 DEFAULT_BUILD_DIR = "/tmp/spacewalk-build"
 
 
@@ -202,7 +199,7 @@ def create_tgz(git_root, prefix, commit, relative_dir, rel_eng_dir,
     os.chdir(os.path.abspath(git_root))
     timestamp = get_commit_timestamp(commit)
 
-    timestamp_script = "tar-fixup-stamp-comment.pl"
+    timestamp_script = get_script_path("tar-fixup-stamp-comment.pl")
 
     #if not os.path.exists(timestamp_script):
     #    error_out("Unable to locate required script: %s" % timestamp_script)
@@ -262,3 +259,15 @@ def normalize_class_name(name):
     return name
 
 
+def get_script_path(scriptname):
+    """
+    Hack to accomodate functional tests running from source, rather than 
+    requiring tito to actually be installed. This variable is only set by
+    test scripts, normally we assume scripts are on PATH.
+    """
+    # TODO: Would be nice to get rid of this hack.
+    scriptpath = scriptname # assume on PATH by default
+    if 'TITO_SRC_BIN_DIR' in os.environ:
+        bin_dir = os.environ['TITO_SRC_BIN_DIR']
+        scriptpath = os.path.join(bin_dir, scriptname)
+    return scriptpath

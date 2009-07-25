@@ -579,7 +579,7 @@ class Builder(object):
             # file we're building off. (note that this is a temp copy of the
             # spec) Swap out the actual release for one that includes the git
             # SHA1 we're building for our test package:
-            setup_specfile_script = "test-setup-specfile.pl"
+            setup_specfile_script = get_script_path("test-setup-specfile.pl")
             cmd = "%s %s %s %s-%s %s" % \
                     (
                         setup_specfile_script,

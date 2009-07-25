@@ -32,6 +32,7 @@ TEST_DIR = '/tmp/titotests/'
 SINGLE_GIT = os.path.join(TEST_DIR, 'single.git')
 #MULTI_GIT = os.path.join(TEST_DIR, 'multi.git')
 
+TEST_PKG_NAME = 'tito-test-pkg'
 TEST_SPEC = """
 Name:           tito-test-pkg
 Version:        0.0.1
@@ -70,17 +71,21 @@ def tito(argstring):
     if 'TITO_SRC_BIN_DIR' in os.environ:
         bin_dir = os.environ['TITO_SRC_BIN_DIR']
         tito_path = os.path.join(bin_dir, 'tito')
-    run_command("%s %s" % (tito_path, argstring))
+    (status, output) = commands.getstatusoutput("%s %s" % (tito_path, 
+        argstring))
+    if status > 0:
+        print output
+        raise Exception()
 
-def cleanup_test_git_repos():
+def cleanup_temp_git():
     """ Delete the test directory if it exists. """
     if os.path.exists(TEST_DIR):
         #error_out("Test Git repo already exists: %s" % TEST_DIR)
         run_command('rm -rf %s' % TEST_DIR)
 
-def create_test_git_repo(multi_project=False):
+def create_temp_git(multi_project=False):
     """ Create a test git repository. """
-    cleanup_test_git_repos()
+    cleanup_temp_git()
 
     run_command('mkdir -p %s' % TEST_DIR)
     run_command('mkdir -p %s' % SINGLE_GIT)
@@ -108,9 +113,8 @@ def create_test_git_repo(multi_project=False):
 class TaggerTests(unittest.TestCase):
 
     def setUp(self):
-        create_test_git_repo()
+        create_temp_git()
 
-        # Probably already there but just to make sure:
         os.chdir(SINGLE_GIT)
         self.assertFalse(os.path.exists(os.path.join(SINGLE_GIT, "rel-eng")))
         tito("init")
@@ -122,10 +126,16 @@ class TaggerTests(unittest.TestCase):
 
     def tearDown(self):
         os.chdir('/tmp') # anywhere but the git repo were about to delete
-        cleanup_test_git_repos()
+        cleanup_temp_git()
 
-    def test_tag_new_package(self):
-        #tito("tag")
-        pass
+    def test_initial_tag_keep_version(self):
+        """ Create an initial package tag with --keep-version. """
+        tito("tag --keep-version --accept-auto-changelog --debug")
+        check_tag_exists("%s-0.0.1-1" % TEST_PKG_NAME, offline=True)
+
+    def test_initial_tag(self):
+        """ Test creating an initial tag. """
+        tito("tag --accept-auto-changelog --debug")
+        check_tag_exists("%s-0.0.2-1" % TEST_PKG_NAME, offline=True)
 
 
