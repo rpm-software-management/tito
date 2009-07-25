@@ -3,7 +3,7 @@
 Name: tito
 Version: 0.0.1
 Release:        1%{?dist}
-Summary: A tool for managing rpm based git projects.
+Summary: A tool for managing rpm based git projects
 
 Group: Development/Tools
 License: GPLv2

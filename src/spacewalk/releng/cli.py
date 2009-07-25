@@ -459,10 +459,13 @@ class InitModule(BaseCliModule):
         # calling main will result in a configuration error.
 
         rel_eng_dir = os.path.join(find_git_root(), "rel-eng")
+        print("Creating tito metadata in: %s" % rel_eng_dir)
+
         filename = os.path.join(rel_eng_dir, GLOBAL_BUILD_PROPS_FILENAME)
         if not os.path.exists(filename):
             if not os.path.exists(rel_eng_dir):
                 commands.getoutput("mkdir -p %s" % rel_eng_dir)
+                print("   - created %s" % rel_eng_dir)
 
             # write out tito.props
             out_f = open(filename, 'w')
@@ -471,14 +474,18 @@ class InitModule(BaseCliModule):
             out_f.write(
                 "default_tagger = spacewalk.releng.tagger.VersionTagger\n")
             out_f.close()
+            print("   - wrote %s" % GLOBAL_BUILD_PROPS_FILENAME)
 
+            commands.getoutput('git add %s' % filename)
             commands.getoutput('git commit -m "Initialized to use tito. "')
+            print("   - committed to git")
 
         pkg_dir = os.path.join(rel_eng_dir, "packages")
         if not os.path.exists(pkg_dir):
             commands.getoutput("mkdir -p %s" % pkg_dir)
+            print("   - created %s" % pkg_dir)
 
-        print("Initialized tito in %s" % rel_eng_dir)
+        print("Done!")
 
 
 class ReportModule(BaseCliModule):
