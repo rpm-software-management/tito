@@ -1,4 +1,3 @@
-=====
 ABOUT
 =====
 
@@ -24,7 +23,6 @@ Tito offers the following features:
    within it. 
 
 
-===============
 GETTING STARTED
 ===============
 
@@ -37,7 +35,6 @@ to git. This directory will store tito's configuration and package metadata on
 a per branch basis. It will be filtered out when creating .tar.gz's.
 
 
-================
 TAGGING PACKAGES
 ================
 
@@ -87,7 +84,7 @@ Once a package is tagged you will need to push both the auto-commit and the tag
 to your remote git repository before tito will let you build it. (better
 support for standalone git repositories is coming, for now --offline will help)
 
-=================
+
 BUILDING PACKAGES
 =================
 
@@ -111,7 +108,7 @@ recently committed work. (NOTE: does *not* include uncommitted changes)
 TODO: Document the use of --release, which is complicated and untested against
 Fedora's Koji.
 
-===============
+
 TROUBLESHOOTING
 ===============
 
