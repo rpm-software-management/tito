@@ -16,7 +16,6 @@ Code for tagging Spacewalk/Satellite packages.
 
 import os
 import re
-import sys
 import commands
 import StringIO
 import shutil
@@ -26,7 +25,9 @@ import textwrap
 
 from time import strftime
 
-from tito.common import *
+from tito.common import (debug, error_out, run_command, find_git_root,
+        find_spec_file, get_project_name, get_latest_tagged_version,
+        get_script_path, get_spec_version_and_release)
 
 
 class VersionTagger(object):

@@ -19,7 +19,9 @@ import re
 import sys
 import commands
 
-from tito.common import *
+from tito.common import (debug, run_command, error_out, find_git_root,
+        create_tgz, get_build_commit, find_spec_file, get_script_path,
+        get_git_head_commit, get_relative_project_dir, check_tag_exists)
 
 DEFAULT_KOJI_OPTS = "build --nowait"
 DEFAULT_CVS_BUILD_DIR = "cvswork"

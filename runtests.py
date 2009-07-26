@@ -18,9 +18,6 @@ Executes all tests.
 
 import sys
 import os
-import os.path
-
-import unittest
 
 # Make sure we run from the source, this is tricky because the functional
 # tests need to find both the location of the 'tito' executable script,

@@ -23,8 +23,6 @@ import ConfigParser
 
 from optparse import OptionParser
 
-from tito.builder import Builder, NoTgzBuilder
-from tito.tagger import VersionTagger, ReleaseTagger
 from tito.common import DEFAULT_BUILD_DIR
 from tito.common import (find_git_root, run_command,
         error_out, debug, get_project_name, get_relative_project_dir,

@@ -17,14 +17,11 @@ Functional Tests for Tito's Tagger Module
 NOTE: These tests require a makeshift git repository created in /tmp.
 """
 
-import sys
 import os
-import os.path
 
 import unittest
 
-import tito.cli # prevents a circular import
-from tito.common import *
+from tito.common import check_tag_exists, commands, run_command
 
 # A location where we can safely create a test git repository.
 # WARNING: This location will be destroyed if present.
@@ -65,7 +62,7 @@ rm -rf %{buildroot}
 %changelog
 """
 
-def tito(argstring):
+def run_tito(argstring):
     """ Run the tito script from source with given arguments. """
     tito_path = 'tito' # assume it's on PATH by default
     if 'TITO_SRC_BIN_DIR' in os.environ:
@@ -117,7 +114,7 @@ class TaggerTests(unittest.TestCase):
 
         os.chdir(SINGLE_GIT)
         self.assertFalse(os.path.exists(os.path.join(SINGLE_GIT, "rel-eng")))
-        tito("init")
+        run_tito("init")
         self.assertTrue(os.path.exists(os.path.join(SINGLE_GIT, "rel-eng")))
         self.assertTrue(os.path.exists(os.path.join(SINGLE_GIT, "rel-eng",
             "packages")))
@@ -130,12 +127,12 @@ class TaggerTests(unittest.TestCase):
 
     def test_initial_tag_keep_version(self):
         """ Create an initial package tag with --keep-version. """
-        tito("tag --keep-version --accept-auto-changelog --debug")
+        run_tito("tag --keep-version --accept-auto-changelog --debug")
         check_tag_exists("%s-0.0.1-1" % TEST_PKG_NAME, offline=True)
 
     def test_initial_tag(self):
         """ Test creating an initial tag. """
-        tito("tag --accept-auto-changelog --debug")
+        run_tito("tag --accept-auto-changelog --debug")
         check_tag_exists("%s-0.0.2-1" % TEST_PKG_NAME, offline=True)
 
 

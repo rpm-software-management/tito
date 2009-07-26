@@ -14,7 +14,7 @@
 
 """ Pure unit tests for tito's common module. """
 
-from tito.common import *
+from tito.common import normalize_class_name
 
 import unittest
 

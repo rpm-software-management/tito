@@ -16,7 +16,6 @@ Common operations.
 
 import os
 import re
-import os.path
 import sys
 import commands
 
