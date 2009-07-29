@@ -12,7 +12,7 @@
 # granted to use or replicate Red Hat trademarks that are incorporated
 # in this software or its documentation.
 """
-Functional Tests for Tito's Tagger Module
+Functional Tests for Tito at the CLI level.
 
 NOTE: These tests require a makeshift git repository created in /tmp.
 """
@@ -71,6 +71,7 @@ def run_tito(argstring):
     (status, output) = commands.getstatusoutput("%s %s" % (tito_path, 
         argstring))
     if status > 0:
+        print "Tito command failed, output:"
         print output
         raise Exception()
 
@@ -81,7 +82,13 @@ def cleanup_temp_git():
         run_command('rm -rf %s' % TEST_DIR)
 
 def create_temp_git(multi_project=False):
-    """ Create a test git repository. """
+    """ 
+    Create a test git repository. 
+    
+    Repository will have a functional spec file for a package named 
+    tito-test-pkg, be tito initiliazed and have one 0.0.1-1 tag created.
+    This is *ALL* you should count on in these tests.
+    """
     cleanup_temp_git()
 
     run_command('mkdir -p %s' % TEST_DIR)
@@ -106,29 +113,51 @@ def create_temp_git(multi_project=False):
     run_command('git add tito-test-pkg.spec')
     run_command('git commit -a -m "Initial commit."')
 
+def setup_module():
+    """ 
+    Python Nose will run this once and only once for all tests in this 
+    module. 
+    """
+    create_temp_git()
 
-class TaggerTests(unittest.TestCase):
+    os.chdir(SINGLE_GIT)
+    run_tito("init")
+
+    run_command('echo "offline = true" >> rel-eng/tito.props')
+    run_command('git add rel-eng/tito.props')
+    run_command('git commit -m "Setting offline"')
+
+    # Create initial 0.0.1 tag:
+    run_tito("tag --keep-version --accept-auto-changelog --debug")
+
+def teardown_module():
+    os.chdir('/tmp') # anywhere but the git repo were about to delete
+    cleanup_temp_git()
+
+
+class InitTests(unittest.TestCase):
 
     def setUp(self):
-        create_temp_git()
-
         os.chdir(SINGLE_GIT)
-        self.assertFalse(os.path.exists(os.path.join(SINGLE_GIT, "rel-eng")))
-        run_tito("init")
+     
+    def test_init(self):
         self.assertTrue(os.path.exists(os.path.join(SINGLE_GIT, "rel-eng")))
         self.assertTrue(os.path.exists(os.path.join(SINGLE_GIT, "rel-eng",
             "packages")))
         self.assertTrue(os.path.exists(os.path.join(SINGLE_GIT, "rel-eng",
             "tito.props")))
 
-    def tearDown(self):
-        os.chdir('/tmp') # anywhere but the git repo were about to delete
-        cleanup_temp_git()
+
+class TaggerTests(unittest.TestCase):
+
+    def setUp(self):
+        os.chdir(SINGLE_GIT)
 
     def test_initial_tag_keep_version(self):
         """ Create an initial package tag with --keep-version. """
-        run_tito("tag --keep-version --accept-auto-changelog --debug")
         check_tag_exists("%s-0.0.1-1" % TEST_PKG_NAME, offline=True)
+        self.assertTrue(os.path.exists(os.path.join(SINGLE_GIT, 
+            "rel-eng/packages", TEST_PKG_NAME)))
 
     def test_initial_tag(self):
         """ Test creating an initial tag. """
@@ -136,3 +165,25 @@ class TaggerTests(unittest.TestCase):
         check_tag_exists("%s-0.0.2-1" % TEST_PKG_NAME, offline=True)
 
 
+class BuilderTests(unittest.TestCase):
+
+    def setUp(self):
+        os.chdir(SINGLE_GIT)
+
+    def test_latest_tgz(self):
+        run_tito("build --tgz")
+
+    def test_tag_tgz(self):
+        run_tito("build --tgz --tag=%s-0.0.1-1" % TEST_PKG_NAME)
+
+    def test_latest_srpm(self):
+        run_tito("build --srpm")
+
+    def test_tag_srpm(self):
+        run_tito("build --srpm --tag=%s-0.0.1-1" % TEST_PKG_NAME)
+
+    def test_latest_rpm(self):
+        run_tito("build --rpm")
+
+    def test_tag_rpm(self):
+        run_tito("build --rpm --tag=%s-0.0.1-1" % TEST_PKG_NAME)
