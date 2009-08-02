@@ -85,9 +85,9 @@ def run_tito(argstring):
         tito_path = os.path.join(bin_dir, 'tito')
     (status, output) = commands.getstatusoutput("%s %s" % (tito_path, 
         argstring))
+    print output
     if status > 0:
         print "Tito command failed, output:"
-        print output
         raise Exception()
 
 def cleanup_temp_git():
@@ -140,6 +140,18 @@ def create_multi_project_git():
         full_pkg_dir = os.path.join(MULTI_GIT, pkg_dir)
         create_git_project(full_pkg_dir, pkg_name)
 
+    # For second test package, use a tito.props to override and use the 
+    # ReleaseTagger:
+    os.chdir(os.path.join(MULTI_GIT, TEST_PKG_2_DIR))
+    filename = os.path.join(MULTI_GIT, TEST_PKG_2_DIR, "build.py.props")
+    out_f = open(filename, 'w')
+    out_f.write("[buildconfig]\n")
+    out_f.write("tagger = tito.tagger.ReleaseTagger\n")
+    out_f.write("builder = tito.builder.Builder\n")
+    out_f.close()
+    run_command("git add build.py.props")
+    run_command('git commit -m "Adding tito.props."')
+
 def create_git_project(full_pkg_dir, pkg_name):
     """
     Write out test files for a git project at the specified location and 
@@ -182,7 +194,7 @@ def setup_module():
 
 def teardown_module():
     os.chdir('/tmp') # anywhere but the git repo were about to delete
-    cleanup_temp_git()
+    #cleanup_temp_git()
 
 
 class InitTests(unittest.TestCase):
@@ -213,6 +225,23 @@ class SingleProjectTaggerTests(unittest.TestCase):
         """ Test creating an initial tag. """
         run_tito("tag --accept-auto-changelog --debug")
         check_tag_exists("%s-0.0.2-1" % TEST_PKG_1, offline=True)
+
+
+class MultiProjectTaggerTests(unittest.TestCase):
+
+    def setUp(self):
+        os.chdir(MULTI_GIT)
+
+    def test_initial_tag_keep_version(self):
+        for pkg_name, pkg_dir in TEST_PKGS:
+            check_tag_exists("%s-0.0.1-1" % pkg_name, offline=True)
+            self.assertTrue(os.path.exists(os.path.join(MULTI_GIT, 
+                "rel-eng/packages", pkg_name)))
+
+    def test_release_tagger(self):
+        os.chdir(os.path.join(MULTI_GIT, TEST_PKG_2_DIR))
+        run_tito('tag --debug --accept-auto-changelog')
+        check_tag_exists("%s-0.0.1-2" % TEST_PKG_2, offline=True)
 
 
 class SingleProjectBuilderTests(unittest.TestCase):
