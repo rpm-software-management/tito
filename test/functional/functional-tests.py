@@ -272,19 +272,23 @@ class SingleProjectBuilderTests(unittest.TestCase):
         os.chdir(SINGLE_GIT)
 
     def test_latest_tgz(self):
-        run_tito("build --tgz")
+        run_tito("build --tgz -o %s" % SINGLE_GIT)
 
     def test_tag_tgz(self):
-        run_tito("build --tgz --tag=%s-0.0.1-1" % TEST_PKG_1)
+        run_tito("build --tgz --tag=%s-0.0.1-1 -o %s" % (TEST_PKG_1,
+            SINGLE_GIT))
+        self.assertTrue(os.path.exists(os.path.join(SINGLE_GIT, 
+            "%s-0.0.1.tar.gz" % TEST_PKG_1)))
 
     def test_latest_srpm(self):
         run_tito("build --srpm")
 
     def test_tag_srpm(self):
-        run_tito("build --srpm --tag=%s-0.0.1-1" % TEST_PKG_1)
+        run_tito("build --srpm --tag=%s-0.0.1-1 -o SINGLE_GIT" % TEST_PKG_1)
 
     def test_latest_rpm(self):
-        run_tito("build --rpm")
+        run_tito("build --rpm -o %s" % SINGLE_GIT)
 
     def test_tag_rpm(self):
-        run_tito("build --rpm --tag=%s-0.0.1-1" % TEST_PKG_1)
+        run_tito("build --rpm --tag=%s-0.0.1-1 -o %s" % (TEST_PKG_1, 
+            SINGLE_GIT))

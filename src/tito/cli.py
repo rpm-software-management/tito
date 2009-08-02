@@ -61,8 +61,12 @@ def read_user_config():
     try:
         f = open(file_loc)
     except:
-        # File doesn't exist but that's ok because it's optional.
-        return config
+        file_loc = os.path.expanduser("~/.titorc")
+        try:
+            f = open(file_loc)
+        except:
+            # File doesn't exist but that's ok because it's optional.
+            return config
 
     for line in f.readlines():
         if line.strip() == "":
@@ -139,6 +143,14 @@ class BaseCliModule(object):
             help="do not attempt any remote communication (avoid using " +
                 "this please)",
             default=False)
+
+        default_output_dir = lookup_build_dir(self.user_config)
+        self.parser.add_option("-o", "--output", dest="output_dir", 
+                metavar="OUTPUTDIR", default=default_output_dir,
+                help="Path to write temp files, tarballs and rpms to. "
+                    "(default %s)"
+                    % default_output_dir)
+
 
     def main(self):
         (self.options, args) = self.parser.parse_args()
@@ -300,6 +312,7 @@ class BuildModule(BaseCliModule):
                 help="Build rpm")
         self.parser.add_option("--dist", dest="dist", metavar="DISTTAG",
                 help="Dist tag to apply to srpm and/or rpm. (i.e. .el5)")
+
         self.parser.add_option("--test", dest="test", action="store_true",
                 help="use current branch HEAD instead of latest package tag")
         self.parser.add_option("--no-cleanup", dest="no_cleanup",
@@ -332,7 +345,7 @@ class BuildModule(BaseCliModule):
     def main(self):
         BaseCliModule.main(self)
 
-        build_dir = lookup_build_dir(self.user_config)
+        build_dir = os.path.normpath(os.path.abspath(self.options.output_dir))
         package_name = get_project_name(tag=self.options.tag)
 
         build_tag = None
@@ -437,7 +450,7 @@ class TagModule(BaseCliModule):
             debug("block_tagging defined in tito.props")
             error_out("Tagging has been disabled in this git branch.")
 
-        build_dir = lookup_build_dir(self.user_config)
+        build_dir = os.path.normpath(os.path.abspath(self.options.output_dir))
         package_name = get_project_name(tag=None)
 
         self.pkg_config = self._read_project_config(package_name, build_dir,

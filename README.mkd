@@ -123,3 +123,12 @@ If your project is standalone (no remote reference you communicate with as
 authoritative) you may wish to set offline = "true" in rel-eng/tito.props under
 the globalconfig section, so you do not need to specify --offline with each
 invocation.
+
+
+CONFIGURATION
+=============
+
+Some user specific settings can be defined in ~/.titorc:
+
+# Default Location to write temp files, tarballs and rpms to:
+RPMBUILD_BASEDIR = "/tmp/tito" 

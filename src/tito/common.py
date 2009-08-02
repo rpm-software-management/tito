@@ -19,7 +19,7 @@ import re
 import sys
 import commands
 
-DEFAULT_BUILD_DIR = "/tmp/spacewalk-build"
+DEFAULT_BUILD_DIR = "/tmp/tito"
 
 
 def error_out(error_msgs):
