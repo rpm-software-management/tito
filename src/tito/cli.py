@@ -28,7 +28,7 @@ from tito.common import (find_git_root, run_command,
         error_out, debug, get_project_name, get_relative_project_dir,
         check_tag_exists, get_latest_tagged_version, normalize_class_name)
 
-BUILD_PROPS_FILENAME = "build.py.props"
+BUILD_PROPS_FILENAME = "tito.props"
 GLOBAL_BUILD_PROPS_FILENAME = "tito.props"
 GLOBALCONFIG_SECTION = "globalconfig"
 DEFAULT_BUILDER = "default_builder"
@@ -190,14 +190,19 @@ class BaseCliModule(object):
         """
         Read and return project build properties if they exist.
 
-        This is done by checking for a build.py.props in the projects
-        directory at the time the tag was made.
+        How to describe this process... we're looking for a tito.props or
+        build.py.props (legacy name) file in the project directory.
+
+        If we're operating on a specific tag, we're looking for these same
+        file's contents back at the time the tag was created. (which we write
+        out to a temp file and use instead of the current file contents)
 
         To accomodate older tags prior to build.py, we also check for
         the presence of a Makefile with NO_TAR_GZ, and include a hack to
         assume build properties in this scenario.
 
-        If no project specific config can be found, use the global config.
+        If no project specific config can be found, settings come from the
+        global tito.props in rel-eng/.
         """
         debug("Determined package name to be: %s" % project_name)
 
@@ -209,6 +214,13 @@ class BaseCliModule(object):
         current_props_file = os.path.join(os.getcwd(), BUILD_PROPS_FILENAME)
         if (os.path.exists(current_props_file)):
             properties_file = current_props_file
+        else:
+            # HACK: Check for legacy build.py.props naming, needed to support
+            # older tags:
+            current_props_file = os.path.join(os.getcwd(), 
+                    "build.py.props")
+            if (os.path.exists(current_props_file)):
+                properties_file = current_props_file
 
         # Check for a build.py.props back when this tag was created and use it
         # instead. (if it exists)
@@ -219,6 +231,12 @@ class BaseCliModule(object):
                     BUILD_PROPS_FILENAME)
             debug(cmd)
             (status, output) = commands.getstatusoutput(cmd)
+            if status > 0:
+                # Give it another try looking for legacy props filename:
+                cmd = "git show %s:%s%s" % (tag, relative_dir,
+                        "build.py.props")
+                debug(cmd)
+                (status, output) = commands.getstatusoutput(cmd)
 
             temp_filename = "%s-%s" % (random.randint(1, 10000),
                     BUILD_PROPS_FILENAME)
@@ -252,7 +270,7 @@ class BaseCliModule(object):
             config.read(properties_file)
         else:
             debug("Unable to locate custom build properties for this package.")
-            debug("   Using global.build.py.props")
+            debug("   Using global.tito.props")
 
         # TODO: Not thrilled with this:
         if wrote_temp_file and not no_cleanup:

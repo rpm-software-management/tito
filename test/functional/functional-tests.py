@@ -21,7 +21,9 @@ import os
 
 import unittest
 
-from tito.common import check_tag_exists, commands, run_command
+from tito.common import check_tag_exists, commands, run_command, \
+        get_latest_tagged_version
+
 
 # A location where we can safely create a test git repository.
 # WARNING: This location will be destroyed if present.
@@ -83,8 +85,9 @@ def run_tito(argstring):
     if 'TITO_SRC_BIN_DIR' in os.environ:
         bin_dir = os.environ['TITO_SRC_BIN_DIR']
         tito_path = os.path.join(bin_dir, 'tito')
-    (status, output) = commands.getstatusoutput("%s %s" % (tito_path, 
-        argstring))
+    tito_cmd = "%s %s" % (tito_path, argstring)
+    print("Running: %s" % tito_cmd)
+    (status, output) = commands.getstatusoutput(tito_cmd)
     print output
     if status > 0:
         print "Tito command failed, output:"
@@ -143,13 +146,13 @@ def create_multi_project_git():
     # For second test package, use a tito.props to override and use the 
     # ReleaseTagger:
     os.chdir(os.path.join(MULTI_GIT, TEST_PKG_2_DIR))
-    filename = os.path.join(MULTI_GIT, TEST_PKG_2_DIR, "build.py.props")
+    filename = os.path.join(MULTI_GIT, TEST_PKG_2_DIR, "tito.props")
     out_f = open(filename, 'w')
     out_f.write("[buildconfig]\n")
     out_f.write("tagger = tito.tagger.ReleaseTagger\n")
     out_f.write("builder = tito.builder.Builder\n")
     out_f.close()
-    run_command("git add build.py.props")
+    run_command("git add tito.props")
     run_command('git commit -m "Adding tito.props."')
 
 def create_git_project(full_pkg_dir, pkg_name):
@@ -180,6 +183,10 @@ def create_git_project(full_pkg_dir, pkg_name):
     # Create initial 0.0.1 tag:
     run_tito("tag --keep-version --accept-auto-changelog --debug")
 
+def release_bumped(initial_version, new_version):
+    first_release = initial_version.split('-')[-1]
+    new_release = new_version.split('-')[-1]
+    return new_release == str(int(first_release) + 1)
 
 def setup_module():
     """ 
@@ -233,6 +240,7 @@ class MultiProjectTaggerTests(unittest.TestCase):
         os.chdir(MULTI_GIT)
 
     def test_initial_tag_keep_version(self):
+        # Tags were actually created in setup code:
         for pkg_name, pkg_dir in TEST_PKGS:
             check_tag_exists("%s-0.0.1-1" % pkg_name, offline=True)
             self.assertTrue(os.path.exists(os.path.join(MULTI_GIT, 
@@ -240,8 +248,22 @@ class MultiProjectTaggerTests(unittest.TestCase):
 
     def test_release_tagger(self):
         os.chdir(os.path.join(MULTI_GIT, TEST_PKG_2_DIR))
+        start_ver = get_latest_tagged_version(TEST_PKG_2)
         run_tito('tag --debug --accept-auto-changelog')
-        check_tag_exists("%s-0.0.1-2" % TEST_PKG_2, offline=True)
+        new_ver = get_latest_tagged_version(TEST_PKG_2)
+        self.assertTrue(release_bumped(start_ver, new_ver))
+
+    def test_release_tagger_legacy_props_file(self):
+        # Test that build.py.props filename is still picked up:
+        os.chdir(os.path.join(MULTI_GIT, TEST_PKG_2_DIR))
+        start_ver = get_latest_tagged_version(TEST_PKG_2)
+
+        run_command("git mv tito.props build.py.props")
+        run_command('git commit -a -m "Rename to build.py.props"')
+
+        run_tito('tag --debug --accept-auto-changelog')
+        new_ver = get_latest_tagged_version(TEST_PKG_2)
+        self.assertTrue(release_bumped(start_ver, new_ver))
 
 
 class SingleProjectBuilderTests(unittest.TestCase):
