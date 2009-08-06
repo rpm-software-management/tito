@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.0.1
+Version: 0.0.2
 Release:        1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -49,6 +49,14 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Thu Aug 06 2009 Devan Goodwin <dgoodwin@rm-rf.ca> 0.0.2-1
+- Introduce --output option for destination/tmp directory. (dgoodwin@rm-rf.ca)
+- Use tito.props for project specific config filename. (dgoodwin@rm-rf.ca)
+- Add multi-project repo tagging tests. (dgoodwin@rm-rf.ca)
+- Add support for offline (standalone) git repos. (dgoodwin@rm-rf.ca)
+- Fix reports for single project git repos. (dgoodwin@rm-rf.ca)
+- Add README documentation. (dgoodwin@rm-rf.ca)
+
 * Wed Jul 22 2009 Devan Goodwin <dgoodwin@rm-rf.ca> 0.0.1-1
 - Initial packaging.
 
