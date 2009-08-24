@@ -28,6 +28,11 @@ from tito.common import (find_git_root, run_command,
         error_out, debug, get_project_name, get_relative_project_dir,
         check_tag_exists, get_latest_tagged_version, normalize_class_name)
 
+# Hack for Python 2.4, seems to require we import these so they get compiled
+# before we try to dynamically import them based on a string name.
+import tito.tagger
+import tito.builder
+
 BUILD_PROPS_FILENAME = "tito.props"
 GLOBAL_BUILD_PROPS_FILENAME = "tito.props"
 GLOBALCONFIG_SECTION = "globalconfig"
