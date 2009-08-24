@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.0.3
+Version: 0.0.4
 Release:        1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -49,6 +49,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Mon Aug 24 2009 Devan Goodwin <dgoodwin@rm-rf.ca> 0.0.4-1
+- Hack to fix import of tagger/builder on Python 2.4. (dgoodwin@rm-rf.ca)
+
 * Thu Aug 06 2009 Devan Goodwin <dgoodwin@rm-rf.ca> 0.0.3-1
 - Introduce --output option for destination/tmp directory. (dgoodwin@rm-rf.ca)
 - Use tito.props for project specific config filename. (dgoodwin@rm-rf.ca)
