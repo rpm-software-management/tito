@@ -2,7 +2,7 @@
 
 Name: tito
 Version: 0.1.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary: A tool for managing rpm based git projects
 
 Group: Development/Tools
@@ -13,6 +13,7 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildArch: noarch
 BuildRequires: python-devel
+BuildRequires: python-setuptools
 
 %description
 Tito is a tool for managing tarballs, rpms, and builds for projects using
@@ -38,7 +39,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%doc README.mkd
+%doc README.mkd AUTHORS COPYING
 %{_bindir}/tito
 %{_bindir}/bump-version.pl
 %{_bindir}/tar-fixup-stamp-comment.pl
@@ -49,6 +50,13 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Mon Oct 19 2009 Devan Goodwin <dgoodwin@rm-rf.ca> 0.1.1-2
+- Fix spec file issues for Fedora inclusion.
+
+* Thu Oct 01 2009 Devan Goodwin <dgoodwin@rm-rf.ca> 0.1.1-2
+- Add AUTHORS and COPYING to doc.
+- Add BuildRequires on python-setuptools.
+
 * Tue Aug 25 2009 Devan Goodwin <dgoodwin@rm-rf.ca> 0.1.1-1
 - Bumping to 0.1.0 for first release. 
 
