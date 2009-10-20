@@ -50,9 +50,6 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
-* Mon Oct 19 2009 Devan Goodwin <dgoodwin@rm-rf.ca> 0.1.1-2
-- Fix spec file issues for Fedora inclusion.
-
 * Thu Oct 01 2009 Devan Goodwin <dgoodwin@rm-rf.ca> 0.1.1-2
 - Add AUTHORS and COPYING to doc.
 - Add BuildRequires on python-setuptools.
