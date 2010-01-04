@@ -1,0 +1,1 @@
+- Test building a tag pushed to remote repo, but when the commits referenced by the tag are not. (possible error reported from Spacewalk)
