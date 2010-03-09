@@ -243,8 +243,9 @@ class VersionTagger(object):
 
         new_version = self._get_spec_version_and_release()
         if new_version.strip() == "":
-            error_out("Error getting bumped package version. "
-                "(can spec file be parsed?)")
+            msg = "Error getting bumped package version, try: \n"
+            msg = msg + "  'rpm -qf --specfile %s'" % self.spec_file
+            error_out(msg)
         print("Tagging new version of %s: %s -> %s" % (self.project_name,
             old_version, new_version))
         return new_version
