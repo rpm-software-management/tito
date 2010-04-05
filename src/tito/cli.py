@@ -498,18 +498,19 @@ class InitModule(BaseCliModule):
         # DO NOT CALL BaseCliModule.main(self)
         # we are initializing tito to work in this module and
         # calling main will result in a configuration error.
+        should_commit = False
 
         rel_eng_dir = os.path.join(find_git_root(), "rel-eng")
         print("Creating tito metadata in: %s" % rel_eng_dir)
 
-        filename = os.path.join(rel_eng_dir, GLOBAL_BUILD_PROPS_FILENAME)
-        if not os.path.exists(filename):
+        propsfile = os.path.join(rel_eng_dir, GLOBAL_BUILD_PROPS_FILENAME)
+        if not os.path.exists(propsfile):
             if not os.path.exists(rel_eng_dir):
                 commands.getoutput("mkdir -p %s" % rel_eng_dir)
                 print("   - created %s" % rel_eng_dir)
 
             # write out tito.props
-            out_f = open(filename, 'w')
+            out_f = open(propsfile, 'w')
             out_f.write("[globalconfig]\n")
             out_f.write("default_builder = %s\n" % 'tito.builder.Builder')
             out_f.write(
@@ -517,14 +518,33 @@ class InitModule(BaseCliModule):
             out_f.close()
             print("   - wrote %s" % GLOBAL_BUILD_PROPS_FILENAME)
 
-            commands.getoutput('git add %s' % filename)
+            commands.getoutput('git add %s' % propsfile)
+            should_commit = True
+
+        # prep the packages metadata directory
+        pkg_dir = os.path.join(rel_eng_dir, "packages")
+        readme = os.path.join(pkg_dir, '.readme')
+
+        if not os.path.exists(readme):
+            if not os.path.exists(pkg_dir):
+                commands.getoutput("mkdir -p %s" % pkg_dir)
+                print("   - created %s" % pkg_dir)
+
+            # write out readme file explaining what pkg_dir is for
+            readme = os.path.join(pkg_dir, '.readme')
+            out_f = open(readme, 'w')
+            out_f.write("the rel-eng/packages directory contains metadata files\n")
+            out_f.write("named after their packages. Each file has the latest tagged\n")
+            out_f.write("version and the project's relative directory.\n")
+            out_f.close()
+            print("   - wrote %s" % readme)
+
+            commands.getoutput('git add %s' % readme)
+            should_commit = True
+
+        if should_commit:
             commands.getoutput('git commit -m "Initialized to use tito. "')
             print("   - committed to git")
-
-        pkg_dir = os.path.join(rel_eng_dir, "packages")
-        if not os.path.exists(pkg_dir):
-            commands.getoutput("mkdir -p %s" % pkg_dir)
-            print("   - created %s" % pkg_dir)
 
         print("Done!")
 
