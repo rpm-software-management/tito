@@ -172,6 +172,13 @@ def get_build_commit(tag, test=False):
         commit_id = run_command('git rev-list --max-count=1 %s' % tag_sha1)
         return commit_id
 
+def get_commit_count(commit_id):
+    """ Return the number of commits between the tag and commit_id"""
+    output = run_command(
+            "git describe %s | awk -F '-' '{ print $(NF-1) ; exit }'"
+            % commit_id)
+    return output
+
 
 def get_git_head_commit():
     """ Return the SHA1 of the HEAD commit on the current git branch. """

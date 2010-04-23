@@ -21,7 +21,8 @@ import commands
 
 from tito.common import (debug, run_command, error_out, find_git_root,
         create_tgz, get_build_commit, find_spec_file, get_script_path,
-        get_git_head_commit, get_relative_project_dir, check_tag_exists)
+        get_git_head_commit, get_relative_project_dir, check_tag_exists,
+        get_commit_count)
 
 DEFAULT_KOJI_OPTS = "build --nowait"
 DEFAULT_CVS_BUILD_DIR = "cvswork"
@@ -589,11 +590,12 @@ class Builder(object):
             # spec) Swap out the actual release for one that includes the git
             # SHA1 we're building for our test package:
             setup_specfile_script = get_script_path("test-setup-specfile.pl")
-            cmd = "%s %s %s %s-%s %s" % \
+            cmd = "%s %s %s %s %s-%s %s" % \
                     (
                         setup_specfile_script,
                         self.spec_file,
                         self.git_commit_id,
+                        self.commit_count,
                         self.project_name,
                         self.display_version,
                         self.tgz_filename,
@@ -623,7 +625,10 @@ class Builder(object):
         branch.
         """
         if self.test:
-            version = "git-" + get_git_head_commit()
+            head_commit = get_git_head_commit()
+            self.commit_count = get_commit_count(head_commit)
+            version = "git-%s.%s" % (self.commit_count, head_commit)
+            #version = "git-" + head_commit
         else:
             version = self.build_version.split("-")[0]
         return version
@@ -690,6 +695,7 @@ class NoTgzBuilder(Builder):
                         script,
                         self.spec_file,
                         self.git_commit_id,
+                        self.commit_count,
                     )
             run_command(cmd)
 

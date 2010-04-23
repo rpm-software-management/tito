@@ -16,7 +16,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-my ($IN, $SHA1, $DIR, $TAR_GZ) = @ARGV;
+my ($IN, $SHA1, $CNT, $DIR, $TAR_GZ) = @ARGV;
 open IN, $IN or die "Error reading [$IN]\n";
 my @lines = <IN>;
 close IN;
@@ -26,7 +26,7 @@ my ($have_release, $have_source, $have_setup) = (0, 0, 0);
 my $i = 0;
 for (@lines) {
 	no warnings 'uninitialized';
-	if (s/^(Release:\s*)(.+?)(%{\?dist})?\s*\n$/$1$2.git.$SHA1$3\n/i) {
+	if (s/^(Release:\s*)(.+?)(%{\?dist})?\s*\n$/$1$2.git.$CNT.$SHA1$3\n/i) {
 		if ($have_release) {
 			die "Duplicate Release line found in [$IN] at line [$i]\n";
 		}
