@@ -594,7 +594,7 @@ class Builder(object):
                     (
                         setup_specfile_script,
                         self.spec_file,
-                        self.git_commit_id,
+                        self.git_commit_id[:7],
                         self.commit_count,
                         self.project_name,
                         self.display_version,
@@ -627,7 +627,7 @@ class Builder(object):
         if self.test:
             head_commit = get_git_head_commit()
             self.commit_count = get_commit_count(head_commit)
-            version = "git-%s.%s" % (self.commit_count, head_commit)
+            version = "git-%s.%s" % (self.commit_count, head_commit[:7])
             #version = "git-" + head_commit
         else:
             version = self.build_version.split("-")[0]
