@@ -140,7 +140,7 @@ def get_project_name(tag=None):
                     spec_file_path)
 
         output = run_command(
-            "cat %s | grep 'Name:' | awk '{ print $2 ; exit }'" %
+            "rpm -q --qf '%%{name}\n' --specfile %s 2> /dev/null | head -1" %
             spec_file_path)
         return output
 
