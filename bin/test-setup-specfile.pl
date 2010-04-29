@@ -52,9 +52,9 @@ if (not $have_release) {
 if (defined $TAR_GZ and not $have_source) {
 	die "The specfile [$IN] does not seem to have Source: line we could use\n";
 }
-if (defined $DIR and not $have_setup) {
-	die "The specfile [$IN] does not seem to have %setup line we could use\n";
-}
+#if (defined $DIR and not $have_setup) {
+#	die "The specfile [$IN] does not seem to have %setup line we could use\n";
+#}
 
 my $OUT = "$IN.$SHA1";
 open OUT, "> $OUT" or die "Error writing [$OUT]\n";

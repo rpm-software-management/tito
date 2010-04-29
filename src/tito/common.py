@@ -164,7 +164,7 @@ def get_relative_project_dir(project_name, commit):
 def get_build_commit(tag, test=False):
     """ Return the git commit we should build. """
     if test:
-        return get_git_head_commit()
+        return get_latest_commit(".")
     else:
         tag_sha1 = run_command(
                 "git ls-remote ./. --tag %s | awk '{ print $1 ; exit }'"
@@ -172,18 +172,33 @@ def get_build_commit(tag, test=False):
         commit_id = run_command('git rev-list --max-count=1 %s' % tag_sha1)
         return commit_id
 
-def get_commit_count(commit_id):
+def get_commit_count(tag, commit_id):
     """ Return the number of commits between the tag and commit_id"""
-    output = run_command(
-            "git describe %s | awk -F '-' '{ print $(NF-1) ; exit }'"
-            % commit_id)
-    return output
+    # git describe returns either a tag-commitcount-gSHA1 OR
+    # just the tag.
+    #
+    # so we need to pass in the tag as well.
+    # output = run_command("git describe %s" % commit_id)
+    # if tag == output:
+    #     return 0
+    # else:
+    #     parse the count from the output
+    output = run_command("git describe %s" % commit_id)
 
+    debug("tag - %s" % tag)
+    debug("output - %s" % output)
 
-def get_git_head_commit():
-    """ Return the SHA1 of the HEAD commit on the current git branch. """
-    return commands.getoutput('git rev-parse --verify HEAD')
+    if tag != output:
+        # tag-commitcount-gSHA1, we want the penultimate value
+        cnt = output.split("-")[-2]
+        return cnt 
 
+    return 0
+
+def get_latest_commit(path="."):
+    """ Return the latest git commit for the given path. """
+    commit_id = run_command("git log --pretty=format:%%H --max-count=1 %s" % path)
+    return commit_id
 
 def get_commit_timestamp(sha1_or_tag):
     """

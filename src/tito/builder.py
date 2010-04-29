@@ -21,8 +21,8 @@ import commands
 
 from tito.common import (debug, run_command, error_out, find_git_root,
         create_tgz, get_build_commit, find_spec_file, get_script_path,
-        get_git_head_commit, get_relative_project_dir, check_tag_exists,
-        get_commit_count)
+        get_relative_project_dir, check_tag_exists,
+        get_commit_count, get_latest_commit)
 
 DEFAULT_KOJI_OPTS = "build --nowait"
 DEFAULT_CVS_BUILD_DIR = "cvswork"
@@ -625,10 +625,10 @@ class Builder(object):
         branch.
         """
         if self.test:
-            head_commit = get_git_head_commit()
-            self.commit_count = get_commit_count(head_commit)
-            version = "git-%s.%s" % (self.commit_count, head_commit[:7])
-            #version = "git-" + head_commit
+            # should get latest commit for given directory *NOT* HEAD
+            latest_commit = get_latest_commit(".")
+            self.commit_count = get_commit_count(self.build_tag, latest_commit)
+            version = "git-%s.%s" % (self.commit_count, latest_commit[:7])
         else:
             version = self.build_version.split("-")[0]
         return version
@@ -660,7 +660,7 @@ class NoTgzBuilder(Builder):
         self._setup_sources()
         self.ran_tgz = True
 
-        source_suffixes = ('.tar.gz', '.tar', '.zip', '.jar')
+        source_suffixes = ('.tar.gz', '.tar', '.zip', '.jar', '.gem')
         debug("Scanning for sources.")
         for filename in os.listdir(self.rpmbuild_gitcopy):
             for suffix in source_suffixes:
@@ -689,8 +689,9 @@ class NoTgzBuilder(Builder):
             # file we're building off. (note that this is a temp copy of the
             # spec) Swap out the actual release for one that includes the git
             # SHA1 we're building for our test package:
+            debug("setup_test_specfile:commit_count = %s" % str(self.commit_count))
             script = "test-setup-specfile.pl"
-            cmd = "%s %s %s" % \
+            cmd = "%s %s %s %s" % \
                     (
                         script,
                         self.spec_file,
