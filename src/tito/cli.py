@@ -460,6 +460,12 @@ class TagModule(BaseCliModule):
                 default=False,
                 help=("Automatically accept the generated changelog."))
 
+        self.parser.add_option("--auto-changelog-message",
+                dest="auto_changelog_msg", metavar="MESSAGE", 
+                help=("Use MESSAGE as the default changelog message for "
+                      "new packages"))
+
+
     def main(self):
         BaseCliModule.main(self)
 

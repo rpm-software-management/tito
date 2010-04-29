@@ -62,6 +62,7 @@ class VersionTagger(object):
 
         self._no_auto_changelog = False
         self._accept_auto_changelog = False
+        self._new_changelog_msg = "new package built with tito"
 
     def run(self, options):
         """
@@ -77,6 +78,8 @@ class VersionTagger(object):
             self._no_auto_changelog=True
         if options.accept_auto_changelog:
             self._accept_auto_changelog=True
+        if options.auto_changelog_msg:
+            self._new_changelog_msg = options.auto_changelog_msg
         self._tag_release()
 
     def _tag_release(self):
@@ -139,7 +142,7 @@ class VersionTagger(object):
                             (last_tag, "HEAD", ".")
                     output = run_command(patch_command)
                 else:
-                    output = "new package"
+                    output = self._new_changelog_msg
 
                 fd, name = tempfile.mkstemp()
                 os.write(fd, "# No changelog entry found; please "
