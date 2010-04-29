@@ -695,7 +695,7 @@ class NoTgzBuilder(Builder):
                     (
                         script,
                         self.spec_file,
-                        self.git_commit_id,
+                        self.git_commit_id[:7],
                         self.commit_count,
                     )
             run_command(cmd)
