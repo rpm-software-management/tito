@@ -86,41 +86,20 @@ class VersionTagger(object):
         """
         Tag a new version of the package. (i.e. x.y.z+1)
         """
-        self._check_today_in_changelog()
+        self._make_changelog()
         new_version = self._bump_version()
         self._check_tag_does_not_exist(self._get_new_tag(new_version))
         self._update_changelog(new_version)
 
         self._update_package_metadata(new_version)
 
-    def _check_today_in_changelog(self):
-        """
-        Verify that there is a changelog entry for today's date and the git
-        user's name and email address.
-
-        i.e. * Thu Nov 27 2008 My Name <me@example.com>
-        """
-        f = open(self.spec_file, 'r')
-        found_changelog = False
-        for line in f.readlines():
-            match = self.changelog_regex.match(line)
-            if not found_changelog and match:
-                found_changelog = True
-        f.close()
-
-        if not found_changelog:
-            if self._no_auto_changelog:
-                error_out("No changelog entry found: '* %s %s <%s>'" % (
-                    self.today, self.git_user, self.git_email))
-            else:
-                self._make_changelog()
-        else:
-            debug("Found changelog entry.")
-
     def _make_changelog(self):
         """
         Create a new changelog entry in the spec, with line items from git
         """
+        if self._no_auto_changelog:
+            debug("Skipping changelog generation.")
+
         in_f = open(self.spec_file, 'r')
         out_f = open(self.spec_file + ".new", 'w')
 
@@ -145,8 +124,7 @@ class VersionTagger(object):
                     output = self._new_changelog_msg
 
                 fd, name = tempfile.mkstemp()
-                os.write(fd, "# No changelog entry found; please "
-                    "edit the following\n")
+                os.write(fd, "# Create your changelog entry below:\n")
                 header = "* %s %s <%s>\n" % (self.today, self.git_user,
                         self.git_email)
 
@@ -374,7 +352,7 @@ class ReleaseTagger(VersionTagger):
         """
         Tag a new release of the package. (i.e. x.y.z-r+1)
         """
-        self._check_today_in_changelog()
+        self._make_changelog()
         new_version = self._bump_version(release=True)
 
         self._check_tag_does_not_exist(self._get_new_tag(new_version))
