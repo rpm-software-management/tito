@@ -136,12 +136,14 @@ def get_project_name(tag=None):
     else:
         spec_file_path = os.path.join(os.getcwd(), find_spec_file())
         if not os.path.exists(spec_file_path):
-            error_out("Unable to get project name from spec file: %s" %
-                    spec_file_path)
+            error_out("spec file: %s does not exist" % spec_file_path)
 
         output = run_command(
             "rpm -q --qf '%%{name}\n' --specfile %s 2> /dev/null | head -1" %
             spec_file_path)
+        if not output:
+            error_out("Unable to determine project name from spec file: %s" %
+                spec_file_path)
         return output
 
 
