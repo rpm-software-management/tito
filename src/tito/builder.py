@@ -42,7 +42,7 @@ class Builder(object):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None, dist=None,
-            test=False, offline=False):
+            test=False, offline=False, auto_install=False):
 
         self.git_root = find_git_root()
         self.rel_eng_dir = os.path.join(self.git_root, "rel-eng")
@@ -56,6 +56,7 @@ class Builder(object):
         self.user_config = user_config
         self.offline=offline
         self.no_cleanup = False
+        self.auto_install = auto_install
 
         # Override global configurations using local configurations
         for section in pkg_config.sections():
@@ -221,6 +222,14 @@ class Builder(object):
         if len(files_written) < 2:
             error_out("Error parsing rpmbuild output")
         self.srpm_location = files_written[0]
+        debug("Binary rpms: %s" % files_written[1:])
+
+        if self.auto_install:
+            print("Auto-installing packages:")
+            if len(files_written[1:]) > 0:
+                cmd = "sudo rpm -Uvh --force %s" % ' '.join(files_written[1:])
+                print("   %s" % cmd)
+                run_command(cmd)
 
     def release(self):
         """
@@ -643,12 +652,13 @@ class NoTgzBuilder(Builder):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None, dist=None,
-            test=False, offline=False):
+            test=False, offline=False, auto_install=False):
 
         Builder.__init__(self, name=name, version=version, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
-                dist=dist, test=test, offline=offline)
+                dist=dist, test=test, offline=offline, 
+                auto_install=auto_install)
 
         # When syncing files with CVS, copy everything from git:
         self.cvs_copy_extensions = ("", )
@@ -710,12 +720,13 @@ class CvsBuilder(NoTgzBuilder):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None, dist=None,
-            test=False, offline=False):
+            test=False, offline=False, auto_install=False):
 
         NoTgzBuilder.__init__(self, name=name, version=version, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
-                dist=dist, test=test, offline=offline)
+                dist=dist, test=test, offline=offline, 
+                auto_install=auto_install)
 
         # TODO: Hack to override here, patches are in a weird place with this
         # builder.
@@ -817,12 +828,13 @@ class SatelliteBuilder(NoTgzBuilder):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None, dist=None,
-            test=False, offline=False):
+            test=False, offline=False, auto_install=False):
 
         NoTgzBuilder.__init__(self, name=name, version=version, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
-                dist=dist, test=test, offline=offline)
+                dist=dist, test=test, offline=offline, 
+                auto_install=auto_install)
 
         if not pkg_config or not pkg_config.has_option("buildconfig",
                 "upstream_name"):

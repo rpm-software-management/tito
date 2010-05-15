@@ -328,6 +328,10 @@ class BuildModule(BaseCliModule):
                 help="Build srpm")
         self.parser.add_option("--rpm", dest="rpm", action="store_true",
                 help="Build rpm")
+        self.parser.add_option("-i", "--install", dest="auto_install", 
+                action="store_true", default=False,
+                help="Install any binary rpms being built. (WARNING: " + \
+                    "uses sudo rpm -Uvh --force)")
         self.parser.add_option("--dist", dest="dist", metavar="DISTTAG",
                 help="Dist tag to apply to srpm and/or rpm. (i.e. .el5)")
 
@@ -417,7 +421,8 @@ class BuildModule(BaseCliModule):
                 user_config=self.user_config,
                 dist=options.dist,
                 test=options.test,
-                offline=options.offline)
+                offline=options.offline,
+                auto_install=options.auto_install)
         return builder
 
     def _validate_options(self):
