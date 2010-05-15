@@ -114,7 +114,7 @@ class Builder(object):
                 debug("cvs_root = %s" % self.cvs_root)
             if self.config.has_option("cvs", "branches"):
                 self.cvs_branches = \
-                    config.get("cvs", "branches").split(" ")
+                    self.config.get("cvs", "branches").split(" ")
 
         # TODO: if it looks like we need custom CVSROOT's for different users,
         # allow setting of a property to lookup in ~/.spacewalk-build-rc to
