@@ -24,7 +24,7 @@ import ConfigParser
 from optparse import OptionParser
 
 from tito.common import DEFAULT_BUILD_DIR
-from tito.common import (find_git_root, run_command,
+from tito.common import (find_git_root, run_command, get_class_by_name,
         error_out, debug, get_project_name, get_relative_project_dir,
         check_tag_exists, get_latest_tagged_version, normalize_class_name)
 
@@ -43,34 +43,6 @@ ASSUMED_NO_TAR_GZ_PROPS = """
 builder = tito.builder.NoTgzBuilder
 tagger = tito.tagger.ReleaseTagger
 """
-
-
-def get_class_by_name(name):
-    """
-    Get a Python class specified by it's fully qualified name.
-
-    NOTE: Does not actually create an instance of the object, only returns
-    a Class object.
-    """
-    name = normalize_class_name(name)
-    # Split name into module and class name:
-    tokens = name.split(".")
-    class_name = tokens[-1]
-    module = ""
-
-    for s in tokens[0:-1]:
-        if module:
-            module = module + "."
-        module = module + s
-
-    mod = __import__(tokens[0])
-    components = name.split('.')
-    for comp in components[1:-1]:
-        mod = getattr(mod, comp)
-
-    debug("Importing %s" % name)
-    c = getattr(mod, class_name)
-    return c
 
 
 def read_user_config():

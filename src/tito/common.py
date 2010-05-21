@@ -60,7 +60,7 @@ def find_git_root():
         error_out(["%s does not appear to be within a git checkout." % \
                 os.getcwd()])
 
-    if cdup == "":
+    if cdup.strip() == "":
         cdup = "./"
     return os.path.abspath(cdup)
 
@@ -294,3 +294,33 @@ def get_script_path(scriptname):
         bin_dir = os.environ['TITO_SRC_BIN_DIR']
         scriptpath = os.path.join(bin_dir, scriptname)
     return scriptpath
+
+
+def get_class_by_name(name):
+    """
+    Get a Python class specified by it's fully qualified name.
+
+    NOTE: Does not actually create an instance of the object, only returns
+    a Class object.
+    """
+    name = normalize_class_name(name)
+    # Split name into module and class name:
+    tokens = name.split(".")
+    class_name = tokens[-1]
+    module = ""
+
+    for s in tokens[0:-1]:
+        if module:
+            module = module + "."
+        module = module + s
+
+    mod = __import__(tokens[0])
+    components = name.split('.')
+    for comp in components[1:-1]:
+        mod = getattr(mod, comp)
+
+    debug("Importing %s" % name)
+    c = getattr(mod, class_name)
+    return c
+
+
