@@ -43,12 +43,6 @@ builder = tito.builder.NoTgzBuilder
 tagger = tito.tagger.ReleaseTagger
 """
 
-lib_dir = os.path.join(find_git_root(), "rel-eng", "lib")
-if os.path.exists(lib_dir):
-    sys.path.append(lib_dir)
-    debug("Added lib dir to PYTHONPATH: %s." % lib_dir)
-
-
 def read_user_config():
     config = {}
     file_loc = os.path.expanduser("~/.spacewalk-build-rc")
@@ -162,6 +156,23 @@ class BaseCliModule(object):
 
         if self.options.debug:
             os.environ['DEBUG'] = "true"
+
+        # Check if global config defines a custom lib dir:
+        if self.global_config.has_option(GLOBALCONFIG_SECTION,
+                "lib_dir"):
+            lib_dir = self.global_config.get(GLOBALCONFIG_SECTION, 
+                    "lib_dir")
+            if lib_dir[0] != '/':
+                # Looks like a relative path, assume from the git root:
+                lib_dir = os.path.join(find_git_root(), lib_dir)
+
+            if os.path.exists(lib_dir):
+                sys.path.append(lib_dir)
+                debug("Added lib dir to PYTHONPATH: %s" % lib_dir)
+            else:
+                print("WARNING: lib_dir specified but does not exist: %s" %
+                        lib_dir)
+
 
     def _read_global_config(self):
         """
