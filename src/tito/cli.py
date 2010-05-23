@@ -26,6 +26,7 @@ from tito.common import DEFAULT_BUILD_DIR
 from tito.common import (find_git_root, run_command, get_class_by_name,
         error_out, debug, get_project_name, get_relative_project_dir,
         check_tag_exists, get_latest_tagged_version, normalize_class_name)
+from tito.exception import *
 
 # Hack for Python 2.4, seems to require we import these so they get compiled
 # before we try to dynamically import them based on a string name.
@@ -457,6 +458,8 @@ class TagModule(BaseCliModule):
                 help=("Use MESSAGE as the default changelog message for "
                       "new packages"))
 
+        self.parser.add_option("--undo", "-u", dest="undo", action="store_true",
+                help="Undo the most recent (un-pushed) tag.")
 
     def main(self):
         BaseCliModule.main(self)
@@ -483,7 +486,12 @@ class TagModule(BaseCliModule):
 
         tagger = tagger_class(global_config=self.global_config,
                 keep_version=self.options.keep_version)
-        tagger.run(self.options)
+
+        try:
+            tagger.run(self.options)
+        except TitoException, e:
+            error_out(e.message)
+
 
 
 class InitModule(BaseCliModule):

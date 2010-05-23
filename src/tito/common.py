@@ -1,4 +1,4 @@
-# Copyright (c) 2008-2009 Red Hat, Inc.
+# Copyright (c) 2008-2010 Red Hat, Inc.
 #
 # This software is licensed to you under the GNU General Public License,
 # version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -26,11 +26,13 @@ def error_out(error_msgs):
     """
     Print the given error message (or list of messages) and exit.
     """
+    print
     if isinstance(error_msgs, list):
         for line in error_msgs:
             print("ERROR: %s" % line)
     else:
         print("ERROR: %s" % error_msgs)
+    print
     sys.exit(1)
 
 
@@ -76,32 +78,88 @@ def run_command(command):
     return output
 
 
+def tag_exists_locally(tag):
+    (status, output) = commands.getstatusoutput("git tag | grep %s" % tag)
+    if status > 0:
+        return False
+    else: 
+        return True
+
+def tag_exists_remotely(tag):
+    """ Returns True if the tag exists in the remote git repo. """
+    repo_url = get_git_repo_url()
+    sha1 = get_remote_tag_sha1(tag)
+    debug("sha1 = %s" % sha1)
+    if sha1 == "":
+        return False
+    return True
+
+
+def get_local_tag_sha1(tag):
+    tag_sha1 = run_command(
+            "git ls-remote ./. --tag %s | awk '{ print $1 ; exit }'"
+            % tag)
+    return tag_sha1
+
+def head_points_to_tag(tag):
+    """ 
+    Ensure the current git head is the same commit as tag.
+
+    For some reason the git commands we normally use to fetch SHA1 for a tag
+    do not work when comparing to the HEAD SHA1. Using a different command
+    for now.
+    """
+    debug("Checking that HEAD commit is %s" % tag)
+    head_sha1 = run_command("git rev-list --max-count=1 HEAD")
+    tag_sha1 = run_command("git rev-list --max-count=1 %s" % tag)
+    debug("   head_sha1 = %s" % head_sha1)
+    debug("   tag_sha1 = %s" % tag_sha1)
+    return head_sha1 == tag_sha1
+
+def undo_tag(tag):
+    """
+    Executes git commands to delete the given tag and undo the most recent
+    commit. Assumes you have taken necessary precautions to ensure this is 
+    what you want to do.
+    """
+    # Using --merge here as it appears to undo the changes in the commit,
+    # but preserve any modified files:
+    output = run_command("git tag -d %s && git reset --merge HEAD^1" % tag)
+    print(output)
+
+def get_remote_tag_sha1(tag):
+    """
+    Get the SHA1 referenced by this git tag in the remote git repo.
+    Will return "" if the git tag does not exist remotely.
+    """
+    repo_url = get_git_repo_url()
+    print("Checking for tag [%s] in git repo [%s]" % (tag, repo_url))
+    cmd = "git ls-remote %s --tag %s | awk '{ print $1 ; exit }'" % \
+            (repo_url, tag)
+    upstream_tag_sha1 = run_command(cmd)
+    return upstream_tag_sha1
+
 def check_tag_exists(tag, offline=False):
     """
     Check that the given git tag exists in a git repository.
     """
-    (status, output) = commands.getstatusoutput("git tag | grep %s" % tag)
-    if status > 0:
+    if not tag_exists_locally(tag):
         error_out("Tag does not exist locally: [%s]" % tag)
-
-    tag_sha1 = run_command(
-            "git ls-remote ./. --tag %s | awk '{ print $1 ; exit }'"
-            % tag)
-    debug("Local tag SHA1: %s" % tag_sha1)
 
     if offline:
         return
 
+    tag_sha1 = get_local_tag_sha1(tag)
+    debug("Local tag SHA1: %s" % tag_sha1)
+
     repo_url = get_git_repo_url()
-    print("Checking for tag [%s] in git repo [%s]" % (tag, repo_url))
-    upstream_tag_sha1 = run_command(
-            "git ls-remote %s --tag %s | awk '{ print $1 ; exit }'" %
-            (repo_url, tag))
+    upstream_tag_sha1 = get_remote_tag_sha1(tag)
     if upstream_tag_sha1 == "":
         error_out(["Tag does not exist in remote git repo: %s" % tag,
             "You must tag, then git push and git push --tags"])
 
     debug("Remote tag SHA1: %s" % upstream_tag_sha1)
+
     if upstream_tag_sha1 != tag_sha1:
         error_out("Tag %s references %s locally but %s upstream." % (tag,
             tag_sha1, upstream_tag_sha1))

@@ -27,7 +27,9 @@ from time import strftime
 
 from tito.common import (debug, error_out, run_command, find_git_root,
         find_spec_file, get_project_name, get_latest_tagged_version,
-        get_script_path, get_spec_version_and_release, replace_version)
+        get_script_path, get_spec_version_and_release, replace_version,
+        tag_exists_locally, tag_exists_remotely, head_points_to_tag, undo_tag)
+from tito.exception import TitoException
 
 
 class VersionTagger(object):
@@ -80,7 +82,12 @@ class VersionTagger(object):
             self._accept_auto_changelog=True
         if options.auto_changelog_msg:
             self._new_changelog_msg = options.auto_changelog_msg
-        self._tag_release()
+
+        # Only two paths through the tagger module right now:
+        if options.undo:
+            self._undo()
+        else:
+            self._tag_release()
 
     def _tag_release(self):
         """
@@ -92,6 +99,30 @@ class VersionTagger(object):
         self._update_changelog(new_version)
         self._update_setup_py(new_version)
         self._update_package_metadata(new_version)
+
+    def _undo(self):
+        """
+        Undo the most recent tag.
+
+        Tag commit must be the most recent commit, and the tag must not
+        exist in the remote git repo, otherwise we report and error out.
+        """
+        tag = "%s-%s" % (self.project_name, 
+                get_latest_tagged_version(self.project_name))
+        print("Undoing tag: %s" % tag)
+        if not tag_exists_locally(tag):
+            raise TitoException(
+                    "Cannot undo tag that does not exist locally.")
+        if tag_exists_remotely(tag):
+            raise TitoException("Cannot undo tag that has been pushed.")
+
+        # Tag must be the most recent commit. 
+        if not head_points_to_tag(tag):
+            raise TitoException("Cannot undo if tag is not the most recent commit.")
+
+        # Everything looks good:
+        print
+        undo_tag(tag)
 
     def _make_changelog(self):
         """
