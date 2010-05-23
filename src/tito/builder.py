@@ -223,9 +223,13 @@ class Builder(object):
         if len(files_written) < 2:
             error_out("Error parsing rpmbuild output")
         self.srpm_location = files_written[0]
-        debug("Binary rpms: %s" % files_written[1:])
+
+        print
+        print("Successfully built: %s" % ' '.join(files_written))
+
 
         if self.auto_install:
+            print
             print("Auto-installing packages:")
             if len(files_written[1:]) > 0:
                 cmd = "sudo rpm -Uvh --force %s" % ' '.join(files_written[1:])
