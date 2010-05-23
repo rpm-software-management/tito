@@ -11,8 +11,7 @@
 # granted to use or replicate Red Hat trademarks that are incorporated
 # in this software or its documentation.
 """
-Command line interface for building Spacewalk and Satellite packages
-from git tags.
+Tito's Command Line Interface
 """
 
 import sys

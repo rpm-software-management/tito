@@ -16,6 +16,7 @@ Code for building Spacewalk/Satellite tarballs, srpms, and rpms.
 
 import os
 import sys
+import re
 import commands
 
 from tito.common import (debug, run_command, error_out, find_git_root,
@@ -898,16 +899,83 @@ class UpstreamBuilder(NoTgzBuilder):
         if (self.upstream_tag == self.build_tag and not self.test):
             return
 
-        self._generate_patches()
+        self.patch_upstream()
 
-    def _generate_patches(self):
+    def patch_upstream(self):
         """
         Generate patches for any differences between our tag and the
-        upstream tag.
+        upstream tag, and apply them into an exported copy of the 
+        spec file.
         """
-        from tito.strategy.patcher import DefaultPatcher
-        patcher = DefaultPatcher(builder=self)
-        patcher.run()
+        patch_filename = "%s-to-%s-%s.patch" % (self.upstream_tag,
+                self.project_name, self.build_version)
+        patch_file = os.path.join(self.rpmbuild_gitcopy,
+                patch_filename)
+        patch_dir = self.git_root
+        if self.relative_project_dir != "/":
+            patch_dir = os.path.join(self.git_root, 
+                    self.relative_project_dir)
+        os.chdir(patch_dir)
+        debug("patch dir = %s" % patch_dir)
+        print("Generating patch [%s]" % patch_filename)
+        debug("Patch: %s" % patch_file)
+        patch_command = "git diff --relative %s..%s > %s" % \
+                (self.upstream_tag, self.git_commit_id, 
+                        patch_file)
+        debug("Generating patch with: %s" % patch_command)
+        output = run_command(patch_command)
+        print(output)
+        # Creating two copies of the patch here in the temp build directories
+        # just out of laziness. Some builders need sources in SOURCES and
+        # others need them in the git copy. Being lazy here avoids one-off
+        # hacks and both copies get cleaned up anyhow.
+        run_command("cp %s %s" % (patch_file, self.rpmbuild_sourcedir))
+
+        # Insert patches into the spec file we'll be building:
+        f = open(self.spec_file, 'r')
+        lines = f.readlines()
+
+        patch_pattern = re.compile('^Patch(\d+):')
+        source_pattern = re.compile('^Source\d+:')
+
+        # Find the largest PatchX: line, or failing that SourceX:
+        patch_number = 0 # What number should we use for our PatchX line
+        patch_insert_index = 0 # Where to insert our PatchX line in the list
+        patch_apply_index = 0 # Where to insert our %patchX line in the list
+        array_index = 0 # Current index in the array
+        for line in lines:
+            match = source_pattern.match(line)
+            if match:
+                patch_insert_index = array_index + 1
+
+            match = patch_pattern.match(line)
+            if match:
+                patch_insert_index = array_index + 1
+                patch_number = int(match.group(1)) + 1
+
+            if line.startswith("%prep"):
+                # We'll apply patch right after prep if there's no %setup line
+                patch_apply_index = array_index + 2
+            elif line.startswith("%setup"):
+                patch_apply_index = array_index + 2 # already added a line
+
+            array_index += 1
+
+        debug("patch_insert_index = %s" % patch_insert_index)
+        debug("patch_apply_index = %s" % patch_apply_index)
+        if patch_insert_index == 0 or patch_apply_index == 0:
+            error_out("Unable to insert PatchX or %patchX lines in spec file")
+
+        lines.insert(patch_insert_index, "Patch%s: %s\n" % (patch_number,
+            patch_filename))
+        lines.insert(patch_apply_index, "%%patch%s -p1\n" % (patch_number))
+        f.close()
+
+        # Now write out the modified lines to the spec file copy:
+        f = open(self.spec_file, 'w')
+        for line in lines:
+            f.write(line)
+        f.close()
 
     def _get_upstream_version(self):
         """
