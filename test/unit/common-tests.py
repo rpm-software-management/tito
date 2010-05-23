@@ -14,7 +14,7 @@
 
 """ Pure unit tests for tito's common module. """
 
-from tito.common import normalize_class_name
+from tito.common import *
 
 import unittest
 
@@ -28,4 +28,49 @@ class CommonTests(unittest.TestCase):
                 normalize_class_name("spacewalk.releng.builder.Builder"))
         self.assertEquals("tito.tagger.VersionTagger", 
                 normalize_class_name("spacewalk.releng.tagger.VersionTagger"))
+
+    def test_replace_version_leading_whitespace(self):
+        line = "    version='1.0'\n"
+        expected = "    version='2.5.3'\n"
+        self.assertEquals(expected, replace_version(line, "2.5.3"))
+
+    def test_replace_version_no_whitespace(self):
+        line = "version='1.0'\n"
+        expected = "version='2.5.3'\n"
+        self.assertEquals(expected, replace_version(line, "2.5.3"))
+
+    def test_replace_version_some_whitespace(self):
+        line = "version = '1.0'\n"
+        expected = "version = '2.5.3'\n"
+        self.assertEquals(expected, replace_version(line, "2.5.3"))
+
+    def test_replace_version_double_quote(self):
+        line = 'version="1.0"\n'
+        expected = 'version="2.5.3"\n'
+        self.assertEquals(expected, replace_version(line, "2.5.3"))
+
+    def test_replace_version_trailing_chars(self):
+        line = "version = '1.0', blah blah blah\n"
+        expected = "version = '2.5.3', blah blah blah\n"
+        self.assertEquals(expected, replace_version(line, "2.5.3"))
+
+    def test_replace_version_crazy_old_version(self):
+        line = "version='1.0asjhd82371kjsdha98475h87asd7---asdai.**&'\n"
+        expected = "version='2.5.3'\n"
+        self.assertEquals(expected, replace_version(line, "2.5.3"))
+
+    def test_replace_version_crazy_new_version(self):
+        line = "version='1.0'\n"
+        expected = "version='91asj.;]][[a]sd[]'\n"
+        self.assertEquals(expected, replace_version(line, 
+            "91asj.;]][[a]sd[]"))
+
+    def test_replace_version_uppercase(self):
+        line = "VERSION='1.0'\n"
+        expected = "VERSION='2.5.3'\n"
+        self.assertEquals(expected, replace_version(line, "2.5.3"))
+
+    def test_replace_version_no_match(self):
+        line = "this isn't a version fool.\n"
+        self.assertEquals(line, replace_version(line, "2.5.3"))
 

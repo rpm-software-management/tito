@@ -147,6 +147,29 @@ def get_project_name(tag=None):
         return output
 
 
+def replace_version(line, new_version):
+    """
+    Attempts to replace common setup.py version formats in the given line,
+    and return the modified line. If no version is present the line is 
+    returned as is.
+
+    Looking for things like version="x.y.z" with configurable case, 
+    whitespace, and optional use of single/double quotes.
+    """
+    # Mmmmm pretty regex!
+    ver_regex = re.compile("(\s*)(version)(\s*)(=)(\s*)(['\"])(.*)(['\"])(.*)",
+            re.IGNORECASE)
+    m = ver_regex.match(line)
+    if m:
+        result_tuple = list(m.group(1, 2, 3, 4, 5, 6))
+        result_tuple.append(new_version)
+        result_tuple.extend(list(m.group(8, 9)))
+        new_line = "%s%s%s%s%s%s%s%s%s\n" % tuple(result_tuple)
+        return new_line
+    else:
+        return line
+
+
 def get_relative_project_dir(project_name, commit):
     """
     Return the project's sub-directory relative to the git root.

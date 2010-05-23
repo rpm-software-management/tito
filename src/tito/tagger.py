@@ -27,7 +27,7 @@ from time import strftime
 
 from tito.common import (debug, error_out, run_command, find_git_root,
         find_spec_file, get_project_name, get_latest_tagged_version,
-        get_script_path, get_spec_version_and_release)
+        get_script_path, get_spec_version_and_release, replace_version)
 
 
 class VersionTagger(object):
@@ -90,7 +90,7 @@ class VersionTagger(object):
         new_version = self._bump_version()
         self._check_tag_does_not_exist(self._get_new_tag(new_version))
         self._update_changelog(new_version)
-
+        self._update_setup_py(new_version)
         self._update_package_metadata(new_version)
 
     def _make_changelog(self):
@@ -185,6 +185,34 @@ class VersionTagger(object):
         f.write(buf.getvalue())
         f.close()
         buf.close()
+
+    def _update_setup_py(self, new_version):
+        """
+        If this project has a setup.py, attempt to update it's version. 
+        """
+        setup_file = os.path.join(self.full_project_dir, "setup.py")
+        if not os.path.exists(setup_file):
+            return
+
+        debug("Found setup.py, attempting to update version.")
+
+        # We probably don't want version-release in setup.py as release is 
+        # an rpm concept. Hopefully this assumption on 
+        py_new_version = new_version.split('-')[0]
+
+        f = open(setup_file, 'r')
+        buf = StringIO.StringIO()
+        for line in f.readlines():
+            buf.write(replace_version(line, py_new_version))
+        f.close()
+
+        # Write out the new setup.py file contents:
+        f = open(setup_file, 'w')
+        f.write(buf.getvalue())
+        f.close()
+        buf.close()
+
+        run_command("git add %s" % setup_file)
 
     def _get_relative_project_dir(self, git_root):
         """
