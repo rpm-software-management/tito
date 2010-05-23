@@ -43,6 +43,11 @@ builder = tito.builder.NoTgzBuilder
 tagger = tito.tagger.ReleaseTagger
 """
 
+lib_dir = os.path.join(find_git_root(), "rel-eng", "lib")
+if os.path.exists(lib_dir):
+    sys.path.append(lib_dir)
+    debug("Added lib dir to PYTHONPATH: %s." % lib_dir)
+
 
 def read_user_config():
     config = {}
