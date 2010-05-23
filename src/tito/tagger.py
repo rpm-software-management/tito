@@ -334,10 +334,12 @@ class VersionTagger(object):
                         self.relative_project_dir)
 
         new_tag = self._get_new_tag(new_version)
-        print("Creating new tag [%s]" % new_tag)
         run_command('git tag -m "%s" %s' % (tag_msg, new_tag))
-        print("You must run [git push && git push --tags] before this " +
-            "tag can be used")
+        print
+        print("Created tag: %s" % new_tag)
+        print("   View: git show HEAD")
+        print("   Undo: tito tag -u")
+        print("   Push: git push && git push --tags")
 
     def _check_tag_does_not_exist(self, new_tag):
         status, output = commands.getstatusoutput(
