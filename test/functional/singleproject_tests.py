@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2008-2009 Red Hat, Inc.
+# Copyright (c) 2008-2010 Red Hat, Inc.
 #
 # This software is licensed to you under the GNU General Public License,
 # version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,59 +14,27 @@
 
 import os
 import shutil
-import tempfile
 import unittest
 
 import git
 
 from tito.common import *
-
-from functional_tests import TEST_SPEC
-from functional_tests import cleanup_temp_git, tito
+from fixture import TitoGitTestFixture, TEST_SPEC, tito
 
 #TITO_REPO = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+PKG_NAME = "titotestpkg"
 
 
-class SingleProjectTests(unittest.TestCase):
+class SingleProjectTests(TitoGitTestFixture):
 
     def setUp(self):
-        self.repo_dir = tempfile.mkdtemp("-titotest")
-        print
-        print
-        print("Testing in: %s" % self.repo_dir)
-        print
-        pkg_name = 'tito-test-pkg'
+        TitoGitTestFixture.setUp(self)
 
-        # Initialize the repo:
-        repo = git.Repo.init(path=self.repo_dir, mkdir=True, bare=False)
-
-        # Write some files to the test git repo:
-        filename = os.path.join(self.repo_dir, "a.txt")
-        out_f = open(filename, 'w')
-        out_f.write("BLERG\n")
-        out_f.close()
-
-        # Write the test spec file:
-        filename = os.path.join(self.repo_dir, "%s.spec" % pkg_name)
-        out_f = open(filename, 'w')
-        out_f.write("Name: %s" % pkg_name)
-        out_f.write(TEST_SPEC)
-        out_f.close()
-
+        self.create_project(PKG_NAME, self.repo_dir)
         os.chdir(self.repo_dir)
-        tito("init")
-        run_command('echo "offline = true" >> rel-eng/tito.props')
-
-        index = repo.index
-        index.add(['a.txt', '%s.spec' % pkg_name], 'rel-eng/tito.props')
-        index.commit('-a -m "Initial commit."')
-
-        #g = git.cmd.Git(self.repo_dir)
-
-        tito('tag --keep-version --debug --accept-auto-changelog')
 
     def tearDown(self):
-        #shutil.rmtree(self.repo_dir)
+        shutil.rmtree(self.repo_dir)
         pass
 
     def test_init_worked(self):
@@ -78,3 +46,27 @@ class SingleProjectTests(unittest.TestCase):
         self.assertTrue(os.path.exists(os.path.join(self.repo_dir, "rel-eng",
             "tito.props")))
 
+    def test_initial_tag(self):
+        self.assertTrue(tag_exists_locally("%s-0.0.1-1" % PKG_NAME))
+
+    def test_latest_tgz(self):
+        tito("build --tgz -o %s" % self.repo_dir)
+
+    def test_tag_tgz(self):
+        tito("build --tgz --tag=%s-0.0.1-1 -o %s" % (PKG_NAME,
+            self.repo_dir))
+        self.assertTrue(os.path.exists(os.path.join(self.repo_dir, 
+            "%s-0.0.1.tar.gz" % PKG_NAME)))
+
+    def test_latest_srpm(self):
+        tito("build --srpm")
+
+    def test_tag_srpm(self):
+        tito("build --srpm --tag=%s-0.0.1-1 -o self.repo_dir" % PKG_NAME)
+
+    def test_latest_rpm(self):
+        tito("build --rpm -o %s" % self.repo_dir)
+
+    def test_tag_rpm(self):
+        tito("build --rpm --tag=%s-0.0.1-1 -o %s" % (PKG_NAME, 
+            self.repo_dir))

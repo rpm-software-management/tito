@@ -23,7 +23,7 @@ import unittest
 
 from tito.common import check_tag_exists, commands, run_command, \
         get_latest_tagged_version
-from tito.cli import CLI
+from fixture import tito, TEST_SPEC
 
 
 # A location where we can safely create a test git repository.
@@ -46,43 +46,6 @@ TEST_PKGS = [
         (TEST_PKG_2, TEST_PKG_2_DIR),
         (TEST_PKG_3, TEST_PKG_3_DIR)
 ]
-
-# NOTE: No Name in test spec file as we re-use it for several packages.
-# Name must be written first.
-TEST_SPEC = """
-Version:        0.0.1
-Release:        1%{?dist}
-Summary:        Tito test package.
-URL:            https://example.com
-Group:          Applications/Internet
-License:        GPLv2
-BuildRoot:      %{_tmppath}/%{name}-root-%(%{__id_u} -n)
-BuildArch:      noarch
-
-%description
-Nobody cares.
-
-%prep
-#nothing to do here
-
-%build
-#nothing to do here
-
-%install
-rm -rf $RPM_BUILD_ROOT
-
-%clean
-rm -rf %{buildroot}
-
-%files
-%defattr(-,root,root)
-
-%changelog
-"""
-
-def tito(argstring):
-    """ Run Tito from source with given arguments. """
-    CLI().main(argstring.split(' '))
 
 def cleanup_temp_git():
     """ Delete the test directory if it exists. """
@@ -194,19 +157,6 @@ def teardown_module():
     #cleanup_temp_git()
 
 
-class InitTests(unittest.TestCase):
-
-    def setUp(self):
-        os.chdir(SINGLE_GIT)
-     
-    def test_init(self):
-        self.assertTrue(os.path.exists(os.path.join(SINGLE_GIT, "rel-eng")))
-        self.assertTrue(os.path.exists(os.path.join(SINGLE_GIT, "rel-eng",
-            "packages")))
-        self.assertTrue(os.path.exists(os.path.join(SINGLE_GIT, "rel-eng",
-            "tito.props")))
-
-
 class SingleProjectTaggerTests(unittest.TestCase):
 
     def setUp(self):
@@ -256,29 +206,3 @@ class MultiProjectTaggerTests(unittest.TestCase):
         self.assertTrue(release_bumped(start_ver, new_ver))
 
 
-class SingleProjectBuilderTests(unittest.TestCase):
-
-    def setUp(self):
-        os.chdir(SINGLE_GIT)
-
-    def test_latest_tgz(self):
-        tito("build --tgz -o %s" % SINGLE_GIT)
-
-    def test_tag_tgz(self):
-        tito("build --tgz --tag=%s-0.0.1-1 -o %s" % (TEST_PKG_1,
-            SINGLE_GIT))
-        self.assertTrue(os.path.exists(os.path.join(SINGLE_GIT, 
-            "%s-0.0.1.tar.gz" % TEST_PKG_1)))
-
-    def test_latest_srpm(self):
-        tito("build --srpm")
-
-    def test_tag_srpm(self):
-        tito("build --srpm --tag=%s-0.0.1-1 -o SINGLE_GIT" % TEST_PKG_1)
-
-    def test_latest_rpm(self):
-        tito("build --rpm -o %s" % SINGLE_GIT)
-
-    def test_tag_rpm(self):
-        tito("build --rpm --tag=%s-0.0.1-1 -o %s" % (TEST_PKG_1, 
-            SINGLE_GIT))
