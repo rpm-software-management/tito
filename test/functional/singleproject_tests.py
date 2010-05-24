@@ -30,7 +30,7 @@ class SingleProjectTests(TitoGitTestFixture):
     def setUp(self):
         TitoGitTestFixture.setUp(self)
 
-        self.create_project(PKG_NAME, self.repo_dir)
+        self.create_project(PKG_NAME)
         os.chdir(self.repo_dir)
 
     def tearDown(self):

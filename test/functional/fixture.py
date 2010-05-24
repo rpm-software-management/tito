@@ -126,42 +126,49 @@ class TitoGitTestFixture(unittest.TestCase):
         index.add(['rel-eng/tito.props'])
         index.commit('Setting offline.')
 
-    def create_project(self, pkg_name, pkg_dir):
+    def create_project(self, pkg_name, pkg_dir=''):
         """
         Create a test project at the given location, assumed to be within
         our test repo, but possibly within a sub-directory.
         """
-        os.chdir(pkg_dir)
+        full_pkg_dir = os.path.join(self.repo_dir, pkg_dir)
+        run_command('mkdir -p %s' % full_pkg_dir)
+        os.chdir(full_pkg_dir)
 
         # TODO: Test project needs work, doesn't work in some scenarios 
         # like UpstreamBuilder:
-        filename = os.path.join(pkg_dir, "a.txt")
+        filename = os.path.join(full_pkg_dir, "a.txt")
         out_f = open(filename, 'w')
         out_f.write("BLERG\n")
         out_f.close()
 
         # Write the test spec file:
-        filename = os.path.join(pkg_dir, "%s.spec" % pkg_name)
+        filename = os.path.join(full_pkg_dir, "%s.spec" % pkg_name)
         out_f = open(filename, 'w')
         out_f.write("Name: %s" % pkg_name)
         out_f.write(TEST_SPEC)
         out_f.close()
 
         # Write test setup.py:
-        filename = os.path.join(pkg_dir, "setup.py")
+        filename = os.path.join(full_pkg_dir, "setup.py")
         out_f = open(filename, 'w')
         out_f.write(TEST_SETUP_PY % (pkg_name, pkg_name))
         out_f.close()
 
         # Write test source:
-        run_command('mkdir -p %s' % os.path.join(pkg_dir, "src"))
-        filename = os.path.join(pkg_dir, "src", "module.py")
+        run_command('mkdir -p %s' % os.path.join(full_pkg_dir, "src"))
+        filename = os.path.join(full_pkg_dir, "src", "module.py")
         out_f = open(filename, 'w')
         out_f.write(TEST_PYTHON_SRC)
         out_f.close()
 
         index = self.repo.index
-        index.add(['a.txt', 'setup.py', 'src/module.py', '%s.spec' % pkg_name])
+        files = [os.path.join(pkg_dir, 'a.txt'),
+                os.path.join(pkg_dir, 'setup.py'),
+                os.path.join(pkg_dir, '%s.spec' % pkg_name),
+                os.path.join(pkg_dir, 'src/module.py')
+        ]
+        index.add(files)
         index.commit('Initial commit.')
 
         tito('tag --keep-version --debug --accept-auto-changelog')
