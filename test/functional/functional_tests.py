@@ -157,23 +157,6 @@ def teardown_module():
     #cleanup_temp_git()
 
 
-class SingleProjectTaggerTests(unittest.TestCase):
-
-    def setUp(self):
-        os.chdir(SINGLE_GIT)
-
-    def test_initial_tag_keep_version(self):
-        """ Create an initial package tag with --keep-version. """
-        check_tag_exists("%s-0.0.1-1" % TEST_PKG_1, offline=True)
-        self.assertTrue(os.path.exists(os.path.join(SINGLE_GIT, 
-            "rel-eng/packages", TEST_PKG_1)))
-
-    def test_initial_tag(self):
-        """ Test creating an initial tag. """
-        tito("tag --accept-auto-changelog --debug")
-        check_tag_exists("%s-0.0.2-1" % TEST_PKG_1, offline=True)
-
-
 class MultiProjectTaggerTests(unittest.TestCase):
 
     def setUp(self):

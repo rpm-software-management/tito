@@ -49,6 +49,17 @@ class SingleProjectTests(TitoGitTestFixture):
     def test_initial_tag(self):
         self.assertTrue(tag_exists_locally("%s-0.0.1-1" % PKG_NAME))
 
+    def test_tag(self):
+        tito("tag --accept-auto-changelog --debug")
+        check_tag_exists("%s-0.0.2-1" % PKG_NAME, offline=True)
+
+    def test_undo_tag(self):
+        tito("tag --accept-auto-changelog --debug")
+        tag = "%s-0.0.2-1" % PKG_NAME
+        check_tag_exists(tag, offline=True)
+        tito("tag -u")
+        self.assertFalse(tag_exists_locally(tag))
+
     def test_latest_tgz(self):
         tito("build --tgz -o %s" % self.repo_dir)
 
