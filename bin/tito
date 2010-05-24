@@ -19,4 +19,4 @@ import sys
 from tito.cli import CLI
 
 if __name__ == "__main__":
-    CLI().main(sys.argv)
+    CLI().main(sys.argv[1:])
