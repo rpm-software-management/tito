@@ -485,7 +485,8 @@ class TagModule(BaseCliModule):
         debug("Using tagger class: %s" % tagger_class)
 
         tagger = tagger_class(global_config=self.global_config,
-                keep_version=self.options.keep_version)
+                keep_version=self.options.keep_version,
+                offline=self.options.offline)
 
         try:
             tagger.run(self.options)

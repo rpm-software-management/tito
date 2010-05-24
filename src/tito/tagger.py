@@ -41,7 +41,7 @@ class VersionTagger(object):
     and the actual RPM "release" will always be set to 1.
     """
 
-    def __init__(self, global_config=None, keep_version=False):
+    def __init__(self, global_config=None, keep_version=False, offline=False):
         self.git_root = find_git_root()
         self.rel_eng_dir = os.path.join(self.git_root, "rel-eng")
         self.config = global_config
@@ -65,6 +65,7 @@ class VersionTagger(object):
         self._no_auto_changelog = False
         self._accept_auto_changelog = False
         self._new_changelog_msg = "new package built with tito"
+        self.offline = offline
 
     def run(self, options):
         """
@@ -113,7 +114,7 @@ class VersionTagger(object):
         if not tag_exists_locally(tag):
             raise TitoException(
                     "Cannot undo tag that does not exist locally.")
-        if tag_exists_remotely(tag):
+        if not self.offline and tag_exists_remotely(tag):
             raise TitoException("Cannot undo tag that has been pushed.")
 
         # Tag must be the most recent commit. 
