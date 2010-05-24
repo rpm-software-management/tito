@@ -14,7 +14,24 @@
 # in this software or its documentation.
 #
 
+""" 
+A Tito development script to run from source.
+
+This script should only ever be called from bin/ in a source checkout.
+"""
+
 import sys
+import os.path
+
+
+# We know this script is in bin/ 
+SCRIPT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
+SRC_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, "src/"))
+SRC_BIN_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "bin/"))
+
+sys.path.insert(0, SRC_DIR)
+
+os.environ['TITO_SRC_BIN_DIR'] = SRC_BIN_DIR
 
 from tito.cli import CLI
 

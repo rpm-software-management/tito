@@ -25,12 +25,11 @@ import os
 # scripts. Adding an environment variable hack to the actual code to 
 # accommodate this for now.
 
-TEST_SCRIPT_DIR = os.path.abspath(os.path.dirname(sys.argv[0]))
+TEST_SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 SRC_DIR = os.path.normpath(os.path.join(TEST_SCRIPT_DIR, "src/"))
 sys.path.insert(0, SRC_DIR)
 SRC_BIN_DIR = os.path.abspath(os.path.join(TEST_SCRIPT_DIR, "bin/"))
 
-os.environ['PYTHONPATH'] = SRC_DIR
 os.environ['TITO_SRC_BIN_DIR'] = SRC_BIN_DIR
 
 if __name__ == '__main__':
