@@ -36,4 +36,4 @@ os.environ['TITO_SRC_BIN_DIR'] = SRC_BIN_DIR
 from tito.cli import CLI
 
 if __name__ == "__main__":
-    CLI().main()
+    CLI().main(sys.argv)

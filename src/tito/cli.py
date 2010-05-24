@@ -88,18 +88,18 @@ class CLI(object):
     options together.
     """
 
-    def main(self):
-        if len(sys.argv) < 2 or not sys.argv[1] in CLI_MODULES.keys():
+    def main(self, argv):
+        print("argv = %s" % argv)
+        if len(argv) < 1 or not argv[0] in CLI_MODULES.keys():
             self._usage()
             sys.exit(1)
 
-        module_class = CLI_MODULES[sys.argv[1]]
+        module_class = CLI_MODULES[argv[0]]
         module = module_class()
-        module.main()
+        module.main(argv)
 
     def _usage(self):
-        print("Usage: %s MODULENAME --help" %
-                (os.path.basename(sys.argv[0])))
+        print("Usage: tito MODULENAME --help")
         print("Supported modules:")
         print("   tag      - Tag package releases.")
         print("   build    - Build packages.")
@@ -141,12 +141,12 @@ class BaseCliModule(object):
                     % default_output_dir)
 
 
-    def main(self):
-        (self.options, args) = self.parser.parse_args()
+    def main(self, argv):
+        (self.options, args) = self.parser.parse_args(argv)
 
         self._validate_options()
 
-        if len(sys.argv) < 2:
+        if len(argv) < 1:
             print(self.parser.error("Must supply an argument. "
                 "Try -h for help."))
 
@@ -352,8 +352,8 @@ class BuildModule(BaseCliModule):
                     "(i.e. runs 'make new-sources') Must be "
                     "used until 'sources' file is committed to CVS."))
 
-    def main(self):
-        BaseCliModule.main(self)
+    def main(self, argv):
+        BaseCliModule.main(self, argv)
 
         build_dir = os.path.normpath(os.path.abspath(self.options.output_dir))
         package_name = get_project_name(tag=self.options.tag)
@@ -461,8 +461,8 @@ class TagModule(BaseCliModule):
         self.parser.add_option("--undo", "-u", dest="undo", action="store_true",
                 help="Undo the most recent (un-pushed) tag.")
 
-    def main(self):
-        BaseCliModule.main(self)
+    def main(self, argv):
+        BaseCliModule.main(self, argv)
 
         if self.global_config.has_option(GLOBALCONFIG_SECTION,
                 "block_tagging"):
@@ -500,7 +500,7 @@ class InitModule(BaseCliModule):
     def __init__(self):
         BaseCliModule.__init__(self, "usage: %prog init [options]")
 
-    def main(self):
+    def main(self, argv):
         # DO NOT CALL BaseCliModule.main(self)
         # we are initializing tito to work in this module and
         # calling main will result in a configuration error.
@@ -576,7 +576,7 @@ class ReportModule(BaseCliModule):
                     "which packages are in need of a re-tag.",
                 ))
 
-    def main(self):
+    def main(self, argv):
         BaseCliModule.main(self)
 
         if self.options.untagged_report:

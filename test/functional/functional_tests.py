@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2008-2009 Red Hat, Inc.
+# Copyright (c) 2008-2010 Red Hat, Inc.
 #
 # This software is licensed to you under the GNU General Public License,
 # version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -23,6 +23,7 @@ import unittest
 
 from tito.common import check_tag_exists, commands, run_command, \
         get_latest_tagged_version
+from tito.cli import CLI
 
 
 # A location where we can safely create a test git repository.
@@ -79,19 +80,9 @@ rm -rf %{buildroot}
 %changelog
 """
 
-def run_tito(argstring):
-    """ Run the tito script from source with given arguments. """
-    tito_path = 'tito' # assume it's on PATH by default
-    if 'TITO_SRC_BIN_DIR' in os.environ:
-        bin_dir = os.environ['TITO_SRC_BIN_DIR']
-        tito_path = os.path.join(bin_dir, 'tito')
-    tito_cmd = "%s %s" % (tito_path, argstring)
-    print("Running: %s" % tito_cmd)
-    (status, output) = commands.getstatusoutput(tito_cmd)
-    print output
-    if status > 0:
-        print "Tito command failed, output:"
-        raise Exception()
+def tito(argstring):
+    """ Run Tito from source with given arguments. """
+    CLI().main(argstring.split(' '))
 
 def cleanup_temp_git():
     """ Delete the test directory if it exists. """
@@ -109,11 +100,10 @@ def create_single_project_git():
     This is *ALL* you should count on in these tests.
     """
 
-    run_command('mkdir -p %s' % TEST_DIR)
     run_command('mkdir -p %s' % SINGLE_GIT)
     os.chdir(SINGLE_GIT)
     run_command('git init')
-    run_tito("init")
+    tito("init")
     run_command('echo "offline = true" >> rel-eng/tito.props')
     run_command('git add rel-eng/tito.props')
     run_command('git commit -m "Setting offline"')
@@ -134,7 +124,7 @@ def create_multi_project_git():
     run_command('mkdir -p %s' % MULTI_GIT)
     os.chdir(MULTI_GIT)
     run_command('git init')
-    run_tito("init")
+    tito("init")
     run_command('echo "offline = true" >> rel-eng/tito.props')
     run_command('git add rel-eng/tito.props')
     run_command('git commit -m "Setting offline"')
@@ -181,7 +171,7 @@ def create_git_project(full_pkg_dir, pkg_name):
     run_command('git commit -a -m "Initial commit for %s."' % pkg_name)
 
     # Create initial 0.0.1 tag:
-    run_tito("tag --keep-version --accept-auto-changelog --debug")
+    tito("tag --keep-version --accept-auto-changelog --debug")
 
 def release_bumped(initial_version, new_version):
     first_release = initial_version.split('-')[-1]
@@ -230,7 +220,7 @@ class SingleProjectTaggerTests(unittest.TestCase):
 
     def test_initial_tag(self):
         """ Test creating an initial tag. """
-        run_tito("tag --accept-auto-changelog --debug")
+        tito("tag --accept-auto-changelog --debug")
         check_tag_exists("%s-0.0.2-1" % TEST_PKG_1, offline=True)
 
 
@@ -249,7 +239,7 @@ class MultiProjectTaggerTests(unittest.TestCase):
     def test_release_tagger(self):
         os.chdir(os.path.join(MULTI_GIT, TEST_PKG_2_DIR))
         start_ver = get_latest_tagged_version(TEST_PKG_2)
-        run_tito('tag --debug --accept-auto-changelog')
+        tito('tag --debug --accept-auto-changelog')
         new_ver = get_latest_tagged_version(TEST_PKG_2)
         self.assertTrue(release_bumped(start_ver, new_ver))
 
@@ -261,7 +251,7 @@ class MultiProjectTaggerTests(unittest.TestCase):
         run_command("git mv tito.props build.py.props")
         run_command('git commit -a -m "Rename to build.py.props"')
 
-        run_tito('tag --debug --accept-auto-changelog')
+        tito('tag --debug --accept-auto-changelog')
         new_ver = get_latest_tagged_version(TEST_PKG_2)
         self.assertTrue(release_bumped(start_ver, new_ver))
 
@@ -272,23 +262,23 @@ class SingleProjectBuilderTests(unittest.TestCase):
         os.chdir(SINGLE_GIT)
 
     def test_latest_tgz(self):
-        run_tito("build --tgz -o %s" % SINGLE_GIT)
+        tito("build --tgz -o %s" % SINGLE_GIT)
 
     def test_tag_tgz(self):
-        run_tito("build --tgz --tag=%s-0.0.1-1 -o %s" % (TEST_PKG_1,
+        tito("build --tgz --tag=%s-0.0.1-1 -o %s" % (TEST_PKG_1,
             SINGLE_GIT))
         self.assertTrue(os.path.exists(os.path.join(SINGLE_GIT, 
             "%s-0.0.1.tar.gz" % TEST_PKG_1)))
 
     def test_latest_srpm(self):
-        run_tito("build --srpm")
+        tito("build --srpm")
 
     def test_tag_srpm(self):
-        run_tito("build --srpm --tag=%s-0.0.1-1 -o SINGLE_GIT" % TEST_PKG_1)
+        tito("build --srpm --tag=%s-0.0.1-1 -o SINGLE_GIT" % TEST_PKG_1)
 
     def test_latest_rpm(self):
-        run_tito("build --rpm -o %s" % SINGLE_GIT)
+        tito("build --rpm -o %s" % SINGLE_GIT)
 
     def test_tag_rpm(self):
-        run_tito("build --rpm --tag=%s-0.0.1-1 -o %s" % (TEST_PKG_1, 
+        tito("build --rpm --tag=%s-0.0.1-1 -o %s" % (TEST_PKG_1, 
             SINGLE_GIT))
