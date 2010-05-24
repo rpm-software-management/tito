@@ -54,11 +54,14 @@ class SingleProjectTests(TitoGitTestFixture):
         check_tag_exists("%s-0.0.2-1" % PKG_NAME, offline=True)
 
     def test_undo_tag(self):
+        commit = self.repo.heads.master.commit
         tito("tag --accept-auto-changelog --debug")
         tag = "%s-0.0.2-1" % PKG_NAME
         check_tag_exists(tag, offline=True)
+        self.assertNotEqual(commit, self.repo.heads.master.commit)
         tito("tag -u")
         self.assertFalse(tag_exists_locally(tag))
+        self.assertEqual(commit, self.repo.heads.master.commit)
 
     def test_latest_tgz(self):
         tito("build --tgz -o %s" % self.repo_dir)
