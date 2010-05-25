@@ -100,7 +100,7 @@ class Empty(object):
 
 def tito(argstring):
     """ Run Tito from source with given arguments. """
-    CLI().main(argstring.split(' '))
+    return CLI().main(argstring.split(' '))
 
 class TitoGitTestFixture(unittest.TestCase):
     """

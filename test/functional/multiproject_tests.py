@@ -29,13 +29,13 @@ from fixture import *
 # A location where we can safely create a test git repository.
 # WARNING: This location will be destroyed if present.
 
-TEST_PKG_1 = 'tito-test-pkg'
+TEST_PKG_1 = 'titotestpkg'
 TEST_PKG_1_DIR = "%s/" % TEST_PKG_1
 
-TEST_PKG_2 = 'tito-test-pkg2'
+TEST_PKG_2 = 'titotestpkg2'
 TEST_PKG_2_DIR = "%s/" % TEST_PKG_2
 
-TEST_PKG_3 = 'tito-test-pkg3'
+TEST_PKG_3 = 'titotestpkg3'
 TEST_PKG_3_DIR = "blah/whatever/%s/" % TEST_PKG_3
 
 TEST_PKGS = [TEST_PKG_1, TEST_PKG_2, TEST_PKG_3]
@@ -45,7 +45,7 @@ def release_bumped(initial_version, new_version):
     new_release = new_version.split('-')[-1]
     return new_release == str(int(first_release) + 1)
 
-class MultiProjectTaggerTests(TitoGitTestFixture):
+class MultiProjectTests(TitoGitTestFixture):
 
     def setUp(self):
         TitoGitTestFixture.setUp(self)
@@ -94,5 +94,20 @@ class MultiProjectTaggerTests(TitoGitTestFixture):
         tito('tag --debug --accept-auto-changelog')
         new_ver = get_latest_tagged_version(TEST_PKG_2)
         self.assertTrue(release_bumped(start_ver, new_ver))
+
+    def test_build_tgz(self):
+        os.chdir(os.path.join(self.repo_dir, 'pkg1'))
+        artifacts = tito('build --tgz')
+        self.assertEquals(1, len(artifacts))
+        self.assertEquals('%s-0.0.1.tar.gz' % TEST_PKG_1, 
+                os.path.basename(artifacts[0]))
+
+    def test_build_rpm(self):
+        os.chdir(os.path.join(self.repo_dir, 'pkg1'))
+        artifacts = tito('build --rpm')
+        self.assertEquals(3, len(artifacts))
+        print artifacts
+
+
 
 

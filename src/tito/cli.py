@@ -89,14 +89,13 @@ class CLI(object):
     """
 
     def main(self, argv):
-        print("argv = %s" % argv)
         if len(argv) < 1 or not argv[0] in CLI_MODULES.keys():
             self._usage()
             sys.exit(1)
 
         module_class = CLI_MODULES[argv[0]]
         module = module_class()
-        module.main(argv)
+        return module.main(argv)
 
     def _usage(self):
         print("Usage: tito MODULENAME --help")
@@ -380,7 +379,7 @@ class BuildModule(BaseCliModule):
         builder = self._create_builder(package_name, build_tag,
                 build_version, self.options, self.pkg_config,
                 build_dir)
-        builder.run(self.options)
+        return builder.run(self.options)
 
     def _create_builder(self, package_name, build_tag, build_version, options,
             pkg_config, build_dir):
@@ -489,7 +488,7 @@ class TagModule(BaseCliModule):
                 offline=self.options.offline)
 
         try:
-            tagger.run(self.options)
+            return tagger.run(self.options)
         except TitoException, e:
             error_out(e.message)
 
@@ -554,6 +553,7 @@ class InitModule(BaseCliModule):
             print("   - committed to git")
 
         print("Done!")
+        return []
 
 
 class ReportModule(BaseCliModule):
@@ -587,6 +587,7 @@ class ReportModule(BaseCliModule):
         if self.options.untagged_commits:
             self._run_untagged_commits(self.global_config)
             sys.exit(1)
+        return []
 
     def _run_untagged_commits(self, global_config):
         """

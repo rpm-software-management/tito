@@ -141,6 +141,9 @@ class Builder(object):
         print("Building package [%s]" % (self.build_tag))
         self.no_cleanup = options.no_cleanup
 
+        # Track full path to artifacts build during this run:
+        self.artifacts = []
+
         if options.tgz:
             self.tgz()
         if options.srpm:
@@ -156,6 +159,7 @@ class Builder(object):
             self._koji_release()
 
         self.cleanup()
+        return self.artifacts
 
     def tgz(self):
         """
@@ -173,6 +177,7 @@ class Builder(object):
         full_path = os.path.join(self.rpmbuild_basedir, self.tgz_filename)
         print("Wrote: %s" % full_path)
         self.sources.append(full_path)
+        self.artifacts.append(full_path)
         return full_path
 
     # TODO: reuse_cvs_checkout isn't needed here, should be cleaned up:
@@ -200,6 +205,7 @@ class Builder(object):
         output = run_command(cmd)
         print(output)
         self.srpm_location = self._find_wrote_in_rpmbuild_output(output)[0]
+        self.artifacts.append(self.srpm_location)
 
     def _rpm(self):
         """ Build an RPM. """
@@ -223,6 +229,7 @@ class Builder(object):
         if len(files_written) < 2:
             error_out("Error parsing rpmbuild output")
         self.srpm_location = files_written[0]
+        self.artifacts.extend(files_written)
 
         print
         print("Successfully built: %s" % ' '.join(files_written))
