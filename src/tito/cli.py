@@ -352,6 +352,10 @@ class BuildModule(BaseCliModule):
                     "(i.e. runs 'make new-sources') Must be "
                     "used until 'sources' file is committed to CVS."))
 
+        self.parser.add_option("--rpmbuild-options", dest='rpmbuild_options',
+                default='',
+                metavar="OPTIONS", help="Options to pass to rpmbuild.")
+
     def main(self, argv):
         BaseCliModule.main(self, argv)
 
@@ -410,7 +414,8 @@ class BuildModule(BaseCliModule):
                 dist=options.dist,
                 test=options.test,
                 offline=options.offline,
-                auto_install=options.auto_install)
+                auto_install=options.auto_install,
+                rpmbuild_options=options.rpmbuild_options)
         return builder
 
     def _validate_options(self):

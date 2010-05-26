@@ -43,7 +43,8 @@ class Builder(object):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None, dist=None,
-            test=False, offline=False, auto_install=False):
+            test=False, offline=False, auto_install=False, 
+            rpmbuild_options=None):
 
         self.git_root = find_git_root()
         self.rel_eng_dir = os.path.join(self.git_root, "rel-eng")
@@ -58,6 +59,9 @@ class Builder(object):
         self.offline=offline
         self.no_cleanup = False
         self.auto_install = auto_install
+        self.rpmbuild_options = rpmbuild_options
+        if not self.rpmbuild_options:
+            self.rpmbuild_options = ''
 
         # Override global configurations using local configurations
         for section in pkg_config.sections():
@@ -195,8 +199,9 @@ class Builder(object):
             define_dist = "--define 'dist %s'" % dist
 
         cmd = ('rpmbuild --define "_source_filedigest_algorithm md5"  --define'
-            ' "_binary_filedigest_algorithm md5" %s %s --nodeps -bs %s' % (
-            self._get_rpmbuild_dir_options(), define_dist, self.spec_file))
+            ' "_binary_filedigest_algorithm md5" %s %s %s --nodeps -bs %s' % (
+            self.rpmbuild_options, self._get_rpmbuild_dir_options(), 
+            define_dist, self.spec_file))
         output = run_command(cmd)
         print(output)
         self.srpm_location = self._find_wrote_in_rpmbuild_output(output)[0]
@@ -214,9 +219,9 @@ class Builder(object):
         if self.dist:
             define_dist = "--define 'dist %s'" % self.dist
         cmd = ('rpmbuild --define "_source_filedigest_algorithm md5"  '
-            '--define "_binary_filedigest_algorithm md5" %s %s --clean '
-            '-ba %s' % (
-            self._get_rpmbuild_dir_options(), define_dist, self.spec_file))
+            '--define "_binary_filedigest_algorithm md5" %s %s %s --clean '
+            '-ba %s' % (self.rpmbuild_options, 
+                self._get_rpmbuild_dir_options(), define_dist, self.spec_file))
         output = run_command(cmd)
         print(output)
         files_written = self._find_wrote_in_rpmbuild_output(output)
@@ -659,13 +664,15 @@ class NoTgzBuilder(Builder):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None, dist=None,
-            test=False, offline=False, auto_install=False):
+            test=False, offline=False, auto_install=False, 
+            rpmbuild_options=None):
 
         Builder.__init__(self, name=name, version=version, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
                 dist=dist, test=test, offline=offline, 
-                auto_install=auto_install)
+                auto_install=auto_install, 
+                rpmbuild_options=rpmbuild_options)
 
         # When syncing files with CVS, copy everything from git:
         self.cvs_copy_extensions = ("", )
@@ -727,13 +734,14 @@ class CvsBuilder(NoTgzBuilder):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None, dist=None,
-            test=False, offline=False, auto_install=False):
+            test=False, offline=False, auto_install=False,
+            rpmbuild_options=None):
 
         NoTgzBuilder.__init__(self, name=name, version=version, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
                 dist=dist, test=test, offline=offline, 
-                auto_install=auto_install)
+                auto_install=auto_install, rpmbuild_options=rpmbuild_options)
 
         # TODO: Hack to override here, patches are in a weird place with this
         # builder.
@@ -835,13 +843,14 @@ class UpstreamBuilder(NoTgzBuilder):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None, dist=None,
-            test=False, offline=False, auto_install=False):
+            test=False, offline=False, auto_install=False, 
+            rpmbuild_options=None):
 
         NoTgzBuilder.__init__(self, name=name, version=version, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
                 dist=dist, test=test, offline=offline, 
-                auto_install=auto_install)
+                auto_install=auto_install, rpmbuild_options=rpmbuild_options)
 
         if not pkg_config or not pkg_config.has_option("buildconfig",
                 "upstream_name"):
