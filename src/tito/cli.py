@@ -89,7 +89,6 @@ class CLI(object):
     """
 
     def main(self, argv):
-        print("argv = %s" % argv)
         if len(argv) < 1 or not argv[0] in CLI_MODULES.keys():
             self._usage()
             sys.exit(1)
