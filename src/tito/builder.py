@@ -18,6 +18,7 @@ import os
 import sys
 import re
 import commands
+from pkg_resources import require
 
 from tito.common import (debug, run_command, error_out, find_git_root,
         create_tgz, get_build_commit, find_spec_file, get_script_path,
@@ -71,6 +72,11 @@ class Builder(object):
                 self.config.set(section, options, 
                         pkg_config.get(section, options))
 
+        if self.config.has_section("requirements"):
+            if self.config.has_option("requirements", "tito"):
+                if self.config.get("requirements", "tito") > require('tito')[0].version:
+                    print "Error: tito version %s or later is needed." % self.config.get("requirements", "tito")
+                    sys.exit(-1)
 
         self.rpmbuild_basedir = build_dir
         self.display_version = self._get_display_version()
