@@ -955,6 +955,7 @@ class UpstreamBuilder(NoTgzBuilder):
         # Insert patches into the spec file we'll be building:
         f = open(self.spec_file, 'r')
         lines = f.readlines()
+        f.close()
 
         patch_pattern = re.compile('^Patch(\d+):')
         source_pattern = re.compile('^Source\d+:')
@@ -990,7 +991,6 @@ class UpstreamBuilder(NoTgzBuilder):
         lines.insert(patch_insert_index, "Patch%s: %s\n" % (patch_number,
             patch_filename))
         lines.insert(patch_apply_index, "%%patch%s -p1\n" % (patch_number))
-        f.close()
 
         # Now write out the modified lines to the spec file copy:
         f = open(self.spec_file, 'w')
