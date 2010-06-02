@@ -19,6 +19,7 @@ import sys
 import re
 import commands
 from pkg_resources import require
+from distutils.version import LooseVersion as loose_version
 
 from tito.common import (debug, run_command, error_out, find_git_root,
         create_tgz, get_build_commit, find_spec_file, get_script_path,
@@ -74,8 +75,11 @@ class Builder(object):
 
         if self.config.has_section("requirements"):
             if self.config.has_option("requirements", "tito"):
-                if self.config.get("requirements", "tito") > require('tito')[0].version:
-                    print "Error: tito version %s or later is needed." % self.config.get("requirements", "tito")
+                if loose_version(self.config.get("requirements", "tito")) > \
+                        loose_version(require('tito')[0].version):
+                    print("Error: tito version %s or later is needed to build this project." % 
+                            self.config.get("requirements", "tito"))
+                    print("Your version: %s" % require('tito')[0].version)
                     sys.exit(-1)
 
         self.rpmbuild_basedir = build_dir
