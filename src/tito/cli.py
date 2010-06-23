@@ -582,7 +582,7 @@ class ReportModule(BaseCliModule):
                 ))
 
     def main(self, argv):
-        BaseCliModule.main(self)
+        BaseCliModule.main(self, argv)
 
         if self.options.untagged_report:
             self._run_untagged_report(self.global_config)
