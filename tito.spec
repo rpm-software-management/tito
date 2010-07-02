@@ -15,6 +15,7 @@ BuildArch: noarch
 BuildRequires: python-devel
 BuildRequires: python-setuptools
 Requires: python-setuptools
+Requires: rpm-build
 
 %description
 Tito is a tool for managing tarballs, rpms, and builds for projects using
