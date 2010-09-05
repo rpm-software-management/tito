@@ -1,0 +1,51 @@
+titorc(5)
+=========
+
+NAME
+----
+titorc - Settings file for `tito`
+
+
+SYNOPSIS
+--------
+None
+// older asciidoc versions (such as the version for .el5) require a synopsis section
+
+
+DESCRIPTION
+-----------
+User preferences can be stored in files:
+
+`~/.spacewalk-build-rc`
+
+`~/.titorc`
+
+If `~/.spacewalk-build-rc` exists, tito ignores `~/.titorc`.
+Both files are optional.
+
+
+OPTIONS
+-------
+RPMBUILD_BASEDIR::
+Specifies a base directory for temp files, tarballs, and RPMs. 
+If defined, and if the directory exists, `tito` will automatically 
+create subdirectories as needed for rpmbuild(8).
+
+
+EXAMPLE
+-------
+
+----
+# Default Location to write temp files, tarballs and rpms to:
+RPMBUILD_BASEDIR = "/tmp/tito"
+----
+
+
+SEE ALSO
+--------
+tito(8)
+
+
+AUTHORS
+-------
+include::AUTHORS[]
