@@ -14,6 +14,8 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch: noarch
 BuildRequires: python-devel
 BuildRequires: python-setuptools
+BuildRequires: asciidoc
+
 Requires: python-setuptools
 Requires: rpm-build
 
@@ -27,12 +29,20 @@ git.
 
 %build
 %{__python} setup.py build
+# convert manages
+a2x -d manpage -f manpage titorc.5.asciidoc
+a2x -d manpage -f manpage tito.8.asciidoc
 
 
 %install
 rm -rf $RPM_BUILD_ROOT
 %{__python} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT
 rm -f $RPM_BUILD_ROOT%{python_sitelib}/*egg-info/requires.txt
+# manpages
+%{__mkdir_p} %{buildroot}%{_mandir}/man5
+%{__mkdir_p} %{buildroot}%{_mandir}/man8
+%{__gzip} -c titorc.5 > %{buildroot}/%{_mandir}/man5/titorc.5.gz
+%{__gzip} -c tito.8 > %{buildroot}/%{_mandir}/man8/tito.8.gz
 
 
 %clean
@@ -42,6 +52,8 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %doc README.mkd AUTHORS COPYING
+%doc %{_mandir}/man5/titorc.5.gz
+%doc %{_mandir}/man8/tito.8.gz
 %{_bindir}/tito
 %{_bindir}/bump-version.pl
 %{_bindir}/tar-fixup-stamp-comment.pl
