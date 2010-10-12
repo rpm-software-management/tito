@@ -200,8 +200,9 @@ def get_project_name(tag=None):
             "rpm -q --qf '%%{name}\n' --specfile %s 2> /dev/null | head -1" %
             spec_file_path)
         if not output:
-            error_out("Unable to determine project name from spec file: %s" %
-                spec_file_path)
+            error_out("Unable to determine project name from spec file: %s, try rpm -q --specfile %s" %
+                spec_file_path, spec_file_path)
+            error_out("Try rpm -qf --specfile %s for more details." % spec_file_path)
         return output
 
 
