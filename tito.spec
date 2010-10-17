@@ -2,7 +2,7 @@
 
 Name: tito
 Version: 0.2.0
-Release:        1%{?dist}
+Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
 Group: Development/Tools
@@ -18,6 +18,7 @@ BuildRequires: asciidoc
 
 Requires: python-setuptools
 Requires: rpm-build
+Requires: rpmlint
 
 %description
 Tito is a tool for managing tarballs, rpms, and builds for projects using
