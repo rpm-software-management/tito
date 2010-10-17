@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.2.0
+Version: 0.2.1
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -65,6 +65,20 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Sun Oct 17 2010 Paul Morgan <jumanjiman@gmail.com> 0.2.1-1
+- Better error-reporting when spec file has errors (jumanjiman@gmail.com)
+- Adding more helpfull error message to show user what is busted
+  (mmccune@redhat.com)
+- Fix rpm command suggestion for broken specs. (dgoodwin@rm-rf.ca)
+- spec file includes titorc(5) and tito(8) (jumanjiman@gmail.com)
+- add manpage source: tito(8) (jumanjiman@gmail.com)
+- add manpage source: titorc(5) (jumanjiman@gmail.com)
+- allow asciidoc source to include AUTHORS file (jumanjiman@gmail.com)
+- git should ignore generated manpage content (jumanjiman@gmail.com)
+- adding rpm-build as a Requires. Seems pretty critical (mmccune@redhat.com)
+- Missing argv in tito report (mcsontos@redhat.com)
+- Add missing dep on python-setuptools. (dgoodwin@rm-rf.ca)
+
 * Wed Jun 02 2010 Devan Goodwin <dgoodwin@rm-rf.ca> 0.2.0-1
 - Restrict building to a minimum version of tito. (msuchy@redhat.com)
 - Added option to pass custom options to rpmbuild. (dgoodwin@rm-rf.ca)
