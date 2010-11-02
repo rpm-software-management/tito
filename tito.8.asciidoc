@@ -1,0 +1,189 @@
+tito(8)
+=======
+
+NAME
+----
+tito - manage RPM based projects using git
+
+
+SYNOPSIS
+--------
+tito init
+
+tito tag [OPTIONS]
+
+tito build --test --rpm
+
+tito build [OPTIONS]
+
+tito report
+
+
+
+DESCRIPTION
+-----------
+
+After setting up a directory as a Git repo, use `tito`
+to manage the tags and builds. A simple workflow may look like:
+
+. Save user preferences as described in `titorc(5)`
+. Initialize a `rel-eng` directory
+. Test
+  .. Make changes to source
+  .. Use git to commit changes
+  .. Build: `tito build --rpm --test`
+. Finalize a release
+  .. Tag: `tito tag`
+  .. Push: `git push && git push --tags`
+  .. Build: `tito build [OPTIONS]`
+
+
+
+OPTIONS
+-------
+
+`tito init`
+~~~~~~~~~~~
+
+This will create a top-level metadata directory called "rel-eng/" and commit it
+to git. This directory will store tito's configuration and package metadata on
+a per branch basis. It will be filtered out when creating .tar.gz's.
+
+NOTE: Your spec file should list the source as `%{name}-%{version}.tar.gz`
+
+`tito tag [options]`
+~~~~~~~~~~~~~~~~~~~~
+
+By default, tito will tag by bumping the rpm version 
+(i.e. we bump the Z in X.Y.Z). If you'd prefer to bump the package
+release instead (normally should just be used for changes to the spec file or
+patches applied within it), you can change the default_tagger class in
+rel-eng/tito.props to ReleaseTagger. This will affect all packages in this git
+branch; if you'd prefer to do this on a per-package basis you can do so in a
+package specific `tito.props`.
+
+-h, --help::
+show this help message and exit
+
+--debug::
+print debug messages
+
+--offline::
+do not attempt any remote communication (avoid using
+this please)
+
+-o 'OUTPUTDIR', --output='OUTPUTDIR'::
+Write temp files, tarballs, and RPMs to 'OUTPUTDIR'.
+Create sub-directories as needed by rpmbuild(8).
+(default `/tmp/tito`)
+
+--tag-release::
+Deprecated, no longer required.
+
+--keep-version::
+Use spec file version/release exactly as specified in
+spec file to tag package.
+
+--no-auto-changelog::
+Don't automatically create a changelog entry for this
+tag if none is found
+
+--accept-auto-changelog::
+Automatically accept the generated changelog.
+
+--auto-changelog-message='MESSAGE'::
+Use 'MESSAGE' as the default changelog message for new
+packages
+
+-u, --undo::
+Undo the most recent (un-pushed) tag.
+
+
+`tito build [options]`
+~~~~~~~~~~~~~~~~~~~~~~
+
+-h, --help::
+show this help message and exit
+
+--debug::
+print debug messages
+
+--offline::
+do not attempt any remote communication (avoid using
+this please)
+
+-o 'OUTPUTDIR', --output='OUTPUTDIR'::
+Write temp files, tarballs and RPMs to 'OUTPUTDIR'.
+(default /tmp/tito)
+
+--tgz::
+Build .tar.gz
+
+--srpm::
+Build srpm
+
+--rpm::
+Build srpm and rpm
+
+-i, --install::
+Install any binary RPMs being built. 
+
+WARNING: uses `sudo rpm -Uvh --force`
+
+--dist='DISTTAG'::
+Apply 'DISTTAG' to srpm and/or rpm. (e.g., ".el5")
+
+--test::
+use current branch HEAD instead of latest package tag
+
+--no-cleanup::
+do not clean up temporary build directories/files
+
+--tag='PKGTAG'::
+build a specific tag instead of the latest version
+(e.g., `spacewalk-java-0.4.0-1`)
+
+--release::
+Release package according to repo configuration.
+(import into CVS and submit to build system, or create
+src.rpm's and submit directly to Koji)
+
+CAUTION: The `--release` option is complicated and untested against
+Fedora's Koji.
+
+--cvs-release::
+Release package only in CVS. (if possible)
+
+--koji-release::
+Release package only in Koji. (if possible)
+
+--upload-new-source='CVS_NEW_SOURCES'::
+Upload a new source tarball to CVS lookaside. (i.e.
+runs 'make new-sources') Must be used until 'sources'
+file is committed to CVS.
+
+--rpmbuild-options='OPTIONS'::
+Pass 'OPTIONS' to rpmbuild.
+
+
+`tito report`
+~~~~~~~~~~~~~
+
+Display a report of all packages with differences between
+HEAD and their most recent tag, as well as a patch for
+that diff. Used to determine which packages are in need
+of a rebuild.
+
+
+
+SEE ALSO
+--------
+titorc(5)
+
+/usr/share/doc/tito-*/README.mkd
+
+
+
+AUTHORS
+-------
+include::AUTHORS[]

@@ -18,6 +18,8 @@ import os
 import sys
 import re
 import commands
+from pkg_resources import require
+from distutils.version import LooseVersion as loose_version
 
 from tito.common import (debug, run_command, error_out, find_git_root,
         create_tgz, get_build_commit, find_spec_file, get_script_path,
@@ -66,9 +68,19 @@ class Builder(object):
         # Override global configurations using local configurations
         for section in pkg_config.sections():
             for options in pkg_config.options(section):
+                if not self.config.has_section(section):
+                    self.config.add_section(section)
                 self.config.set(section, options, 
                         pkg_config.get(section, options))
 
+        if self.config.has_section("requirements"):
+            if self.config.has_option("requirements", "tito"):
+                if loose_version(self.config.get("requirements", "tito")) > \
+                        loose_version(require('tito')[0].version):
+                    print("Error: tito version %s or later is needed to build this project." % 
+                            self.config.get("requirements", "tito"))
+                    print("Your version: %s" % require('tito')[0].version)
+                    sys.exit(-1)
 
         self.rpmbuild_basedir = build_dir
         self.display_version = self._get_display_version()
@@ -203,7 +215,7 @@ class Builder(object):
         elif dist:
             define_dist = "--define 'dist %s'" % dist
 
-        cmd = ('rpmbuild --define "_source_filedigest_algorithm md5"  --define'
+        cmd = ('LC_ALL=C rpmbuild --define "_source_filedigest_algorithm md5"  --define'
             ' "_binary_filedigest_algorithm md5" %s %s %s --nodeps -bs %s' % (
             self.rpmbuild_options, self._get_rpmbuild_dir_options(), 
             define_dist, self.spec_file))
@@ -224,7 +236,7 @@ class Builder(object):
         define_dist = ""
         if self.dist:
             define_dist = "--define 'dist %s'" % self.dist
-        cmd = ('rpmbuild --define "_source_filedigest_algorithm md5"  '
+        cmd = ('LC_ALL=C rpmbuild --define "_source_filedigest_algorithm md5"  '
             '--define "_binary_filedigest_algorithm md5" %s %s %s --clean '
             '-ba %s' % (self.rpmbuild_options, 
                 self._get_rpmbuild_dir_options(), define_dist, self.spec_file))
@@ -954,6 +966,7 @@ class UpstreamBuilder(NoTgzBuilder):
         # Insert patches into the spec file we'll be building:
         f = open(self.spec_file, 'r')
         lines = f.readlines()
+        f.close()
 
         patch_pattern = re.compile('^Patch(\d+):')
         source_pattern = re.compile('^Source\d+:')
@@ -989,7 +1002,6 @@ class UpstreamBuilder(NoTgzBuilder):
         lines.insert(patch_insert_index, "Patch%s: %s\n" % (patch_number,
             patch_filename))
         lines.insert(patch_apply_index, "%%patch%s -p1\n" % (patch_number))
-        f.close()
 
         # Now write out the modified lines to the spec file copy:
         f = open(self.spec_file, 'w')
