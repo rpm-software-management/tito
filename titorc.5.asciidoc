@@ -20,7 +20,7 @@ User preferences can be stored in files:
 
 `~/.titorc`
 
-If `~/.spacewalk-build-rc` exists, tito ignores `~/.titorc`.
+If `$HOME/.spacewalk-build-rc` exists, tito ignores `$HOME/.titorc`.
 Both files are optional.
 
 
