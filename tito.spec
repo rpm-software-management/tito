@@ -60,6 +60,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/bump-version.pl
 %{_bindir}/tar-fixup-stamp-comment.pl
 %{_bindir}/test-setup-specfile.pl
+%{_bindir}/generate-patches.pl
 %dir %{python_sitelib}/tito
 %{python_sitelib}/tito/*
 %{python_sitelib}/tito-*.egg-info

@@ -40,6 +40,7 @@ setup(
         'bin/bump-version.pl',
         'bin/tar-fixup-stamp-comment.pl',
         'bin/test-setup-specfile.pl',
+        'bin/generate-patches.pl'
     ],
 
     classifiers = [

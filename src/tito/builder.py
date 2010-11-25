@@ -933,37 +933,10 @@ class UpstreamBuilder(NoTgzBuilder):
 
         self.patch_upstream()
 
-    def patch_upstream(self):
+    def _patch_upstream(self):
+        """ Insert patches into the spec file we'll be building
+            returns (patch_number, patch_insert_index, patch_apply_index, lines)
         """
-        Generate patches for any differences between our tag and the
-        upstream tag, and apply them into an exported copy of the 
-        spec file.
-        """
-        patch_filename = "%s-to-%s-%s.patch" % (self.upstream_tag,
-                self.project_name, self.build_version)
-        patch_file = os.path.join(self.rpmbuild_gitcopy,
-                patch_filename)
-        patch_dir = self.git_root
-        if self.relative_project_dir != "/":
-            patch_dir = os.path.join(self.git_root, 
-                    self.relative_project_dir)
-        os.chdir(patch_dir)
-        debug("patch dir = %s" % patch_dir)
-        print("Generating patch [%s]" % patch_filename)
-        debug("Patch: %s" % patch_file)
-        patch_command = "git diff --relative %s..%s > %s" % \
-                (self.upstream_tag, self.git_commit_id, 
-                        patch_file)
-        debug("Generating patch with: %s" % patch_command)
-        output = run_command(patch_command)
-        print(output)
-        # Creating two copies of the patch here in the temp build directories
-        # just out of laziness. Some builders need sources in SOURCES and
-        # others need them in the git copy. Being lazy here avoids one-off
-        # hacks and both copies get cleaned up anyhow.
-        run_command("cp %s %s" % (patch_file, self.rpmbuild_sourcedir))
-
-        # Insert patches into the spec file we'll be building:
         f = open(self.spec_file, 'r')
         lines = f.readlines()
         f.close()
@@ -998,11 +971,47 @@ class UpstreamBuilder(NoTgzBuilder):
         debug("patch_apply_index = %s" % patch_apply_index)
         if patch_insert_index == 0 or patch_apply_index == 0:
             error_out("Unable to insert PatchX or %patchX lines in spec file")
+        return (patch_number, patch_insert_index, patch_apply_index, lines)
+
+    def patch_upstream(self):
+        """
+        Generate patches for any differences between our tag and the
+        upstream tag, and apply them into an exported copy of the 
+        spec file.
+        """
+        patch_filename = "%s-to-%s-%s.patch" % (self.upstream_tag,
+                self.project_name, self.build_version)
+        patch_file = os.path.join(self.rpmbuild_gitcopy,
+                patch_filename)
+        patch_dir = self.git_root
+        if self.relative_project_dir != "/":
+            patch_dir = os.path.join(self.git_root, 
+                    self.relative_project_dir)
+        os.chdir(patch_dir)
+        debug("patch dir = %s" % patch_dir)
+        print("Generating patch [%s]" % patch_filename)
+        debug("Patch: %s" % patch_file)
+        patch_command = "git diff --relative %s..%s > %s" % \
+                (self.upstream_tag, self.git_commit_id, 
+                        patch_file)
+        debug("Generating patch with: %s" % patch_command)
+        output = run_command(patch_command)
+        print(output)
+        # Creating two copies of the patch here in the temp build directories
+        # just out of laziness. Some builders need sources in SOURCES and
+        # others need them in the git copy. Being lazy here avoids one-off
+        # hacks and both copies get cleaned up anyhow.
+        run_command("cp %s %s" % (patch_file, self.rpmbuild_sourcedir))
+
+        (patch_number, patch_insert_index, patch_apply_index, lines) = self._patch_upstream()
 
         lines.insert(patch_insert_index, "Patch%s: %s\n" % (patch_number,
             patch_filename))
         lines.insert(patch_apply_index, "%%patch%s -p1\n" % (patch_number))
+        self._write_spec(lines)
 
+    def _write_spec(self, lines):
+        """ Write 'lines' to self.spec_file """
         # Now write out the modified lines to the spec file copy:
         f = open(self.spec_file, 'w')
         for line in lines:
