@@ -19,7 +19,7 @@ use warnings FATAL => 'all';
 
 my $command = shift @ARGV;
 if (not defined $command
-	or ($command ne 'bump-version' and $command ne 'bump-release')) {
+	or ($command ne 'bump-version' and $command ne 'bump-release' and $command ne 'zstream-release')) {
 	usage();
 }
 my $specfile = 0;
@@ -32,7 +32,7 @@ if (not @ARGV) {
 }
 
 sub usage {
-	die "usage: $0 { bump-version | bump-release } [--specfile] file [ files ... ]\n";
+	die "usage: $0 { bump-version | bump-release | zstream-release } [--specfile] file [ files ... ]\n";
 }
 
 my $newfile;
@@ -42,8 +42,10 @@ while (<ARGV>) {
 		if ($command eq 'bump-version') {
 			s/^(version:\s*)(.+)/ $1 . bump_version($2) /ei;
 			s/^(release:\s*)(.+)/ $1 . reset_release($2) /ei;
-		} else {
+		} elsif ($command eq 'bump-bump-release') {
 			s/^(release:\s*)(.+)/ $1 . bump_version($2) /ei;
+		} else { # zstream-release Release: 7%{?dist}
+			s/^(release:\s*)(.+)/ $1 . bump_zstream($2) /ei;
 		}
 		push @content, $_;
 	} else {
@@ -88,6 +90,13 @@ sub bump_version {
 	no warnings 'uninitialized';
 	s/^(.+\.)?([0-9]+)(\.|%|$)/$1 . ($2 + 1) . $3/e;
 	$_;
+}
+
+sub bump_zstream {
+    my $version = shift;
+    # if we do not have zstream, create .0 and then bump the version
+    $version =~ s/^(.*)(%{\?dist})$/$1$2.0/i;
+    return bump_version($version);
 }
 
 sub reset_release {

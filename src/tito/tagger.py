@@ -259,7 +259,7 @@ class VersionTagger(object):
         relative = current_dir[len(git_root) + 1:] + "/"
         return relative
 
-    def _bump_version(self, release=False):
+    def _bump_version(self, release=False, zstream=False):
         """
         Bump up the package version in the spec file.
 
@@ -276,6 +276,8 @@ class VersionTagger(object):
             bump_type = "bump-version"
             if release:
                 bump_type = "bump-release"
+            elif zstream:
+                bump_type = "bump-zstream"
 
             script_path = get_script_path("bump-version.pl")
             cmd = "%s %s --specfile %s" % \
