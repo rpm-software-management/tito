@@ -389,20 +389,10 @@ def get_class_by_name(name):
     # Split name into module and class name:
     tokens = name.split(".")
     class_name = tokens[-1]
-    module = ""
-
-    for s in tokens[0:-1]:
-        if module:
-            module = module + "."
-        module = module + s
-
-    mod = __import__(tokens[0])
-    components = name.split('.')
-    for comp in components[1:-1]:
-        mod = getattr(mod, comp)
+    module = '.'.join(tokens[0:-1])
 
     debug("Importing %s" % name)
-    c = getattr(mod, class_name)
-    return c
+    mod = __import__(module, globals(), locals(), [class_name])
+    return getattr(mod, class_name)
 
 
