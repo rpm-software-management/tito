@@ -18,3 +18,7 @@ class zStreamTagger(VersionTagger):
         self._check_tag_does_not_exist(self._get_new_tag(new_version))
         self._update_changelog(new_version)
         self._update_package_metadata(new_version, release=True)
+
+    def release_type(self):
+        """ return short string "zstream release" """
+        return "zstream release"

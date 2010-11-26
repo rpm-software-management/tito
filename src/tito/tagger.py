@@ -293,15 +293,19 @@ class VersionTagger(object):
             old_version, new_version))
         return new_version
 
-    def _update_package_metadata(self, new_version, release=False):
+    def release_type(self):
+        """ return short string which explain type of release. 
+            e.g. 'minor release
+            Child classes probably want to override this.
+        """
+        return "release"
+
+    def _update_package_metadata(self, new_version):
         """
         We track package metadata in the rel-eng/packages/ directory. Each
         file here stores the latest package version (for the git branch you
         are on) as well as the relative path to the project's code. (from the
         git root)
-
-        Set release to True when bumping the package release. (as opposed to
-        it's version)
         """
         self._clear_package_metadata()
 
@@ -323,13 +327,8 @@ class VersionTagger(object):
         run_command("git add %s" % os.path.join(self.full_project_dir,
             self.spec_file_name))
 
-        # Just an informative message appearing in the commit log:
-        release_type = "release"
-        if release:
-            release_type = "minor release"
-
         run_command('git commit -m "Automatic commit of package ' +
-                '[%s] %s [%s]."' % (self.project_name, release_type,
+                '[%s] %s [%s]."' % (self.project_name, self.release_type(),
                     new_version_w_suffix))
 
         tag_msg = "Tagging package [%s] version [%s] in directory [%s]." % \
@@ -421,4 +420,8 @@ class ReleaseTagger(VersionTagger):
 
         self._check_tag_does_not_exist(self._get_new_tag(new_version))
         self._update_changelog(new_version)
-        self._update_package_metadata(new_version, release=True)
+        self._update_package_metadata(new_version)
+
+    def release_type(self):
+        """ return short string "minor release" """
+        return "minor release"
