@@ -258,7 +258,10 @@ class Builder(object):
             if len(files_written[1:]) > 0:
                 cmd = "sudo rpm -Uvh --force %s" % ' '.join(files_written[1:])
                 print("   %s" % cmd)
-                run_command(cmd)
+                try:
+                    run_command(cmd)
+                except KeyboardInterrupt:
+                    pass
 
     def release(self):
         """
