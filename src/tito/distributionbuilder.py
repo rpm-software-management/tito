@@ -23,9 +23,9 @@ class DistributionBuilder(UpstreamBuilder):
         """ Create one patch per each release """
         os.chdir(os.path.join(self.git_root, self.relative_project_dir))
         debug("Running /usr/bin/generate-patches.pl -d %s %s %s-1 %s %s" \
-               % self.rpmbuild_gitcopy, self.project_name, self.upstream_version, self.build_version, self.git_commit_id)
+               % (self.rpmbuild_gitcopy, self.project_name, self.upstream_version, self.build_version, self.git_commit_id))
         output = run_command("/usr/bin/generate-patches.pl -d %s %s %s-1 %s %s" \
-               % self.rpmbuild_gitcopy, self.project_name, self.upstream_version, self.build_version, self.git_commit_id)
+               % (self.rpmbuild_gitcopy, self.project_name, self.upstream_version, self.build_version, self.git_commit_id))
         self.patch_files = output.split("\n")
         for p_file in self.patch_files:
             run_command("cp %s/%s %s" % (self.rpmbuild_gitcopy, p_file, self.rpmbuild_sourcedir))
