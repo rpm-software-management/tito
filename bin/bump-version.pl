@@ -42,7 +42,7 @@ while (<ARGV>) {
 		if ($command eq 'bump-version') {
 			s/^(version:\s*)(.+)/ $1 . bump_version($2) /ei;
 			s/^(release:\s*)(.+)/ $1 . reset_release($2) /ei;
-		} elsif ($command eq 'bump-bump-release') {
+		} elsif ($command eq 'bump-release') {
 			s/^(release:\s*)(.+)/ $1 . bump_version($2) /ei;
 		} else { # zstream-release Release: 7%{?dist}
 			s/^(release:\s*)(.+)/ $1 . bump_zstream($2) /ei;
