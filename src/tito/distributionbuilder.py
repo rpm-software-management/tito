@@ -14,9 +14,9 @@ class DistributionBuilder(UpstreamBuilder):
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None, dist=None,
             test=False, offline=False, auto_install=False,
-            rpmbuild_options=None):
+            rpmbuild_options=None, scratch=False):
         UpstreamBuilder.__init__(self, name, version, tag, build_dir, pkg_config,
-                global_config, user_config, dist, test, offline, auto_install, rpmbuild_options)
+                global_config, user_config, dist, test, offline, auto_install, rpmbuild_options, scratch)
         self.patch_files = []
 
     def patch_upstream(self):

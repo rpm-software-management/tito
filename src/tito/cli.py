@@ -354,6 +354,10 @@ class BuildModule(BaseCliModule):
         self.parser.add_option("--rpmbuild-options", dest='rpmbuild_options',
                 default='',
                 metavar="OPTIONS", help="Options to pass to rpmbuild.")
+        self.parser.add_option("--scratch", dest="scratch",
+                action="store_true",
+                help="Do scratch build (only for --koji-release)",
+                )
 
     def main(self, argv):
         BaseCliModule.main(self, argv)
@@ -414,7 +418,8 @@ class BuildModule(BaseCliModule):
                 test=options.test,
                 offline=options.offline,
                 auto_install=options.auto_install,
-                rpmbuild_options=options.rpmbuild_options)
+                rpmbuild_options=options.rpmbuild_options,
+                scratch=options.scratch)
         return builder
 
     def _validate_options(self):

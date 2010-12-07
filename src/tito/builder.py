@@ -46,7 +46,7 @@ class Builder(object):
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None, dist=None,
             test=False, offline=False, auto_install=False, 
-            rpmbuild_options=None):
+            rpmbuild_options=None, scratch=False):
 
         self.git_root = find_git_root()
         self.rel_eng_dir = os.path.join(self.git_root, "rel-eng")
@@ -62,6 +62,7 @@ class Builder(object):
         self.no_cleanup = False
         self.auto_install = auto_install
         self.rpmbuild_options = rpmbuild_options
+        self.scratch = scratch
         if not self.rpmbuild_options:
             self.rpmbuild_options = ''
 
@@ -321,6 +322,9 @@ class Builder(object):
         koji_opts = DEFAULT_KOJI_OPTS
         if 'KOJI_OPTIONS' in self.user_config:
             koji_opts = self.user_config['KOJI_OPTIONS']
+
+        if self.scratch:
+            koji_opts = ' '.join([koji_opts, '--scratch'])
 
         for koji_tag in koji_tags:
             # Lookup the disttag configured for this Koji tag:
@@ -687,14 +691,14 @@ class NoTgzBuilder(Builder):
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None, dist=None,
             test=False, offline=False, auto_install=False, 
-            rpmbuild_options=None):
+            rpmbuild_options=None, scratch=False):
 
         Builder.__init__(self, name=name, version=version, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
                 dist=dist, test=test, offline=offline, 
                 auto_install=auto_install, 
-                rpmbuild_options=rpmbuild_options)
+                rpmbuild_options=rpmbuild_options, scratch=scratch)
 
         # When syncing files with CVS, copy everything from git:
         self.cvs_copy_extensions = ("", )
@@ -757,13 +761,14 @@ class CvsBuilder(NoTgzBuilder):
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None, dist=None,
             test=False, offline=False, auto_install=False,
-            rpmbuild_options=None):
+            rpmbuild_options=None, scratch=False):
 
         NoTgzBuilder.__init__(self, name=name, version=version, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
                 dist=dist, test=test, offline=offline, 
-                auto_install=auto_install, rpmbuild_options=rpmbuild_options)
+                auto_install=auto_install, rpmbuild_options=rpmbuild_options,
+                scratch=scratch)
 
         # TODO: Hack to override here, patches are in a weird place with this
         # builder.
@@ -866,13 +871,14 @@ class UpstreamBuilder(NoTgzBuilder):
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None, dist=None,
             test=False, offline=False, auto_install=False, 
-            rpmbuild_options=None):
+            rpmbuild_options=None, scratch=False):
 
         NoTgzBuilder.__init__(self, name=name, version=version, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
                 dist=dist, test=test, offline=offline, 
-                auto_install=auto_install, rpmbuild_options=rpmbuild_options)
+                auto_install=auto_install, rpmbuild_options=rpmbuild_options,
+                scratch=scratch)
 
         if not pkg_config or not pkg_config.has_option("buildconfig",
                 "upstream_name"):
