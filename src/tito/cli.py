@@ -414,12 +414,7 @@ class BuildModule(BaseCliModule):
                 pkg_config=pkg_config,
                 global_config=self.global_config,
                 user_config=self.user_config,
-                dist=options.dist,
-                test=options.test,
-                offline=options.offline,
-                auto_install=options.auto_install,
-                rpmbuild_options=options.rpmbuild_options,
-                scratch=options.scratch)
+                options = options)
         return builder
 
     def _validate_options(self):
