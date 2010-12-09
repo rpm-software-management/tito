@@ -316,6 +316,18 @@ class Builder(object):
         self._cvs_make_tag()
         self._cvs_make_build()
 
+    def __is_whitelisted(self, koji_tag):
+        """ Return true if package is whitelisted in tito.props"""
+        return self.config.has_option(koji_tag, "whitelist") and \
+            self.project_name in self.config.get(koji_tag,
+                        "whitelist").strip().split(" ")
+
+    def __is_blacklisted(self, koji_tag):
+        """ Return true if package is blacklisted in tito.props"""
+        return self.config.has_option(koji_tag, "blacklist") and \
+            self.project_name in self.config.get(koji_tag,
+                        "blacklist").strip().split(" ")
+
     def _koji_release(self):
         """
         Lookup autobuild Koji tags from global config, create srpms with
@@ -339,19 +351,16 @@ class Builder(object):
             if self.config.has_option(koji_tag, "whitelist"):
                 # whitelist implies only those packages can be built to the
                 # tag,regardless if blacklist is also defined.
-                if self.project_name not in self.config.get(koji_tag,
-                        "whitelist").strip().split(" "):
+                if not self.__is_whitelisted(koji_tag):
                     print("WARNING: %s not specified in whitelist for %s" % (
                         self.project_name, koji_tag))
                     print("   Package *NOT* submitted to Koji.")
                     continue
-            elif self.config.has_option(koji_tag, "blacklist"):
-                if self.project_name in self.config.get(koji_tag,
-                        "blacklist").strip().split(" "):
-                    print("WARNING: %s specified in blacklist for %s" % (
-                        self.project_name, koji_tag))
-                    print("   Package *NOT* submitted to Koji.")
-                    continue
+            elif self.__is_blacklisted(koji_tag):
+                print("WARNING: %s specified in blacklist for %s" % (
+                    self.project_name, koji_tag))
+                print("   Package *NOT* submitted to Koji.")
+                continue
 
             # Getting tricky here, normally Builder's are only used to
             # create one rpm and then exit. Here we're going to try
@@ -365,14 +374,10 @@ class Builder(object):
         autobuild_tags = self.config.get("koji", "autobuild_tags")
         koji_tags = autobuild_tags.strip().split(" ")
         for koji_tag in koji_tags:
-            if self.config.has_option(koji_tag, "whitelist") and \
-                    self.project_name in self.config.get(koji_tag,
-                    "whitelist").strip().split(" "):
+            if self.__is_whitelisted(koji_tag):
                 if 'DEBUG' in os.environ:
                     koji_tag += ' whitelisted'
-            elif self.config.has_option(koji_tag, "blacklist") and \
-                    self.project_name in self.config.get(koji_tag,
-                    "blacklist").strip().split(" "):
+            elif self.__is_blacklisted(koji_tag):
                 if 'DEBUG' in os.environ:
                     koji_tag += ' blacklisted'
                 else:
