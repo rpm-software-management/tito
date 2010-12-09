@@ -349,6 +349,10 @@ class BuildModule(BaseCliModule):
                 action="store_true",
                 help="List tags for which we build this package",
                 )
+        self.parser.add_option("--only-tags", dest="only_tags",
+                action="append", metavar="KOJITAG",
+                help="Build in koji only for specified tags",
+                )
         self.parser.add_option("--upload-new-source", dest="cvs_new_sources",
                 action="append",
                 help=("Upload a new source tarball to CVS lookaside. "

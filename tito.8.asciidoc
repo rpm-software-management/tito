@@ -162,6 +162,9 @@ List tags for which we build this package. If you set --debug together
 with this option, you will see all tags and whether they are whitelisted
 or blacklisted.
 
+--only-tags='KOJI_TAG'::
+Build in koji only for specified tags. Can be specified multiple times.
+
 --upload-new-source='CVS_NEW_SOURCES'::
 Upload a new source tarball to CVS lookaside. (i.e.
 runs 'make new-sources') Must be used until 'sources'

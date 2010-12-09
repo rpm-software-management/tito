@@ -65,9 +65,10 @@ class Builder(object):
             self.auto_install = options.auto_install
             self.rpmbuild_options = options.rpmbuild_options
             self.scratch = options.scratch
+            self.only_tags = options.only_tags
         else:
             self.dist = self.test = self.offline = self.auto_install = self.rpmbuild_options \
-            = self.scratch = None
+            = self.scratch = self.only_tags = None
         if not self.rpmbuild_options:
             self.rpmbuild_options = ''
 
@@ -346,6 +347,8 @@ class Builder(object):
             koji_opts = ' '.join([koji_opts, '--scratch'])
 
         for koji_tag in koji_tags:
+            if self.only_tags and koji_tag not in self.only_tags:
+                continue
             # Lookup the disttag configured for this Koji tag:
             disttag = self.config.get(koji_tag, "disttag")
             if self.config.has_option(koji_tag, "whitelist"):
