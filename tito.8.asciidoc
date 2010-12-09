@@ -157,6 +157,11 @@ Release package only in CVS. (if possible)
 --koji-release::
 Release package only in Koji. (if possible)
 
+--list-tags::
+List tags for which we build this package. If you set --debug together
+with this option, you will see all tags and whether they are whitelisted
+or blacklisted.
+
 --upload-new-source='CVS_NEW_SOURCES'::
 Upload a new source tarball to CVS lookaside. (i.e.
 runs 'make new-sources') Must be used until 'sources'

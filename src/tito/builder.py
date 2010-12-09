@@ -179,6 +179,8 @@ class Builder(object):
             self._cvs_release()
         elif options.koji_release:
             self._koji_release()
+        elif options.list_tags:
+            self._list_tags()
 
         self.cleanup()
         return self.artifacts
@@ -357,6 +359,25 @@ class Builder(object):
             self._srpm(dist=disttag, reuse_cvs_checkout=True)
 
             self._submit_build("koji", koji_opts, koji_tag)
+
+    def _list_tags(self):
+        """ Print tags to which we build this package. """
+        autobuild_tags = self.config.get("koji", "autobuild_tags")
+        koji_tags = autobuild_tags.strip().split(" ")
+        for koji_tag in koji_tags:
+            if self.config.has_option(koji_tag, "whitelist") and \
+                    self.project_name in self.config.get(koji_tag,
+                    "whitelist").strip().split(" "):
+                if 'DEBUG' in os.environ:
+                    koji_tag += ' whitelisted'
+            elif self.config.has_option(koji_tag, "blacklist") and \
+                    self.project_name in self.config.get(koji_tag,
+                    "blacklist").strip().split(" "):
+                if 'DEBUG' in os.environ:
+                    koji_tag += ' blacklisted'
+                else:
+                    continue
+            print koji_tag
 
     def _setup_sources(self):
         """
