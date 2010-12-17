@@ -131,6 +131,7 @@ class VersionTagger(object):
         """
         if self._no_auto_changelog:
             debug("Skipping changelog generation.")
+            return
 
         in_f = open(self.spec_file, 'r')
         out_f = open(self.spec_file + ".new", 'w')
