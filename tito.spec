@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.2.0
+Version: 0.3.0
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -67,6 +67,26 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Wed Jan 05 2011 Devan Goodwin <dgoodwin@rm-rf.ca> 0.3.0-1
+- implement --only-tags option for builder class (msuchy@redhat.com)
+- implement --list-tags option for builder (msuchy@redhat.com)
+- add option --scratch to builder class (msuchy@redhat.com)
+- do not throw traceback if you hit Ctrl+C during Auto-instaling
+  (msuchy@redhat.com)
+- allow child taggers to control commit message (msuchy@redhat.com)
+- add new tagger: zStreamTagger - bump up release part after dist tag
+  (msuchy@redhat.com)
+- Better error-reporting when spec file has errors (jumanjiman@gmail.com)
+- if we grep rpmbuild output for some string, we have to switch to C locale
+  (miroslav@suchy.cz)
+- Adding more helpfull error message to show user what is busted
+  (mmccune@redhat.com)
+- Fix rpm command suggestion for broken specs. (dgoodwin@rm-rf.ca)
+- add manpage source: tito(8) (jumanjiman@gmail.com)
+- add manpage source: titorc(5) (jumanjiman@gmail.com)
+- adding rpm-build as a Requires. Seems pretty critical (mmccune@redhat.com)
+- Add missing dep on python-setuptools. (dgoodwin@rm-rf.ca)
+
 * Wed Jun 02 2010 Devan Goodwin <dgoodwin@rm-rf.ca> 0.2.0-1
 - Restrict building to a minimum version of tito. (msuchy@redhat.com)
 - Added option to pass custom options to rpmbuild. (dgoodwin@rm-rf.ca)
