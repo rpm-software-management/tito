@@ -15,6 +15,7 @@ BuildArch: noarch
 BuildRequires: python-devel
 BuildRequires: python-setuptools
 BuildRequires: asciidoc
+BuildRequires: libxslt
 
 Requires: python-setuptools
 Requires: rpm-build
