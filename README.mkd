@@ -132,3 +132,47 @@ Some user specific settings can be defined in ~/.titorc:
 
 # Default Location to write temp files, tarballs and rpms to:
 RPMBUILD_BASEDIR = "/tmp/tito" 
+
+The main tito configuration file resides in your git repository at /rel-eng/tito.props. Below is an attempt to document each supported section and option:
+
+## Section: [globalconfig]
+
+### default_builder / default_tagger
+
+Specified the default builder to use if the package does not specify it's own in a package specific tito.props. 
+
+I.e:
+
+> default_builder = spacewalk.releng.builder.Builder
+> default_tagger = spacewalk.releng.tagger.VersionTagger
+
+### lib_dir
+
+Specifies an optional directory where you may be storing custom tito builders/taggers in your git repository. If you have very specific build needs, this can be useful to tailer the core tito classes with inheritance, or to write your own from scratch. Note that this has disadvantages as well, as this code will need to be kept in all your branches, and can have implications when building tags from the past.
+
+> lib_dir=rel-eng/lib/
+
+### tag_suffix 
+
+An optional specification of a suffix to append to all tags created by tito for this repo. Can be useful for situations where one git repository is inheriting from another, but tags are created in both. The suffix will be an indicator as to which repo the tag originated in.
+ 
+> tag_suffix = -mysuffix 
+
+## Section: [cvs]
+
+Tito has support for releasing builds in a CVS driven buildsystem, similar to the former Fedora build infrastructure. (WARNING: this has now been replaced with a git infrastructure, this module no longer can be used with Fedora)
+
+
+> [cvs]
+> cvsroot = :ext:myuser@cvs.fedoraproject.org:/cvs/extra
+> branches = CVSBRANCH1 CVSBRANCH2
+
+
+
+[requirements]
+tito=0.2.0
+
+
+
+
+
