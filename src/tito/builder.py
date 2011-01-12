@@ -119,6 +119,12 @@ class Builder(object):
         # Set to true if we've already created a tgz:
         self.ran_tgz = False
 
+        # Used to make sure we only modify the spec file for a test build 
+        # once. The srpm method may be called multiple times during koji
+        # releases to create the proper disttags, but we only want to modify
+        # the spec file once.
+        self.ran_setup_test_specfile = False
+
         # NOTE: These are defined later when/if we actually dump a copy of the
         # project source at the tag we're building. Only then can we search for
         # a spec file.
@@ -665,7 +671,7 @@ class Builder(object):
             self.rpmbuild_sourcedir, self.rpmbuild_builddir))
 
     def _setup_test_specfile(self):
-        if self.test:
+        if self.test and not self.ran_setup_test_specfile:
             # If making a test rpm we need to get a little crazy with the spec
             # file we're building off. (note that this is a temp copy of the
             # spec) Swap out the actual release for one that includes the git
@@ -682,6 +688,7 @@ class Builder(object):
                         self.tgz_filename,
                     )
             run_command(cmd)
+            self.ran_setup_test_specfile = True
 
     def _get_rpmbuild_dir_options(self):
         return ('--define "_sourcedir %s" --define "_builddir %s" --define '
