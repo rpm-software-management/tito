@@ -125,6 +125,15 @@ class VersionTagger(object):
         print
         undo_tag(tag)
 
+    def _generate_default_changelog(self, last_tag):
+        """
+        Run git-log and will generate changelog, which still can be edited by user
+        in _make_changelog.
+        """
+        patch_command = "git log --pretty=format:%%s\ \(%%ae\)" \
+                         " --relative %s..%s -- %s" % (last_tag, "HEAD", ".")
+        return run_command(patch_command)
+
     def _make_changelog(self):
         """
         Create a new changelog entry in the spec, with line items from git
@@ -147,11 +156,7 @@ class VersionTagger(object):
                 # don't die if this is a new package with no history
                 if old_version != None:
                     last_tag = "%s-%s" % (self.project_name, old_version)
-                    patch_command = \
-                            "git log --pretty=format:%%s\ \(%%ae\)" \
-                            " --relative %s..%s -- %s" % \
-                            (last_tag, "HEAD", ".")
-                    output = run_command(patch_command)
+                    output = self._generate_default_changelog(last_tag)
                 else:
                     output = self._new_changelog_msg
 

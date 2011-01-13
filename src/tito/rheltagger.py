@@ -1,0 +1,53 @@
+import re
+from tito.common import run_command
+from tito.tagger import ReleaseTagger
+
+class RHELTagger(ReleaseTagger):
+    """
+    Tagger which is based on ReleaseTagger and use Red Hat Enterprise Linux
+    format of Changelog:
+    - Resolves: #1111 - description
+    or
+    - Related: #1111 - description
+    if BZ number was already mentioned in this changelog
+
+    Used for:
+        - Red Hat Enterprise Linux
+
+    If you want it put in tito.pros (global) or localy in build.py.props:
+    [buildconfig]
+    tagger = tito.rheltagger.RHELTagger
+    """
+
+    def _generate_default_changelog(self, last_tag):
+        """
+        Run git-log and will generate changelog, which still can be edited by user
+        in _make_changelog.
+        use format:
+        - Resolves: #1111 - description
+        """
+        patch_command = "git log --pretty='format:%%s'" \
+                         " --relative %s..%s -- %s" % (last_tag, "HEAD", ".")
+        output = run_command(patch_command)
+        BZ = {}
+        result = None
+        for line in reversed(output.split('\n')):
+            # delete "(cherry picked from ..." from subject
+            m = re.match("(.+)(\(cherry picked from .*\))", line)
+            if m:
+                line = m.group(1)
+
+            # prepend Related/Resolved if subject contains BZ number
+            m = re.match("(\d+)\s+-\s+(.*)", line)
+            if m:
+                bz_number = m.group(1)
+                if bz_number in BZ:
+                    line = "Related: #%s - %s" % (bz_number, m.group(2))
+                else:
+                    line = "Resolved: #%s - %s" % (bz_number, m.group(2))
+                    BZ[bz_number] = 1
+            if result:
+	        result = line + "\n" + result
+            else:
+                result = line
+        return result
