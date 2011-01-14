@@ -125,6 +125,18 @@ class VersionTagger(object):
         print
         undo_tag(tag)
 
+    def _changelog_remove_cherrypick(self, line):
+        """
+        remove text "(cherry picked from commit ..." from line unless
+        changelog_do_not_remove_cherrypick is specified in [globalconfig]
+        """
+        if not (self.config.has_option("globalconfig", "changelog_do_not_remove_cherrypick") 
+            and self.config.get("globalconfig", "changelog_do_not_remove_cherrypick")):
+            m = re.match("(.+)(\(cherry picked from .*\))", line)
+            if m:
+                line = m.group(1)
+        return line
+
     def _generate_default_changelog(self, last_tag):
         """
         Run git-log and will generate changelog, which still can be edited by user
@@ -132,7 +144,11 @@ class VersionTagger(object):
         """
         patch_command = "git log --pretty=format:%%s\ \(%%ae\)" \
                          " --relative %s..%s -- %s" % (last_tag, "HEAD", ".")
-        return run_command(patch_command)
+        output = run_command(patch_command)
+        result = []
+        for line in output.split('\n'):
+            result.extend([self._changelog_remove_cherrypick(line)])
+        return '\n'.join(result)
 
     def _make_changelog(self):
         """
