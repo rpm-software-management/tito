@@ -32,10 +32,7 @@ class RHELTagger(ReleaseTagger):
         BZ = {}
         result = None
         for line in reversed(output.split('\n')):
-            # delete "(cherry picked from ..." from subject
-            m = re.match("(.+)(\(cherry picked from .*\))", line)
-            if m:
-                line = m.group(1)
+            line = self._changelog_remove_cherrypick(line)
 
             # prepend Related/Resolved if subject contains BZ number
             m = re.match("(\d+)\s+-\s+(.*)", line)
