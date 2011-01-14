@@ -155,7 +155,7 @@ class VersionTagger(object):
         output = run_command(patch_command)
         result = []
         for line in output.split('\n'):
-            result.extend(self._changelog_remove_cherrypick(line))
+            result.extend([self._changelog_remove_cherrypick(line)])
         return '\n'.join(result)
 
     def _make_changelog(self):
