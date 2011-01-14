@@ -21,6 +21,53 @@ import commands
 
 DEFAULT_BUILD_DIR = "/tmp/tito"
 
+def extract_bzs(output):
+    """
+    Parses the output of CVS diff or a series of git commit log entries,
+    looking for new lines which look like a commit of the format:
+
+    ######: Commit message
+
+    The bugzilla numbers references will be extracted into a list for a
+    Resolves/Related line used in some CVS build systems.
+    """
+    regex = re.compile(r"^(\d*):.*")
+    diff_regex = re.compile(r"^(\+ )?(\d*)\s?[:-]+\s?.*")
+    bzs = []
+    for line in output.split("\n"):
+        match = re.match(regex, line)
+        match2 = re.match(diff_regex, line)
+        if match:
+            bzs.append(match.group(1))
+        elif match2:
+            bzs.append(match2.group(2))
+
+    return bzs
+
+def gen_commit_bugzilla_status(bugzilla_ids):
+    """
+    Returns a Resolves line for the given bugzilla IDs.
+    """
+    output = ""
+    for bz in bugzilla_ids:
+        output = "%sResolves: #%s\n" % (output, bz)
+    return output
+
+    #BZ = {}
+    #result = None
+    #for line in reversed(output.split('\n')):
+    #    m = re.match("(\d+)\s+-\s+(.*)", line)
+    #    if m:
+    #        bz_number = m.group(1)
+    #        if bz_number in BZ:
+    #            line = "Related: #%s - %s" % (bz_number, m.group(2))
+    #        else:
+    #            line = "Resolved: #%s - %s" % (bz_number, m.group(2))
+    #            BZ[bz_number] = 1
+    #    if result:
+    #        result = line + "\n" + result
+    #    else:
+    #        result = line
 
 def error_out(error_msgs):
     """

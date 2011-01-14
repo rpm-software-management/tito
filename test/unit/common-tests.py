@@ -74,3 +74,53 @@ class CommonTests(unittest.TestCase):
         line = "this isn't a version fool.\n"
         self.assertEquals(line, replace_version(line, "2.5.3"))
 
+
+class ExtractBugzillasTest(unittest.TestCase):
+
+    def test_single_line(self):
+        commit_log = "123456: Did something interesting."
+        results = extract_bzs(commit_log)
+        self.assertEquals(1, len(results))
+        self.assertEquals("123456", results[0])
+
+    def test_single_with_dash(self):
+        commit_log = "123456 - Did something interesting."
+        results = extract_bzs(commit_log)
+        self.assertEquals(1, len(results))
+        self.assertEquals("123456", results[0])
+
+    def test_single_with_no_spaces(self):
+        commit_log = "123456-Did something interesting."
+        results = extract_bzs(commit_log)
+        self.assertEquals(1, len(results))
+        self.assertEquals("123456", results[0])
+
+    def test_diff_format(self):
+        commit_log = "+ 123456: Did something interesting."
+        results = extract_bzs(commit_log)
+        self.assertEquals(1, len(results))
+        self.assertEquals("123456", results[0])
+
+    def test_single_line_no_bz(self):
+        commit_log = "Did something interesting."
+        results = extract_bzs(commit_log)
+        self.assertEquals(0, len(results))
+
+    def test_multi_line(self):
+        commit_log = "123456: Did something interesting.\nAnother commit.\n" \
+                "456789: A third commit."
+        results = extract_bzs(commit_log)
+        self.assertEquals(2, len(results))
+        self.assertEquals("123456", results[0])
+        self.assertEquals("456789", results[1])
+
+
+class GenResolvesLineTest(unittest.TestCase):
+
+    def test_single_bz(self):
+        line = gen_commit_bugzilla_status(["123456"])
+        self.assertEquals("Resolves: #123456\n", line)
+
+    def test_multi_bz(self):
+        line = gen_commit_bugzilla_status(["123456", "456789", "789123"])
+        self.assertEquals("Resolves: #123456\nResolves: #456789\nResolves: #789123\n", line)
