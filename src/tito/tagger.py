@@ -136,12 +136,22 @@ class VersionTagger(object):
                 line = m.group(1)
         return line
 
+    def _changelog_email(self):
+        """ if you have set changelog_with_email in [globalconfig] set to 1, it will return 
+            string '(%ae)'
+        """
+        result = ''
+        if (self.config.has_option("globalconfig", "changelog_with_email")
+            and self.config.get("globalconfig", "changelog_with_email")):
+            result = ' (%ae)'
+        return result
+
     def _generate_default_changelog(self, last_tag):
         """ Run git-log and will generate changelog, which still can be edited by user
             in _make_changelog.
         """
-        patch_command = "git log --pretty=format:%%s\ \(%%ae\)" \
-                         " --relative %s..%s -- %s" % (last_tag, "HEAD", ".")
+        patch_command = "git log --pretty='format:%%s%s'" \
+                         " --relative %s..%s -- %s" % (self._changelog_email(), last_tag, "HEAD", ".")
         output = run_command(patch_command)
         result = []
         for line in output.split('\n'):

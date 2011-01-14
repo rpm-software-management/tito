@@ -25,8 +25,8 @@ class RHELTagger(ReleaseTagger):
             use format:
             - Resolves: #1111 - description
         """
-        patch_command = "git log --pretty='format:%%s'" \
-                         " --relative %s..%s -- %s" % (last_tag, "HEAD", ".")
+        patch_command = "git log --pretty='format:%%s%s'" \
+                         " --relative %s..%s -- %s" % (self._changelog_email(), last_tag, "HEAD", ".")
         output = run_command(patch_command)
         BZ = {}
         result = None
