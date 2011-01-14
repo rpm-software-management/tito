@@ -28,30 +28,27 @@ def extract_bzs(output):
 
     ######: Commit message
 
-    The bugzilla numbers references will be extracted into a list for a
-    Resolves/Related line used in some CVS build systems.
+    Returns a list of lines of text similar to:
+
+    Resolves: #XXXXXX - Commit message
     """
-    regex = re.compile(r"^(\d*):.*")
-    diff_regex = re.compile(r"^(\+ )?(\d*)\s?[:-]+\s?.*")
+    regex = re.compile(r"^(\d*)\s?[:-]+\s?(.*)")
+    diff_regex = re.compile(r"^(\+ )?(\d*)\s?[:-]+\s?(.*)")
     bzs = []
     for line in output.split("\n"):
         match = re.match(regex, line)
         match2 = re.match(diff_regex, line)
         if match:
-            bzs.append(match.group(1))
+            print match.group(1)
+            bzs.append((match.group(1), match.group(2)))
         elif match2:
-            bzs.append(match2.group(2))
+            bzs.append((match2.group(2), match2.group(3)))
 
-    return bzs
-
-def gen_commit_bugzilla_status(bugzilla_ids):
-    """
-    Returns a Resolves line for the given bugzilla IDs.
-    """
-    output = ""
-    for bz in bugzilla_ids:
-        output = "%sResolves: #%s\n" % (output, bz)
+    output = []
+    for bz in bzs:
+        output.append("Resolves: #%s - %s" % (bz[0], bz[1]))
     return output
+
 
     #BZ = {}
     #result = None
