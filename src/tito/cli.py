@@ -534,6 +534,8 @@ class InitModule(BaseCliModule):
             out_f.write("default_builder = %s\n" % 'tito.builder.Builder')
             out_f.write(
                 "default_tagger = %s\n" % 'tito.tagger.VersionTagger')
+            out_f.write("changelog_do_not_remove_cherrypick = 0\n")
+            out_f.write("changelog_with_email = 1\n")
             out_f.close()
             print("   - wrote %s" % GLOBAL_BUILD_PROPS_FILENAME)
 

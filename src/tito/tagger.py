@@ -125,6 +125,43 @@ class VersionTagger(object):
         print
         undo_tag(tag)
 
+    def _changelog_remove_cherrypick(self, line):
+        """
+        remove text "(cherry picked from commit ..." from line unless
+        changelog_do_not_remove_cherrypick is specified in [globalconfig]
+        """
+        if not (self.config.has_option("globalconfig", "changelog_do_not_remove_cherrypick") 
+            and self.config.get("globalconfig", "changelog_do_not_remove_cherrypick")):
+            m = re.match("(.+)(\(cherry picked from .*\))", line)
+            if m:
+                line = m.group(1)
+        return line
+
+    def _changelog_email(self):
+        """
+        if you have set changelog_with_email in [globalconfig] set to 1, it will return 
+        string '(%ae)'
+        """
+        result = ''
+        if (self.config.has_option("globalconfig", "changelog_with_email")
+            and self.config.get("globalconfig", "changelog_with_email")) or \
+            not self.config.has_option("globalconfig", "changelog_with_email"):
+            result = ' (%ae)'
+        return result
+
+    def _generate_default_changelog(self, last_tag):
+        """
+        Run git-log and will generate changelog, which still can be edited by user
+        in _make_changelog.
+        """
+        patch_command = "git log --pretty='format:%%s%s'" \
+                         " --relative %s..%s -- %s" % (self._changelog_email(), last_tag, "HEAD", ".")
+        output = run_command(patch_command)
+        result = []
+        for line in output.split('\n'):
+            result.extend([self._changelog_remove_cherrypick(line)])
+        return '\n'.join(result)
+
     def _make_changelog(self):
         """
         Create a new changelog entry in the spec, with line items from git
@@ -148,11 +185,7 @@ class VersionTagger(object):
                 # don't die if this is a new package with no history
                 if old_version != None:
                     last_tag = "%s-%s" % (self.project_name, old_version)
-                    patch_command = \
-                            "git log --pretty=format:%%s\ \(%%ae\)" \
-                            " --relative %s..%s -- %s" % \
-                            (last_tag, "HEAD", ".")
-                    output = run_command(patch_command)
+                    output = self._generate_default_changelog(last_tag)
                 else:
                     output = self._new_changelog_msg
 
