@@ -26,7 +26,7 @@ from distutils.version import LooseVersion as loose_version
 from tito.common import (debug, run_command, error_out, find_git_root,
         create_tgz, get_build_commit, find_spec_file, get_script_path,
         get_relative_project_dir, check_tag_exists,
-        get_commit_count, get_latest_commit)
+        get_commit_count, get_latest_commit, extract_bzs)
 from tito.common import get_class_by_name
 
 DEFAULT_KOJI_OPTS = "build --nowait"
@@ -321,7 +321,6 @@ class Builder(object):
         self._cvs_upload_sources()
 
         self._cvs_user_confirm_commit()
-        self._cvs_user_confirm_commit_msg()
 
         self._cvs_make_tag()
         self._cvs_make_build()
@@ -551,8 +550,8 @@ class Builder(object):
         print("")
 
         os.chdir(self.cvs_package_workdir)
-        (status, output) = commands.getstatusoutput("cvs diff -u")
-        print(output)
+        (status, diff_output) = commands.getstatusoutput("cvs diff -u")
+        print(diff_output)
 
         print("")
         print("##### Please review the above diff #####")
@@ -562,12 +561,17 @@ class Builder(object):
             self.cleanup()
             sys.exit(1)
 
-    def _cvs_user_confirm_commit_msg(self):
+        self._cvs_user_confirm_commit_msg(diff_output)
+
+    def _cvs_user_confirm_commit_msg(self, diff_output):
 
         fd, name = tempfile.mkstemp()
         debug("Storing CVS commit message in temp file: %s" % name)
         os.write(fd, "Update %s to %s\n" % (self.project_name,
             self.build_version))
+        # Write out Resolves line for all bugzillas we see in commit diff:
+        for line in extract_bzs(diff_output):
+            os.write(fd, line + "\n")
 
         print("")
         print("##### CVS commit message: #####")
