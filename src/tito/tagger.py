@@ -60,7 +60,7 @@ class VersionTagger(object):
         self.today = strftime("%a %b %d %Y")
         (self.git_user, self.git_email) = self._get_git_user_info()
         self.changelog_regex = re.compile('\\*\s%s\s%s(\s<%s>)?' % (self.today,
-            self.git_user, self.git_email))
+            self.git_user, self.git_email.replace("+", "\+").replace(".", "\.")))
 
         self._no_auto_changelog = False
         self._accept_auto_changelog = False
