@@ -272,11 +272,31 @@ class Builder(object):
         if self.auto_install:
             print
             print("Auto-installing packages:")
+            print
+
+            dont_install = []
+            if 'NO_AUTO_INSTALL' in self.user_config:
+                dont_install = self.user_config['NO_AUTO_INSTALL'].split(" ")
+                debug("Will not auto-install any packages matching: %s" % dont_install)
+
             if len(files_written[1:]) > 0:
-                cmd = "sudo rpm -Uvh --force %s" % ' '.join(files_written[1:])
-                print("   %s" % cmd)
+                do_install = []
+                for to_inst in files_written[1:]:
+                    install = True
+                    for skip in dont_install:
+                        if skip in to_inst:
+                            install = False
+                            print("Skipping: %s" % to_inst)
+                            break
+                    if install:
+                        do_install.append(to_inst)
+
+                print
+                cmd = "sudo rpm -Uvh --force %s" % ' '.join(do_install)
+                print("%s" % cmd)
                 try:
                     run_command(cmd)
+                    print
                 except KeyboardInterrupt:
                     pass
 

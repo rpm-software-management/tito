@@ -131,7 +131,11 @@ CONFIGURATION
 Some user specific settings can be defined in ~/.titorc:
 
 # Default Location to write temp files, tarballs and rpms to:
-RPMBUILD_BASEDIR = "/tmp/tito" 
+RPMBUILD_BASEDIR = /tmp/tito
+
+# Specify packages to not auto-install. Uses a simple string contains
+# comparison.
+NO_AUTO_INSTALL = project-subpkg1 project-subpkg2
 
 The main tito configuration file resides in your git repository at /rel-eng/tito.props. Below is an attempt to document each supported section and option:
 
