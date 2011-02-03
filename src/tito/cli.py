@@ -337,6 +337,11 @@ class BuildModule(BaseCliModule):
                     "(import into CVS and submit to build system, or create ",
                     "src.rpm's and submit directly to koji)",
                 ))
+        self.parser.add_option("--dry-run", dest="dry_run",
+                action="store_true", default=False,
+                help="Do not actually commit/push anything during --release.",
+                )
+
         self.parser.add_option("--cvs-release", dest="cvs_release",
                 action="store_true",
                 help="Release package only in CVS. (if possible)",

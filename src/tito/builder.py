@@ -68,6 +68,7 @@ class Builder(object):
             self.rpmbuild_options = options.rpmbuild_options
             self.scratch = options.scratch
             self.only_tags = options.only_tags
+            self.dry_run = options.dry_run
         else:
             self.dist = self.test = self.offline = self.auto_install = self.rpmbuild_options \
             = self.scratch = self.only_tags = None
@@ -614,23 +615,36 @@ class Builder(object):
                 editor = os.environ["EDITOR"]
             subprocess.call([editor, name])
 
-        print("Proceeding with commit.")
-        os.chdir(self.cvs_package_workdir)
         cmd = 'cvs commit -F %s' % name
         debug("CVS commit command: %s" % cmd)
-        output = run_command(cmd)
+        if self.dry_run:
+            self.print_dry_run_warning(cmd)
+        else:
+            print("Proceeding with commit.")
+            os.chdir(self.cvs_package_workdir)
+            output = run_command(cmd)
 
         os.unlink(name)
+
+    def print_dry_run_warning(self, command_that_would_be_run_otherwise):
+        print
+        print("WARNING: Skipping command due to --dry-run: %s" %
+                command_that_would_be_run_otherwise)
+        print
 
     def _cvs_make_tag(self):
         """ Create a CVS tag based on what we just committed. """
         os.chdir(self.cvs_package_workdir)
+        cmd = "make tag"
+        if self.dry_run:
+            self.print_dry_run_warning(cmd)
+            return
         print("Creating CVS tags...")
         for branch in self.cvs_branches:
             branch_dir = os.path.join(self.cvs_workdir, self.project_name,
                     branch)
             os.chdir(branch_dir)
-            (status, output) = commands.getstatusoutput("make tag")
+            (status, output) = commands.getstatusoutput(cmd)
             print(output)
             if status > 1:
                 self.cleanup()
@@ -638,13 +652,17 @@ class Builder(object):
 
     def _cvs_make_build(self):
         """ Build srpm and submit to build system. """
+        cmd = "BUILD_FLAGS=--nowait make build"
+        if self.dry_run:
+            self.print_dry_run_warning(cmd)
+            return
         os.chdir(self.cvs_package_workdir)
         print("Submitting CVS builds...")
         for branch in self.cvs_branches:
             branch_dir = os.path.join(self.cvs_workdir, self.project_name,
                     branch)
             os.chdir(branch_dir)
-            output = run_command("BUILD_FLAGS=--nowait make build")
+            output = run_command(cmd)
             print(output)
 
     def _can_build_in_cvs(self):
@@ -688,6 +706,11 @@ class Builder(object):
         """ Submit srpm to brew/koji. """
         cmd = "%s %s %s %s" % (executable, koji_opts, tag, self.srpm_location)
         print("\nSubmitting build with: %s" % cmd)
+
+        if self.dry_run:
+            self.print_dry_run_warning(cmd)
+            return
+
         output = run_command(cmd)
         print(output)
 
