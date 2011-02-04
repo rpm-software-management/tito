@@ -356,11 +356,15 @@ class Builder(object):
         # TODO: replace None with username here
         os.chdir(self.cvs_workdir)
         pyfedpkg.clone(self.project_name, None, self.cvs_workdir)
-        os.chdir(os.path.join(self.cvs_workdir, self.project_name))
+
+        project_checkout = os.path.join(self.cvs_workdir, self.project_name)
+        os.chdir(project_checkout)
 
         self.tgz()
 
-        self._git_sync_files()
+        self._git_sync_files(project_checkout)
+        self._git_upload_sources(project_checkout)
+        self._git_user_confirm_commit(project_checkout)
 
 
     def __is_whitelisted(self, koji_tag):
@@ -483,6 +487,27 @@ class Builder(object):
                 error_out("%s CVS checkout is missing branch: %s" %
                         (self.project_name, branch))
 
+    def _git_upload_sources(self, project_checkout):
+        """
+        Upload any tarballs to the lookaside directory. (if necessary)
+        Uses the "fedpkg new-sources" command
+        """
+        if not self.sources:
+            debug("No sources need to be uploaded.")
+            return
+
+        print("Uploading sources to lookaside:")
+        os.chdir(project_checkout)
+        cmd = 'fedpkg new-sources %s' % (" ".join(self.sources))
+        debug(cmd)
+
+        if self.dry_run:
+            self.print_dry_run_warning(cmd)
+            return
+
+        output = run_command(cmd)
+        debug(output)
+
     def _cvs_upload_sources(self):
         """
         Upload any tarballs to the CVS lookaside directory. (if necessary)
@@ -499,6 +524,10 @@ class Builder(object):
             os.chdir(branch_dir)
             cmd = 'make new-sources FILES="%s"' % (" ".join(self.sources))
             debug(cmd)
+            if self.dry_run:
+                self.print_dry_run_warning(cmd)
+                return
+
             output = run_command(cmd)
             debug(output)
 
@@ -543,9 +572,9 @@ class Builder(object):
                 debug("   copying:   %s" % filename)
                 files_to_copy.append(full_filepath)
 
-            return files_to_copy
+        return files_to_copy
 
-    def _git_sync_files(self):
+    def _git_sync_files(self, project_checkout):
         """
         Copy files from our git into each git build branch and add them.
 
@@ -558,16 +587,15 @@ class Builder(object):
         debug("Searching for files to copy to build system git:")
         files_to_copy = self._list_files_to_copy()
 
-        build_sys_dir = os.path.join(self.cvs_workdir, self.project_name)
-        os.chdir(build_sys_dir)
+        os.chdir(project_checkout)
 
         # TODO:
         #for branch in self.cvs_branches:
         #print("Syncing files with git branch [%s]" % branch)
         new, copied, old =  \
-                self._sync_files(files_to_copy, build_sys_dir)
+                self._sync_files(files_to_copy, project_checkout)
 
-        os.chdir(build_sys_dir)
+        os.chdir(project_checkout)
 
         # Git add everything:
         for add_file in (new + copied):
@@ -654,6 +682,36 @@ class Builder(object):
                 old_files.append(filename)
 
         return new_files, copied_files, old_files
+
+    def _git_user_confirm_commit(self, project_checkout):
+        """ Prompt user if they wish to proceed with commit. """
+        print("")
+        text = "Running 'fedpkg diff' in: %s" % project_checkout
+        print("#" * len(text))
+        print(text)
+        print("#" * len(text))
+        print("")
+
+        os.chdir(project_checkout)
+        (status, diff_output) = commands.getstatusoutput("fedpkg diff")
+        print(diff_output)
+
+        print("")
+        print("##### Please review the above diff #####")
+        answer = raw_input("Do you wish to proceed with commit? [y/n] ")
+        if answer.lower() not in ['y', 'yes', 'ok', 'sure']:
+            print("Fine, you're on your own!")
+            self.cleanup()
+            sys.exit(1)
+
+        cmd = 'fedpkg commit -m "Update %s to %s"' % (self.project_name, self.build_version)
+        debug("git commit command: %s" % cmd)
+        if self.dry_run:
+            self.print_dry_run_warning(cmd)
+        else:
+            print("Proceeding with commit.")
+            os.chdir(self.cvs_package_workdir)
+            output = run_command(cmd)
 
     def _cvs_user_confirm_commit(self):
         """ Prompt user if they wish to proceed with commit. """
