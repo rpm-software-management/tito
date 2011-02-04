@@ -33,7 +33,7 @@ DEFAULT_KOJI_OPTS = "build --nowait"
 DEFAULT_CVS_BUILD_DIR = "cvswork"
 
 # List of CVS files to protect when syncing git with a CVS module:
-CVS_PROTECT_FILES = ('branch', 'CVS', '.cvsignore', 'Makefile', 'sources')
+PROTECTED_BUILD_SYS_FILES = ('branch', 'CVS', '.cvsignore', 'Makefile', 'sources', ".git", ".gitignore")
 
 
 class Builder(object):
@@ -189,6 +189,8 @@ class Builder(object):
             self._cvs_release()
         elif options.koji_release:
             self._koji_release()
+        elif options.git_release:
+            self._git_release()
         elif options.list_tags:
             self._list_tags()
 
@@ -346,6 +348,21 @@ class Builder(object):
         self._cvs_make_tag()
         self._cvs_make_build()
 
+    def _git_release(self):
+        print("RELEASING IN GIT WEEEEEEEEEEEEEEEEEE")
+        import pyfedpkg
+
+        commands.getoutput("mkdir -p %s" % self.cvs_workdir)
+        # TODO: replace None with username here
+        os.chdir(self.cvs_workdir)
+        pyfedpkg.clone(self.project_name, None, self.cvs_workdir)
+        os.chdir(os.path.join(self.cvs_workdir, self.project_name))
+
+        self.tgz()
+
+        self._git_sync_files()
+
+
     def __is_whitelisted(self, koji_tag):
         """ Return true if package is whitelisted in tito.props"""
         return self.config.has_option(koji_tag, "whitelist") and \
@@ -485,30 +502,28 @@ class Builder(object):
             output = run_command(cmd)
             debug(output)
 
-    def _cvs_sync_files(self):
+    def _list_files_to_copy(self):
         """
-        Copy files from git into each CVS branch and add them. Extra files
-        found in CVS will then be deleted.
+        Returns a list of the full file paths for each file that should be
+        copied from our git project into the build system checkout. This
+        is used to sync files to CVS or git during a release.
 
-        A list of CVS safe files is used to protect critical files both from
-        being overwritten by a git file of the same name, as well as being
-        deleted after.
+        i.e. spec file, .patches.
+
+        It is assumed that any file found in the build system checkout
+        but not in this list, and not in the protected files list, should
+        probably be cleaned up.
         """
-
-        # Build the list of all files we will copy from git to CVS.
-        debug("Searching for git files to copy to CVS:")
-
         # Include the spec file explicitly, in the case of SatelliteBuilder
         # we modify and then use a spec file copy from a different location.
         files_to_copy = [self.spec_file] # full paths
-        filenames_to_copy = [os.path.basename(self.spec_file)] # just filenames
 
         for filename in os.listdir(self.rpmbuild_gitcopy):
             full_filepath = os.path.join(self.rpmbuild_gitcopy, filename)
             if os.path.isdir(full_filepath):
                 # skip it
                 continue
-            if filename in CVS_PROTECT_FILES:
+            if filename in PROTECTED_BUILD_SYS_FILES:
                 debug("   skipping:  %s (protected file)" % filename)
                 continue
             elif filename.endswith(".spec"):
@@ -527,39 +542,118 @@ class Builder(object):
             if copy_it:
                 debug("   copying:   %s" % filename)
                 files_to_copy.append(full_filepath)
-                filenames_to_copy.append(filename)
+
+            return files_to_copy
+
+    def _git_sync_files(self):
+        """
+        Copy files from our git into each git build branch and add them.
+
+        A list of safe files is used to protect critical files both from
+        being overwritten by a git file of the same name, as well as being
+        deleted after.
+        """
+
+        # Build the list of all files we will copy:
+        debug("Searching for files to copy to build system git:")
+        files_to_copy = self._list_files_to_copy()
+
+        build_sys_dir = os.path.join(self.cvs_workdir, self.project_name)
+        os.chdir(build_sys_dir)
+
+        # TODO:
+        #for branch in self.cvs_branches:
+        #print("Syncing files with git branch [%s]" % branch)
+        new, copied, old =  \
+                self._sync_files(files_to_copy, build_sys_dir)
+
+        os.chdir(build_sys_dir)
+
+        # Git add everything:
+        for add_file in (new + copied):
+            commands.getstatusoutput("git add %s" % add_file)
+
+        # Cleanup obsolete files:
+        for cleanup_file in old:
+            # Can't delete via full path, must not chdir:
+            run_command("git rm %s" % cleanup_file)
+
+
+    def _cvs_sync_files(self):
+        """
+        Copy files from git into each CVS branch and add them. Extra files
+        found in CVS will then be deleted.
+
+        A list of CVS safe files is used to protect critical files both from
+        being overwritten by a git file of the same name, as well as being
+        deleted after.
+        """
+
+        # Build the list of all files we will copy from git to CVS.
+        debug("Searching for git files to copy to CVS:")
+        files_to_copy = self._list_files_to_copy()
 
         for branch in self.cvs_branches:
+            print("Syncing files with CVS branch [%s]" % branch)
             branch_dir = os.path.join(self.cvs_workdir, self.project_name,
                     branch)
+
+            new, copied, old =  \
+                    self._sync_files(files_to_copy, branch_dir)
+
             os.chdir(branch_dir)
-            print("Syncing files with CVS branch [%s]" % branch)
-            for copy_me in files_to_copy:
-                base_filename = os.path.basename(copy_me)
-                dest_path = os.path.join(branch_dir, base_filename)
 
-                # Check if file we're about to copy already exists in CVS so
-                # we know if we need to run 'cvs add' or not:
-                cvs_add = True
-                if os.path.exists(dest_path):
-                    cvs_add = False
+            # For entirely new files we need to cvs add:
+            for add_file in new:
+                commands.getstatusoutput("cvs add %s" % add_file)
 
-                cmd = "cp %s %s" % (copy_me, dest_path)
-                run_command(cmd)
+            # Cleanup obsolete files:
+            for cleanup_file in old:
+                # Can't delete via full path, must not chdir:
+                run_command("cvs rm -Rf %s" % cleanup_file)
 
-                if cvs_add:
-                    print("   added: %s" % base_filename)
-                    commands.getstatusoutput("cvs add %s" % base_filename)
-                else:
-                    print("   copied: %s" % base_filename)
+    def _sync_files(self, files_to_copy, dest_dir):
+        debug("Copying files: %s" % files_to_copy)
+        debug("   to: %s" % dest_dir)
+        os.chdir(dest_dir)
 
-            # Now delete any extraneous files in the CVS branch.
-            for filename in os.listdir(branch_dir):
-                if filename not in CVS_PROTECT_FILES and \
-                        filename not in filenames_to_copy:
-                    print("   deleted: %s" % filename)
-                    # Can't delete via full path, must not chdir:
-                    run_command("cvs rm -Rf %s" % filename)
+        # Need a list of just the filenames for a set comparison later:
+        filenames_to_copy = []
+        for filename in files_to_copy:
+            filenames_to_copy.append(os.path.basename(filename))
+
+        # Base filename for entirely new files:
+        new_files = []
+
+        # Base filenames for pre-existing files we copied over:
+        copied_files = []
+
+        # Base filenames that need to be removed by the caller:
+        old_files = []
+
+        for copy_me in files_to_copy:
+            base_filename = os.path.basename(copy_me)
+            dest_path = os.path.join(dest_dir, base_filename)
+
+            if os.path.exists(dest_path):
+                print("   adding: %s" % base_filename)
+                new_files.append(base_filename)
+            else:
+                print("   copying: %s" % base_filename)
+
+
+            cmd = "cp %s %s" % (copy_me, dest_path)
+            run_command(cmd)
+
+        # Track filenames that will need to be deleted by the caller.
+        # Could be git or CVS.
+        for filename in os.listdir(dest_dir):
+            if filename not in PROTECTED_BUILD_SYS_FILES and \
+                    filename not in filenames_to_copy:
+                print("   deleting: %s" % filename)
+                old_files.append(filename)
+
+        return new_files, copied_files, old_files
 
     def _cvs_user_confirm_commit(self):
         """ Prompt user if they wish to proceed with commit. """

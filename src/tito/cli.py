@@ -346,6 +346,11 @@ class BuildModule(BaseCliModule):
                 action="store_true",
                 help="Release package only in CVS. (if possible)",
                 )
+        self.parser.add_option("--git-release", dest="git_release",
+                action="store_true",
+                help="Release package only in git based build system. "
+                    "(i.e. Fedora)",
+                )
         self.parser.add_option("--koji-release", dest="koji_release",
                 action="store_true",
                 help="Release package only in Koji. (if possible)",
