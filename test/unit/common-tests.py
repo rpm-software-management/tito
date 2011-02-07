@@ -74,3 +74,49 @@ class CommonTests(unittest.TestCase):
         line = "this isn't a version fool.\n"
         self.assertEquals(line, replace_version(line, "2.5.3"))
 
+
+class ExtractBugzillasTest(unittest.TestCase):
+
+    def test_single_line(self):
+        commit_log = "- 123456: Did something interesting."
+        results = extract_bzs(commit_log)
+        self.assertEquals(1, len(results))
+        self.assertEquals("Resolves: #123456 - Did something interesting.", 
+                results[0])
+
+    def test_single_with_dash(self):
+        commit_log = "- 123456 - Did something interesting."
+        results = extract_bzs(commit_log)
+        self.assertEquals(1, len(results))
+        self.assertEquals("Resolves: #123456 - Did something interesting.", 
+                results[0])
+
+    def test_single_with_no_spaces(self):
+        commit_log = "- 123456-Did something interesting."
+        results = extract_bzs(commit_log)
+        self.assertEquals(1, len(results))
+        self.assertEquals("Resolves: #123456 - Did something interesting.", 
+                results[0])
+
+    def test_diff_format(self):
+        commit_log = "+- 123456: Did something interesting."
+        results = extract_bzs(commit_log)
+        self.assertEquals(1, len(results))
+        self.assertEquals("Resolves: #123456 - Did something interesting.", 
+                results[0])
+
+    def test_single_line_no_bz(self):
+        commit_log = "- Did something interesting."
+        results = extract_bzs(commit_log)
+        self.assertEquals(0, len(results))
+
+    def test_multi_line(self):
+        commit_log = "- 123456: Did something interesting.\n- Another commit.\n" \
+                "- 456789: A third commit."
+        results = extract_bzs(commit_log)
+        self.assertEquals(2, len(results))
+        self.assertEquals("Resolves: #123456 - Did something interesting.", 
+                results[0])
+        self.assertEquals("Resolves: #456789 - A third commit.", 
+                results[1])
+

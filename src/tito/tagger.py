@@ -60,7 +60,7 @@ class VersionTagger(object):
         self.today = strftime("%a %b %d %Y")
         (self.git_user, self.git_email) = self._get_git_user_info()
         self.changelog_regex = re.compile('\\*\s%s\s%s(\s<%s>)?' % (self.today,
-            self.git_user, self.git_email))
+            self.git_user, self.git_email.replace("+", "\+").replace(".", "\.")))
 
         self._no_auto_changelog = False
         self._accept_auto_changelog = False
@@ -126,8 +126,9 @@ class VersionTagger(object):
         undo_tag(tag)
 
     def _changelog_remove_cherrypick(self, line):
-        """ remove text "(cherry picked from commit ..." from line unless
-            changelog_do_not_remove_cherrypick is specified in [globalconfig]
+        """
+        remove text "(cherry picked from commit ..." from line unless
+        changelog_do_not_remove_cherrypick is specified in [globalconfig]
         """
         if not (self.config.has_option("globalconfig", "changelog_do_not_remove_cherrypick") 
             and self.config.get("globalconfig", "changelog_do_not_remove_cherrypick")):
@@ -137,18 +138,21 @@ class VersionTagger(object):
         return line
 
     def _changelog_email(self):
-        """ if you have set changelog_with_email in [globalconfig] set to 1, it will return 
-            string '(%ae)'
+        """
+        if you have set changelog_with_email in [globalconfig] set to 1, it will return 
+        string '(%ae)'
         """
         result = ''
         if (self.config.has_option("globalconfig", "changelog_with_email")
-            and self.config.get("globalconfig", "changelog_with_email")):
+            and self.config.get("globalconfig", "changelog_with_email")) or \
+            not self.config.has_option("globalconfig", "changelog_with_email"):
             result = ' (%ae)'
         return result
 
     def _generate_default_changelog(self, last_tag):
-        """ Run git-log and will generate changelog, which still can be edited by user
-            in _make_changelog.
+        """
+        Run git-log and will generate changelog, which still can be edited by user
+        in _make_changelog.
         """
         patch_command = "git log --pretty='format:%%s%s'" \
                          " --relative %s..%s -- %s" % (self._changelog_email(), last_tag, "HEAD", ".")
@@ -164,6 +168,7 @@ class VersionTagger(object):
         """
         if self._no_auto_changelog:
             debug("Skipping changelog generation.")
+            return
 
         in_f = open(self.spec_file, 'r')
         out_f = open(self.spec_file + ".new", 'w')

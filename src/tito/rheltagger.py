@@ -20,10 +20,11 @@ class RHELTagger(ReleaseTagger):
     """
 
     def _generate_default_changelog(self, last_tag):
-        """ Run git-log and will generate changelog, which still can be edited by user
-            in _make_changelog.
-            use format:
-            - Resolves: #1111 - description
+        """
+        Run git-log and will generate changelog, which still can be edited by user
+        in _make_changelog.
+        use format:
+        - Resolves: #1111 - description
         """
         patch_command = "git log --pretty='format:%%s%s'" \
                          " --relative %s..%s -- %s" % (self._changelog_email(), last_tag, "HEAD", ".")

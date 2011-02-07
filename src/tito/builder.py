@@ -18,6 +18,8 @@ import os
 import sys
 import re
 import commands
+import tempfile
+import subprocess
 from pkg_resources import require
 from distutils.version import LooseVersion as loose_version
 
@@ -319,6 +321,7 @@ class Builder(object):
         self._cvs_upload_sources()
 
         self._cvs_user_confirm_commit()
+        self._cvs_user_confirm_commit_msg()
 
         self._cvs_make_tag()
         self._cvs_make_build()
@@ -558,13 +561,42 @@ class Builder(object):
             print("Fine, you're on your own!")
             self.cleanup()
             sys.exit(1)
-        else:
-            print("Proceeding with commit.")
-            os.chdir(self.cvs_package_workdir)
-            cmd = 'cvs commit -m "Update %s to %s"' % \
-                    (self.project_name, self.build_version)
-            debug("CVS commit command: %s" % cmd)
-            output = run_command(cmd)
+
+    def _cvs_user_confirm_commit_msg(self):
+
+        fd, name = tempfile.mkstemp()
+        debug("Storing CVS commit message in temp file: %s" % name)
+        os.write(fd, "Update %s to %s\n" % (self.project_name,
+            self.build_version))
+
+        print("")
+        print("##### CVS commit message: #####")
+        print("")
+
+        os.lseek(fd, 0, 0)
+        file = os.fdopen(fd)
+        for line in file.readlines():
+            print line
+        file.close()
+
+        print("")
+        print("###############################")
+        print("")
+        answer = raw_input("Would you like to edit this commit message? [y/n] ")
+        if answer.lower() in ['y', 'yes', 'ok', 'sure']:
+            debug("Opening editor for user to edit commit message in: %s" % name)
+            editor = 'vi'
+            if "EDITOR" in os.environ:
+                editor = os.environ["EDITOR"]
+            subprocess.call([editor, name])
+
+        print("Proceeding with commit.")
+        os.chdir(self.cvs_package_workdir)
+        cmd = 'cvs commit -F %s' % name
+        debug("CVS commit command: %s" % cmd)
+        output = run_command(cmd)
+
+        os.unlink(name)
 
     def _cvs_make_tag(self):
         """ Create a CVS tag based on what we just committed. """
