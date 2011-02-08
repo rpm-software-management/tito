@@ -58,7 +58,7 @@ def extract_bzs(output):
     #        if bz_number in BZ:
     #            line = "Related: #%s - %s" % (bz_number, m.group(2))
     #        else:
-    #            line = "Resolved: #%s - %s" % (bz_number, m.group(2))
+    #            line = "Resolves: #%s - %s" % (bz_number, m.group(2))
     #            BZ[bz_number] = 1
     #    if result:
     #        result = line + "\n" + result

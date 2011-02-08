@@ -34,14 +34,14 @@ class RHELTagger(ReleaseTagger):
         for line in reversed(output.split('\n')):
             line = self._changelog_remove_cherrypick(line)
 
-            # prepend Related/Resolved if subject contains BZ number
+            # prepend Related/Resolves if subject contains BZ number
             m = re.match("(\d+)\s+-\s+(.*)", line)
             if m:
                 bz_number = m.group(1)
                 if bz_number in BZ:
                     line = "Related: #%s - %s" % (bz_number, m.group(2))
                 else:
-                    line = "Resolved: #%s - %s" % (bz_number, m.group(2))
+                    line = "Resolves: #%s - %s" % (bz_number, m.group(2))
                     BZ[bz_number] = 1
             if result:
 	        result = line + "\n" + result
