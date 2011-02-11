@@ -193,7 +193,7 @@ class VersionTagger(object):
 
                 fd, name = tempfile.mkstemp()
                 os.write(fd, "# Create your changelog entry below:\n")
-		if self.git_email is None:
+		if self.git_email is None or (('HIDE_EMAIL' in self.user_config) and (self.user_config['HIDE_EMAIL'])):
 			header = "* %s %s\n" % (self.today, self.git_user)
 		else:
 			header = "* %s %s <%s>\n" % (self.today, self.git_user,

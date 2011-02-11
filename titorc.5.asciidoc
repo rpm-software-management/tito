@@ -31,6 +31,12 @@ Specifies a base directory for temp files, tarballs, and RPMs.
 If defined, and if the directory exists, `tito` will automatically 
 create subdirectories as needed for rpmbuild(8).
 
+HIDE_EMAIL::
+If set to something different from 0, it will not use you email address
+in changelog entry. I.e. instead of
+ * Tue Feb 11 2011 Miroslav Suchy <msuchy@redhat.com> 0.3.0-2
+it will use:
+ * Tue Feb 11 2011 Miroslav Suchy 0.3.0-2
 
 EXAMPLE
 -------
