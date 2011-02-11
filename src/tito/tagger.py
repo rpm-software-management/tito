@@ -22,6 +22,7 @@ import shutil
 import subprocess
 import tempfile
 import textwrap
+import sys
 
 from time import strftime
 
@@ -191,8 +192,11 @@ class VersionTagger(object):
 
                 fd, name = tempfile.mkstemp()
                 os.write(fd, "# Create your changelog entry below:\n")
-                header = "* %s %s <%s>\n" % (self.today, self.git_user,
-                        self.git_email)
+		if self.git_email is None:
+			header = "* %s %s\n" % (self.today, self.git_user)
+		else:
+			header = "* %s %s <%s>\n" % (self.today, self.git_user,
+				self.git_email)
 
                 os.write(fd, header)
 
@@ -419,8 +423,17 @@ class VersionTagger(object):
 
     def _get_git_user_info(self):
         """ Return the user.name and user.email git config values. """
-        return (run_command('git config --get user.name'),
-                run_command('git config --get user.email'))
+	try:
+		name = run_command('git config --get user.name')
+	except:
+		sys.stderr.write('Warning: user.name in ~/.gitconfig not set.')
+		name = 'Unknown name'
+	try:
+		email = run_command('git config --get user.email')
+	except:
+		sys.stderr.write('Warning: user.email in ~/.gitconfig not set.')
+		email = None
+	return (name, email)
 
     def _get_spec_version_and_release(self):
         """ Get the package version from the spec file. """
