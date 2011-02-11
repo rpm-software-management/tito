@@ -42,10 +42,11 @@ class VersionTagger(object):
     and the actual RPM "release" will always be set to 1.
     """
 
-    def __init__(self, global_config=None, keep_version=False, offline=False):
+    def __init__(self, global_config=None, keep_version=False, offline=False, user_config=None):
         self.git_root = find_git_root()
         self.rel_eng_dir = os.path.join(self.git_root, "rel-eng")
         self.config = global_config
+	self.user_config = user_config
 
         self.full_project_dir = os.getcwd()
         self.spec_file_name = find_spec_file()
