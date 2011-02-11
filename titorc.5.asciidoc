@@ -26,6 +26,10 @@ Both files are optional.
 
 OPTIONS
 -------
+KOJI_OPTIONS::
+Specify strings of options, which is passed to koji on commandline when you
+execute --koji-release. For example:
+
 RPMBUILD_BASEDIR::
 Specifies a base directory for temp files, tarballs, and RPMs. 
 If defined, and if the directory exists, `tito` will automatically 
@@ -40,6 +44,7 @@ it will use:
 
 EXAMPLE
 -------
+KOJI_OPTIONS=-c ~/.koji/spacewalkproject.org-config build --nowait
 
 ----
 # Default Location to write temp files, tarballs and rpms to:
