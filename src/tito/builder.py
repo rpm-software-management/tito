@@ -1211,7 +1211,7 @@ class UpstreamBuilder(NoTgzBuilder):
         f.close()
 
         patch_pattern = re.compile('^Patch(\d+):')
-        source_pattern = re.compile('^Source\d+:')
+        source_pattern = re.compile('^Source(\d+)?:')
 
         # Find the largest PatchX: line, or failing that SourceX:
         patch_number = 0 # What number should we use for our PatchX line
