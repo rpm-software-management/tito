@@ -21,6 +21,9 @@ Requires: python-setuptools
 Requires: rpm-build
 Requires: rpmlint
 Requires: GitPython >= 0.2.0
+Requires: fedpkg
+Requires: fedora-cert
+Requires: fedora-packager
 
 %description
 Tito is a tool for managing tarballs, rpms, and builds for projects using

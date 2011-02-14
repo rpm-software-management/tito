@@ -171,6 +171,12 @@ Tito has support for releasing builds in a CVS driven buildsystem, similar to th
 > cvsroot = :ext:myuser@cvs.fedoraproject.org:/cvs/extra
 > branches = CVSBRANCH1 CVSBRANCH2
 
+## Section [gitrelease]
+
+Tito has support for releasing builds in Fedora's git build system. Your spec file and patches will be synched into the first branch listed below, then merged into the following branches.
+
+> branches = master f14/master f13/master
+
 
 
 [requirements]

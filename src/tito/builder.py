@@ -20,6 +20,8 @@ import re
 import commands
 import tempfile
 import subprocess
+import fedora_cert
+import pyfedpkg
 from pkg_resources import require
 from distutils.version import LooseVersion as loose_version
 
@@ -149,6 +151,12 @@ class Builder(object):
             if self.config.has_option("cvs", "branches"):
                 self.cvs_branches = \
                     self.config.get("cvs", "branches").split(" ")
+
+        self.git_branches = []
+        if self.config.has_section("gitrelease"):
+            if self.config.has_option("gitrelease", "branches"):
+                self.git_branches = \
+                    self.config.get("gitrelease", "branches").split(" ")
 
         # TODO: if it looks like we need custom CVSROOT's for different users,
         # allow setting of a property to lookup in ~/.spacewalk-build-rc to
@@ -349,16 +357,15 @@ class Builder(object):
         self._cvs_make_build()
 
     def _git_release(self):
-        print("RELEASING IN GIT WEEEEEEEEEEEEEEEEEE")
-        import pyfedpkg
 
         commands.getoutput("mkdir -p %s" % self.cvs_workdir)
-        # TODO: replace None with username here
         os.chdir(self.cvs_workdir)
-        pyfedpkg.clone(self.project_name, None, self.cvs_workdir)
+        user = fedora_cert.read_user_cert()
+        pyfedpkg.clone(self.project_name, user, self.cvs_workdir)
 
         project_checkout = os.path.join(self.cvs_workdir, self.project_name)
         os.chdir(project_checkout)
+        run_command("git checkout %s" % self.git_branches[0])
 
         self.tgz()
 
@@ -686,14 +693,16 @@ class Builder(object):
     def _git_user_confirm_commit(self, project_checkout):
         """ Prompt user if they wish to proceed with commit. """
         print("")
-        text = "Running 'fedpkg diff' in: %s" % project_checkout
+        text = "Running 'git diff' in: %s" % project_checkout
         print("#" * len(text))
         print(text)
         print("#" * len(text))
         print("")
 
+        main_branch = self.git_branches[0]
+
         os.chdir(project_checkout)
-        (status, diff_output) = commands.getstatusoutput("fedpkg diff")
+        (status, diff_output) = commands.getstatusoutput("git diff --cached")
         print(diff_output)
 
         print("")
@@ -704,14 +713,43 @@ class Builder(object):
             self.cleanup()
             sys.exit(1)
 
-        cmd = 'fedpkg commit -m "Update %s to %s"' % (self.project_name, self.build_version)
+        cmd = 'fedpkg commit -m "Update %s to %s"' % (self.project_name, 
+                self.build_version)
         debug("git commit command: %s" % cmd)
+        build_cmd = "fedpkg build --nowait"
         if self.dry_run:
             self.print_dry_run_warning(cmd)
         else:
             print("Proceeding with commit.")
+            print
             os.chdir(self.cvs_package_workdir)
             output = run_command(cmd)
+            cmd = "git push origin %s:%s" % (main_branch, main_branch)
+            if self.dry_run:
+                self.print_dry_run_warning(cmd)
+                self.print_dry_run_warning(build_cmd)
+            else:
+                print(cmd)
+                run_command(cmd)
+                print(build_cmd)
+                run_command(build_cmd)
+                print
+
+        for branch in self.git_branches[1:]:
+            print("Merging %s into %s" % (main_branch, branch))
+            run_command("git checkout %s" % branch)
+            run_command("git merge %s" % main_branch)
+
+            cmd = "git push origin %s:%s" % (branch, branch)
+            if self.dry_run:
+                self.print_dry_run_warning(cmd)
+                self.print_dry_run_warning(build_cmd)
+            else:
+                print(cmd)
+                run_command(cmd)
+                print(build_cmd)
+                run_command(build_cmd)
+                print
 
     def _cvs_user_confirm_commit(self):
         """ Prompt user if they wish to proceed with commit. """
