@@ -6,3 +6,6 @@ default_tagger = spacewalk.releng.tagger.VersionTagger
 cvsroot = :ext:dgoodwin@cvs.fedoraproject.org:/cvs/extras
 branches = EL-5 EL-6 F-12 F-13
 
+[gitrelease]
+branches = master el5/master el6/master f13/master f14/master 
+
