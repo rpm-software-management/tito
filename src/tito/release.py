@@ -19,6 +19,8 @@ import os
 import commands
 import fedora_cert
 import pyfedpkg
+import tempfile
+import subprocess
 
 from tito.common import *
 
@@ -328,13 +330,13 @@ class CvsReleaser(Releaser):
 
         # Configure CVS variables if possible. Will check later that
         # they're actually defined if the user requested CVS work be done.
-        if self.config.has_section("cvs"):
-            if self.config.has_option("cvs", "cvsroot"):
-                self.cvs_root = self.config.get("cvs", "cvsroot")
+        if self.builder.config.has_section("cvs"):
+            if self.builder.config.has_option("cvs", "cvsroot"):
+                self.cvs_root = self.builder.config.get("cvs", "cvsroot")
                 debug("cvs_root = %s" % self.cvs_root)
-            if self.config.has_option("cvs", "branches"):
+            if self.builder.config.has_option("cvs", "branches"):
                 self.cvs_branches = \
-                    self.config.get("cvs", "branches").split(" ")
+                    self.builder.config.get("cvs", "branches").split(" ")
 
     def release(self, dry_run=False):
         self.dry_run = dry_run
@@ -456,7 +458,7 @@ class CvsReleaser(Releaser):
         Upload any tarballs to the CVS lookaside directory. (if necessary)
         Uses the "make new-sources" target in common.
         """
-        if not self.sources:
+        if not self.builder.sources:
             debug("No sources need to be uploaded.")
             return
 

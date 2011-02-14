@@ -18,8 +18,6 @@ import os
 import sys
 import re
 import commands
-import tempfile
-import subprocess
 from pkg_resources import require
 from distutils.version import LooseVersion as loose_version
 
