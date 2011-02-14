@@ -664,7 +664,7 @@ class KojiReleaser(Releaser):
 
     def list_tags(self):
         """ Print tags to which we build this package. """
-        autobuild_tags = self.config.get("koji", "autobuild_tags")
+        autobuild_tags = self.builder.config.get("koji", "autobuild_tags")
         koji_tags = autobuild_tags.strip().split(" ")
         for koji_tag in koji_tags:
             if self.__is_whitelisted(koji_tag):
@@ -679,7 +679,7 @@ class KojiReleaser(Releaser):
 
     def _submit_build(self, executable, koji_opts, tag):
         """ Submit srpm to brew/koji. """
-        cmd = "%s %s %s %s" % (executable, koji_opts, tag, self.srpm_location)
+        cmd = "%s %s %s %s" % (executable, koji_opts, tag, self.builder.srpm_location)
         print("\nSubmitting build with: %s" % cmd)
 
         if self.dry_run:
