@@ -579,11 +579,9 @@ class KojiReleaser(Releaser):
 
     def __init__(self, builder):
         Releaser.__init__(self, builder)
-        if self.builder.options:
-            self.only_tags = self.builder.options.only_tags
-            self.scratch = options.scratch
-        else:
-            self.only_tags = self.scratch = None
+
+        self.only_tags = self.builder.only_tags
+        self.scratch = self.builder.scratch
 
     def release(self, dry_run=False):
         self.dry_run = dry_run

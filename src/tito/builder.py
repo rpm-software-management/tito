@@ -55,9 +55,16 @@ class Builder(object):
             self.auto_install = options.auto_install
             self.rpmbuild_options = options.rpmbuild_options
             self.dry_run = options.dry_run
+
+            # These two options are specific to the Koji releaser. If we end up
+            # refactoring to a separate "release" command, these can probably 
+            # go away.
+            self.only_tags = options.only_tags
+            self.scratch = options.scratch
+
         else:
             self.dist = self.test = self.offline = self.auto_install = \
-                    self.rpmbuild_options = None
+                    self.rpmbuild_options = self.only_tags = self.scratch = None
         if not self.rpmbuild_options:
             self.rpmbuild_options = ''
 
@@ -283,7 +290,7 @@ class Builder(object):
         """
 
         cvs_releaser = CvsReleaser(self)
-        cvs_release.release(self.dry_run)
+        cvs_releaser.release(self.dry_run)
 
         koji_releaser = KojiReleaser(self)
         koji_releaser.release(self.dry_run)
