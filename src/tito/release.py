@@ -131,7 +131,7 @@ class Releaser(object):
             base_filename = os.path.basename(copy_me)
             dest_path = os.path.join(dest_dir, base_filename)
 
-            if os.path.exists(dest_path):
+            if not os.path.exists(dest_path):
                 print("   adding: %s" % base_filename)
                 new_files.append(base_filename)
             else:
