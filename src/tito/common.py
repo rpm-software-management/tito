@@ -130,7 +130,11 @@ def tag_exists_locally(tag):
 
 def tag_exists_remotely(tag):
     """ Returns True if the tag exists in the remote git repo. """
-    repo_url = get_git_repo_url()
+    try:
+        repo_url = get_git_repo_url()
+    except:
+        sys.stderr.write('Warning: remote.origin do not exist. Assuming --offline, for remote tag checking.')
+        return False
     sha1 = get_remote_tag_sha1(tag)
     debug("sha1 = %s" % sha1)
     if sha1 == "":
@@ -195,7 +199,11 @@ def check_tag_exists(tag, offline=False):
     tag_sha1 = get_local_tag_sha1(tag)
     debug("Local tag SHA1: %s" % tag_sha1)
 
-    repo_url = get_git_repo_url()
+    try:
+        repo_url = get_git_repo_url()
+    except:
+        sys.stderr.write('Warning: remote.origin do not exist. Assuming --offline, for remote tag checking.')
+        return
     upstream_tag_sha1 = get_remote_tag_sha1(tag)
     if upstream_tag_sha1 == "":
         error_out(["Tag does not exist in remote git repo: %s" % tag,
@@ -372,7 +380,6 @@ def get_git_repo_url():
     Uses ~/.git/config remote origin url.
     """
     return run_command("git config remote.origin.url")
-
 
 def get_latest_tagged_version(package_name):
     """

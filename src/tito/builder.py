@@ -436,7 +436,7 @@ class NoTgzBuilder(Builder):
         self._setup_sources()
         self.ran_tgz = True
 
-        source_suffixes = ('.tar.gz', '.tar', '.zip', '.jar', '.gem')
+        source_suffixes = ('.tar.gz', '.tgz', '.tar.bz2', '.tar', '.zip', '.jar', '.gem')
         debug("Scanning for sources.")
         for filename in os.listdir(self.rpmbuild_gitcopy):
             for suffix in source_suffixes:
@@ -670,7 +670,7 @@ class UpstreamBuilder(NoTgzBuilder):
         f.close()
 
         patch_pattern = re.compile('^Patch(\d+):')
-        source_pattern = re.compile('^Source\d+:')
+        source_pattern = re.compile('^Source(\d+)?:')
 
         # Find the largest PatchX: line, or failing that SourceX:
         patch_number = 0 # What number should we use for our PatchX line
