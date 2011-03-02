@@ -1,0 +1,189 @@
+tito.props(5)
+============
+
+NAME
+----
+tito.props - Settings file for whole git repository with multiple packages.
+build.py.props - Setting file in package directory, which override values in tito.props
+
+
+SYNOPSIS
+--------
+None
+// older asciidoc versions (such as the version for .el5) require a synopsis section
+
+
+DESCRIPTION
+-----------
+Project settings can be stored in files:
+
+`GITROOT/rel-eng/tito.props`
+
+`GITROOT/SOME/PACKAGE/build.py.props`
+
+First tito.props is read, and if build.py.props in package directory is present, then it
+is read as well and options in build.py.props override those from tito.props.
+
+
+SECTIONS
+--------
+There is several sections:
+ * globalconfig
+ * koji
+ * cvs
+
+GLOBALCONFIG
+------------
+This section is mandatory. At least in tito.props as you need to specify
+default builder and tagger for you project. You can use following variables:
+
+default_builder::
+You specify name of class which is used for building (creating rpm or src.rpm).
+You can either specify builders shipped with Tito (see BUILDERS section below)
+or use your own modules stored in GITROOT/rel-eng/lib/ path.
+I.e if you specify name spacewalk.releng.tagger.VersionTagger, then tito will
+check if exist file GITROOT/rel-eng/lib/spacewalk/releng/tagger.py and in it
+class VersionTagger. If this import will fail, then it will check if file
+/usr/lib/pythonX.Y/site-packages/spacewalk/releng/tagger.py with class
+VersionTagger exists.
+
+default_tagger::
+You specify name of class which is used for tagging (bump up version/release
+and create changelog). You can either specify taggers shipped with Tito (see
+TAGGERS section below).
+Search path of class is exactly the same as in default_builder.
+
+builder::
+This option is used in build.py.props and define builder class for one specific
+package.
+
+tagger::
+This option is used in build.py.props and define tagging class for one specific
+package.
+
+changelog_with_email::
+If set to 0, then entries in changelog (subject of commits) are not followed by
+email of commiter. Default is 1.
+
+changelog_do_not_remove_cherrypick::
+If set to 0, it will not remove from cherry picked commits the part "(cherry
+picked from commit ...)"
+
+
+KOJI
+----
+autobuild_tags::
+If you use --koji-relase it will try to build src.rpm package in specified tags
+in koji.
+Also see KOJI_OPTIONS in titorc(5).
+You can specify section which is named as the tag and put there following
+options:
+
+disttag::
+Dist tag variable, which is passed to rpmbuild for packages build in this tag.
+
+blacklist::
+Space separated list of packages, which should not be built in this tag.
+
+CVS
+---
+cvsroot::
+Root of you Dist-CVS to checkout.
+
+branches::
+In which dist-cvs branch should be commited your spec file and patches.
+
+REQUIREMENTS
+------------
+tito::
+If tito is older then specified version, it will refuse to continue.
+
+BUILDERS
+--------
+
+tito.builder.Builder::
+Basic package builder. It create tar.gz of whole directory and create src.rpm
+and build rpm using some supported method.
+
+tito.builder.NoTgzBuilder::
+Builder for packages that do not require the creation of tarball.
+Usually these package have source files checked directly into git.
+
+tito.builder.CvsBuilder::
+Builder for packages whose sources are managed in dist-cvs/Fedora-cvs.
+
+tito.builder.UpstreamBuilder::
+Builder for packages that are based off an upstream git tag.
+Commits applied in downstream git become patches applied to the upstream
+tarball.
+For example - you are building package foo-1.2-3... Tar.gz file is created from
+commit, which is tagged by foo-1.2-1 and the diff between release 1 and 3 is
+put in spec file as Patch0.
+
+tito.distributionbuilder.DistributionBuilder::
+Behave similar as tito.builder.UpstreamBuilder, but patch is created for every
+release. Therefore package from previous example will end up with tar.gz file
+created from tag foo-1.2-1 and with
+ Patch0: foo-1.2-1-to-foo-1.2-2.patch
+ Patch1: foo-1.2-1-to-foo-1.2-3.patch
+
+TAGGERS
+-------
+All taggers which inherit fom tito.tagger.VersionTagger (all to this date),
+will update file GITROOT/rel-eng/packages/name-of-package and put there one
+line which consist of version-release of package, space delimiter, path to
+package directory relative to GITROOT.
+
+tito.tagger.VersionTagger::
+Standard tagger class, used for tagging packages build from source in git.
+Releaase will be tagged by incrementing the package version, and the actual
+"Release" will be always set to 1.
+
+tito.tagger.ReleaseTagger::
+Keep version and increment release.
+
+tito.zstreamtagger.zStreamTagger::
+Tagger which increments zstream number in release. I.e. x.y.z-r%{dist}.Z+1
+It is used for EUS packages.
+
+tito.rheltagger.RHELTagger::
+Tagger which is based on ReleaseTagger and use Red Hat Enterprise Linux
+format of Changelog:
+- Resolves: #1111 - description
+- Related: #1111 - description
+
+EXAMPLE
+-------
+ [globalconfig]
+ default_builder = tito.builder.Builder
+ default_tagger = spacewalk.releng.tagger.VersionTagger
+
+ [koji]
+ autobuild_tags = dist-5E-sw-1.2-candidate dist-f12-sw-1.2-candidate dist-f13-sw-1.2-candidate
+
+ [dist-5E-sw-1.2-candidate]
+ disttag = .el5
+
+ [dist-f12-sw-1.2-candidate]
+ disttag = .fc12
+ blacklist=jabberd-selinux
+
+ [dist-f13-sw-1.2-candidate]
+ disttag = .fc13
+ blacklist=jabberd-selinux
+
+ [cvs]
+ cvsroot = :gserver:your.dist-cvs.server.com:/cvs/dist
+ branches = SATELLITE-5_4-RHEL-5
+
+ [requirements]
+ tito=0.3.0
+
+SEE ALSO
+--------
+tito(8) titorc(5)
+
+
+AUTHORS
+-------
+include::AUTHORS[]

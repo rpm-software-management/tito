@@ -22,6 +22,7 @@ import shutil
 import subprocess
 import tempfile
 import textwrap
+import sys
 
 from time import strftime
 
@@ -41,10 +42,11 @@ class VersionTagger(object):
     and the actual RPM "release" will always be set to 1.
     """
 
-    def __init__(self, global_config=None, keep_version=False, offline=False):
+    def __init__(self, global_config=None, keep_version=False, offline=False, user_config=None):
         self.git_root = find_git_root()
         self.rel_eng_dir = os.path.join(self.git_root, "rel-eng")
         self.config = global_config
+	self.user_config = user_config
 
         self.full_project_dir = os.getcwd()
         self.spec_file_name = find_spec_file()
@@ -59,8 +61,11 @@ class VersionTagger(object):
 
         self.today = strftime("%a %b %d %Y")
         (self.git_user, self.git_email) = self._get_git_user_info()
+        git_email = self.git_email
+        if git_email is None:
+            git_email = ''
         self.changelog_regex = re.compile('\\*\s%s\s%s(\s<%s>)?' % (self.today,
-            self.git_user, self.git_email.replace("+", "\+").replace(".", "\.")))
+            self.git_user, git_email.replace("+", "\+").replace(".", "\.")))
 
         self._no_auto_changelog = False
         self._accept_auto_changelog = False
@@ -191,8 +196,11 @@ class VersionTagger(object):
 
                 fd, name = tempfile.mkstemp()
                 os.write(fd, "# Create your changelog entry below:\n")
-                header = "* %s %s <%s>\n" % (self.today, self.git_user,
-                        self.git_email)
+		if self.git_email is None or (('HIDE_EMAIL' in self.user_config) and (self.user_config['HIDE_EMAIL'])):
+			header = "* %s %s\n" % (self.today, self.git_user)
+		else:
+			header = "* %s %s <%s>\n" % (self.today, self.git_user,
+				self.git_email)
 
                 os.write(fd, header)
 
@@ -419,8 +427,17 @@ class VersionTagger(object):
 
     def _get_git_user_info(self):
         """ Return the user.name and user.email git config values. """
-        return (run_command('git config --get user.name'),
-                run_command('git config --get user.email'))
+	try:
+		name = run_command('git config --get user.name')
+	except:
+		sys.stderr.write('Warning: user.name in ~/.gitconfig not set.')
+		name = 'Unknown name'
+	try:
+		email = run_command('git config --get user.email')
+	except:
+		sys.stderr.write('Warning: user.email in ~/.gitconfig not set.')
+		email = None
+	return (name, email)
 
     def _get_spec_version_and_release(self):
         """ Get the package version from the spec file. """
