@@ -206,9 +206,13 @@ class Builder(object):
         debug("Creating srpm from spec file: %s" % self.spec_file)
         define_dist = ""
         if self.dist:
+            debug("using self.dist: %s" % self.dist)
             define_dist = "--define 'dist %s'" % self.dist
         elif dist:
+            debug("using dist: %s" % dist)
             define_dist = "--define 'dist %s'" % dist
+        else:
+            debug("*NOT* using dist at all")
 
         cmd = ('LC_ALL=C rpmbuild --define "_source_filedigest_algorithm md5"  --define'
             ' "_binary_filedigest_algorithm md5" %s %s %s --nodeps -bs %s' % (

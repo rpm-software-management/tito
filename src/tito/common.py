@@ -111,6 +111,7 @@ def find_git_root():
 
 
 def run_command(command):
+    debug(command)
     (status, output) = commands.getstatusoutput(command)
     if status > 0:
         sys.stderr.write("\n########## ERROR ############\n")
