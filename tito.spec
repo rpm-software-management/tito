@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.3.1
+Version: 0.3.2
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -74,6 +74,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Tue Apr 26 2011 Devan Goodwin <dgoodwin@rm-rf.ca> 0.3.2-1
+- add debug logging (jesusr@redhat.com)
+
 * Tue Apr 26 2011 Devan Goodwin <dgoodwin@rm-rf.ca> 0.3.1-1
 - flip condition so new files are added and existing files are copied
   (msuchy@redhat.com)
