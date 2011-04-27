@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.3.0
+Version: 0.3.1
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -74,6 +74,43 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Tue Apr 26 2011 Devan Goodwin <dgoodwin@rm-rf.ca> 0.3.1-1
+- flip condition so new files are added and existing files are copied
+  (msuchy@redhat.com)
+- fix traceback if git_email is not specified (miroslav@suchy.cz)
+- Refactor release code out of the builder class. (dgoodwin@rm-rf.ca)
+- Configure tito for Fedora git builds. (dgoodwin@rm-rf.ca)
+- Complete Fedora git build process. (dgoodwin@rm-rf.ca)
+- if remote.origin is not set, assume --offline and print warning, but proceed
+  (msuchy@redhat.com)
+- Source can be tar.bz2 (msuchy@redhat.com)
+- Source can be without number (msuchy@redhat.com)
+- add man page for tito.props(5) (msuchy@redhat.com)
+- document KOJI_OPTIONS options of titorc (msuchy@redhat.com)
+- add option HIDE_EMAIL to .titorc, which will hide your email in first line of
+  changelog entry (msuchy@redhat.com)
+- pass user_config to tagger class (msuchy@redhat.com)
+- issue 18 - do not print TB if user.name, user.email is not set
+  (msuchy@redhat.com)
+- Upload sources and confirm commit during git release. (dgoodwin@redhat.com)
+- First draft of Fedora Git releasing. (dgoodwin@redhat.com)
+- Add a --dry-run option for build --release. (dgoodwin@redhat.com)
+- Allow user config setting for sub-packages to skip during auto-install.
+  (dgoodwin@redhat.com)
+- Hookup bugzilla extraction during cvs release. (dgoodwin@redhat.com)
+- Plus and dot chars in git email handled correctly now (lzap+git@redhat.com)
+- put emails in changelog only if changelog_with_email is set to 1 in
+  [globalconfig] section of config (msuchy@redhat.com)
+- use _changelog_remove_cherrypick() for rheltagger (msuchy@redhat.com)
+- Add code for extracting bugzilla IDs from CVS diff or git log.
+  (dgoodwin@redhat.com)
+- Prompt user to edit CVS commit messages. (dgoodwin@redhat.com)
+- Fix no auto changelog option. (dgoodwin@redhat.com)
+- add tagger for Red Hat Enterprise Linux (msuchy@redhat.com)
+- Fix test builds in koji. (dgoodwin@rm-rf.ca)
+- Documentation update. (dgoodwin@rm-rf.ca)
+- Add missing dep on libxslt. (dgoodwin@rm-rf.ca)
+
 * Wed Jan 05 2011 Devan Goodwin <dgoodwin@rm-rf.ca> 0.3.0-1
 - implement --only-tags option for builder class (msuchy@redhat.com)
 - implement --list-tags option for builder (msuchy@redhat.com)
