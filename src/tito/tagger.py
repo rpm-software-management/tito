@@ -136,7 +136,8 @@ class VersionTagger(object):
         changelog_do_not_remove_cherrypick is specified in [globalconfig]
         """
         if not (self.config.has_option("globalconfig", "changelog_do_not_remove_cherrypick") 
-            and self.config.get("globalconfig", "changelog_do_not_remove_cherrypick")):
+            and self.config.get("globalconfig", "changelog_do_not_remove_cherrypick")
+            and self.config.get("globalconfig", "changelog_do_not_remove_cherrypick").strip() != '0'):
             m = re.match("(.+)(\(cherry picked from .*\))", line)
             if m:
                 line = m.group(1)
