@@ -441,6 +441,12 @@ class CvsReleaser(Releaser):
         print("Checking out cvs module [%s]" % self.project_name)
         os.chdir(self.cvs_workdir)
         run_command("cvs -d %s co %s" % (self.cvs_root, self.project_name))
+        for i in range(0, len(self.cvs_branches)):
+            if self.cvs_branches[i].find('/') > -1:
+                debug("Checking out zstream branch %s" % self.cvs_branches[i])
+                (base, zstream) = self.cvs_branches[i].split('/')
+                run_command("make -C %s zstreams" % (os.path.join(self.cvs_package_workdir, base)))
+                self.cvs_branches[i] = zstream
 
     def cvs_verify_branches_exist(self):
         """ Check that CVS checkout contains the branches we expect. """

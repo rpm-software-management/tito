@@ -92,6 +92,12 @@ Root of you Dist-CVS to checkout.
 
 branches::
 In which dist-cvs branch should be commited your spec file and patches.
+If you use zStreamTagger for EUS builds, use the format
+ branches = BASE/EUS-VARIANT
+for example:
+ branches = RHEL-6/RHEL-6_1-Z
+This will run "make zstreams" in BASE directory and will then use EUS-VARIANT
+branch.
 
 REQUIREMENTS
 ------------
