@@ -235,7 +235,7 @@ class FedoraGitReleaser(Releaser):
 
         for branch in self.git_branches[1:]:
             print("Merging %s into %s" % (main_branch, branch))
-            run_command("git checkout %s" % branch)
+            run_command("fedpkg switch-branch %s" % branch)
             run_command("git merge %s" % main_branch)
 
             cmd = "git push origin %s:%s" % (branch, branch)
