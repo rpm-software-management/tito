@@ -20,6 +20,9 @@ import sys
 import commands
 
 DEFAULT_BUILD_DIR = "/tmp/tito"
+DEFAULT_BUILDER = "default_builder"
+DEFAULT_TAGGER = "default_tagger"
+GLOBALCONFIG_SECTION = "globalconfig"
 
 def extract_bzs(output):
     """
@@ -77,6 +80,35 @@ def error_out(error_msgs):
         print("ERROR: %s" % error_msgs)
     print
     sys.exit(1)
+
+
+def create_builder(package_name, build_tag, build_version, options,
+        pkg_config, build_dir, global_config, user_config):
+    """
+    Create (but don't run) the builder class. Builder object may be
+    used by other objects without actually having run() called.
+    """
+
+    builder_class = None
+    if pkg_config.has_option("buildconfig", "builder"):
+        builder_class = get_class_by_name(pkg_config.get("buildconfig",
+            "builder"))
+    else:
+        builder_class = get_class_by_name(global_config.get(
+            GLOBALCONFIG_SECTION, DEFAULT_BUILDER))
+    debug("Using builder class: %s" % builder_class)
+
+    # Instantiate the builder:
+    builder = builder_class(
+            name=package_name,
+            version=build_version,
+            tag=build_tag,
+            build_dir=build_dir,
+            pkg_config=pkg_config,
+            global_config=global_config,
+            user_config=user_config,
+            options = options)
+    return builder
 
 
 def find_spec_file(in_dir=None):

@@ -42,12 +42,12 @@ class Builder(object):
         self.project_name = name
         self.build_tag = tag
         self.build_version = version
-        self.dist = options.dist
-        self.test = options.test
         self.config = global_config
         self.user_config = user_config
-        self.offline = options.offline
         self.no_cleanup = False
+
+        # Probably not a great idea to be passing in CLI options directly to
+        # an object that gets re-used. This is however optional.
         if options is not None:
             self.dist = options.dist
             self.test = options.test
@@ -65,6 +65,10 @@ class Builder(object):
         else:
             self.dist = self.test = self.offline = self.auto_install = \
                     self.rpmbuild_options = self.only_tags = self.scratch = None
+            self.dist = None
+            self.test = False
+            self.offline = False
+
         if not self.rpmbuild_options:
             self.rpmbuild_options = ''
 
@@ -99,6 +103,7 @@ class Builder(object):
         tgz_base = self._get_tgz_name_and_ver()
         self.tgz_filename = tgz_base + ".tar.gz"
         self.tgz_dir = tgz_base
+        self.artifacts = []
 
         temp_dir = "rpmbuild-%s" % self.project_name_and_sha1
         self.rpmbuild_dir = os.path.join(self.rpmbuild_basedir, temp_dir)
@@ -144,7 +149,7 @@ class Builder(object):
         print("Building package [%s]" % (self.build_tag))
         self.no_cleanup = options.no_cleanup
 
-        # Track full path to artifacts build during this run:
+        # Reset list of artifacts on each call to run().
         self.artifacts = []
 
         if options.tgz:

@@ -33,8 +33,14 @@ PROTECTED_BUILD_SYS_FILES = ('branch', 'CVS', '.cvsignore', 'Makefile', 'sources
 
 class Releaser(object):
 
-    def __init__(self, builder):
-        self.builder = builder
+    def __init__(self, name=None, version=None, tag=None, build_dir=None,
+            pkg_config=None, global_config=None, user_config=None):
+
+        # While we create a builder here, we don't actually call run on it 
+        # unless the releaser needs to:
+        self.builder = create_builder(name, tag,
+                version, None, pkg_config,
+                build_dir, global_config, user_config)
         self.project_name = self.builder.project_name
 
         # TODO: if it looks like we need custom CVSROOT's for different users,
@@ -154,8 +160,10 @@ class Releaser(object):
 
 class FedoraGitReleaser(Releaser):
 
-    def __init__(self, builder):
-        Releaser.__init__(self, builder)
+    def __init__(self, name=None, version=None, tag=None, build_dir=None,
+            pkg_config=None, global_config=None, user_config=None):
+        Releaser.__init__(self, name, version, tag, build_dir, pkg_config, 
+                global_config, user_config)
 
         self.git_branches = []
         if self.builder.config.has_section("gitrelease"):
@@ -325,8 +333,10 @@ class FedoraGitReleaser(Releaser):
 
 class CvsReleaser(Releaser):
 
-    def __init__(self, builder):
-        Releaser.__init__(self, builder)
+    def __init__(self, name=None, version=None, tag=None, build_dir=None,
+            pkg_config=None, global_config=None, user_config=None):
+        Releaser.__init__(self, name, version, tag, build_dir, pkg_config, 
+                global_config, user_config)
 
         # Configure CVS variables if possible. Will check later that
         # they're actually defined if the user requested CVS work be done.
@@ -577,8 +587,10 @@ class CvsReleaser(Releaser):
 
 class KojiReleaser(Releaser):
 
-    def __init__(self, builder):
-        Releaser.__init__(self, builder)
+    def __init__(self, name=None, version=None, tag=None, build_dir=None,
+            pkg_config=None, global_config=None, user_config=None):
+        Releaser.__init__(self, name, version, tag, build_dir, pkg_config, 
+                global_config, user_config)
 
         self.only_tags = self.builder.only_tags
         self.scratch = self.builder.scratch

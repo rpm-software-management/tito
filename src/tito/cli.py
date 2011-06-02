@@ -22,10 +22,7 @@ import ConfigParser
 
 from optparse import OptionParser
 
-from tito.common import DEFAULT_BUILD_DIR
-from tito.common import (find_git_root, run_command, get_class_by_name,
-        error_out, debug, get_project_name, get_relative_project_dir,
-        check_tag_exists, get_latest_tagged_version, normalize_class_name)
+from tito.common import *
 from tito.exception import *
 
 # Hack for Python 2.4, seems to require we import these so they get compiled
@@ -35,9 +32,6 @@ import tito.builder
 
 BUILD_PROPS_FILENAME = "tito.props"
 GLOBAL_BUILD_PROPS_FILENAME = "tito.props"
-GLOBALCONFIG_SECTION = "globalconfig"
-DEFAULT_BUILDER = "default_builder"
-DEFAULT_TAGGER = "default_tagger"
 ASSUMED_NO_TAR_GZ_PROPS = """
 [buildconfig]
 builder = tito.builder.NoTgzBuilder
@@ -141,7 +135,7 @@ class BaseCliModule(object):
 
 
     def main(self, argv):
-        (self.options, args) = self.parser.parse_args(argv)
+        (self.options, self.args) = self.parser.parse_args(argv)
 
         self._validate_options()
 
@@ -355,6 +349,10 @@ class BuildModule(BaseCliModule):
                 action="store_true",
                 help="Release package only in Koji. (if possible)",
                 )
+        self.parser.add_option("--yum-release", dest="yum_release",
+                action="store_true",
+                help="Build packages in mock and generate a yum repository.",
+                )
         self.parser.add_option("--list-tags", dest="list_tags",
                 action="store_true",
                 help="List tags for which we build this package",
@@ -402,38 +400,10 @@ class BuildModule(BaseCliModule):
         self.pkg_config = self._read_project_config(package_name, build_dir,
                 self.options.tag, self.options.no_cleanup)
 
-        builder = self._create_builder(package_name, build_tag,
+        builder = create_builder(package_name, build_tag,
                 build_version, self.options, self.pkg_config,
-                build_dir)
+                build_dir, self.global_config, self.user_config)
         return builder.run(self.options)
-
-    def _create_builder(self, package_name, build_tag, build_version, options,
-            pkg_config, build_dir):
-        """
-        Create (but don't run) the builder class. Builder object may be
-        used by other objects without actually having run() called.
-        """
-
-        builder_class = None
-        if pkg_config.has_option("buildconfig", "builder"):
-            builder_class = get_class_by_name(pkg_config.get("buildconfig",
-                "builder"))
-        else:
-            builder_class = get_class_by_name(self.global_config.get(
-                GLOBALCONFIG_SECTION, DEFAULT_BUILDER))
-        debug("Using builder class: %s" % builder_class)
-
-        # Instantiate the builder:
-        builder = builder_class(
-                name=package_name,
-                version=build_version,
-                tag=build_tag,
-                build_dir=build_dir,
-                pkg_config=pkg_config,
-                global_config=self.global_config,
-                user_config=self.user_config,
-                options = options)
-        return builder
 
     def _validate_options(self):
         if self.options.srpm and self.options.rpm:
@@ -450,6 +420,108 @@ class BuildModule(BaseCliModule):
                 "(--release includes both)"])
         if self.options.release and self.options.test:
             error_out("Cannot combine --release with --test.")
+
+
+class ReleaseModule(BaseCliModule):
+
+    # Maps a releaser key (used on CLI) to the actual releaser class to use.
+    # Projects can point to their own releasers in their tito.props.
+
+    def __init__(self):
+        self.DEFAULT_RELEASERS = {
+                'cvs': 'tito.release.CvsReleaser',
+                'koji': 'tito.release.KojiReleaser',
+                'fedora-git': 'tito.release.FedoraGitReleaser',
+        }
+        BaseCliModule.__init__(self, "usage: %prog release [options]")
+
+        self.parser.add_option("--type", dest="type", metavar="RELEASERKEY",
+                help="Release type key. Can be a default, or custom releaser.")
+
+        self.parser.add_option("--dist", dest="dist", metavar="DISTTAG",
+                help="Dist tag to apply to srpm and/or rpm. (i.e. .el5)")
+
+        self.parser.add_option("--no-cleanup", dest="no_cleanup",
+                action="store_true",
+                help="do not clean up temporary build directories/files")
+        self.parser.add_option("--tag", dest="tag", metavar="PKGTAG",
+                help="build a specific tag instead of the latest version " +
+                    "(i.e. spacewalk-java-0.4.0-1)")
+
+        self.parser.add_option("--dry-run", dest="dry_run",
+                action="store_true", default=False,
+                help="Do not actually commit/push anything during --release.",
+                )
+
+#        self.parser.add_option("--list-tags", dest="list_tags",
+#                action="store_true",
+#                help="List tags for which we build this package",
+#                )
+#        self.parser.add_option("--only-tags", dest="only_tags",
+#                action="append", metavar="KOJITAG",
+#                help="Build in koji only for specified tags",
+#                )
+#        self.parser.add_option("--upload-new-source", dest="cvs_new_sources",
+#                action="append",
+#                help=("Upload a new source tarball to CVS lookaside. "
+#                    "(i.e. runs 'make new-sources') Must be "
+#                    "used until 'sources' file is committed to CVS."))
+
+#        self.parser.add_option("--rpmbuild-options", dest='rpmbuild_options',
+#                default='',
+#                metavar="OPTIONS", help="Options to pass to rpmbuild.")
+#        self.parser.add_option("--scratch", dest="scratch",
+#                action="store_true",
+#                help="Do scratch build (only for --koji-release)",
+#                )
+
+    def main(self, argv):
+        BaseCliModule.main(self, argv)
+
+        if not self.options.type:
+            print("ERROR: Must specify a releaser to run with --type=RELEASERTYPE")
+            print("Supported releaser types:")
+            for typekey in self.DEFAULT_RELEASERS.keys():
+                print("   %s - %s" % (typekey, self.DEFAULT_RELEASERS[typekey]))
+                # TODO: scan custom releasers as well
+            sys.exit(1)
+
+        build_dir = os.path.normpath(os.path.abspath(self.options.output_dir))
+        package_name = get_project_name(tag=self.options.tag)
+
+        build_tag = None
+        build_version = None
+        # Determine which package version we should build:
+        if self.options.tag:
+            build_tag = self.options.tag
+            build_version = build_tag[len(package_name + "-"):]
+        else:
+            build_version = get_latest_tagged_version(package_name)
+            if build_version == None:
+                error_out(["Unable to lookup latest package info.",
+                        "Perhaps you need to tag first?"])
+            build_tag = "%s-%s" % (package_name, build_version)
+
+        check_tag_exists(build_tag, offline=self.options.offline)
+
+        self.pkg_config = self._read_project_config(package_name, build_dir,
+                self.options.tag, self.options.no_cleanup)
+
+        # Now create an instance of the releaser we intend to use:
+        releaser_class = get_class_by_name(self.DEFAULT_RELEASERS[
+            self.options.type])
+        debug("Using releaser class: %s" % releaser_class)
+
+        releaser = releaser_class(
+                name=package_name,
+                version=build_version,
+                tag=build_tag,
+                build_dir=build_dir,
+                pkg_config=self.pkg_config,
+                global_config=self.global_config,
+                user_config=self.user_config)
+
+        return releaser.release(dry_run=self.options.dry_run)
 
 
 class TagModule(BaseCliModule):
@@ -722,6 +794,7 @@ class ReportModule(BaseCliModule):
 CLI_MODULES = {
     "build": BuildModule,
     "tag": TagModule,
+    "release": ReleaseModule,
     "report": ReportModule,
     "init": InitModule,
 }
