@@ -428,11 +428,6 @@ class ReleaseModule(BaseCliModule):
     # Projects can point to their own releasers in their tito.props.
 
     def __init__(self):
-        self.DEFAULT_RELEASERS = {
-                'cvs': 'tito.release.CvsReleaser',
-                'koji': 'tito.release.KojiReleaser',
-                'fedora-git': 'tito.release.FedoraGitReleaser',
-        }
         BaseCliModule.__init__(self, "usage: %prog release [options]")
 
         self.parser.add_option("--type", dest="type", metavar="RELEASERKEY",
@@ -478,11 +473,23 @@ class ReleaseModule(BaseCliModule):
     def main(self, argv):
         BaseCliModule.main(self, argv)
 
+        self.releasers = {
+                'cvs': 'tito.release.CvsReleaser',
+                'koji': 'tito.release.KojiReleaser',
+                'fedora-git': 'tito.release.FedoraGitReleaser',
+        }
+
+        # Load all custom releasers configured:
+        if self.global_config.has_section("releasers"):
+            for k in self.global_config.options("releasers"):
+                self.releasers[k] = self.global_config.get("releasers", k)
+                debug("Added custom releaser definition: %s" % k)
+
         if not self.options.type:
             print("ERROR: Must specify a releaser to run with --type=RELEASERTYPE")
             print("Supported releaser types:")
-            for typekey in self.DEFAULT_RELEASERS.keys():
-                print("   %s - %s" % (typekey, self.DEFAULT_RELEASERS[typekey]))
+            for typekey in self.releasers.keys():
+                print("   %s - %s" % (typekey, self.releasers[typekey]))
                 # TODO: scan custom releasers as well
             sys.exit(1)
 
@@ -508,7 +515,9 @@ class ReleaseModule(BaseCliModule):
                 self.options.tag, self.options.no_cleanup)
 
         # Now create an instance of the releaser we intend to use:
-        releaser_class = get_class_by_name(self.DEFAULT_RELEASERS[
+        if self.options.type not in self.releasers:
+            error_out("No such releaser configured: %s" % self.options.type)
+        releaser_class = get_class_by_name(self.releasers[
             self.options.type])
         debug("Using releaser class: %s" % releaser_class)
 
