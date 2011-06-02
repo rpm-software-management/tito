@@ -54,17 +54,15 @@ class Builder(object):
             self.offline = options.offline
             self.auto_install = options.auto_install
             self.rpmbuild_options = options.rpmbuild_options
-            self.dry_run = options.dry_run
 
             # These two options are specific to the Koji releaser. If we end up
             # refactoring to a separate "release" command, these can probably 
             # go away.
             self.only_tags = options.only_tags
-            self.scratch = options.scratch
 
         else:
             self.dist = self.test = self.offline = self.auto_install = \
-                    self.rpmbuild_options = self.only_tags = self.scratch = None
+                    self.rpmbuild_options = self.only_tags = None
             self.dist = None
             self.test = False
             self.offline = False
@@ -158,21 +156,6 @@ class Builder(object):
             self.srpm()
         if options.rpm:
             self._rpm()
-
-        if options.release:
-            self.release()
-        elif options.cvs_release:
-            releaser = CvsReleaser(self)
-            releaser.release(dry_run=self.dry_run)
-        elif options.koji_release:
-            releaser = KojiReleaser(self)
-            releaser.release(dry_run=self.dry_run)
-        elif options.git_release:
-            releaser = FedoraGitReleaser(self)
-            releaser.release(dry_run=self.dry_run)
-        elif options.list_tags:
-            koji_releaser = KojiReleaser(self)
-            koji_releaser.list_tags()
 
         self.cleanup()
         return self.artifacts
@@ -286,26 +269,6 @@ class Builder(object):
                     print
                 except KeyboardInterrupt:
                     pass
-
-    def release(self):
-        """
-        Release this package via configuration for this git repo and branch.
-
-        Check if CVS support is configured in rel-eng/global.build.py.props
-        and initiate CVS import/tag/build if so.
-
-        Check for configured Koji branches also, if found create srpms and
-        submit to those branches with proper disttag's.
-        """
-
-        cvs_releaser = CvsReleaser(self)
-        cvs_releaser.release(self.dry_run)
-
-        koji_releaser = KojiReleaser(self)
-        koji_releaser.release(self.dry_run)
-
-        git_releaser = FedoraGitReleaser(self)
-        git_releaser.release(self.dry_run)
 
     def _setup_sources(self):
         """

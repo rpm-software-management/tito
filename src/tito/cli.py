@@ -325,34 +325,6 @@ class BuildModule(BaseCliModule):
                 help="build a specific tag instead of the latest version " +
                     "(i.e. spacewalk-java-0.4.0-1)")
 
-        self.parser.add_option("--release", dest="release",
-                action="store_true", help="%s %s %s" % (
-                    "Release package according to repo configuration.",
-                    "(import into CVS and submit to build system, or create ",
-                    "src.rpm's and submit directly to koji)",
-                ))
-        self.parser.add_option("--dry-run", dest="dry_run",
-                action="store_true", default=False,
-                help="Do not actually commit/push anything during --release.",
-                )
-
-        self.parser.add_option("--cvs-release", dest="cvs_release",
-                action="store_true",
-                help="Release package only in CVS. (if possible)",
-                )
-        self.parser.add_option("--git-release", dest="git_release",
-                action="store_true",
-                help="Release package only in git based build system. "
-                    "(i.e. Fedora)",
-                )
-        self.parser.add_option("--koji-release", dest="koji_release",
-                action="store_true",
-                help="Release package only in Koji. (if possible)",
-                )
-        self.parser.add_option("--yum-release", dest="yum_release",
-                action="store_true",
-                help="Build packages in mock and generate a yum repository.",
-                )
         self.parser.add_option("--list-tags", dest="list_tags",
                 action="store_true",
                 help="List tags for which we build this package",
@@ -370,10 +342,6 @@ class BuildModule(BaseCliModule):
         self.parser.add_option("--rpmbuild-options", dest='rpmbuild_options',
                 default='',
                 metavar="OPTIONS", help="Options to pass to rpmbuild.")
-        self.parser.add_option("--scratch", dest="scratch",
-                action="store_true",
-                help="Do scratch build (only for --koji-release)",
-                )
 
     def main(self, argv):
         BaseCliModule.main(self, argv)
@@ -410,16 +378,6 @@ class BuildModule(BaseCliModule):
             error_out("Cannot combine --srpm and --rpm")
         if self.options.test and self.options.tag:
             error_out("Cannot build test version of specific tag.")
-        if (self.options.srpm or self.options.rpm) and self.options.release:
-            error_out("Cannot combine --srpm/--rpm with --release.")
-
-        if self.options.release and (self.options.cvs_release or
-                self.options.koji_release):
-            error_out([
-                "Cannot combine --cvs-release/--koji-release with --release.",
-                "(--release includes both)"])
-        if self.options.release and self.options.test:
-            error_out("Cannot combine --release with --test.")
 
 
 class ReleaseModule(BaseCliModule):
