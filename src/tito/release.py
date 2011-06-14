@@ -254,16 +254,16 @@ class FedoraGitReleaser(Releaser):
 
     def _can_build_in_git(self):
         """
-        Return True if this repo and branch is configured to build in 
+        Return True if this repo and branch is configured to build in
         Fedora git.
         """
         if not self.builder.config.has_section("gitrelease"):
-            print("Cannot build in Feodra git, no 'gitrelease' section "
+            print("Cannot build in Fedora git, no 'gitrelease' section "
                 "found in tito.props.")
             return False
 
         if not self.builder.config.has_option("gitrelease", "branches"):
-            print("Cannot build in Feodra git, no branches defined in "
+            print("Cannot build in Fedora git, no branches defined in "
                     "tito.props")
             return False
 
