@@ -190,7 +190,7 @@ class FedoraGitReleaser(Releaser):
 
         project_checkout = os.path.join(self.cvs_workdir, self.project_name)
         os.chdir(project_checkout)
-        run_command("git checkout %s" % self.git_branches[0])
+        run_command("fedpkg switch-branch %s" % self.git_branches[0])
 
         self.builder.tgz()
 
@@ -229,7 +229,7 @@ class FedoraGitReleaser(Releaser):
         os.chdir(self.cvs_package_workdir)
         output = run_command(cmd)
 
-        cmd = "git push origin %s:%s" % (main_branch, main_branch)
+        cmd = "fedpkg push"
         build_cmd = "fedpkg build --nowait"
         if self.dry_run:
             self.print_dry_run_warning(cmd)
