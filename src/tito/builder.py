@@ -54,15 +54,9 @@ class Builder(object):
             self.offline = options.offline
             self.auto_install = options.auto_install
             self.rpmbuild_options = options.rpmbuild_options
-
-            # These two options are specific to the Koji releaser. If we end up
-            # refactoring to a separate "release" command, these can probably 
-            # go away.
-            self.only_tags = options.only_tags
-
         else:
             self.dist = self.test = self.offline = self.auto_install = \
-                    self.rpmbuild_options = self.only_tags = None
+                    self.rpmbuild_options = None
             self.dist = None
             self.test = False
             self.offline = False

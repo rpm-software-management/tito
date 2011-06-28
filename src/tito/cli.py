@@ -325,13 +325,12 @@ class BuildModule(BaseCliModule):
                 help="build a specific tag instead of the latest version " +
                     "(i.e. spacewalk-java-0.4.0-1)")
 
+        self.parser.add_option("--release", dest="release",
+                action="store_true", help="DEPRECATED: please use 'tito release' instead.")                                     
+
         self.parser.add_option("--list-tags", dest="list_tags",
                 action="store_true",
                 help="List tags for which we build this package",
-                )
-        self.parser.add_option("--only-tags", dest="only_tags",
-                action="append", metavar="KOJITAG",
-                help="Build in koji only for specified tags",
                 )
         self.parser.add_option("--upload-new-source", dest="cvs_new_sources",
                 action="append",
@@ -351,6 +350,10 @@ class BuildModule(BaseCliModule):
 
         build_tag = None
         build_version = None
+
+        if self.options.release:
+            error_out("'tito build --release' is now deprecated. Please see 'tito release'.")
+
         # Determine which package version we should build:
         if self.options.tag:
             build_tag = self.options.tag
@@ -410,19 +413,11 @@ class ReleaseModule(BaseCliModule):
 #                action="store_true",
 #                help="List tags for which we build this package",
 #                )
+        # These are specific only to Koji releaser, what can we do?
 #        self.parser.add_option("--only-tags", dest="only_tags",
 #                action="append", metavar="KOJITAG",
 #                help="Build in koji only for specified tags",
 #                )
-#        self.parser.add_option("--upload-new-source", dest="cvs_new_sources",
-#                action="append",
-#                help=("Upload a new source tarball to CVS lookaside. "
-#                    "(i.e. runs 'make new-sources') Must be "
-#                    "used until 'sources' file is committed to CVS."))
-
-#        self.parser.add_option("--rpmbuild-options", dest='rpmbuild_options',
-#                default='',
-#                metavar="OPTIONS", help="Options to pass to rpmbuild.")
 #        self.parser.add_option("--scratch", dest="scratch",
 #                action="store_true",
 #                help="Do scratch build (only for --koji-release)",
