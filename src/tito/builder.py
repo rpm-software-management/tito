@@ -355,6 +355,19 @@ class Builder(object):
         else:
             print("Leaving rpmbuild files in: %s" % self.rpmbuild_dir)
 
+    def _check_build_dirs_access(self):
+        """
+        Ensure the build directories are writable.
+        """
+        if not os.access(self.rpmbuild_basedir, os.W_OK):
+            error_out("%s is not writable." % self.rpmbuild_basedir)
+        if not os.access(self.rpmbuild_dir, os.W_OK):
+            error_out("%s is not writable." % self.rpmbuild_dir)
+        if not os.access(self.rpmbuild_sourcedir, os.W_OK):
+            error_out("%s is not writable." % self.rpmbuild_sourcedir)
+        if not os.access(self.rpmbuild_builddir, os.W_OK):
+            error_out("%s is not writable." % self.rpmbuild_builddir)
+
     def _create_build_dirs(self):
         """
         Create the build directories. Can safely be called multiple times.
@@ -362,6 +375,7 @@ class Builder(object):
         commands.getoutput("mkdir -p %s %s %s %s" % (
             self.rpmbuild_basedir, self.rpmbuild_dir,
             self.rpmbuild_sourcedir, self.rpmbuild_builddir))
+        self._check_build_dirs_access()
 
     def _setup_test_specfile(self):
         if self.test and not self.ran_setup_test_specfile:
