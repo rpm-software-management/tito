@@ -399,8 +399,8 @@ def create_tgz(git_root, prefix, commit, relative_dir, rel_eng_dir,
         relative_git_dir = ""
 
     archive_cmd = ('git archive --format=tar --prefix=%s/ %s:%s '
-        '| grep -a -v "^%s/rel-eng/" | %s %s %s | gzip -n -c - | tee %s' % (
-        prefix, commit, relative_git_dir, prefix, timestamp_script, 
+        '| %s %s %s | gzip -n -c - | tee %s' % (
+        prefix, commit, relative_git_dir, timestamp_script,
         timestamp, commit, dest_tgz))
     debug(archive_cmd)
     run_command(archive_cmd)
