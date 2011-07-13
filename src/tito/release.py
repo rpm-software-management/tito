@@ -209,37 +209,40 @@ class FedoraGitReleaser(Releaser):
 
         main_branch = self.git_branches[0]
 
+
+
         os.chdir(project_checkout)
         (status, diff_output) = commands.getstatusoutput("git diff --cached")
-        print(diff_output)
 
-        print("")
-        print("##### Please review the above diff #####")
-        answer = raw_input("Do you wish to proceed with commit? [y/n] ")
-        if answer.lower() not in ['y', 'yes', 'ok', 'sure']:
-            print("Fine, you're on your own!")
-            self.cleanup()
-            sys.exit(1)
+        if diff_output.strip() == "":
+            print("No changes in main branch, skipping commit for: %s" % main_branch)
+        else:
+            print(diff_output)
+            print("")
+            print("##### Please review the above diff #####")
+            answer = raw_input("Do you wish to proceed with commit? [y/n] ")
+            if answer.lower() not in ['y', 'yes', 'ok', 'sure']:
+                print("Fine, you're on your own!")
+                self.cleanup()
+                sys.exit(1)
 
-        print("Proceeding with commit.")
-        cmd = 'fedpkg commit -m "Update %s to %s"' % (self.project_name, 
-                self.builder.build_version)
-        debug("git commit command: %s" % cmd)
-        print
-        os.chdir(self.cvs_package_workdir)
-        output = run_command(cmd)
+            print("Proceeding with commit.")
+            cmd = 'fedpkg commit -m "Update %s to %s"' % (self.project_name,
+                    self.builder.build_version)
+            debug("git commit command: %s" % cmd)
+            print
+            os.chdir(self.cvs_package_workdir)
+            output = run_command(cmd)
 
         cmd = "fedpkg push"
-        build_cmd = "fedpkg build --nowait"
         if self.dry_run:
             self.print_dry_run_warning(cmd)
-            self.print_dry_run_warning(build_cmd)
         else:
+            # Push
             print(cmd)
             run_command(cmd)
-            print(build_cmd)
-            run_command(build_cmd)
-            print
+
+        self._build()
 
         for branch in self.git_branches[1:]:
             print("Merging %s into %s" % (main_branch, branch))
@@ -249,13 +252,31 @@ class FedoraGitReleaser(Releaser):
             cmd = "git push origin %s:%s" % (branch, branch)
             if self.dry_run:
                 self.print_dry_run_warning(cmd)
-                self.print_dry_run_warning(build_cmd)
             else:
                 print(cmd)
                 run_command(cmd)
-                print(build_cmd)
-                run_command(build_cmd)
-                print
+
+            self._build()
+            print
+
+    def _build(self):
+        """ Submit a Fedora build from current directory. """
+        build_cmd = "fedpkg build --nowait"
+
+        if self.dry_run:
+            self.print_dry_run_warning(build_cmd)
+            return
+
+        print("Submitting build: %s" % build_cmd)
+        (status, output) = commands.getstatusoutput(build_cmd)
+        if status > 0:
+            if "already been built" in output:
+                print("Build has been submitted previously, continuing...")
+            else:
+                sys.stderr.write("ERROR: Unable to submit build.")
+                sys.stderr.write("  Status code: %s" % status)
+                sys.stderr.write("  Output: %s" % output)
+                sys.exit(1)
 
 
 
