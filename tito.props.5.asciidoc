@@ -1,5 +1,6 @@
 tito.props(5)
 ============
+include::man.asciidoc[]
 
 NAME
 ----
