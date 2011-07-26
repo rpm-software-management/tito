@@ -346,12 +346,12 @@ def get_commit_count(tag, commit_id):
     # just the tag.
     #
     # so we need to pass in the tag as well.
-    # output = run_command("git describe %s" % commit_id)
+    # output = run_command("git describe --match=%s %s" % (tag, commit_id))
     # if tag == output:
     #     return 0
     # else:
     #     parse the count from the output
-    output = run_command("git describe %s" % commit_id)
+    output = run_command("git describe --match=%s %s" % (tag, commit_id))
 
     debug("tag - %s" % tag)
     debug("output - %s" % output)
