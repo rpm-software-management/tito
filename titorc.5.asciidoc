@@ -1,5 +1,6 @@
 titorc(5)
 =========
+include::man.asciidoc[]
 
 NAME
 ----

@@ -1,5 +1,6 @@
 tito(8)
 =======
+include::man.asciidoc[]
 
 NAME
 ----

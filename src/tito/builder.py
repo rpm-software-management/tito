@@ -221,7 +221,13 @@ class Builder(object):
             '--define "_binary_filedigest_algorithm md5" %s %s %s --clean '
             '-ba %s' % (self.rpmbuild_options, 
                 self._get_rpmbuild_dir_options(), define_dist, self.spec_file))
-        output = run_command(cmd)
+	try:
+            output = run_command(cmd)
+        except (KeyboardInterrupt, SystemExit):
+            print ""
+            exit (1)
+        except Exception, err:
+            error_out('%s' % str(err))
         print(output)
         files_written = self._find_wrote_in_rpmbuild_output(output)
         if len(files_written) < 2:
