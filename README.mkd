@@ -42,26 +42,38 @@ Before doing most everything you'll need to tag your package(s).
 
 Before doing this you'll need to ensure that your package spec files are at the top of the relative source tree for that package.
 
-For the most common case, a single project git repository:
+For the most common case, a single project git repository has the spec file and
+root of the project at the top level of the git repository:
 
+    docs/
     mypackage.spec
+    README
     rel-eng/
     src/
+    test/
 
-For a multi-project git repository, something like:
+For a multi-project git repository, packages can be defined in various
+sub-directories, provided they do not nest (i.e. walking up the tree, two spec
+files will never be encountered):
 
     rel-eng/
     package1/
+        docs/
         mypackage.spec
+        README
         src/
+        test/
     subdir/
         package2/
             anotherpkg.spec
+            docs/
+            README
             src/
+            test/
 
 The packages can be organized in any hierarchy you like and even be moved
-around and re-tagged, we only need to have the spec file at the top of the
-source for that package.
+around and re-tagged, we only need to have the spec file in the top level
+directory for that package.
 
 To create an initial package tag, modify your spec file's version/release as
 desired and run, add a changelog entry, and run:
