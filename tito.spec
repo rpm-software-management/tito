@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.3.2
+Version: 0.3.3
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -74,6 +74,24 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Wed Oct 05 2011 Devan Goodwin <dgoodwin@rm-rf.ca> 0.3.3-1
+- Clarify some initial project layout documentation. (dgoodwin@rm-rf.ca)
+- match based on the tag for the package we are building (mmccune@redhat.com)
+- Teach tito how to checkout EUS branches (msuchy@redhat.com)
+- Remove release parameter from _update_package_metadata() (msuchy@redhat.com)
+- Avoid traceback if rpmbuild fails (jumanjiman@gmail.com)
+- Make Fedora git builds a little more tolerant if you need to re-run.
+  (dgoodwin@redhat.com)
+- Fix the binary spew in SOURCES on some weird tags. (dgoodwin@redhat.com)
+- Do not print traceback when user lacks write permission (jumanjiman@gmail.com)
+- Fix Fedora git releaser to use more reliable commands. (dgoodwin@rm-rf.ca)
+- Remove the old tito build --release code. (dgoodwin@rm-rf.ca)
+- Allow custom releasers to be loaded and used. (dgoodwin@rm-rf.ca)
+- Introduce new CLI module for releases. (dgoodwin@rm-rf.ca)
+- Use fedpkg switch branch for git releases. (dgoodwin@rm-rf.ca)
+- Do not print traceback when user hit Ctrl+C (msuchy@redhat.com)
+- '0' is True, we want it as false (msuchy@redhat.com)
+
 * Tue Apr 26 2011 Devan Goodwin <dgoodwin@rm-rf.ca> 0.3.2-1
 - add debug logging (jesusr@redhat.com)
 
