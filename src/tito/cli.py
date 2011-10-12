@@ -127,7 +127,7 @@ class BaseCliModule(object):
             default=False)
 
         default_output_dir = lookup_build_dir(self.user_config)
-        self.parser.add_option("-o", "--output", dest="output_dir", 
+        self.parser.add_option("-o", "--output", dest="output_dir",
                 metavar="OUTPUTDIR", default=default_output_dir,
                 help="Path to write temp files, tarballs and rpms to. "
                     "(default %s)"
@@ -154,7 +154,7 @@ class BaseCliModule(object):
         # Check if global config defines a custom lib dir:
         if self.global_config.has_option(GLOBALCONFIG_SECTION,
                 "lib_dir"):
-            lib_dir = self.global_config.get(GLOBALCONFIG_SECTION, 
+            lib_dir = self.global_config.get(GLOBALCONFIG_SECTION,
                     "lib_dir")
             if lib_dir[0] != '/':
                 # Looks like a relative path, assume from the git root:
@@ -228,7 +228,7 @@ class BaseCliModule(object):
         else:
             # HACK: Check for legacy build.py.props naming, needed to support
             # older tags:
-            current_props_file = os.path.join(os.getcwd(), 
+            current_props_file = os.path.join(os.getcwd(),
                     "build.py.props")
             if (os.path.exists(current_props_file)):
                 properties_file = current_props_file
@@ -309,7 +309,7 @@ class BuildModule(BaseCliModule):
                 help="Build srpm")
         self.parser.add_option("--rpm", dest="rpm", action="store_true",
                 help="Build rpm")
-        self.parser.add_option("-i", "--install", dest="auto_install", 
+        self.parser.add_option("-i", "--install", dest="auto_install",
                 action="store_true", default=False,
                 help="Install any binary rpms being built. (WARNING: " + \
                     "uses sudo rpm -Uvh --force)")
@@ -326,7 +326,7 @@ class BuildModule(BaseCliModule):
                     "(i.e. spacewalk-java-0.4.0-1)")
 
         self.parser.add_option("--release", dest="release",
-                action="store_true", help="DEPRECATED: please use 'tito release' instead.")                                     
+                action="store_true", help="DEPRECATED: please use 'tito release' instead.")
 
         self.parser.add_option("--list-tags", dest="list_tags",
                 action="store_true",
@@ -430,6 +430,7 @@ class ReleaseModule(BaseCliModule):
                 'cvs': 'tito.release.CvsReleaser',
                 'koji': 'tito.release.KojiReleaser',
                 'fedora-git': 'tito.release.FedoraGitReleaser',
+                'yum-mock': 'tito.release.YumRepoMockReleaser'
         }
 
         # Load all custom releasers configured:
@@ -510,7 +511,7 @@ class TagModule(BaseCliModule):
                 help=("Automatically accept the generated changelog."))
 
         self.parser.add_option("--auto-changelog-message",
-                dest="auto_changelog_msg", metavar="MESSAGE", 
+                dest="auto_changelog_msg", metavar="MESSAGE",
                 help=("Use MESSAGE as the default changelog message for "
                       "new packages"))
 
@@ -667,7 +668,7 @@ class ReportModule(BaseCliModule):
                     continue
                 f = open(os.path.join(package_metadata_dir, md_file))
                 (version, relative_dir) = f.readline().strip().split(" ")
-                
+
                 # Hack for single project git repos:
                 if relative_dir == '/':
                     relative_dir = ""

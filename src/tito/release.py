@@ -22,6 +22,9 @@ import pyfedpkg
 import tempfile
 import subprocess
 
+from tempfile import mkdtemp
+from shutil import rmtree, copy
+
 from tito.common import *
 
 DEFAULT_KOJI_OPTS = "build --nowait"
@@ -36,7 +39,7 @@ class Releaser(object):
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None):
 
-        # While we create a builder here, we don't actually call run on it 
+        # While we create a builder here, we don't actually call run on it
         # unless the releaser needs to:
         self.builder = create_builder(name, tag,
                 version, None, pkg_config,
@@ -158,11 +161,71 @@ class Releaser(object):
         return new_files, copied_files, old_files
 
 
+class YumRepoMockReleaser(Releaser):
+    """
+    A releaser which will rsync down a yum repo, build the desired packages,
+    plug them in, update the repodata, and push the yum repo back out.
+
+    Building of the packages is done via mock.
+
+    WARNING: This will not work in all
+    situations, depending on the current OS, and the mock target you
+    are attempting to use.
+    """
+
+    def __init__(self, name=None, version=None, tag=None, build_dir=None,
+            pkg_config=None, global_config=None, user_config=None):
+        Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
+                global_config, user_config)
+
+        self.build_dir = build_dir
+
+        # Override to use the mock builder:
+        from tito.builder import MockBuilder
+        self.builder = MockBuilder(name=name, tag=tag, version=version,
+                options=None,
+                pkg_config=pkg_config,
+                build_dir=build_dir,
+                global_config=global_config,
+                user_config=user_config)
+
+    def release(self, dry_run=False):
+        # Should this run?
+        self.builder.tgz()
+        self.builder.srpm()
+        self.builder._rpm()
+        self.builder.cleanup()
+
+        print "RPMS:"
+        print self.builder.artifacts
+
+        # TODO: username
+        rsync_location = "fedorapeople.org:/srv/repos/candlepin/subscription-manager/fedora-15/x86_64/"
+        # Make a temp directory to sync the existing repo contents into:
+        yum_temp_dir = mkdtemp(dir=self.build_dir, prefix="tito-yumrepo-")
+        debug("Copying existing yum repo to:: %s" % yum_temp_dir)
+        run_command("rsync -avtz %s %s" % (rsync_location, yum_temp_dir))
+
+        for artifact in self.builder.artifacts:
+            if artifact.endswith(".rpm") and not artifact.endswith(".src.rpm"):
+                copy(artifact, yum_temp_dir)
+                print("Copied %s to yum repo." % artifact)
+
+        os.chdir(yum_temp_dir)
+        output = run_command("createrepo ./")
+        print output
+
+
+        # TODO: Cleanup
+        #rmtree(yum_temp_dir)
+
+
+
 class FedoraGitReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None):
-        Releaser.__init__(self, name, version, tag, build_dir, pkg_config, 
+        Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
                 global_config, user_config)
 
         self.git_branches = []
@@ -208,8 +271,6 @@ class FedoraGitReleaser(Releaser):
         print("")
 
         main_branch = self.git_branches[0]
-
-
 
         os.chdir(project_checkout)
         (status, diff_output) = commands.getstatusoutput("git diff --cached")
@@ -277,9 +338,6 @@ class FedoraGitReleaser(Releaser):
                 sys.stderr.write("  Status code: %s" % status)
                 sys.stderr.write("  Output: %s" % output)
                 sys.exit(1)
-
-
-
 
     def _can_build_in_git(self):
         """
@@ -356,7 +414,7 @@ class CvsReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None):
-        Releaser.__init__(self, name, version, tag, build_dir, pkg_config, 
+        Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
                 global_config, user_config)
 
         # Configure CVS variables if possible. Will check later that
@@ -616,7 +674,7 @@ class KojiReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None):
-        Releaser.__init__(self, name, version, tag, build_dir, pkg_config, 
+        Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
                 global_config, user_config)
 
         self.only_tags = self.builder.only_tags

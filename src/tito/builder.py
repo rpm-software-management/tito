@@ -69,14 +69,14 @@ class Builder(object):
             for options in pkg_config.options(section):
                 if not self.config.has_section(section):
                     self.config.add_section(section)
-                self.config.set(section, options, 
+                self.config.set(section, options,
                         pkg_config.get(section, options))
 
         if self.config.has_section("requirements"):
             if self.config.has_option("requirements", "tito"):
                 if loose_version(self.config.get("requirements", "tito")) > \
                         loose_version(require('tito')[0].version):
-                    print("Error: tito version %s or later is needed to build this project." % 
+                    print("Error: tito version %s or later is needed to build this project." %
                             self.config.get("requirements", "tito"))
                     print("Your version: %s" % require('tito')[0].version)
                     sys.exit(-1)
@@ -112,7 +112,7 @@ class Builder(object):
         # Set to true if we've already created a tgz:
         self.ran_tgz = False
 
-        # Used to make sure we only modify the spec file for a test build 
+        # Used to make sure we only modify the spec file for a test build
         # once. The srpm method may be called multiple times during koji
         # releases to create the proper disttags, but we only want to modify
         # the spec file once.
@@ -198,7 +198,7 @@ class Builder(object):
 
         cmd = ('LC_ALL=C rpmbuild --define "_source_filedigest_algorithm md5"  --define'
             ' "_binary_filedigest_algorithm md5" %s %s %s --nodeps -bs %s' % (
-            self.rpmbuild_options, self._get_rpmbuild_dir_options(), 
+            self.rpmbuild_options, self._get_rpmbuild_dir_options(),
             define_dist, self.spec_file))
         output = run_command(cmd)
         print(output)
@@ -219,7 +219,7 @@ class Builder(object):
             define_dist = "--define 'dist %s'" % self.dist
         cmd = ('LC_ALL=C rpmbuild --define "_source_filedigest_algorithm md5"  '
             '--define "_binary_filedigest_algorithm md5" %s %s %s --clean '
-            '-ba %s' % (self.rpmbuild_options, 
+            '-ba %s' % (self.rpmbuild_options,
                 self._get_rpmbuild_dir_options(), define_dist, self.spec_file))
 	try:
             output = run_command(cmd)
@@ -690,7 +690,7 @@ class UpstreamBuilder(NoTgzBuilder):
     def patch_upstream(self):
         """
         Generate patches for any differences between our tag and the
-        upstream tag, and apply them into an exported copy of the 
+        upstream tag, and apply them into an exported copy of the
         spec file.
         """
         patch_filename = "%s-to-%s-%s.patch" % (self.upstream_tag,
@@ -699,14 +699,14 @@ class UpstreamBuilder(NoTgzBuilder):
                 patch_filename)
         patch_dir = self.git_root
         if self.relative_project_dir != "/":
-            patch_dir = os.path.join(self.git_root, 
+            patch_dir = os.path.join(self.git_root,
                     self.relative_project_dir)
         os.chdir(patch_dir)
         debug("patch dir = %s" % patch_dir)
         print("Generating patch [%s]" % patch_filename)
         debug("Patch: %s" % patch_file)
         patch_command = "git diff --relative %s..%s > %s" % \
-                (self.upstream_tag, self.git_commit_id, 
+                (self.upstream_tag, self.git_commit_id,
                         patch_file)
         debug("Generating patch with: %s" % patch_command)
         output = run_command(patch_command)
@@ -772,3 +772,70 @@ class UpstreamBuilder(NoTgzBuilder):
 class SatelliteBuilder(UpstreamBuilder):
     pass
 
+
+class MockBuilder(Builder):
+    """
+    Uses the mock tool to create a chroot for building packages for a different
+    OS version than you may be currently using.
+    """
+
+    def __init__(self, name=None, version=None, tag=None, build_dir=None,
+            pkg_config=None, global_config=None, user_config=None, options=None):
+
+        Builder.__init__(self, name=name, version=version, tag=tag,
+                build_dir=build_dir, pkg_config=pkg_config,
+                global_config=global_config, user_config=user_config,
+                options=options)
+
+        self.mock_tag = "fedora-15-x86_64"
+        #self.mock_tag = "epel-6-x86_64"
+        #self.mock_tag = "fedora-14-x86_64"
+        #self.mock_tag = "epel-5-x86_64"
+
+        # TODO: error out if mock package is not installed
+
+    def _rpm(self):
+        """
+        Uses the SRPM
+        Override the base builder rpm method.
+        """
+
+        print("Creating rpms for %s-%s in mock: %s" % (
+            self.project_name, self.display_version, self.mock_tag))
+        if not self.srpm_location:
+            self.srpm()
+        print("Using srpm: %s" % self.srpm_location)
+        self._build_in_mock()
+
+    def _build_in_mock(self):
+        print("Initializing mock:\n")
+        output = run_command("mock -r %s --init" % self.mock_tag)
+        print output
+        print("\nInstalling deps:\n")
+        output = run_command("mock -r %s --installdeps %s" % (
+            self.mock_tag, self.srpm_location))
+        print output
+        #print("\nCopying:\n")
+        #output = run_command("mock -r %s --copyin %s /tmp" % (
+        #    self.mock_tag, self.srpm_location))
+        #print output
+        print("\nRebuilding:\n")
+        output = run_command('mock -r %s --rebuild %s' %
+                (self.mock_tag, self.srpm_location))
+        print output
+        print("\nCopying resulting rpms:\n")
+        mock_output_dir = os.path.join(self.rpmbuild_dir, "mockoutput")
+        output = run_command("mock -r %s --copyout /builddir/build/RPMS/ %s" %
+                (self.mock_tag, mock_output_dir))
+        print output
+
+        # Copy everything mock wrote out to /tmp/tito:
+        files = os.listdir(mock_output_dir)
+        run_command("cp %s/*.rpm %s" %
+                (mock_output_dir, self.rpmbuild_basedir))
+        print
+        print("Wrote:")
+        for rpm in files:
+            rpm_path = os.path.join(self.rpmbuild_basedir, rpm)
+            print("  %s" % rpm_path)
+            self.artifacts.append(rpm_path)
