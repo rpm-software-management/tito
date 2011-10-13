@@ -478,4 +478,26 @@ def get_class_by_name(name):
     mod = __import__(module, globals(), locals(), [class_name])
     return getattr(mod, class_name)
 
+def increase_version(version_string):
+    regex = re.compile(r"^(%.*)|(.+\.)?([0-9]+)(\..*|%.*|$)")
+    match = re.match(regex, version_string)
+    if match:
+        matches = list(match.groups())
+        # Increment the number in the third match group, if there is one
+        if matches[2]:
+            matches[2] = str(int(matches[2]) + 1)
+        # Join everything back up, skipping match groups with None
+        return "".join([x for x in matches if x])
 
+    # If no match, return an empty string
+    return ""
+
+def reset_release(release_string):
+    regex = re.compile(r"(^|\.)([.0-9]+)(\.|%|$)")
+    return regex.sub(r"\g<1>1\g<3>", release_string)
+
+def increase_zstream(release_string):
+    # If we do not have zstream, create .0 and then bump the version
+    regex = re.compile(r"^(.*%{\?dist})$")
+    bumped_string = regex.sub(r"\g<1>.0", release_string)
+    return increase_version(bumped_string)

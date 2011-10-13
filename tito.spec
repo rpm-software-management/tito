@@ -64,7 +64,6 @@ rm -rf $RPM_BUILD_ROOT
 %doc %{_mandir}/man5/build.py.props.5.gz
 %doc %{_mandir}/man8/tito.8.gz
 %{_bindir}/tito
-%{_bindir}/bump-version.pl
 %{_bindir}/tar-fixup-stamp-comment.pl
 %{_bindir}/test-setup-specfile.pl
 %{_bindir}/generate-patches.pl
