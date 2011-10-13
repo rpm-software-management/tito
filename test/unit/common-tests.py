@@ -74,6 +74,71 @@ class CommonTests(unittest.TestCase):
         line = "this isn't a version fool.\n"
         self.assertEquals(line, replace_version(line, "2.5.3"))
 
+class VersionMathTest(unittest.TestCase):
+    def test_increase_version_minor(self):
+        line = "1.0.0"
+        expected="1.0.1"
+        self.assertEquals(expected, increase_version(line))
+
+    def test_increase_version_major(self):
+        line = "1.0"
+        expected="1.1"
+        self.assertEquals(expected, increase_version(line))
+
+    def test_increase_release(self):
+        line = "1"
+        expected="2"
+        self.assertEquals(expected, increase_version(line))
+
+    def test_increase_versionless(self):
+        line = "%{app_version}"
+        expected="%{app_version}"
+        self.assertEquals(expected, increase_version(line))        
+
+    def test_increase_release_with_rpm_cruft(self):
+        line = "1%{?dist}"
+        expected="2%{?dist}"
+        self.assertEquals(expected, increase_version(line))
+
+    def test_increase_release_with_zstream(self):
+        line = "1%{?dist}.1"
+        expected="1%{?dist}.2"
+        self.assertEquals(expected, increase_version(line))
+
+    def test_unknown_version(self):
+        line = "somethingstrange"
+        expected=""
+        self.assertEquals(expected, increase_version(line))
+
+    def test_empty_string(self):
+        line = ""
+        expected=""
+        self.assertEquals(expected, increase_version(line))        
+
+    def test_increase_zstream(self):
+        line = "1%{?dist}"
+        expected="1%{?dist}.1"
+        self.assertEquals(expected, increase_zstream(line))
+
+    def test_increase_zstream_already_appended(self):
+        line = "1%{?dist}.1"
+        expected="1%{?dist}.2"
+        self.assertEquals(expected, increase_zstream(line))
+
+    def test_reset_release_with_rpm_cruft(self):
+        line = "2%{?dist}"
+        expected="1%{?dist}"
+        self.assertEquals(expected, reset_release(line))
+
+    def test_reset_release_with_more_rpm_cruft(self):
+        line = "2.beta"
+        expected="1.beta"
+        self.assertEquals(expected, reset_release(line))
+
+    def test_reset_release(self):
+        line = "2"
+        expected="1"
+        self.assertEquals(expected, reset_release(line))
 
 class ExtractBugzillasTest(unittest.TestCase):
 

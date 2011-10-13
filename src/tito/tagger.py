@@ -29,7 +29,8 @@ from time import strftime
 from tito.common import (debug, error_out, run_command, find_git_root,
         find_spec_file, get_project_name, get_latest_tagged_version,
         get_script_path, get_spec_version_and_release, replace_version,
-        tag_exists_locally, tag_exists_remotely, head_points_to_tag, undo_tag)
+        tag_exists_locally, tag_exists_remotely, head_points_to_tag, undo_tag,
+        increase_version, reset_release, increase_zstream)
 from tito.exception import TitoException
 
 
@@ -314,18 +315,48 @@ class VersionTagger(object):
         old_version = get_latest_tagged_version(self.project_name)
         if old_version == None:
             old_version = "untagged"
-        # TODO: Do this here instead of calling out to an external Perl script:
         if not self.keep_version:
-            bump_type = "bump-version"
-            if release:
-                bump_type = "bump-release"
-            elif zstream:
-                bump_type = "bump-zstream"
+            version_regex = re.compile("^(version:\s*)(.+)$", re.IGNORECASE)
+            release_regex = re.compile("^(release:\s*)(.+)$", re.IGNORECASE)
 
-            script_path = get_script_path("bump-version.pl")
-            cmd = "%s %s --specfile %s" % \
-                    (script_path, bump_type, self.spec_file)
-            run_command(cmd)
+            in_f = open(self.spec_file, 'r')
+            out_f = open(self.spec_file + ".new", 'w')
+
+            for line in in_f.readlines():
+                if release:
+                    match = re.match(release_regex, line)
+                    if match:
+                        line = "".join((match.group(1)
+                                        , increase_version(match.group(2))
+                                        , "\n"
+                        ))
+                elif zstream:
+                    match = re.match(release_regex, line)
+                    if match:
+                        line = "".join((match.group(1)
+                                        , increase_zstream(match.group(2))
+                                        , "\n"
+                        ))
+                else:
+                    match = re.match(version_regex, line)
+                    if match:
+                        line = "".join((match.group(1)
+                                        , increase_version(match.group(2))
+                                        , "\n"
+                        ))
+
+                    match = re.match(release_regex, line)
+                    if match:
+                        line = "".join((match.group(1)
+                                        , reset_release(match.group(2))
+                                        , "\n"
+                        ))
+
+                out_f.write(line)
+
+            in_f.close()
+            out_f.close()
+            shutil.move(self.spec_file + ".new", self.spec_file)
 
         new_version = self._get_spec_version_and_release()
         if new_version.strip() == "":

@@ -37,7 +37,6 @@ setup(
     # non-python scripts go here
     scripts = [
         'bin/tito',
-        'bin/bump-version.pl',
         'bin/tar-fixup-stamp-comment.pl',
         'bin/test-setup-specfile.pl',
         'bin/generate-patches.pl'
