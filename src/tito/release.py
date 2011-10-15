@@ -33,6 +33,7 @@ DEFAULT_CVS_BUILD_DIR = "cvswork"
 # List of CVS files to protect when syncing git with a CVS module:
 PROTECTED_BUILD_SYS_FILES = ('branch', 'CVS', '.cvsignore', 'Makefile', 'sources', ".git", ".gitignore")
 
+RSYNC_USERNAME = 'RSYNC_USERNAME' # environment variable name
 
 class Releaser(object):
 
@@ -202,19 +203,23 @@ class YumRepoMockReleaser(Releaser):
         print "RPMS:"
         print self.builder.artifacts
 
-        # TODO: username
         rsync_location = "fedorapeople.org:/srv/repos/candlepin/subscription-manager/fedora-15/x86_64/"
+        if RSYNC_USERNAME in os.environ:
+            print("%s set, using rsync username: %s" % (RSYNC_USERNAME,
+                    os.environ[RSYNC_USERNAME]))
+            rsync_location = "%s@%s" % (os.environ[RSYNC_USERNAME], rsync_location)
         # Make a temp directory to sync the existing repo contents into:
         yum_temp_dir = mkdtemp(dir=self.build_dir, prefix="tito-yumrepo-")
-        debug("Copying existing yum repo to: %s" % yum_temp_dir)
-        run_command("rsync -avtz %s %s" % (rsync_location, yum_temp_dir))
+        print("Syncing yum repo: %s -> %s" % (rsync_location, yum_temp_dir))
+        output = run_command("rsync -avtz %s %s" % (rsync_location, yum_temp_dir))
+        debug(output)
 
         for artifact in self.builder.artifacts:
             if artifact.endswith(".rpm") and not artifact.endswith(".src.rpm"):
                 copy(artifact, yum_temp_dir)
                 print("Copied %s to yum repo." % artifact)
 
-        # TODO: should we clean up old versions of these packages?
+        # TODO: should we clean up old versions of these packages in the repo?
 
         os.chdir(yum_temp_dir)
         output = run_command("createrepo ./")

@@ -794,6 +794,8 @@ class MockBuilder(Builder):
 
         # TODO: error out if mock package is not installed
 
+        # TODO: error out if user does not have mock group
+
     def _rpm(self):
         """
         Uses the SRPM
