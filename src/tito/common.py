@@ -24,6 +24,15 @@ DEFAULT_BUILDER = "default_builder"
 DEFAULT_TAGGER = "default_tagger"
 GLOBALCONFIG_SECTION = "globalconfig"
 
+
+# Define some shortcuts to fully qualified Builder classes to make things
+# a little more concise for CLI users. Mock is probably the only one this
+# is relevant for at this time.
+BUILDER_SHORTCUTS = {
+    'mock': 'tito.builder.MockBuilder'
+}
+
+
 def extract_bzs(output):
     """
     Parses the output of CVS diff or a series of git commit log entries,
@@ -89,6 +98,10 @@ def create_builder(package_name, build_tag, build_version, options,
     Create (but don't run) the builder class. Builder object may be
     used by other objects without actually having run() called.
     """
+
+    # Allow some shorter names for builders for CLI users.
+    if builder_class in BUILDER_SHORTCUTS:
+        builder_class = BUILDER_SHORTCUTS[builder_class]
 
     if builder_class is None:
         if pkg_config.has_option("buildconfig", "builder"):

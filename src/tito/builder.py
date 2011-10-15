@@ -23,6 +23,7 @@ from distutils.version import LooseVersion as loose_version
 
 from tito.common import *
 from tito.release import *
+from tito.exception import TitoException
 
 class Builder(object):
     """
@@ -32,6 +33,7 @@ class Builder(object):
     which require other unusual behavior can subclass this to inject the
     desired behavior.
     """
+    REQUIRED_ARGS = []
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
@@ -155,6 +157,13 @@ class Builder(object):
         # Set to path to srpm once we build one.
         self.srpm_location = None
 
+        self._check_required_args()
+
+    def _check_required_args(self):
+        for arg in self.REQUIRED_ARGS:
+            if arg not in self.args:
+                raise TitoException("Builder missing required argument: %s" %
+                        arg)
 
     def run(self, options):
         """
@@ -806,6 +815,7 @@ class MockBuilder(Builder):
     Uses the mock tool to create a chroot for building packages for a different
     OS version than you may be currently using.
     """
+    REQUIRED_ARGS = ['mock']
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,

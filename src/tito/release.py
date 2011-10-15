@@ -190,7 +190,7 @@ class Releaser(object):
         return new_files, copied_files, old_files
 
 
-class YumRepoMockReleaser(Releaser):
+class YumRepoReleaser(Releaser):
     """
     A releaser which will rsync down a yum repo, build the desired packages,
     plug them in, update the repodata, and push the yum repo back out.

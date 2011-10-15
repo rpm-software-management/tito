@@ -329,6 +329,15 @@ class BuildModule(BaseCliModule):
         self.parser.add_option("--release", dest="release",
                 action="store_true", help="DEPRECATED: please use 'tito release' instead.")
 
+        self.parser.add_option("--builder", dest="builder",
+                help="Override the normal builder by specifying a full class "
+                    "path or one of the pre-configured shortcuts.")
+
+        self.parser.add_option("--builder-arg", dest="builder_args",
+                action="append",
+                help="Custom arguments specific to a particular builder."
+                    " (key=value)")
+
         self.parser.add_option("--list-tags", dest="list_tags",
                 action="store_true",
                 help="List tags for which we build this package",
@@ -372,12 +381,12 @@ class BuildModule(BaseCliModule):
         self.pkg_config = self._read_project_config(package_name, build_dir,
                 self.options.tag, self.options.no_cleanup)
 
-        # TODO:
-        args = {}
+        args = self._parse_builder_args()
 
         builder = create_builder(package_name, build_tag,
                 build_version, self.options, self.pkg_config,
-                build_dir, self.global_config, self.user_config, args)
+                build_dir, self.global_config, self.user_config, args,
+                builder_class=self.options.builder)
         return builder.run(self.options)
 
     def _validate_options(self):
@@ -385,6 +394,30 @@ class BuildModule(BaseCliModule):
             error_out("Cannot combine --srpm and --rpm")
         if self.options.test and self.options.tag:
             error_out("Cannot build test version of specific tag.")
+
+    def _parse_builder_args(self):
+        """
+        Builder args are sometimes needed for builders that require runtime
+        data.
+
+        On the CLI this is specified with multiple uses of:
+
+            --builder-arg key=value
+
+        This method parses any --builder-arg's given and splits the key/value
+        pairs out into a dict.
+        """
+        args = {}
+        if self.options.builder_args is None:
+            return args
+
+        try:
+            for pair in self.options.builder_args:
+                key,value = pair.split("=")
+                args[key] = value
+        except ValueError:
+            error_out("Error parsing a --builder-arg, be sure to use key=value")
+        return args
 
 
 class ReleaseModule(BaseCliModule):
