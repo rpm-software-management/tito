@@ -56,7 +56,8 @@ class Builder(object):
 
         args - Optional arguments specific to each builder. Can be passed
         in explicitly by user on the CLI, or via a release target config
-        entry.
+        entry. Only for things which vary on invocations of the builder,
+        avoid using these if possible.
         """
 
         self.git_root = find_git_root()
@@ -815,8 +816,8 @@ class MockBuilder(Builder):
                 global_config=global_config, user_config=user_config,
                 options=options, args=args)
 
-        # TODO: yum releaser will set this for us, but need a solution here...
-        self.mock_tag = None
+        # TODO: make sure we're given a 'mock' argument:
+        self.mock_tag = args['mock']
 
         # TODO: error out if mock package is not installed
 

@@ -41,11 +41,13 @@ class Releaser(object):
             pkg_config=None, global_config=None, user_config=None,
             target=None, releaser_config=None):
 
+        self.builder_args = self._parse_builder_args(releaser_config, target)
+
         # While we create a builder here, we don't actually call run on it
         # unless the releaser needs to:
         self.builder = create_builder(name, tag,
                 version, None, pkg_config,
-                build_dir, global_config, user_config)
+                build_dir, global_config, user_config, self.builder_args)
         self.project_name = self.builder.project_name
 
         # TODO: if it looks like we need custom CVSROOT's for different users,
@@ -68,6 +70,25 @@ class Releaser(object):
         self.target = target
 
         self.dry_run = False
+
+    def _parse_builder_args(self, releaser_config, target):
+        """
+        Any properties found in a releaser target section starting with
+        "builder." are assumed to be builder arguments.
+
+        i.e.:
+
+        builder.mock = epel-6-x86_64
+
+        Would indicate that we need to pass an argument "mock" to whatever
+        builder is configured.
+        """
+        args = {}
+        for opt in releaser_config.options(target):
+            if opt.startswith("builder."):
+                args[opt[len("builder."):]] = releaser_config.get(target, opt)
+        debug("Parsed custom builder args: %s" % args)
+        return args
 
     def release(self, dry_run=False):
         pass
@@ -189,19 +210,13 @@ class YumRepoMockReleaser(Releaser):
 
         self.build_dir = build_dir
 
-        # Override to use the mock builder:
-        from tito.builder import MockBuilder
-        self.builder = MockBuilder(name=name, tag=tag, version=version,
-                options=None,
-                pkg_config=pkg_config,
-                build_dir=build_dir,
-                global_config=global_config,
-                user_config=user_config)
-
-        # TODO: hack, how can we pass arbitrary data like the mock config
-        # into a builder? Need to do similar from CLI if you wanna over ride
-        # it and run...
-        self.builder.mock_tag = self.releaser_config.get(self.target, 'mock')
+        # Use the builder from the release target, rather than the default
+        # one defined for this git repo or sub-package:
+        # TODO:
+        self.builder = create_builder(name, tag,
+                version, None, pkg_config,
+                build_dir, global_config, user_config, self.builder_args,
+                builder_class=self.releaser_config.get(self.target, 'builder'))
 
     def release(self, dry_run=False):
         # Should this run?

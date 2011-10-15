@@ -83,19 +83,24 @@ def error_out(error_msgs):
 
 
 def create_builder(package_name, build_tag, build_version, options,
-        pkg_config, build_dir, global_config, user_config):
+        pkg_config, build_dir, global_config, user_config, args,
+        builder_class=None):
     """
     Create (but don't run) the builder class. Builder object may be
     used by other objects without actually having run() called.
     """
 
-    builder_class = None
-    if pkg_config.has_option("buildconfig", "builder"):
-        builder_class = get_class_by_name(pkg_config.get("buildconfig",
-            "builder"))
+    if builder_class is None:
+        if pkg_config.has_option("buildconfig", "builder"):
+            builder_class = get_class_by_name(pkg_config.get("buildconfig",
+                "builder"))
+        else:
+            builder_class = get_class_by_name(global_config.get(
+                GLOBALCONFIG_SECTION, DEFAULT_BUILDER))
     else:
-        builder_class = get_class_by_name(global_config.get(
-            GLOBALCONFIG_SECTION, DEFAULT_BUILDER))
+        # We were given an explicit builder class as a str, get the actual
+        # class reference:
+        builder_class = get_class_by_name(builder_class)
     debug("Using builder class: %s" % builder_class)
 
     # Instantiate the builder:
@@ -107,7 +112,8 @@ def create_builder(package_name, build_tag, build_version, options,
             pkg_config=pkg_config,
             global_config=global_config,
             user_config=user_config,
-            options = options)
+            options=options,
+            args=args)
     return builder
 
 
@@ -158,7 +164,7 @@ def tag_exists_locally(tag):
     (status, output) = commands.getstatusoutput("git tag | grep %s" % tag)
     if status > 0:
         return False
-    else: 
+    else:
         return True
 
 def tag_exists_remotely(tag):
@@ -182,7 +188,7 @@ def get_local_tag_sha1(tag):
     return tag_sha1
 
 def head_points_to_tag(tag):
-    """ 
+    """
     Ensure the current git head is the same commit as tag.
 
     For some reason the git commands we normally use to fetch SHA1 for a tag
@@ -199,7 +205,7 @@ def head_points_to_tag(tag):
 def undo_tag(tag):
     """
     Executes git commands to delete the given tag and undo the most recent
-    commit. Assumes you have taken necessary precautions to ensure this is 
+    commit. Assumes you have taken necessary precautions to ensure this is
     what you want to do.
     """
     # Using --merge here as it appears to undo the changes in the commit,
@@ -293,10 +299,10 @@ def get_project_name(tag=None):
 def replace_version(line, new_version):
     """
     Attempts to replace common setup.py version formats in the given line,
-    and return the modified line. If no version is present the line is 
+    and return the modified line. If no version is present the line is
     returned as is.
 
-    Looking for things like version="x.y.z" with configurable case, 
+    Looking for things like version="x.y.z" with configurable case,
     whitespace, and optional use of single/double quotes.
     """
     # Mmmmm pretty regex!
@@ -359,7 +365,7 @@ def get_commit_count(tag, commit_id):
     if tag != output:
         # tag-commitcount-gSHA1, we want the penultimate value
         cnt = output.split("-")[-2]
-        return cnt 
+        return cnt
 
     return 0
 
@@ -438,7 +444,7 @@ def get_latest_tagged_version(package_name):
 def normalize_class_name(name):
     """
     Just a hack to accomodate tito config files with builder/tagger
-    classes referenced in the spacewalk.releng namespace, which has 
+    classes referenced in the spacewalk.releng namespace, which has
     since been renamed to just tito.
     """
     look_for = "spacewalk.releng."
@@ -449,7 +455,7 @@ def normalize_class_name(name):
 
 def get_script_path(scriptname):
     """
-    Hack to accomodate functional tests running from source, rather than 
+    Hack to accomodate functional tests running from source, rather than
     requiring tito to actually be installed. This variable is only set by
     test scripts, normally we assume scripts are on PATH.
     """

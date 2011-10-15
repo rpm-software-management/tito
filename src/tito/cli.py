@@ -372,9 +372,12 @@ class BuildModule(BaseCliModule):
         self.pkg_config = self._read_project_config(package_name, build_dir,
                 self.options.tag, self.options.no_cleanup)
 
+        # TODO:
+        args = {}
+
         builder = create_builder(package_name, build_tag,
                 build_version, self.options, self.pkg_config,
-                build_dir, self.global_config, self.user_config)
+                build_dir, self.global_config, self.user_config, args)
         return builder.run(self.options)
 
     def _validate_options(self):
