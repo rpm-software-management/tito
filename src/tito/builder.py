@@ -34,7 +34,30 @@ class Builder(object):
     """
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
-            pkg_config=None, global_config=None, user_config=None, options=None):
+            pkg_config=None, global_config=None, user_config=None,
+            options=None, args=None):
+
+        """
+        name - Package name that is being built.
+
+        version - Version and release being built.
+
+        tag - The git tag being built.
+
+        build_dir - Temporary build directory where we can safely work.
+
+        pkg_config - Package specific configuration.
+
+        global_config - Global configuration from rel-eng/tito.props.
+
+        user_config - User configuration from ~/.titorc.
+
+        options - Parsed CLI options.
+
+        args - Optional arguments specific to each builder. Can be passed
+        in explicitly by user on the CLI, or via a release target config
+        entry.
+        """
 
         self.git_root = find_git_root()
         self.rel_eng_dir = os.path.join(self.git_root, "rel-eng")
@@ -45,6 +68,7 @@ class Builder(object):
         self.config = global_config
         self.user_config = user_config
         self.no_cleanup = False
+        self.args = args
 
         # Probably not a great idea to be passing in CLI options directly to
         # an object that gets re-used. This is however optional.
@@ -405,12 +429,13 @@ class NoTgzBuilder(Builder):
     """
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
-            pkg_config=None, global_config=None, user_config=None, options=None):
+            pkg_config=None, global_config=None, user_config=None,
+            options=None, args=None):
 
         Builder.__init__(self, name=name, version=version, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
-                options=options)
+                options=options, args=args)
 
         # When syncing files with CVS, copy everything from git:
         self.cvs_copy_extensions = ("", )
@@ -471,12 +496,13 @@ class CvsBuilder(NoTgzBuilder):
     """
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
-            pkg_config=None, global_config=None, user_config=None, options=None):
+            pkg_config=None, global_config=None, user_config=None,
+            options=None, args=None):
 
         NoTgzBuilder.__init__(self, name=name, version=version, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
-                options=options)
+                options=options, args=args)
 
         # TODO: Hack to override here, patches are in a weird place with this
         # builder.
@@ -578,12 +604,13 @@ class UpstreamBuilder(NoTgzBuilder):
     """
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
-            pkg_config=None, global_config=None, user_config=None, options=None):
+            pkg_config=None, global_config=None, user_config=None,
+            options=None, args=None):
 
         NoTgzBuilder.__init__(self, name=name, version=version, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
-                options=options)
+                options=options, args=args)
 
         if not pkg_config or not pkg_config.has_option("buildconfig",
                 "upstream_name"):
@@ -780,12 +807,13 @@ class MockBuilder(Builder):
     """
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
-            pkg_config=None, global_config=None, user_config=None, options=None):
+            pkg_config=None, global_config=None, user_config=None,
+            options=None, args=None):
 
         Builder.__init__(self, name=name, version=version, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
-                options=options)
+                options=options, args=args)
 
         # TODO: yum releaser will set this for us, but need a solution here...
         self.mock_tag = None
