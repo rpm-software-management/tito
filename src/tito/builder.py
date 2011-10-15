@@ -787,10 +787,8 @@ class MockBuilder(Builder):
                 global_config=global_config, user_config=user_config,
                 options=options)
 
-        self.mock_tag = "fedora-15-x86_64"
-        #self.mock_tag = "epel-6-x86_64"
-        #self.mock_tag = "fedora-14-x86_64"
-        #self.mock_tag = "epel-5-x86_64"
+        # TODO: yum releaser will set this for us, but need a solution here...
+        self.mock_tag = None
 
         # TODO: error out if mock package is not installed
 

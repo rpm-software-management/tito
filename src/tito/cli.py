@@ -510,6 +510,7 @@ class ReleaseModule(BaseCliModule):
                 pkg_config=self.pkg_config,
                 global_config=self.global_config,
                 user_config=self.user_config,
+                target=target,
                 releaser_config=releaser_config)
 
         return releaser.release(dry_run=self.options.dry_run)

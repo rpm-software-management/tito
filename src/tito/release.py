@@ -39,7 +39,7 @@ class Releaser(object):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            releaser_config=None):
+            target=None, releaser_config=None):
 
         # While we create a builder here, we don't actually call run on it
         # unless the releaser needs to:
@@ -60,7 +60,12 @@ class Releaser(object):
 
         # When syncing files with CVS, only copy files with these extensions:
         self.cvs_copy_extensions = (".spec", ".patch")
+
+        # Config for all releasers:
         self.releaser_config = releaser_config
+
+        # The actual release target we're building:
+        self.target = target
 
         self.dry_run = False
 
@@ -178,9 +183,9 @@ class YumRepoMockReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            releaser_config=None):
+            target=None, releaser_config=None):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
-                global_config, user_config, releaser_config)
+                global_config, user_config, target, releaser_config)
 
         self.build_dir = build_dir
 
@@ -193,6 +198,11 @@ class YumRepoMockReleaser(Releaser):
                 global_config=global_config,
                 user_config=user_config)
 
+        # TODO: hack, how can we pass arbitrary data like the mock config
+        # into a builder? Need to do similar from CLI if you wanna over ride
+        # it and run...
+        self.builder.mock_tag = self.releaser_config.get(self.target, 'mock')
+
     def release(self, dry_run=False):
         # Should this run?
         self.builder.tgz()
@@ -203,7 +213,7 @@ class YumRepoMockReleaser(Releaser):
         print "RPMS:"
         print self.builder.artifacts
 
-        rsync_location = "fedorapeople.org:/srv/repos/candlepin/subscription-manager/fedora-15/x86_64/"
+        rsync_location = self.releaser_config.get(self.target, 'rsync')
         if RSYNC_USERNAME in os.environ:
             print("%s set, using rsync username: %s" % (RSYNC_USERNAME,
                     os.environ[RSYNC_USERNAME]))
@@ -222,26 +232,27 @@ class YumRepoMockReleaser(Releaser):
         # TODO: should we clean up old versions of these packages in the repo?
 
         os.chdir(yum_temp_dir)
+        print("Refreshing yum repodata...")
         output = run_command("createrepo ./")
-        print output
+        debug(output)
 
         print("Syncing yum repository back to: %s" % rsync_location)
-        output = run_command("rsync -avtz --delete %s/ %s" % (yum_temp_dir, rsync_location))
-        print output
-
+        # TODO: configurable rsync options?
+        output = run_command("rsync -avtz --delete %s/ %s" %
+                (yum_temp_dir, rsync_location))
+        debug(output)
 
         # TODO: Cleanup
         #rmtree(yum_temp_dir)
-
 
 
 class FedoraGitReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            releaser_config=None):
+            target=None, releaser_config=None):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
-                global_config, user_config, releaser_config)
+                global_config, user_config, target, releaser_config)
 
         self.git_branches = []
         if self.builder.config.has_section("gitrelease"):
@@ -429,9 +440,9 @@ class CvsReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            releaser_config=None):
+            target=None, releaser_config=None):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
-                global_config, user_config, releaser_config)
+                global_config, user_config, target, releaser_config)
 
         # Configure CVS variables if possible. Will check later that
         # they're actually defined if the user requested CVS work be done.
@@ -690,9 +701,9 @@ class KojiReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            releaser_config=None):
+            target=None, releaser_config=None):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
-                global_config, user_config, releaser_config)
+                global_config, user_config, target, releaser_config)
 
         self.only_tags = self.builder.only_tags
         self.scratch = self.builder.scratch
