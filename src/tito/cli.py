@@ -32,6 +32,7 @@ import tito.builder
 
 BUILD_PROPS_FILENAME = "tito.props"
 GLOBAL_BUILD_PROPS_FILENAME = "tito.props"
+RELEASERS_CONF_FILENAME = "releasers.conf"
 ASSUMED_NO_TAR_GZ_PROPS = """
 [buildconfig]
 builder = tito.builder.NoTgzBuilder
@@ -389,7 +390,7 @@ class ReleaseModule(BaseCliModule):
     # Projects can point to their own releasers in their tito.props.
 
     def __init__(self):
-        BaseCliModule.__init__(self, "usage: %prog release [options]")
+        BaseCliModule.__init__(self, "usage: %prog release [options] TARGET")
 
         self.parser.add_option("--type", dest="type", metavar="RELEASERKEY",
                 help="Release type key. Can be a default, or custom releaser.")
@@ -423,29 +424,63 @@ class ReleaseModule(BaseCliModule):
 #                help="Do scratch build (only for --koji-release)",
 #                )
 
+    def _read_releaser_config(self):
+        """
+        Read the releaser targets from rel-eng/releasers.conf.
+        """
+        rel_eng_dir = os.path.join(find_git_root(), "rel-eng")
+        filename = os.path.join(rel_eng_dir, RELEASERS_CONF_FILENAME)
+        config = ConfigParser.ConfigParser()
+        config.read(filename)
+        return config
+
+    def _legacy_cvs_hack(self, releaser_config):
+        """
+        Support the old style CVS builds when config is still in global
+        tito.props, as opposed to the new releasers.conf.
+        """
+        if releaser_config.has_section("cvs"):
+            # Looks like the user already created an appropriate cvs release
+            # target, we can safely leave this config alone.
+            return
+
+        # Otherwise setup a releaser target as if they'd defined one:
+        debug("Adding in cvs releaser:")
+        releaser_config.add_section('cvs')
+        releaser_config.set('cvs', 'releaser', 'tito.release.CvsReleaser')
+        releaser_config.set('cvs', 'cvsroot', self.global_config.get(
+            "cvs", "cvsroot"))
+        releaser_config.set('cvs', 'branches', self.global_config.get(
+            "cvs", "branches"))
+
+    def _print_releasers(self, releaser_config):
+        print("Available release targets:")
+        for section in releaser_config.sections():
+            print("  %s" % section)
+
     def main(self, argv):
         BaseCliModule.main(self, argv)
 
-        self.releasers = {
-                'cvs': 'tito.release.CvsReleaser',
-                'koji': 'tito.release.KojiReleaser',
-                'fedora-git': 'tito.release.FedoraGitReleaser',
-                'yum-mock': 'tito.release.YumRepoMockReleaser'
-        }
+        releaser_config = self._read_releaser_config()
+        self._legacy_cvs_hack(releaser_config)
 
-        # Load all custom releasers configured:
-        if self.global_config.has_section("releasers"):
-            for k in self.global_config.options("releasers"):
-                self.releasers[k] = self.global_config.get("releasers", k)
-                debug("Added custom releaser definition: %s" % k)
-
-        if not self.options.type:
-            print("ERROR: Must specify a releaser to run with --type=RELEASERTYPE")
-            print("Supported releaser types:")
-            for typekey in self.releasers.keys():
-                print("   %s - %s" % (typekey, self.releasers[typekey]))
-                # TODO: scan custom releasers as well
+        # First arg is sub-command 'release', the rest should be our release
+        # targets:
+        # TODO: support multiple release targets someday
+        if len(self.args) != 2:
+            print("ERROR: You must supply a single release target.")
+            self._print_releasers(releaser_config)
             sys.exit(1)
+        targets = self.args[1:]
+
+        # Create an instance of the releaser we intend to use:
+        # TODO: multiple targets?
+        target = targets[0]
+        print("Releasing to target: %s" % target)
+        if not releaser_config.has_section(target):
+            error_out("No such releaser configured: %s" % target)
+        releaser_class = get_class_by_name(releaser_config.get(target, "releaser"))
+        debug("Using releaser class: %s" % releaser_class)
 
         build_dir = os.path.normpath(os.path.abspath(self.options.output_dir))
         package_name = get_project_name(tag=self.options.tag)
@@ -462,18 +497,10 @@ class ReleaseModule(BaseCliModule):
                 error_out(["Unable to lookup latest package info.",
                         "Perhaps you need to tag first?"])
             build_tag = "%s-%s" % (package_name, build_version)
-
         check_tag_exists(build_tag, offline=self.options.offline)
 
         self.pkg_config = self._read_project_config(package_name, build_dir,
                 self.options.tag, self.options.no_cleanup)
-
-        # Now create an instance of the releaser we intend to use:
-        if self.options.type not in self.releasers:
-            error_out("No such releaser configured: %s" % self.options.type)
-        releaser_class = get_class_by_name(self.releasers[
-            self.options.type])
-        debug("Using releaser class: %s" % releaser_class)
 
         releaser = releaser_class(
                 name=package_name,
@@ -482,7 +509,8 @@ class ReleaseModule(BaseCliModule):
                 build_dir=build_dir,
                 pkg_config=self.pkg_config,
                 global_config=self.global_config,
-                user_config=self.user_config)
+                user_config=self.user_config,
+                releaser_config=releaser_config)
 
         return releaser.release(dry_run=self.options.dry_run)
 

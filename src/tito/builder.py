@@ -808,26 +808,17 @@ class MockBuilder(Builder):
         self._build_in_mock()
 
     def _build_in_mock(self):
-        print("Initializing mock:\n")
+        print("Initializing mock...")
         output = run_command("mock -r %s --init" % self.mock_tag)
-        print output
-        print("\nInstalling deps:\n")
+        print("Installing deps in mock...")
         output = run_command("mock -r %s --installdeps %s" % (
             self.mock_tag, self.srpm_location))
-        print output
-        #print("\nCopying:\n")
-        #output = run_command("mock -r %s --copyin %s /tmp" % (
-        #    self.mock_tag, self.srpm_location))
-        #print output
-        print("\nRebuilding:\n")
+        print("Building RPMs in mock...")
         output = run_command('mock -r %s --rebuild %s' %
                 (self.mock_tag, self.srpm_location))
-        print output
-        print("\nCopying resulting rpms:\n")
         mock_output_dir = os.path.join(self.rpmbuild_dir, "mockoutput")
         output = run_command("mock -r %s --copyout /builddir/build/RPMS/ %s" %
                 (self.mock_tag, mock_output_dir))
-        print output
 
         # Copy everything mock wrote out to /tmp/tito:
         files = os.listdir(mock_output_dir)

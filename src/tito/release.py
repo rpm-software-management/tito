@@ -37,7 +37,8 @@ PROTECTED_BUILD_SYS_FILES = ('branch', 'CVS', '.cvsignore', 'Makefile', 'sources
 class Releaser(object):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
-            pkg_config=None, global_config=None, user_config=None):
+            pkg_config=None, global_config=None, user_config=None,
+            releaser_config=None):
 
         # While we create a builder here, we don't actually call run on it
         # unless the releaser needs to:
@@ -58,6 +59,7 @@ class Releaser(object):
 
         # When syncing files with CVS, only copy files with these extensions:
         self.cvs_copy_extensions = (".spec", ".patch")
+        self.releaser_config = releaser_config
 
         self.dry_run = False
 
@@ -174,9 +176,10 @@ class YumRepoMockReleaser(Releaser):
     """
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
-            pkg_config=None, global_config=None, user_config=None):
+            pkg_config=None, global_config=None, user_config=None,
+            releaser_config=None):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
-                global_config, user_config)
+                global_config, user_config, releaser_config)
 
         self.build_dir = build_dir
 
@@ -203,7 +206,7 @@ class YumRepoMockReleaser(Releaser):
         rsync_location = "fedorapeople.org:/srv/repos/candlepin/subscription-manager/fedora-15/x86_64/"
         # Make a temp directory to sync the existing repo contents into:
         yum_temp_dir = mkdtemp(dir=self.build_dir, prefix="tito-yumrepo-")
-        debug("Copying existing yum repo to:: %s" % yum_temp_dir)
+        debug("Copying existing yum repo to: %s" % yum_temp_dir)
         run_command("rsync -avtz %s %s" % (rsync_location, yum_temp_dir))
 
         for artifact in self.builder.artifacts:
@@ -211,8 +214,14 @@ class YumRepoMockReleaser(Releaser):
                 copy(artifact, yum_temp_dir)
                 print("Copied %s to yum repo." % artifact)
 
+        # TODO: should we clean up old versions of these packages?
+
         os.chdir(yum_temp_dir)
         output = run_command("createrepo ./")
+        print output
+
+        print("Syncing yum repository back to: %s" % rsync_location)
+        output = run_command("rsync -avtz --delete %s/ %s" % (yum_temp_dir, rsync_location))
         print output
 
 
@@ -224,9 +233,10 @@ class YumRepoMockReleaser(Releaser):
 class FedoraGitReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
-            pkg_config=None, global_config=None, user_config=None):
+            pkg_config=None, global_config=None, user_config=None,
+            releaser_config=None):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
-                global_config, user_config)
+                global_config, user_config, releaser_config)
 
         self.git_branches = []
         if self.builder.config.has_section("gitrelease"):
@@ -413,9 +423,10 @@ class FedoraGitReleaser(Releaser):
 class CvsReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
-            pkg_config=None, global_config=None, user_config=None):
+            pkg_config=None, global_config=None, user_config=None,
+            releaser_config=None):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
-                global_config, user_config)
+                global_config, user_config, releaser_config)
 
         # Configure CVS variables if possible. Will check later that
         # they're actually defined if the user requested CVS work be done.
@@ -673,9 +684,10 @@ class CvsReleaser(Releaser):
 class KojiReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
-            pkg_config=None, global_config=None, user_config=None):
+            pkg_config=None, global_config=None, user_config=None,
+            releaser_config=None):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
-                global_config, user_config)
+                global_config, user_config, releaser_config)
 
         self.only_tags = self.builder.only_tags
         self.scratch = self.builder.scratch

@@ -10,5 +10,3 @@ branches = EL-5 EL-6 F-12 F-13
 [gitrelease]
 branches = master el5 el6 f14 f15 f16
 
-[releasers]
-dummy = custom.DummyReleaser
