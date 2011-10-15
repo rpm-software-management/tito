@@ -1,5 +1,21 @@
-To run all tests, install the python-nose package and from the root of the 
+To run all tests, install the python-nose package and from the root of the
 project:
 
     ./runtests.py
+
+
+
+When developing code for tito there are a couple ways you can test:
+
+"bin/tito-dev" is a script that will run code from the local checkout
+rather than what is installed on the system.
+
+And of course, you can always use the installed tito to replace itself with a test build of the latest *committed* code in your git HEAD.
+
+    tito build --rpm --test -i
+
+If you screw anything up inside tito itself, you can just:
+
+    rpm -e tito
+    yum install tito
 
