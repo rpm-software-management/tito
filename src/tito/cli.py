@@ -428,9 +428,6 @@ class ReleaseModule(BaseCliModule):
     def __init__(self):
         BaseCliModule.__init__(self, "usage: %prog release [options] TARGET")
 
-        self.parser.add_option("--type", dest="type", metavar="RELEASERKEY",
-                help="Release type key. Can be a default, or custom releaser.")
-
         self.parser.add_option("--dist", dest="dist", metavar="DISTTAG",
                 help="Dist tag to apply to srpm and/or rpm. (i.e. .el5)")
 
@@ -564,6 +561,8 @@ class ReleaseModule(BaseCliModule):
         self.pkg_config = self._read_project_config(package_name, build_dir,
                 self.options.tag, self.options.no_cleanup)
 
+        orig_cwd = os.getcwd()
+
         # Create an instance of the releaser we intend to use:
         for target in targets:
             print("Releasing to target: %s" % target)
@@ -583,7 +582,11 @@ class ReleaseModule(BaseCliModule):
                     target=target,
                     releaser_config=releaser_config)
             releaser.release(dry_run=self.options.dry_run)
-            print()
+
+            # Make sure we go back to where we started, otherwise multiple
+            # builders gets very confused:
+            os.chdir(orig_cwd)
+            print
 
 
 class TagModule(BaseCliModule):
