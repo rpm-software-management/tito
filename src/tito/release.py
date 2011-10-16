@@ -26,6 +26,7 @@ from tempfile import mkdtemp
 from shutil import rmtree, copy
 
 from tito.common import *
+from tito.exception import TitoException
 
 DEFAULT_KOJI_OPTS = "build --nowait"
 DEFAULT_CVS_BUILD_DIR = "cvswork"
@@ -36,6 +37,14 @@ PROTECTED_BUILD_SYS_FILES = ('branch', 'CVS', '.cvsignore', 'Makefile', 'sources
 RSYNC_USERNAME = 'RSYNC_USERNAME' # environment variable name
 
 class Releaser(object):
+    """
+    Parent class of all releasers.
+
+    Can't really be used by itself, need to use one of the sub-classes.
+    """
+    GLOBAL_REQUIRED_CONFIG = ['releaser']
+    REQUIRED_CONFIG = []
+    OPTIONAL_CONFIG = []
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
@@ -70,6 +79,33 @@ class Releaser(object):
         self.target = target
 
         self.dry_run = False
+
+        self._check_releaser_config()
+
+    def _check_releaser_config(self):
+        """
+        Verify this release target has all the config options it needs.
+        """
+        for opt in self.GLOBAL_REQUIRED_CONFIG:
+            if not self.releaser_config.has_option(self.target, opt):
+                raise TitoException(
+                        "Release target '%s' missing required option '%s'" %
+                        (self.target, opt))
+        for opt in self.REQUIRED_CONFIG:
+            if not self.releaser_config.has_option(self.target, opt):
+                raise TitoException(
+                        "Release target '%s' missing required option '%s'" %
+                        (self.target, opt))
+
+        # TODO: accomodate 'builder.*' for yum releaser and we can use this:
+        #for opt in self.releaser_config.options(self.target):
+        #    if opt not in self.GLOBAL_REQUIRED_CONFIG and \
+        #            opt not in self.REQUIRED_CONFIG and \
+        #            opt not in self.OPTIONAL_CONFIG:
+        #        raise TitoException(
+        #                "Release target '%s' has unknown option '%s'" %
+        #                (self.target, opt))
+
 
     def _parse_builder_args(self, releaser_config, target):
         """
@@ -201,6 +237,7 @@ class YumRepoReleaser(Releaser):
     situations, depending on the current OS, and the mock target you
     are attempting to use.
     """
+    REQUIRED_CONFIG = ['rsync', 'builder']
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
@@ -212,7 +249,6 @@ class YumRepoReleaser(Releaser):
 
         # Use the builder from the release target, rather than the default
         # one defined for this git repo or sub-package:
-        # TODO:
         self.builder = create_builder(name, tag,
                 version, None, pkg_config,
                 build_dir, global_config, user_config, self.builder_args,
@@ -263,23 +299,20 @@ class YumRepoReleaser(Releaser):
 
 class FedoraGitReleaser(Releaser):
 
+    REQUIRED_CONFIG = ['branches']
+
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
             target=None, releaser_config=None):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
                 global_config, user_config, target, releaser_config)
 
-        self.git_branches = []
-        if self.builder.config.has_section("gitrelease"):
-            if self.builder.config.has_option("gitrelease", "branches"):
-                self.git_branches = \
-                    self.builder.config.get("gitrelease", "branches").split(" ")
-
+        self.git_branches = \
+            self.releaser_config.get(self.target, "branches").split(" ")
 
     def release(self, dry_run=False):
         self.dry_run = dry_run
-        if self._can_build_in_git():
-            self._git_release()
+        self._git_release()
 
     def cleanup(self):
         debug("Cleaning up [%s]" % self.cvs_package_workdir)
@@ -380,23 +413,6 @@ class FedoraGitReleaser(Releaser):
                 sys.stderr.write("  Output: %s" % output)
                 sys.exit(1)
 
-    def _can_build_in_git(self):
-        """
-        Return True if this repo and branch is configured to build in
-        Fedora git.
-        """
-        if not self.builder.config.has_section("gitrelease"):
-            print("Cannot build in Fedora git, no 'gitrelease' section "
-                "found in tito.props.")
-            return False
-
-        if not self.builder.config.has_option("gitrelease", "branches"):
-            print("Cannot build in Fedora git, no branches defined in "
-                    "tito.props")
-            return False
-
-        return True
-
     def _git_upload_sources(self, project_checkout):
         """
         Upload any tarballs to the lookaside directory. (if necessary)
@@ -453,6 +469,8 @@ class FedoraGitReleaser(Releaser):
 
 class CvsReleaser(Releaser):
 
+    REQUIRED_CONFIG = ['cvsroot', 'branches']
+
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
             target=None, releaser_config=None):
@@ -461,44 +479,21 @@ class CvsReleaser(Releaser):
 
         # Configure CVS variables if possible. Will check later that
         # they're actually defined if the user requested CVS work be done.
-        if self.builder.config.has_section("cvs"):
-            if self.builder.config.has_option("cvs", "cvsroot"):
-                self.cvs_root = self.builder.config.get("cvs", "cvsroot")
-                debug("cvs_root = %s" % self.cvs_root)
-            if self.builder.config.has_option("cvs", "branches"):
-                self.cvs_branches = \
-                    self.builder.config.get("cvs", "branches").split(" ")
+        if self.releaser_config.has_option(target, "cvsroot"):
+            self.cvs_root = self.releaser_config.get(target, "cvsroot")
+            debug("cvs_root = %s" % self.cvs_root)
+        if self.releaser_config.has_option(target, "branches"):
+            self.cvs_branches = \
+                self.releaser_config.get(target, "branches").split(" ")
 
     def release(self, dry_run=False):
         self.dry_run = dry_run
 
-        if self._can_build_in_cvs():
-            self._cvs_release()
+        self._cvs_release()
 
     def cleanup(self):
         debug("Cleaning up [%s]" % self.cvs_package_workdir)
         run_command("rm -rf %s" % self.cvs_package_workdir)
-
-    def _can_build_in_cvs(self):
-        """
-        Return True if this repo and branch is configured to build in CVS.
-        """
-        if not self.builder.config.has_section("cvs"):
-            debug("Cannot build from CVS, no 'cvs' section "
-                "found in tito.props.")
-            return False
-
-        if not self.builder.config.has_option("cvs", "cvsroot"):
-            debug("Cannot build from CVS, no 'cvsroot' "
-                "defined in tito.props.")
-            return False
-
-        if not self.builder.config.has_option("cvs", "branches"):
-            debug("Cannot build from CVS no branches "
-                "defined in tito.props.")
-            return False
-
-        return True
 
     def _cvs_release(self):
         """
@@ -545,7 +540,8 @@ class CvsReleaser(Releaser):
             if self.cvs_branches[i].find('/') > -1:
                 debug("Checking out zstream branch %s" % self.cvs_branches[i])
                 (base, zstream) = self.cvs_branches[i].split('/')
-                run_command("make -C %s zstreams" % (os.path.join(self.cvs_package_workdir, base)))
+                run_command("make -C %s zstreams" %
+                        (os.path.join(self.cvs_package_workdir, base)))
                 self.cvs_branches[i] = zstream
 
     def cvs_verify_branches_exist(self):
@@ -762,6 +758,7 @@ class KojiReleaser(Releaser):
         if self.scratch:
             koji_opts = ' '.join([koji_opts, '--scratch'])
 
+        # TODO: need to re-do this metaphor to use release targets instead:
         for koji_tag in koji_tags:
             if self.only_tags and koji_tag not in self.only_tags:
                 continue

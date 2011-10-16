@@ -470,9 +470,9 @@ class ReleaseModule(BaseCliModule):
         config.read(filename)
         return config
 
-    def _legacy_cvs_hack(self, releaser_config):
+    def _legacy_builder_hack(self, releaser_config):
         """
-        Support the old style CVS builds when config is still in global
+        Support the old style CVS/koji builds when config is still in global
         tito.props, as opposed to the new releasers.conf.
         """
         if releaser_config.has_section("cvs"):
@@ -481,13 +481,32 @@ class ReleaseModule(BaseCliModule):
             return
 
         # Otherwise setup a releaser target as if they'd defined one:
-        debug("Adding in cvs releaser:")
-        releaser_config.add_section('cvs')
-        releaser_config.set('cvs', 'releaser', 'tito.release.CvsReleaser')
-        releaser_config.set('cvs', 'cvsroot', self.global_config.get(
-            "cvs", "cvsroot"))
-        releaser_config.set('cvs', 'branches', self.global_config.get(
-            "cvs", "branches"))
+        if self.global_config.has_section('cvs'):
+            print("WARNING: legacy 'cvs' section in tito.props, please "
+                    "consider creating a target in releasers.conf.")
+            print("Simulating 'cvs' release target for now.")
+            releaser_config.add_section('cvs')
+            releaser_config.set('cvs', 'releaser', 'tito.release.CvsReleaser')
+            for opt in ["cvsroot", "branches"]:
+                if self.global_config.has_option("cvs", opt):
+                    releaser_config.set('cvs', opt, self.global_config.get(
+                        "cvs", opt))
+        if self.global_config.has_section("koji"):
+            print("WARNING: legacy 'koji' section in tito.props, please "
+                    "consider creating a target in releasers.conf.")
+            print("Simulating 'koji' release target for now.")
+            releaser_config.add_section('koji')
+            releaser_config.set('koji', 'releaser', 'tito.release.KojiReleaser')
+
+            # TODO: find a way to get koji builds going through the new release
+            # target config file, tricky as each koji tag gets it's own
+            # section in tito.props. They should probably all get their own
+            # target.
+
+            #for opt in ["autobuild_tags", "disttag", "whitelist", "blacklist"]:
+            #    if self.global_config.has_option("koji", opt):
+            #        releaser_config.set('koji', opt, self.global_config.get(
+            #            "koji", opt))
 
     def _print_releasers(self, releaser_config):
         print("Available release targets:")
@@ -498,7 +517,7 @@ class ReleaseModule(BaseCliModule):
         BaseCliModule.main(self, argv)
 
         releaser_config = self._read_releaser_config()
-        self._legacy_cvs_hack(releaser_config)
+        self._legacy_builder_hack(releaser_config)
 
         # First arg is sub-command 'release', the rest should be our release
         # targets:
@@ -615,7 +634,6 @@ class TagModule(BaseCliModule):
             return tagger.run(self.options)
         except TitoException, e:
             error_out(e.message)
-
 
 
 class InitModule(BaseCliModule):

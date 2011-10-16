@@ -3,10 +3,6 @@ default_builder = spacewalk.releng.builder.Builder
 default_tagger = spacewalk.releng.tagger.VersionTagger
 lib_dir = rel-eng/custom/
 
-[cvs]
-cvsroot = :ext:dgoodwin@cvs.fedoraproject.org:/cvs/extras
-branches = EL-5 EL-6 F-12 F-13
-
 [gitrelease]
 branches = master el5 el6 f14 f15 f16
 
