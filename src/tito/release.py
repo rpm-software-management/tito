@@ -261,9 +261,6 @@ class YumRepoReleaser(Releaser):
         self.builder._rpm()
         self.builder.cleanup()
 
-        print "RPMS:"
-        print self.builder.artifacts
-
         rsync_location = self.releaser_config.get(self.target, 'rsync')
         if RSYNC_USERNAME in os.environ:
             print("%s set, using rsync username: %s" % (RSYNC_USERNAME,

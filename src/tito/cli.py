@@ -542,6 +542,27 @@ class ReleaseModule(BaseCliModule):
             sys.exit(1)
 
         targets = self._calc_release_targets(releaser_config)
+        print("Will release to the following targets: %s" % targets.join(', '))
+
+        build_dir = os.path.normpath(os.path.abspath(self.options.output_dir))
+        package_name = get_project_name(tag=self.options.tag)
+
+        build_tag = None
+        build_version = None
+        # Determine which package version we should build:
+        if self.options.tag:
+            build_tag = self.options.tag
+            build_version = build_tag[len(package_name + "-"):]
+        else:
+            build_version = get_latest_tagged_version(package_name)
+            if build_version == None:
+                error_out(["Unable to lookup latest package info.",
+                        "Perhaps you need to tag first?"])
+            build_tag = "%s-%s" % (package_name, build_version)
+        check_tag_exists(build_tag, offline=self.options.offline)
+
+        self.pkg_config = self._read_project_config(package_name, build_dir,
+                self.options.tag, self.options.no_cleanup)
 
         # Create an instance of the releaser we intend to use:
         for target in targets:
@@ -550,26 +571,6 @@ class ReleaseModule(BaseCliModule):
                 error_out("No such releaser configured: %s" % target)
             releaser_class = get_class_by_name(releaser_config.get(target, "releaser"))
             debug("Using releaser class: %s" % releaser_class)
-
-            build_dir = os.path.normpath(os.path.abspath(self.options.output_dir))
-            package_name = get_project_name(tag=self.options.tag)
-
-            build_tag = None
-            build_version = None
-            # Determine which package version we should build:
-            if self.options.tag:
-                build_tag = self.options.tag
-                build_version = build_tag[len(package_name + "-"):]
-            else:
-                build_version = get_latest_tagged_version(package_name)
-                if build_version == None:
-                    error_out(["Unable to lookup latest package info.",
-                            "Perhaps you need to tag first?"])
-                build_tag = "%s-%s" % (package_name, build_version)
-            check_tag_exists(build_tag, offline=self.options.offline)
-
-            self.pkg_config = self._read_project_config(package_name, build_dir,
-                    self.options.tag, self.options.no_cleanup)
 
             releaser = releaser_class(
                     name=package_name,
@@ -582,6 +583,7 @@ class ReleaseModule(BaseCliModule):
                     target=target,
                     releaser_config=releaser_config)
             releaser.release(dry_run=self.options.dry_run)
+            print()
 
 
 class TagModule(BaseCliModule):
