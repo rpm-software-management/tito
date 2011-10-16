@@ -428,9 +428,6 @@ class ReleaseModule(BaseCliModule):
     def __init__(self):
         BaseCliModule.__init__(self, "usage: %prog release [options] TARGET")
 
-        self.parser.add_option("--dist", dest="dist", metavar="DISTTAG",
-                help="Dist tag to apply to srpm and/or rpm. (i.e. .el5)")
-
         self.parser.add_option("--no-cleanup", dest="no_cleanup",
                 action="store_true",
                 help="do not clean up temporary build directories/files")
@@ -440,8 +437,7 @@ class ReleaseModule(BaseCliModule):
 
         self.parser.add_option("--dry-run", dest="dry_run",
                 action="store_true", default=False,
-                help="Do not actually commit/push anything during --release.",
-                )
+                help="Do not actually commit/push anything during release.")
 
         self.parser.add_option("--all-starting-with", dest="all_starting_with",
                 help="Run all release targets starting with the given string.")

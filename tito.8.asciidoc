@@ -55,7 +55,7 @@ NOTE: Your spec file should list the source as `%{name}-%{version}.tar.gz`
 `tito tag [options]`
 ~~~~~~~~~~~~~~~~~~~~
 
-By default, tito will tag by bumping the rpm version 
+By default, tito will tag by bumping the rpm version
 (i.e. we bump the Z in X.Y.Z). If you'd prefer to bump the package
 release instead (normally should just be used for changes to the spec file or
 patches applied within it), you can change the default_tagger class in
@@ -127,7 +127,7 @@ Build srpm
 Build srpm and rpm
 
 -i, --install::
-Install any binary RPMs being built. 
+Install any binary RPMs being built.
 
 WARNING: uses `sudo rpm -Uvh --force`
 
@@ -135,28 +135,10 @@ WARNING: uses `sudo rpm -Uvh --force`
 Apply 'DISTTAG' to srpm and/or rpm. (e.g., ".el5")
 
 --test::
-use current branch HEAD instead of latest package tag
+use current branch HEAD instead of latest package tag.
 
 --no-cleanup::
 do not clean up temporary build directories/files
-
---tag='PKGTAG'::
-build a specific tag instead of the latest version
-(e.g., `spacewalk-java-0.4.0-1`)
-
---release::
-Release package according to repo configuration.
-(import into CVS and submit to build system, or create
-src.rpm's and submit directly to Koji)
-
-CAUTION: The `--release` option is complicated and untested against
-Fedora's Koji.
-
---cvs-release::
-Release package only in CVS. (if possible)
-
---koji-release::
-Release package only in Koji. (if possible)
 
 --list-tags::
 List tags for which we build this package. If you set --debug together
@@ -174,8 +156,45 @@ file is committed to CVS.
 --rpmbuild-options='OPTIONS'::
 Pass 'OPTIONS' to rpmbuild.
 
---scratch::
-Do scratch build (only for --koji-release)
+--builder='BUILDER'::
+Override the normal builder by specifying a full class
+path or one of the pre-configured shortcuts. Only useful if you need to override the default builder for some purpose, such as testing a build via mock.
+
+--builder-arg='BUILDER_ARGS'::
+Custom arguments specific to a particular builder. (key=value)
+
+
+
+`tito release [options] TARGETS`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Runs the release targets defined in rel-eng/releasers.conf.
+
+-h, --help::
+show this help message and exit
+
+--debug::
+print debug messages
+
+--offline::
+do not attempt any remote communication (avoid using
+this please)
+
+-o 'OUTPUTDIR', --output='OUTPUTDIR'::
+Write temp files, tarballs and RPMs to 'OUTPUTDIR'.
+(default /tmp/tito)
+
+--tag='PKGTAG'::
+build a specific tag instead of the latest version
+(e.g., `spacewalk-java-0.4.0-1`)
+
+--dry-run::
+Do not actually commit/push anything during release.
+
+--all-starting-with=ALL_STARTING_WITH::
+Run all release targets starting with the given string. (i.e.
+if you have defined release targets yum-f15 and yum-f14 in releasers.conf,
+--all-starting-with=yum will run only these targets, and ignore any others.)
 
 
 `tito report`
@@ -186,11 +205,21 @@ HEAD and their most recent tag, as well as a patch for
 that diff. Used to determine which packages are in need
 of a rebuild.
 
+EXAMPLES
+--------
+
+Build and install a test package from the latest code in current git HEAD::
+tito build --rpm --test -i
+
+Overriding the default builder to build via mock instead::
+tito build --builder mock --builder-arg mock=fedora-15-x86_64 --rpm
 
 
 SEE ALSO
 --------
 titorc(5)
+releasers.conf(5)
+tito.props(5)
 
 /usr/share/doc/tito-*/README.mkd
 

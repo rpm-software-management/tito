@@ -13,14 +13,18 @@ Tito offers the following features:
  - Build source and binary "test" rpms off most recently committed code.
  - Build multiple source rpms with appropriate disttag's for submission to the
    Koji build system
+ - Build rpms via the "mock" tool.
  - On a per-branch basis in git:
    - Maintain concurrent version streams.
    - Vary the way packages are built/tagged.
  - Report on any diffs or commits messages missing since last tag.
+ - Define release targets to publish your packages to yum repositories, or
+   the Fedora build system.
+ - Define custom builder/releaser implementations for your own project needs.
  - Build packages off an "upstream" git repository, where modifications in the
    "downstream" git repository will be applied as a patch in the source rpm.
  - Manage all of the above for a git repository with many disjoint packages
-   within it. 
+   within it.
 
 
 GETTING STARTED
@@ -38,7 +42,7 @@ a per branch basis. It will be filtered out when creating .tar.gz's.
 TAGGING PACKAGES
 ================
 
-Before doing most everything you'll need to tag your package(s). 
+Before doing most everything you'll need to tag your package(s).
 
 Before doing this you'll need to ensure that your package spec files are at the top of the relative source tree for that package.
 
@@ -82,7 +86,7 @@ desired and run, add a changelog entry, and run:
 
 For future tagging you'll probably want to use the auto-changelog, which will
 auto-populate based on the first line of every git commit since your last
-package tag, then give you a chance to edit it. 
+package tag, then give you a chance to edit it.
 
 By default if you omit --keep-version, tito will tag by bumping the rpm
 version. (i.e. we bump the Z in X.Y.Z. If you'd prefer to bump the package
@@ -96,6 +100,7 @@ Once a package is tagged you will need to push both the auto-commit and the tag
 to your remote git repository before tito will let you build it. (better
 support for standalone git repositories is coming, for now --offline will help)
 
+See "man tito" for more options.
 
 BUILDING PACKAGES
 =================
@@ -120,6 +125,55 @@ recently committed work. (NOTE: does *not* include uncommitted changes)
 TODO: Document the use of --release, which is complicated and untested against
 Fedora's Koji.
 
+See "man tito" for more options.
+
+
+RELEASING PACKAGES
+==================
+
+Tito supports a mechanism where you can define multiple release targets.
+
+In rel-eng/releasers.conf, create a section like:
+
+[yum-f15-x86_64]
+releaser = tito.release.YumRepoReleaser
+builder = tito.builder.MockBuilder
+builder.mock = fedora-15-x86_64
+rsync = fedorapeople.org:/srv/repos/dgoodwin/tito/fedora-15/x86_64/
+
+You can define as many release targets as you like with various configurations.
+To publish the most recently tagged build in your current branch you would run:
+
+    tito release yum-f15-x86_64
+
+You can specify multiple targets on the CLI.
+
+See "man 8 releasers.conf" for more information on defining release targets.
+
+See "man tito" for more information on CLI arguments to "tito release".
+
+
+
+CUSTOM BUILDERS / TAGGERS / RELEASERS
+=====================================
+
+If the existing implementations Tito provides are not sufficient for
+your needs, it is possible to define a lib_dir in tito.props globalconfig
+section. This is a directory that tito will add to the python path during
+execution, allowing you a place to define your own custom implementations of
+builders, taggers, and releasers.
+
+The process of actually writing a custom Builder/Tagger/Releaser is an exercise
+left to the reader, but essentially you will want to work off the code in the
+tito.builder module. Inherit from the base Builder, and override the methods
+you need to.
+
+Please note that if you store your custom implementations inside your source
+tree, they will need to be kept in sync in all branches you are using for
+consistent behavior. Also, there are no guarantees that tito will not change in
+future releases, meaning that your custom implementations may occasionally need
+to be updated.
+
 
 TROUBLESHOOTING
 ===============
@@ -140,61 +194,13 @@ invocation.
 CONFIGURATION
 =============
 
-Some user specific settings can be defined in ~/.titorc:
+See:
 
-# Default Location to write temp files, tarballs and rpms to:
-RPMBUILD_BASEDIR = /tmp/tito
+    man 5 tito.props
 
-# Specify packages to not auto-install. Uses a simple string contains
-# comparison.
-NO_AUTO_INSTALL = project-subpkg1 project-subpkg2
+    man 5 releasers.conf
 
-The main tito configuration file resides in your git repository at /rel-eng/tito.props. Below is an attempt to document each supported section and option:
-
-## Section: [globalconfig]
-
-### default_builder / default_tagger
-
-Specified the default builder to use if the package does not specify it's own in a package specific tito.props. 
-
-I.e:
-
-> default_builder = spacewalk.releng.builder.Builder
-> default_tagger = spacewalk.releng.tagger.VersionTagger
-
-### lib_dir
-
-Specifies an optional directory where you may be storing custom tito builders/taggers in your git repository. If you have very specific build needs, this can be useful to tailer the core tito classes with inheritance, or to write your own from scratch. Note that this has disadvantages as well, as this code will need to be kept in all your branches, and can have implications when building tags from the past.
-
-> lib_dir=rel-eng/lib/
-
-### tag_suffix 
-
-An optional specification of a suffix to append to all tags created by tito for this repo. Can be useful for situations where one git repository is inheriting from another, but tags are created in both. The suffix will be an indicator as to which repo the tag originated in.
- 
-> tag_suffix = -mysuffix 
-
-## Section: [cvs]
-
-Tito has support for releasing builds in a CVS driven buildsystem, similar to the former Fedora build infrastructure. (WARNING: this has now been replaced with a git infrastructure, this module no longer can be used with Fedora)
-
-
-> [cvs]
-> cvsroot = :ext:myuser@cvs.fedoraproject.org:/cvs/extra
-> branches = CVSBRANCH1 CVSBRANCH2
-
-## Section [gitrelease]
-
-Tito has support for releasing builds in Fedora's git build system. Your spec file and patches will be synched into the first branch listed below, then merged into the following branches.
-
-> branches = master f14/master f13/master
-
-
-
-[requirements]
-tito=0.2.0
-
-
+    man 5 titorc
 
 
 

@@ -4,7 +4,7 @@ include::man.asciidoc[]
 
 NAME
 ----
-titorc - Settings file for `tito`
+titorc - A user specific settings file for `tito`.
 
 
 SYNOPSIS
@@ -15,14 +15,9 @@ None
 
 DESCRIPTION
 -----------
-User preferences can be stored in files:
-
-`~/.spacewalk-build-rc`
+User preferences can optionally be stored:
 
 `~/.titorc`
-
-If `$HOME/.spacewalk-build-rc` exists, tito ignores `$HOME/.titorc`.
-Both files are optional.
 
 
 OPTIONS
@@ -32,15 +27,16 @@ Specify strings of options, which is passed to koji on commandline when you
 execute --koji-release. For example:
 
 RPMBUILD_BASEDIR::
-Specifies a base directory for temp files, tarballs, and RPMs. 
-If defined, and if the directory exists, `tito` will automatically 
-create subdirectories as needed for rpmbuild(8).
+Specifies a base directory for temp files, tarballs, and RPMs.
+If defined, and if the directory exists, `tito` will automatically
+create subdirectories as needed for rpmbuild(8). Can be overridden
+on the fly with -o. The default output directory is /tmp/tito.
 
 HIDE_EMAIL::
-If set to something different from 0, it will not use you email address
-in changelog entry. I.e. instead of
+If set to something other than 0, your email address will not be used in
+changelog entries. I.e. instead of
  * Tue Feb 11 2011 Miroslav Suchy <msuchy@redhat.com> 0.3.0-2
-it will use:
+You will get:
  * Tue Feb 11 2011 Miroslav Suchy 0.3.0-2
 
 EXAMPLE

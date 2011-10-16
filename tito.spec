@@ -39,6 +39,7 @@ git.
 a2x -d manpage -f manpage titorc.5.asciidoc
 a2x -d manpage -f manpage tito.8.asciidoc
 a2x -d manpage -f manpage tito.props.5.asciidoc
+a2x -d manpage -f manpage releasers.conf.5.asciidoc
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -50,6 +51,7 @@ rm -f $RPM_BUILD_ROOT%{python_sitelib}/*egg-info/requires.txt
 %{__gzip} -c titorc.5 > %{buildroot}/%{_mandir}/man5/titorc.5.gz
 %{__gzip} -c tito.8 > %{buildroot}/%{_mandir}/man8/tito.8.gz
 %{__gzip} -c tito.props.5 > %{buildroot}/%{_mandir}/man5/tito.props.5.gz
+%{__gzip} -c releasers.conf.5 > %{buildroot}/%{_mandir}/man5/releasers.conf.5.gz
 %{__gzip} -c build.py.props.5 > %{buildroot}/%{_mandir}/man5/build.py.props.5.gz
 
 %clean
@@ -61,6 +63,7 @@ rm -rf $RPM_BUILD_ROOT
 %doc README.mkd AUTHORS COPYING
 %doc %{_mandir}/man5/titorc.5.gz
 %doc %{_mandir}/man5/tito.props.5.gz
+%doc %{_mandir}/man5/releasers.conf.5.gz
 %doc %{_mandir}/man5/build.py.props.5.gz
 %doc %{_mandir}/man8/tito.8.gz
 %{_bindir}/tito
@@ -194,7 +197,7 @@ rm -rf $RPM_BUILD_ROOT
 - Add BuildRequires on python-setuptools.
 
 * Tue Aug 25 2009 Devan Goodwin <dgoodwin@rm-rf.ca> 0.1.1-1
-- Bumping to 0.1.0 for first release. 
+- Bumping to 0.1.0 for first release.
 
 * Mon Aug 24 2009 Devan Goodwin <dgoodwin@rm-rf.ca> 0.0.4-1
 - Hack to fix import of tagger/builder on Python 2.4. (dgoodwin@rm-rf.ca)

@@ -22,16 +22,13 @@ Project settings can be stored in files:
 
 `GITROOT/SOME/PACKAGE/build.py.props`
 
-First tito.props is read, and if build.py.props in package directory is present, then it
-is read as well and options in build.py.props override those from tito.props.
+The global rel-eng/tito.props is generally where settings are defined. For some multi-project git repositories, individual packages can override these settings by placing a tito.props in the project directory. (i.e. same location as it's .spec file)
 
 
 SECTIONS
 --------
-There is several sections:
- * globalconfig
- * koji
- * cvs
+tito.props can contain several sections:
+
 
 GLOBALCONFIG
 ------------
@@ -39,28 +36,21 @@ This section is mandatory. At least in tito.props as you need to specify
 default builder and tagger for you project. You can use following variables:
 
 default_builder::
-You specify name of class which is used for building (creating rpm or src.rpm).
-You can either specify builders shipped with Tito (see BUILDERS section below)
-or use your own modules stored in GITROOT/rel-eng/lib/ path.
-I.e if you specify name spacewalk.releng.tagger.VersionTagger, then tito will
-check if exist file GITROOT/rel-eng/lib/spacewalk/releng/tagger.py and in it
-class VersionTagger. If this import will fail, then it will check if file
-/usr/lib/pythonX.Y/site-packages/spacewalk/releng/tagger.py with class
-VersionTagger exists.
+The fully qualified Builder class implementation to use.
+You can either specify builders shipped with Tito (see BUILDERS section below), or a custom builder located within the directory your `lib_dir` option points to.
 
 default_tagger::
-You specify name of class which is used for tagging (bump up version/release
-and create changelog). You can either specify taggers shipped with Tito (see
-TAGGERS section below).
-Search path of class is exactly the same as in default_builder.
+The fully qualified Tagger class implementation to use.
+You can either specify builders shipped with Tito (see TAGGERS section below), or a custom builder located within the directory your `lib_dir` option points to.
+
+lib_dir::
+Optional property defining a directory to be added to the Python path when executing tito. Allows you to store custom implementations of Builder, Tagger, and Releaser.
 
 builder::
-This option is used in build.py.props and define builder class for one specific
-package.
+This option is used in project specific tito.props only, and allows that project to override the default_builder defined in rel-eng/tito.props.
 
 tagger::
-This option is used in build.py.props and define tagging class for one specific
-package.
+This option is used in project specific tito.props only, and allows that project to override the default_tagger defined in rel-eng/tito.props.
 
 changelog_with_email::
 If set to 0, then entries in changelog (subject of commits) are not followed by
@@ -70,9 +60,15 @@ changelog_do_not_remove_cherrypick::
 If set to 0, it will not remove from cherry picked commits the part "(cherry
 picked from commit ...)"
 
+tag_suffix::
+An optional specification of a suffix to append to all tags created by tito for this repo. Can be useful for situations where one git repository is inheriting from another, but tags are created in both. The suffix will be an indicator as to which repo the tag originated in. (i.e. tag_suffix = -mysuffix)
+
 
 KOJI
 ----
+
+WARNING: very experimental, and not tested against Fedora's Koji.
+
 autobuild_tags::
 If you use --koji-relase it will try to build src.rpm package in specified tags
 in koji.
@@ -89,10 +85,10 @@ Space separated list of packages, which should not be built in this tag.
 CVS
 ---
 cvsroot::
-Root of you Dist-CVS to checkout.
+Root of your CVS repository. (i.e. cvsroot = :ext:myuser@cvs.fedoraproject.org:/cvs/extra)
 
 branches::
-In which dist-cvs branch should be commited your spec file and patches.
+CVS branches to sync sources to, and build from.
 If you use zStreamTagger for EUS builds, use the format
  branches = BASE/EUS-VARIANT
 for example:
@@ -104,6 +100,7 @@ REQUIREMENTS
 ------------
 tito::
 If tito is older then specified version, it will refuse to continue.
+
 
 BUILDERS
 --------
@@ -154,8 +151,8 @@ Tagger which increments zstream number in release. I.e. x.y.z-r%{dist}.Z+1
 It is used for EUS packages.
 
 tito.rheltagger.RHELTagger::
-Tagger which is based on ReleaseTagger and use Red Hat Enterprise Linux
-format of Changelog:
+Tagger which is based on ReleaseTagger and uses Red Hat Enterprise Linux
+changelog format:
 - Resolves: #1111 - description
 - Related: #1111 - description
 

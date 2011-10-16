@@ -1,0 +1,76 @@
+releasers.conf(5)
+=================
+include::man.asciidoc[]
+
+NAME
+----
+releasers.conf - Config file defining release targets where builds can be published.
+
+
+SYNOPSIS
+--------
+None
+
+
+DESCRIPTION
+-----------
+Tito allows projects to define their own release targets, which can specify the exact releaser implementation to use (potentially a custom one), and any arguments it may need for a specific type of build.
+
+
+RELEASERS
+---------
+
+Tito includes several releaser implementations that can be used in releasers.conf. Additionally you may define a lib_dir in your tito.props globalconfig section, and place your own custom implementation of a releaser there.
+
+tito.release.YumRepoReleaser::
+Releaser which will build your packages, rsync down an existing yum repository, place your packages in it, regenerate the yum repodata, and rsync the yum repository back up.
+
+tito.release.FedoraGitReleaser::
+
+Releaser which will checkout your project in Fedora git using fedpkg. Sources are then synced to the first branch your releaser lists. After this tito will git merge the first branch into all other listed branches, triggering builds in each.
+
+WARNING: Highly experimental, very prone to failure if merging master into your branches is likely to cause a conflict. You will need to cleanup manually if this occurs.
+
+ [fedora-git]
+ releaser = tito.release.FedoraGitReleaser
+ branches = master el5 el6 f14 f15 f16
+
+tito.release.CvsReleaser::
+Releaser which will submit builds through CVS build systems. (no longer useful for Fedora) The CVS module is checked out, sources, spec file, and patches are synced and committed, the release is tagged (make tag), and then submitted to the build system. (make build)
+
+ [cvs]
+ releaser = tito.release.CvsReleaser
+ cvsroot = :ext:myuser@cvs.fedoraproject.org:/cvs/extra
+ branches = BRANCH1 BRANCH2
+
+tito.release.KojiReleaser::
+Highly experimental, ignore for now.
+
+
+
+EXAMPLE
+-------
+
+ [yum-f15-x86_64]
+ releaser = tito.release.YumRepoReleaser
+ builder = tito.builder.MockBuilder
+ builder.mock = fedora-15-x86_64
+ rsync = fedorapeople.org:/srv/repos/dgoodwin/tito/fedora-15/x86_64/
+
+ [yum-f16-x86_64]
+ releaser = tito.release.YumRepoReleaser
+ builder = tito.builder.MockBuilder
+ builder.mock = fedora-16-x86_64
+ rsync = fedorapeople.org:/srv/repos/dgoodwin/tito/fedora-16/x86_64/
+
+ [yum-el6-x86_64]
+ releaser = tito.release.YumRepoReleaser
+ builder = tito.builder.MockBuilder
+ builder.mock = epel-6-x86_64
+ rsync = fedorapeople.org:/srv/repos/dgoodwin/tito/epel-6/x86_64/
+
+ [cvs]
+ cvsroot = :gserver:cvs.example.com:/cvs/dist
+ branches = FEDORA-15
+
+
