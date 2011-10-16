@@ -255,6 +255,8 @@ class YumRepoReleaser(Releaser):
                 builder_class=self.releaser_config.get(self.target, 'builder'))
 
     def release(self, dry_run=False):
+        self.dry_run = dry_run
+
         # Should this run?
         self.builder.tgz()
         self.builder.srpm()
@@ -286,9 +288,13 @@ class YumRepoReleaser(Releaser):
 
         print("Syncing yum repository back to: %s" % rsync_location)
         # TODO: configurable rsync options?
-        output = run_command("rsync -avtz --delete %s/ %s" %
-                (yum_temp_dir, rsync_location))
-        debug(output)
+        cmd = "rsync -avtz --delete %s/ %s" % \
+                (yum_temp_dir, rsync_location)
+        if self.dry_run:
+            self.print_dry_run_warning(cmd)
+        else:
+            output = run_command(cmd)
+            debug(output)
 
         # TODO: Cleanup
         #rmtree(yum_temp_dir)
