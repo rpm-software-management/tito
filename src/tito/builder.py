@@ -184,6 +184,7 @@ class Builder(object):
             self.srpm()
         if options.rpm:
             self._rpm()
+            self._auto_install()
 
         self.cleanup()
         return self.artifacts
@@ -255,7 +256,7 @@ class Builder(object):
             '--define "_binary_filedigest_algorithm md5" %s %s %s --clean '
             '-ba %s' % (self.rpmbuild_options,
                 self._get_rpmbuild_dir_options(), define_dist, self.spec_file))
-	try:
+        try:
             output = run_command(cmd)
         except (KeyboardInterrupt, SystemExit):
             print ""
@@ -273,6 +274,10 @@ class Builder(object):
         print("Successfully built: %s" % ' '.join(files_written))
 
 
+    def _auto_install(self):
+        """
+        If requested, auto install the RPMs we just built.
+        """
         if self.auto_install:
             print
             print("Auto-installing packages:")
@@ -283,26 +288,29 @@ class Builder(object):
                 dont_install = self.user_config['NO_AUTO_INSTALL'].split(" ")
                 debug("Will not auto-install any packages matching: %s" % dont_install)
 
-            if len(files_written[1:]) > 0:
-                do_install = []
-                for to_inst in files_written[1:]:
-                    install = True
-                    for skip in dont_install:
-                        if skip in to_inst:
-                            install = False
-                            print("Skipping: %s" % to_inst)
-                            break
-                    if install:
-                        do_install.append(to_inst)
+            do_install = []
+            for to_inst in self.artifacts:
+                # Only install rpms:
+                if not to_inst.endswith(".rpm") or to_inst.endswith(".src.rpm"):
+                    continue
 
+                install = True
+                for skip in dont_install:
+                    if skip in to_inst:
+                        install = False
+                        print("Skipping: %s" % to_inst)
+                        break
+                if install:
+                    do_install.append(to_inst)
+
+            print
+            cmd = "sudo rpm -Uvh --force %s" % ' '.join(do_install)
+            print("%s" % cmd)
+            try:
+                run_command(cmd)
                 print
-                cmd = "sudo rpm -Uvh --force %s" % ' '.join(do_install)
-                print("%s" % cmd)
-                try:
-                    run_command(cmd)
-                    print
-                except KeyboardInterrupt:
-                    pass
+            except KeyboardInterrupt:
+                pass
 
     def _setup_sources(self):
         """
