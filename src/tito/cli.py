@@ -542,7 +542,7 @@ class ReleaseModule(BaseCliModule):
             sys.exit(1)
 
         targets = self._calc_release_targets(releaser_config)
-        print("Will release to the following targets: %s" % targets.join(', '))
+        print("Will release to the following targets: %s" % ", ".join(targets))
 
         build_dir = os.path.normpath(os.path.abspath(self.options.output_dir))
         package_name = get_project_name(tag=self.options.tag)
