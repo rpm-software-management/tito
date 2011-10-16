@@ -446,6 +446,9 @@ class ReleaseModule(BaseCliModule):
                 help="Do not actually commit/push anything during --release.",
                 )
 
+        self.parser.add_option("--all-starting-with", dest="all_starting_with",
+                help="Run all release targets starting with the given string.")
+
 #        self.parser.add_option("--list-tags", dest="list_tags",
 #                action="store_true",
 #                help="List tags for which we build this package",
@@ -513,6 +516,17 @@ class ReleaseModule(BaseCliModule):
         for section in releaser_config.sections():
             print("  %s" % section)
 
+    def _calc_release_targets(self, releaser_config):
+        targets = []
+        if self.options.all_starting_with:
+            for target in releaser_config.sections():
+                if target.startswith(self.options.all_starting_with):
+                    targets.append(target)
+        else:
+            targets = self.args[1:]
+        return targets
+
+
     def main(self, argv):
         BaseCliModule.main(self, argv)
 
@@ -522,53 +536,52 @@ class ReleaseModule(BaseCliModule):
         # First arg is sub-command 'release', the rest should be our release
         # targets:
         # TODO: support multiple release targets someday
-        if len(self.args) != 2:
-            print("ERROR: You must supply a single release target.")
+        if len(self.args) < 2 and self.options.all_starting_with is None:
+            print("ERROR: You must supply at least one release target.")
             self._print_releasers(releaser_config)
             sys.exit(1)
-        targets = self.args[1:]
+
+        targets = self._calc_release_targets(releaser_config)
 
         # Create an instance of the releaser we intend to use:
-        # TODO: multiple targets?
-        target = targets[0]
-        print("Releasing to target: %s" % target)
-        if not releaser_config.has_section(target):
-            error_out("No such releaser configured: %s" % target)
-        releaser_class = get_class_by_name(releaser_config.get(target, "releaser"))
-        debug("Using releaser class: %s" % releaser_class)
+        for target in targets:
+            print("Releasing to target: %s" % target)
+            if not releaser_config.has_section(target):
+                error_out("No such releaser configured: %s" % target)
+            releaser_class = get_class_by_name(releaser_config.get(target, "releaser"))
+            debug("Using releaser class: %s" % releaser_class)
 
-        build_dir = os.path.normpath(os.path.abspath(self.options.output_dir))
-        package_name = get_project_name(tag=self.options.tag)
+            build_dir = os.path.normpath(os.path.abspath(self.options.output_dir))
+            package_name = get_project_name(tag=self.options.tag)
 
-        build_tag = None
-        build_version = None
-        # Determine which package version we should build:
-        if self.options.tag:
-            build_tag = self.options.tag
-            build_version = build_tag[len(package_name + "-"):]
-        else:
-            build_version = get_latest_tagged_version(package_name)
-            if build_version == None:
-                error_out(["Unable to lookup latest package info.",
-                        "Perhaps you need to tag first?"])
-            build_tag = "%s-%s" % (package_name, build_version)
-        check_tag_exists(build_tag, offline=self.options.offline)
+            build_tag = None
+            build_version = None
+            # Determine which package version we should build:
+            if self.options.tag:
+                build_tag = self.options.tag
+                build_version = build_tag[len(package_name + "-"):]
+            else:
+                build_version = get_latest_tagged_version(package_name)
+                if build_version == None:
+                    error_out(["Unable to lookup latest package info.",
+                            "Perhaps you need to tag first?"])
+                build_tag = "%s-%s" % (package_name, build_version)
+            check_tag_exists(build_tag, offline=self.options.offline)
 
-        self.pkg_config = self._read_project_config(package_name, build_dir,
-                self.options.tag, self.options.no_cleanup)
+            self.pkg_config = self._read_project_config(package_name, build_dir,
+                    self.options.tag, self.options.no_cleanup)
 
-        releaser = releaser_class(
-                name=package_name,
-                version=build_version,
-                tag=build_tag,
-                build_dir=build_dir,
-                pkg_config=self.pkg_config,
-                global_config=self.global_config,
-                user_config=self.user_config,
-                target=target,
-                releaser_config=releaser_config)
-
-        return releaser.release(dry_run=self.options.dry_run)
+            releaser = releaser_class(
+                    name=package_name,
+                    version=build_version,
+                    tag=build_tag,
+                    build_dir=build_dir,
+                    pkg_config=self.pkg_config,
+                    global_config=self.global_config,
+                    user_config=self.user_config,
+                    target=target,
+                    releaser_config=releaser_config)
+            releaser.release(dry_run=self.options.dry_run)
 
 
 class TagModule(BaseCliModule):
