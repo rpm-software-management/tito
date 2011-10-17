@@ -79,14 +79,17 @@ The packages can be organized in any hierarchy you like and even be moved
 around and re-tagged, we only need to have the spec file in the top level
 directory for that package.
 
-To create an initial package tag, modify your spec file's version/release as
-desired and run, add a changelog entry, and run:
+Tagging packages is normally done with:
 
-    tito tag --keep-version --no-auto-changelog
+    tito tag
 
-For future tagging you'll probably want to use the auto-changelog, which will
-auto-populate based on the first line of every git commit since your last
-package tag, then give you a chance to edit it.
+This will:
+
+ - bump the version or release in the spec file (use --keep-version to use whatever is defined in the spec file)
+ - auto-generate a changelog from first line of each commit since last tag (use --no-auto-changelog if you do not want this)
+ - open an editor allowing you a chance to edit that changelog
+ - insert the changelog into your spec
+ - commit these changes, and generate a git tag
 
 By default if you omit --keep-version, tito will tag by bumping the rpm
 version. (i.e. we bump the Z in X.Y.Z. If you'd prefer to bump the package

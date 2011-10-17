@@ -20,7 +20,7 @@ Project settings can be stored in files:
 
 `GITROOT/rel-eng/tito.props`
 
-`GITROOT/SOME/PACKAGE/build.py.props`
+`GITROOT/SOME/PACKAGE/tito.props`
 
 The global rel-eng/tito.props is generally where settings are defined. For some multi-project git repositories, individual packages can override these settings by placing a tito.props in the project directory. (i.e. same location as it's .spec file)
 

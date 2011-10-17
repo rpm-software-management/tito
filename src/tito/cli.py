@@ -439,8 +439,12 @@ class ReleaseModule(BaseCliModule):
                 action="store_true", default=False,
                 help="Do not actually commit/push anything during release.")
 
+        self.parser.add_option("--all",
+                help="Run all release targets configured.")
+
         self.parser.add_option("--all-starting-with", dest="all_starting_with",
                 help="Run all release targets starting with the given string.")
+
 
 #        self.parser.add_option("--list-tags", dest="list_tags",
 #                action="store_true",
@@ -455,6 +459,25 @@ class ReleaseModule(BaseCliModule):
 #                action="store_true",
 #                help="Do scratch build (only for --koji-release)",
 #                )
+
+    def _validate_options(self):
+
+        if self.options.all and self.options.all_starting_with:
+            error_out("Cannot combine --all and --all-starting-with.")
+
+        if (self.options.all or self.options.all_starting_with) and \
+                len(self.args) > 1:
+            error_out("Cannot use explicit release targets with "
+                    "--all or --all-starting-with.")
+
+        # First arg is sub-command 'release', the rest should be our release
+        # targets:
+        if len(self.args) < 2 and (self.options.all_starting_with is None) and \
+                (self.options.all is None):
+            print("ERROR: You must supply at least one release target.")
+            self._print_releasers(releaser_config)
+            sys.exit(1)
+
 
     def _read_releaser_config(self):
         """
@@ -515,24 +538,18 @@ class ReleaseModule(BaseCliModule):
             for target in releaser_config.sections():
                 if target.startswith(self.options.all_starting_with):
                     targets.append(target)
+        elif self.options.all:
+            for target in releaser_config.sections():
+                targets.append(target)
         else:
             targets = self.args[1:]
         return targets
-
 
     def main(self, argv):
         BaseCliModule.main(self, argv)
 
         releaser_config = self._read_releaser_config()
         self._legacy_builder_hack(releaser_config)
-
-        # First arg is sub-command 'release', the rest should be our release
-        # targets:
-        # TODO: support multiple release targets someday
-        if len(self.args) < 2 and self.options.all_starting_with is None:
-            print("ERROR: You must supply at least one release target.")
-            self._print_releasers(releaser_config)
-            sys.exit(1)
 
         targets = self._calc_release_targets(releaser_config)
         print("Will release to the following targets: %s" % ", ".join(targets))
