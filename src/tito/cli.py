@@ -474,9 +474,7 @@ class ReleaseModule(BaseCliModule):
         # targets:
         if len(self.args) < 2 and (self.options.all_starting_with is None) and \
                 (self.options.all is None):
-            print("ERROR: You must supply at least one release target.")
-            self._print_releasers(releaser_config)
-            sys.exit(1)
+            error_out("You must supply at least one release target.")
 
 
     def _read_releaser_config(self):
