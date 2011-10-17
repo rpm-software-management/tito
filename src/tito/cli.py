@@ -445,6 +445,9 @@ class ReleaseModule(BaseCliModule):
         self.parser.add_option("--all-starting-with", dest="all_starting_with",
                 help="Run all release targets starting with the given string.")
 
+        self.parser.add_option("-l", "--list", dest="list_releasers",
+                action="store_true",
+                help="List all configured release targets.")
 
 #        self.parser.add_option("--list-tags", dest="list_tags",
 #                action="store_true",
@@ -469,12 +472,6 @@ class ReleaseModule(BaseCliModule):
                 len(self.args) > 1:
             error_out("Cannot use explicit release targets with "
                     "--all or --all-starting-with.")
-
-        # First arg is sub-command 'release', the rest should be our release
-        # targets:
-        if len(self.args) < 2 and (self.options.all_starting_with is None) and \
-                (self.options.all is None):
-            error_out("You must supply at least one release target.")
 
 
     def _read_releaser_config(self):
@@ -547,6 +544,18 @@ class ReleaseModule(BaseCliModule):
         BaseCliModule.main(self, argv)
 
         releaser_config = self._read_releaser_config()
+
+        if self.options.list_releasers:
+            self._print_releasers(releaser_config)
+            sys.exit(1)
+
+        # First arg is sub-command 'release', the rest should be our release
+        # targets:
+        if len(self.args) < 2 and (self.options.all_starting_with is None) and \
+                (self.options.all is None):
+            error_out("You must supply at least one release target.")
+
+
         self._legacy_builder_hack(releaser_config)
 
         targets = self._calc_release_targets(releaser_config)

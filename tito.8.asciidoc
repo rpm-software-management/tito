@@ -194,6 +194,9 @@ Do not actually commit/push anything during release.
 --all::
 Run all release targets defined in rel-eng/releasers.conf.
 
+--list::
+List all release targets defined in rel-eng/releasers.conf.
+
 --all-starting-with=ALL_STARTING_WITH::
 Run all release targets starting with the given string. (i.e.
 if you have defined release targets yum-f15 and yum-f14 in releasers.conf,
