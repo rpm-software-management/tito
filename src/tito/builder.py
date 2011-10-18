@@ -835,6 +835,15 @@ class MockBuilder(Builder):
                 options=options, args=args)
 
         self.mock_tag = args['mock']
+        self.mock_cmd_args = ""
+        if 'mock_config_dir' in args:
+            mock_config_dir = args['mock_config_dir']
+            if not mock_config_dir.startswith("/"):
+                # If not an absolute path, assume below git root:
+                mock_config_dir = os.path.join(self.git_root, mock_config_dir)
+            if not os.path.exists(mock_config_dir):
+                raise TitoException("No such mock config dir: %s" % mock_config_dir)
+            self.mock_cmd_args = "%s --configdir=%s" % (self.mock_cmd_args, mock_config_dir)
 
         # TODO: error out if mock package is not installed
 
@@ -855,16 +864,16 @@ class MockBuilder(Builder):
 
     def _build_in_mock(self):
         print("Initializing mock...")
-        output = run_command("mock -r %s --init" % self.mock_tag)
+        output = run_command("mock %s -r %s --init" % (self.mock_cmd_args, self.mock_tag))
         print("Installing deps in mock...")
-        output = run_command("mock -r %s --installdeps %s" % (
-            self.mock_tag, self.srpm_location))
+        output = run_command("mock %s -r %s --installdeps %s" % (
+            self.mock_cmd_args, self.mock_tag, self.srpm_location))
         print("Building RPMs in mock...")
-        output = run_command('mock -r %s --rebuild %s' %
-                (self.mock_tag, self.srpm_location))
+        output = run_command('mock %s -r %s --rebuild %s' %
+                (self.mock_cmd_args, self.mock_tag, self.srpm_location))
         mock_output_dir = os.path.join(self.rpmbuild_dir, "mockoutput")
-        output = run_command("mock -r %s --copyout /builddir/build/RPMS/ %s" %
-                (self.mock_tag, mock_output_dir))
+        output = run_command("mock %s -r %s --copyout /builddir/build/RPMS/ %s" %
+                (self.mock_cmd_args, self.mock_tag, mock_output_dir))
 
         # Copy everything mock wrote out to /tmp/tito:
         files = os.listdir(mock_output_dir)
