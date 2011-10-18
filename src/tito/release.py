@@ -719,7 +719,9 @@ class KojiReleaser(Releaser):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
                 global_config, user_config, target, releaser_config)
 
-        self.only_tags = self.builder.only_tags
+        self.only_tags = []
+        if 'ONLY_TAGS' in os.environ:
+            self.only_tags = os.environ['ONLY_TAGS'].split(' ')
 
     def release(self, dry_run=False):
         self.dry_run = dry_run
