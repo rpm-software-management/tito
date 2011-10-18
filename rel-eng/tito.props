@@ -6,3 +6,8 @@ lib_dir = rel-eng/custom/
 [gitrelease]
 branches = master el5 el6 f14 f15 f16
 
+[tag1]
+disttag = el5
+
+[tag2]
+disttag = el5

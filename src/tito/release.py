@@ -759,7 +759,7 @@ class KojiReleaser(Releaser):
         if 'KOJI_OPTIONS' in self.builder.user_config:
             koji_opts = self.builder.user_config['KOJI_OPTIONS']
 
-        if 'SCRATCH' in os.environ and os.environ['SCRATCH'] == '1'
+        if 'SCRATCH' in os.environ and os.environ['SCRATCH'] == '1':
             koji_opts = ' '.join([koji_opts, '--scratch'])
 
         # TODO: need to re-do this metaphor to use release targets instead:
