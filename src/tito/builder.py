@@ -834,7 +834,6 @@ class MockBuilder(Builder):
                 global_config=global_config, user_config=user_config,
                 options=options, args=args)
 
-        # TODO: make sure we're given a 'mock' argument:
         self.mock_tag = args['mock']
 
         # TODO: error out if mock package is not installed
@@ -877,3 +876,4 @@ class MockBuilder(Builder):
             rpm_path = os.path.join(self.rpmbuild_basedir, rpm)
             print("  %s" % rpm_path)
             self.artifacts.append(rpm_path)
+        print

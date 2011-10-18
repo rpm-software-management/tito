@@ -458,10 +458,6 @@ class ReleaseModule(BaseCliModule):
 #                action="append", metavar="KOJITAG",
 #                help="Build in koji only for specified tags",
 #                )
-#        self.parser.add_option("--scratch", dest="scratch",
-#                action="store_true",
-#                help="Do scratch build (only for --koji-release)",
-#                )
 
     def _validate_options(self):
 

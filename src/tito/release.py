@@ -720,7 +720,6 @@ class KojiReleaser(Releaser):
                 global_config, user_config, target, releaser_config)
 
         self.only_tags = self.builder.only_tags
-        self.scratch = self.builder.scratch
 
     def release(self, dry_run=False):
         self.dry_run = dry_run
@@ -758,8 +757,8 @@ class KojiReleaser(Releaser):
         if 'KOJI_OPTIONS' in self.builder.user_config:
             koji_opts = self.builder.user_config['KOJI_OPTIONS']
 
-        if self.scratch:
-            koji_opts = ' '.join([koji_opts, '--scratch'])
+        #if self.scratch:
+        #    koji_opts = ' '.join([koji_opts, '--scratch'])
 
         # TODO: need to re-do this metaphor to use release targets instead:
         for koji_tag in koji_tags:
