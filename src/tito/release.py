@@ -726,31 +726,14 @@ class KojiReleaser(Releaser):
     def release(self, dry_run=False):
         self.dry_run = dry_run
 
-        if self._can_build_in_koji():
-            self._koji_release()
-
-    def _can_build_in_koji(self):
-        """
-        Return True if this repo and branch are configured to auto build in
-        any Koji tags.
-        """
-        if not self.builder.config.has_section("koji"):
-            debug("No 'koji' section found in tito.props.")
-            return False
-
-        if not self.builder.config.has_option("koji", "autobuild_tags"):
-            debug("Cannot build in Koji, no autobuild_tags "
-                "defined in tito.props.")
-            return False
-
-        return True
+        self._koji_release()
 
     def _koji_release(self):
         """
         Lookup autobuild Koji tags from global config, create srpms with
         appropriate disttags, and submit builds to Koji.
         """
-        autobuild_tags = self.builder.config.get("koji", "autobuild_tags")
+        autobuild_tags = self.releaser_config.get(self.target, "autobuild_tags")
         print("Building release in Koji...")
         debug("Koji tags: %s" % autobuild_tags)
         koji_tags = autobuild_tags.strip().split(" ")
@@ -800,21 +783,6 @@ class KojiReleaser(Releaser):
         return self.builder.config.has_option(koji_tag, "blacklist") and \
             self.project_name in self.builder.config.get(koji_tag,
                         "blacklist").strip().split(" ")
-
-    def list_tags(self):
-        """ Print tags to which we build this package. """
-        autobuild_tags = self.builder.config.get("koji", "autobuild_tags")
-        koji_tags = autobuild_tags.strip().split(" ")
-        for koji_tag in koji_tags:
-            if self.__is_whitelisted(koji_tag):
-                if 'DEBUG' in os.environ:
-                    koji_tag += ' whitelisted'
-            elif self.__is_blacklisted(koji_tag):
-                if 'DEBUG' in os.environ:
-                    koji_tag += ' blacklisted'
-                else:
-                    continue
-            print koji_tag
 
     def _submit_build(self, executable, koji_opts, tag):
         """ Submit srpm to brew/koji. """

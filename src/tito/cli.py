@@ -507,6 +507,8 @@ class ReleaseModule(BaseCliModule):
             print("Simulating 'koji' release target for now.")
             releaser_config.add_section('koji')
             releaser_config.set('koji', 'releaser', 'tito.release.KojiReleaser')
+            releaser_config.set('koji', 'autobuild_tags',
+                    self.global_config.get('koji', 'autobuild_tags'))
 
             # TODO: find a way to get koji builds going through the new release
             # target config file, tricky as each koji tag gets it's own
