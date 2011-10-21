@@ -500,6 +500,8 @@ class TagModule(BaseCliModule):
                 action="store_true",
                 help=("Use spec file version/release exactly as "
                     "specified in spec file to tag package."))
+        self.parser.add_option("--use-version", dest="use_version",
+                help=("Update the spec file with the specified version."))
 
         self.parser.add_option("--no-auto-changelog", action="store_true",
                 default=False,
@@ -532,7 +534,9 @@ class TagModule(BaseCliModule):
                 None, None)
 
         tagger_class = None
-        if self.pkg_config.has_option("buildconfig", "tagger"):
+        if self.options.use_version:
+            tagger_class = get_class_by_name("tito.tagger.ForceVersionTagger")
+        elif self.pkg_config.has_option("buildconfig", "tagger"):
             tagger_class = get_class_by_name(self.pkg_config.get("buildconfig",
                 "tagger"))
         else:
@@ -550,7 +554,9 @@ class TagModule(BaseCliModule):
         except TitoException, e:
             error_out(e.message)
 
-
+    def _validate_options(self):
+        if self.options.keep_version and self.options.use_version:
+            error_out("Cannot combine --keep-version and --use-version")
 
 class InitModule(BaseCliModule):
     """ CLI Module for initializing a project for use with tito. """
