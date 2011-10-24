@@ -89,6 +89,8 @@ class VersionTagger(object):
             self._accept_auto_changelog=True
         if options.auto_changelog_msg:
             self._new_changelog_msg = options.auto_changelog_msg
+        if options.use_version:
+            self._use_version = options.use_version
 
         # Only two paths through the tagger module right now:
         if options.undo:
@@ -303,7 +305,7 @@ class VersionTagger(object):
         relative = current_dir[len(git_root) + 1:] + "/"
         return relative
 
-    def _bump_version(self, release=False, zstream=False):
+    def _bump_version(self, release=False, zstream=False, force=False):
         """
         Bump up the package version in the spec file.
 
@@ -335,6 +337,20 @@ class VersionTagger(object):
                     if match:
                         line = "".join((match.group(1)
                                         , increase_zstream(match.group(2))
+                                        , "\n"
+                        ))
+                elif force:
+                    match = re.match(version_regex, line)
+                    if match:
+                        line = "".join((match.group(1)
+                                        , self._use_version
+                                        , "\n"
+                        ))
+
+                    match = re.match(release_regex, line)
+                    if match:
+                        line = "".join((match.group(1)
+                                        , reset_release(match.group(2))
                                         , "\n"
                         ))
                 else:
@@ -508,3 +524,20 @@ class ReleaseTagger(VersionTagger):
     def release_type(self):
         """ return short string "minor release" """
         return "minor release"
+
+class ForceVersionTagger(VersionTagger):
+    """
+    Tagger which forcibly updates the spec file to a version provided on the
+    command line by the --use-version option.
+    """
+
+    def _tag_release(self):
+        """
+        Tag a new release of the package.
+        """
+        self._make_changelog()
+        new_version = self._bump_version(force=True)
+        self._check_tag_does_not_exist(self._get_new_tag(new_version))
+        self._update_changelog(new_version)
+        self._update_setup_py(new_version)
+        self._update_package_metadata(new_version)
