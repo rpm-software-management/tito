@@ -1,5 +1,5 @@
 [globalconfig]
-default_builder = spacewalk.releng.builder.Builder
+default_builder = spacewalk.releng.builder.UpstreamBuilder
 default_tagger = spacewalk.releng.tagger.VersionTagger
 lib_dir = rel-eng/custom/
 

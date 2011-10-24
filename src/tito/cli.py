@@ -484,14 +484,13 @@ class ReleaseModule(BaseCliModule):
         """
         Support the old style CVS/koji builds when config is still in global
         tito.props, as opposed to the new releasers.conf.
-        """
-        if releaser_config.has_section("cvs"):
-            # Looks like the user already created an appropriate cvs release
-            # target, we can safely leave this config alone.
-            return
 
-        # Otherwise setup a releaser target as if they'd defined one:
-        if self.global_config.has_section('cvs'):
+        If the releasers.conf has a
+        """
+
+        # Handle cvs:
+        if self.global_config.has_section('cvs') and not \
+                releaser_config.has_section("cvs"):
             print("WARNING: legacy 'cvs' section in tito.props, please "
                     "consider creating a target in releasers.conf.")
             print("Simulating 'cvs' release target for now.")
@@ -501,7 +500,10 @@ class ReleaseModule(BaseCliModule):
                 if self.global_config.has_option("cvs", opt):
                     releaser_config.set('cvs', opt, self.global_config.get(
                         "cvs", opt))
-        if self.global_config.has_section("koji"):
+
+        # Handle koji:
+        if self.global_config.has_section("koji") and not \
+                releaser_config.has_section("koji"):
             print("WARNING: legacy 'koji' section in tito.props, please "
                     "consider creating a target in releasers.conf.")
             print("Simulating 'koji' release target for now.")

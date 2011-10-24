@@ -104,10 +104,12 @@ def create_builder(package_name, build_tag, build_version, options,
         builder_class = BUILDER_SHORTCUTS[builder_class]
 
     if builder_class is None:
+        debug("---- Builder class is None")
         if pkg_config.has_option("buildconfig", "builder"):
             builder_class = get_class_by_name(pkg_config.get("buildconfig",
                 "builder"))
         else:
+            debug("---- Global config")
             builder_class = get_class_by_name(global_config.get(
                 GLOBALCONFIG_SECTION, DEFAULT_BUILDER))
     else:
