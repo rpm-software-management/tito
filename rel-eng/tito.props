@@ -1,6 +1,6 @@
 [globalconfig]
-default_builder = spacewalk.releng.builder.UpstreamBuilder
-default_tagger = spacewalk.releng.tagger.VersionTagger
+default_builder = tito.builder.Builder
+default_tagger = tito.tagger.VersionTagger
 lib_dir = rel-eng/custom/
 
 [gitrelease]
