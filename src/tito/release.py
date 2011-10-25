@@ -713,6 +713,8 @@ class CvsReleaser(Releaser):
 
 class KojiReleaser(Releaser):
 
+    REQUIRED_CONFIG = ['autobuild_tags']
+
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
             target=None, releaser_config=None):
@@ -722,6 +724,8 @@ class KojiReleaser(Releaser):
         self.only_tags = []
         if 'ONLY_TAGS' in os.environ:
             self.only_tags = os.environ['ONLY_TAGS'].split(' ')
+
+        self.skip_srpm = False
 
     def release(self, dry_run=False):
         self.dry_run = dry_run
@@ -768,7 +772,8 @@ class KojiReleaser(Releaser):
             # Getting tricky here, normally Builder's are only used to
             # create one rpm and then exit. Here we're going to try
             # to run multiple srpm builds:
-            self.builder.srpm(dist=disttag, reuse_cvs_checkout=True)
+            if not self.skip_srpm:
+                self.builder.srpm(dist=disttag, reuse_cvs_checkout=True)
 
             self._submit_build("koji", koji_opts, koji_tag)
 
@@ -796,6 +801,33 @@ class KojiReleaser(Releaser):
         output = run_command(cmd)
         print(output)
 
+
+class KojiGitReleaser(KojiReleaser):
+    """
+    A derivative of the Koji releaser which uses a git repository to build off,
+    rather than submitting srpms.
+    """
+
+    REQUIRED_CONFIG = ['autobuild_tags', 'git_url']
+
+    def _koji_release(self):
+        self.skip_srpm = True
+        KojiReleaser._koji_release(self)
+
+    def _submit_build(self, executable, koji_opts, tag):
+        """ Submit build to koji. """
+        cmd = "%s %s %s %s/#%s" % \
+                (executable, koji_opts, tag,
+                        self.releaser_config.get(self.target, 'git_url'),
+                        self.builder.build_tag)
+        print("\nSubmitting build with: %s" % cmd)
+
+        if self.dry_run:
+            self.print_dry_run_warning(cmd)
+            return
+
+        output = run_command(cmd)
+        print(output)
 
 
 

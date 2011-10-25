@@ -3,6 +3,7 @@ Next release:
 • test koji release
 • re-examine --no-cleanup
 • mock setup error checking (mock installed, user in group)
+- make use-version understand releases too.
 
 Lesser Priority:
 
@@ -12,7 +13,6 @@ Lesser Priority:
 • write functional tests for the yum releaser
 • scratch builder for koji/brew (can we re-use existing koji builder?)
 • test scratch builds
-• tito tag --use-version (instead of forcing to edit spec file)
 • SRPM repos?
 - Use proper temp dirs, not ones that will get re-used.
 
