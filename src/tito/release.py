@@ -18,7 +18,12 @@ Code for submitting builds for release.
 import os
 import commands
 import fedora_cert
-import pyfedpkg
+# TODO: older versions of fedpkg used this first import, the latter is newer.
+# Drop the first import and try/except someday:
+try:
+    import pyfedpkg as fedpkg
+except ImportError, e:
+    from pyrpkg import fedpkg
 import tempfile
 import subprocess
 
@@ -326,7 +331,7 @@ class FedoraGitReleaser(Releaser):
         commands.getoutput("mkdir -p %s" % self.cvs_workdir)
         os.chdir(self.cvs_workdir)
         user = fedora_cert.read_user_cert()
-        pyfedpkg.clone(self.project_name, user, self.cvs_workdir)
+        fedpkg.clone(self.project_name, user, self.cvs_workdir)
 
         project_checkout = os.path.join(self.cvs_workdir, self.project_name)
         os.chdir(project_checkout)
@@ -471,6 +476,11 @@ class FedoraGitReleaser(Releaser):
 
 
 class CvsReleaser(Releaser):
+    """
+    Release packages via a CVS build system.
+
+    WARNING: no longer relevant to Fedora, which now uses Git.
+    """
 
     REQUIRED_CONFIG = ['cvsroot', 'branches']
 
@@ -712,6 +722,12 @@ class CvsReleaser(Releaser):
 
 
 class KojiReleaser(Releaser):
+    """
+    Releaser for the Koji build system.
+
+    WARNING: this is more of use to people running their own Koji instance.
+    Fedora projects will most likely want to use the Fedora git releaser.
+    """
 
     REQUIRED_CONFIG = ['autobuild_tags']
 
