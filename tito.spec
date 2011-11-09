@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.3.3
+Version: 0.4.0
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -76,6 +76,28 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Wed Nov 09 2011 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.0-1
+- Fix import error with new fedpkg version. (dgoodwin@rm-rf.ca)
+- Add a KojiGitReleaser. (dgoodwin@rm-rf.ca)
+- Adding --use-version to allow Tito to force a version to use.
+  (awood@redhat.com)
+- Support SCRATCH=1 env variable for koji releaser. (dgoodwin@rm-rf.ca)
+- Support ONLY_TAGS env variable for koji releaser. (dgoodwin@rm-rf.ca)
+- List releasers option. (dgoodwin@rm-rf.ca)
+- Documentation update. (dgoodwin@rm-rf.ca)
+- Allow releaseing to multiple targets at once, and add --all-starting-with.
+  (dgoodwin@rm-rf.ca)
+- Make auto-install available to all builders. (dgoodwin@rm-rf.ca)
+- Allow setting specific builder and passing builder args on CLI. (dgoodwin@rm-
+  rf.ca)
+- Add new mechanism for passing custom arguments to builders. (dgoodwin@rm-
+  rf.ca)
+- HACKING tips updated. (dgoodwin@rm-rf.ca)
+- Add a rsync username env variable for yum repo releaser. (dgoodwin@rm-rf.ca)
+- Restructure release CLI. (dgoodwin@redhat.com)
+- Parsing spec files and bumping their versions or releases is now in Python.
+  (awood@redhat.com)
+
 * Wed Oct 05 2011 Devan Goodwin <dgoodwin@rm-rf.ca> 0.3.3-1
 - Clarify some initial project layout documentation. (dgoodwin@rm-rf.ca)
 - match based on the tag for the package we are building (mmccune@redhat.com)
