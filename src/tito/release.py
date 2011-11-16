@@ -18,12 +18,6 @@ Code for submitting builds for release.
 import os
 import commands
 import fedora_cert
-# TODO: older versions of fedpkg used this first import, the latter is newer.
-# Drop the first import and try/except someday:
-try:
-    import pyfedpkg as fedpkg
-except ImportError, e:
-    from pyrpkg import fedpkg
 import tempfile
 import subprocess
 
@@ -331,7 +325,7 @@ class FedoraGitReleaser(Releaser):
         commands.getoutput("mkdir -p %s" % self.cvs_workdir)
         os.chdir(self.cvs_workdir)
         user = fedora_cert.read_user_cert()
-        fedpkg.clone(self.project_name, user, self.cvs_workdir)
+        run_command("fedpkg clone %s" % self.project_name)
 
         project_checkout = os.path.join(self.cvs_workdir, self.project_name)
         os.chdir(project_checkout)
