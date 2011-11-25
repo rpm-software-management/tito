@@ -22,6 +22,7 @@ import tempfile
 import subprocess
 
 from tempfile import mkdtemp
+from shutil import rmtree, copy
 
 from tito.common import *
 from tito.exception import TitoException
@@ -46,7 +47,7 @@ class Releaser(object):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            target=None, releaser_config=None):
+            target=None, releaser_config=None, no_cleanup=False):
 
         self.builder_args = self._parse_builder_args(releaser_config, target)
 
@@ -77,6 +78,8 @@ class Releaser(object):
         self.target = target
 
         self.dry_run = False
+
+        self.no_cleanup = no_cleanup
 
         self._check_releaser_config()
 
@@ -128,8 +131,11 @@ class Releaser(object):
         pass
 
     def cleanup(self):
-        debug("Cleaning up [%s]" % self.cvs_package_workdir)
-        run_command("rm -rf %s" % self.cvs_package_workdir)
+        if not self.no_cleanup:
+            debug("Cleaning up [%s]" % self.cvs_package_workdir)
+            run_command("rm -rf %s" % self.cvs_package_workdir)
+        else:
+            print("WARNING: leaving %s (--no-cleanup)" % self.cvs_package_workdir)
 
     def _list_files_to_copy(self):
         """
@@ -239,9 +245,9 @@ class YumRepoReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            target=None, releaser_config=None):
+            target=None, releaser_config=None, no_cleanup=False):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
-                global_config, user_config, target, releaser_config)
+                global_config, user_config, target, releaser_config, no_cleanup)
 
         self.build_dir = build_dir
 
@@ -267,19 +273,19 @@ class YumRepoReleaser(Releaser):
                     os.environ[RSYNC_USERNAME]))
             rsync_location = "%s@%s" % (os.environ[RSYNC_USERNAME], rsync_location)
         # Make a temp directory to sync the existing repo contents into:
-        yum_temp_dir = mkdtemp(dir=self.build_dir, prefix="yumrepo-")
-        print("Syncing yum repo: %s -> %s" % (rsync_location, yum_temp_dir))
-        output = run_command("rsync -avtz %s %s" % (rsync_location, yum_temp_dir))
+        self.yum_temp_dir = mkdtemp(dir=self.build_dir, prefix="yumrepo-")
+        print("Syncing yum repo: %s -> %s" % (rsync_location, self.yum_temp_dir))
+        output = run_command("rsync -avtz %s %s" % (rsync_location, self.yum_temp_dir))
         debug(output)
 
         for artifact in self.builder.artifacts:
             if artifact.endswith(".rpm") and not artifact.endswith(".src.rpm"):
-                copy(artifact, yum_temp_dir)
+                copy(artifact, self.yum_temp_dir)
                 print("Copied %s to yum repo." % artifact)
 
         # TODO: should we clean up old versions of these packages in the repo?
 
-        os.chdir(yum_temp_dir)
+        os.chdir(self.yum_temp_dir)
         print("Refreshing yum repodata...")
         output = run_command("createrepo ./")
         debug(output)
@@ -287,15 +293,19 @@ class YumRepoReleaser(Releaser):
         print("Syncing yum repository back to: %s" % rsync_location)
         # TODO: configurable rsync options?
         cmd = "rsync -avtz --no-p --no-g --delete %s/ %s" % \
-                (yum_temp_dir, rsync_location)
+                (self.yum_temp_dir, rsync_location)
         if self.dry_run:
             self.print_dry_run_warning(cmd)
         else:
             output = run_command(cmd)
             debug(output)
 
-        # TODO: Cleanup
-        #rmtree(yum_temp_dir)
+    def cleanup(self):
+        if not self.no_cleanup:
+            debug("Cleaning up [%s]" % self.yum_temp_dir)
+            rmtree(self.yum_temp_dir)
+        else:
+            print("WARNING: leaving %s (--no-cleanup)" % self.yum_temp_dir)
 
 
 class FedoraGitReleaser(Releaser):
@@ -304,9 +314,9 @@ class FedoraGitReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            target=None, releaser_config=None):
+            target=None, releaser_config=None, no_cleanup=False):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
-                global_config, user_config, target, releaser_config)
+                global_config, user_config, target, releaser_config, no_cleanup)
 
         self.git_branches = \
             self.releaser_config.get(self.target, "branches").split(" ")
@@ -316,8 +326,11 @@ class FedoraGitReleaser(Releaser):
         self._git_release()
 
     def cleanup(self):
-        debug("Cleaning up [%s]" % self.cvs_package_workdir)
-        run_command("rm -rf %s" % self.cvs_package_workdir)
+        if not self.no_cleanup:
+            debug("Cleaning up [%s]" % self.cvs_package_workdir)
+            run_command("rm -rf %s" % self.cvs_package_workdir)
+        else:
+            print("WARNING: leaving %s (--no-cleanup)" % self.cvs_package_workdir)
 
     def _git_release(self):
 
@@ -479,9 +492,9 @@ class CvsReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            target=None, releaser_config=None):
+            target=None, releaser_config=None, no_cleanup=False):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
-                global_config, user_config, target, releaser_config)
+                global_config, user_config, target, releaser_config, no_cleanup)
 
         # Configure CVS variables if possible. Will check later that
         # they're actually defined if the user requested CVS work be done.
@@ -498,8 +511,11 @@ class CvsReleaser(Releaser):
         self._cvs_release()
 
     def cleanup(self):
-        debug("Cleaning up [%s]" % self.cvs_package_workdir)
-        run_command("rm -rf %s" % self.cvs_package_workdir)
+        if not self.no_cleanup:
+            debug("Cleaning up [%s]" % self.cvs_package_workdir)
+            run_command("rm -rf %s" % self.cvs_package_workdir)
+        else:
+            print("WARNING: leaving %s (--no-cleanup)" % self.cvs_package_workdir)
 
     def _cvs_release(self):
         """
@@ -726,9 +742,9 @@ class KojiReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            target=None, releaser_config=None):
+            target=None, releaser_config=None, no_cleanup=False):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
-                global_config, user_config, target, releaser_config)
+                global_config, user_config, target, releaser_config, no_cleanup)
 
         self.only_tags = []
         if 'ONLY_TAGS' in os.environ:

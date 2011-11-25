@@ -600,8 +600,10 @@ class ReleaseModule(BaseCliModule):
                     global_config=self.global_config,
                     user_config=self.user_config,
                     target=target,
-                    releaser_config=releaser_config)
+                    releaser_config=releaser_config,
+                    no_cleanup=self.options.no_cleanup)
             releaser.release(dry_run=self.options.dry_run)
+            releaser.cleanup()
 
             # Make sure we go back to where we started, otherwise multiple
             # builders gets very confused:
