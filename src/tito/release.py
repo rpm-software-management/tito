@@ -262,50 +262,54 @@ class YumRepoReleaser(Releaser):
         self.dry_run = dry_run
 
         # Should this run?
+        self.builder.no_cleanup = self.no_cleanup
         self.builder.tgz()
         self.builder.srpm()
         self.builder._rpm()
         self.builder.cleanup()
 
-        rsync_location = self.releaser_config.get(self.target, 'rsync')
-        if RSYNC_USERNAME in os.environ:
-            print("%s set, using rsync username: %s" % (RSYNC_USERNAME,
-                    os.environ[RSYNC_USERNAME]))
-            rsync_location = "%s@%s" % (os.environ[RSYNC_USERNAME], rsync_location)
-        # Make a temp directory to sync the existing repo contents into:
-        self.yum_temp_dir = mkdtemp(dir=self.build_dir, prefix="yumrepo-")
-        print("Syncing yum repo: %s -> %s" % (rsync_location, self.yum_temp_dir))
-        output = run_command("rsync -avtz %s %s" % (rsync_location, self.yum_temp_dir))
-        debug(output)
-
-        for artifact in self.builder.artifacts:
-            if artifact.endswith(".rpm") and not artifact.endswith(".src.rpm"):
-                copy(artifact, self.yum_temp_dir)
-                print("Copied %s to yum repo." % artifact)
-
-        # TODO: should we clean up old versions of these packages in the repo?
-
-        os.chdir(self.yum_temp_dir)
-        print("Refreshing yum repodata...")
-        output = run_command("createrepo ./")
-        debug(output)
-
-        print("Syncing yum repository back to: %s" % rsync_location)
-        # TODO: configurable rsync options?
-        cmd = "rsync -avtz --no-p --no-g --delete %s/ %s" % \
-                (self.yum_temp_dir, rsync_location)
-        if self.dry_run:
-            self.print_dry_run_warning(cmd)
-        else:
-            output = run_command(cmd)
+        rsync_locations = self.releaser_config.get(self.target, 'rsync').split(" ")
+        for rsync_location in rsync_locations:
+            if RSYNC_USERNAME in os.environ:
+                print("%s set, using rsync username: %s" % (RSYNC_USERNAME,
+                        os.environ[RSYNC_USERNAME]))
+                rsync_location = "%s@%s" % (os.environ[RSYNC_USERNAME], rsync_location)
+            # Make a temp directory to sync the existing repo contents into:
+            yum_temp_dir = mkdtemp(dir=self.build_dir, prefix="yumrepo-")
+            print("Syncing yum repo: %s -> %s" % (rsync_location, yum_temp_dir))
+            output = run_command("rsync -avtz %s %s" % (rsync_location, yum_temp_dir))
             debug(output)
 
+            for artifact in self.builder.artifacts:
+                if artifact.endswith(".rpm") and not artifact.endswith(".src.rpm"):
+                    copy(artifact, yum_temp_dir)
+                    print("Copied %s to yum repo." % artifact)
+
+            # TODO: should we clean up old versions of these packages in the repo?
+
+            os.chdir(yum_temp_dir)
+            print("Refreshing yum repodata...")
+            output = run_command("createrepo ./")
+            debug(output)
+
+            print("Syncing yum repository back to: %s" % rsync_location)
+            # TODO: configurable rsync options?
+            cmd = "rsync -avtz --no-p --no-g --delete %s/ %s" % \
+                    (yum_temp_dir, rsync_location)
+            if self.dry_run:
+                self.print_dry_run_warning(cmd)
+            else:
+                output = run_command(cmd)
+                debug(output)
+            if not self.no_cleanup:
+                debug("Cleaning up [%s]" % yum_temp_dir)
+                rmtree(yum_temp_dir)
+            else:
+                print("WARNING: leaving %s (--no-cleanup)" % yum_temp_dir)
+
     def cleanup(self):
-        if not self.no_cleanup:
-            debug("Cleaning up [%s]" % self.yum_temp_dir)
-            rmtree(self.yum_temp_dir)
-        else:
-            print("WARNING: leaving %s (--no-cleanup)" % self.yum_temp_dir)
+        """ No-op, we clean up during self.release() """
+        pass
 
 
 class FedoraGitReleaser(Releaser):
