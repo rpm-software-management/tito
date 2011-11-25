@@ -887,7 +887,7 @@ class MockBuilder(Builder):
         print
 
 
-class BrewPreBuiltBuilder(Builder):
+class BrewDownloadBuilder(Builder):
     """
     A special case builder which uses pre-existing Brew builds and
     pulls down the resulting rpms locally. Useful in some cases when
