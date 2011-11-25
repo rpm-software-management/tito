@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.4.0
+Version: 0.4.1
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -76,6 +76,14 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Fri Nov 25 2011 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.1-1
+- Allow one build to go to multiple yum repo URLs. (dgoodwin@redhat.com)
+- Fix --no-cleanup for release module. (dgoodwin@redhat.com)
+- Add a BrewDownloadBuilder. (dgoodwin@redhat.com)
+- Use proper temp directories to build. (dgoodwin@redhat.com)
+- Fix permissions when rsync'ing yum repositories. (dgoodwin@redhat.com)
+- Switch to CLI fedpkg command instead of module. (dgoodwin@rm-rf.ca)
+
 * Wed Nov 09 2011 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.0-1
 - Fix import error with new fedpkg version. (dgoodwin@rm-rf.ca)
 - Add a KojiGitReleaser. (dgoodwin@rm-rf.ca)
