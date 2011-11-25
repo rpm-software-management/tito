@@ -38,7 +38,7 @@ class SingleProjectTests(TitoGitTestFixture):
         pass
 
     def test_init_worked(self):
-        # Not actually running init here, just making sure it worked when 
+        # Not actually running init here, just making sure it worked when
         # run during setup.
         self.assertTrue(os.path.exists(os.path.join(self.repo_dir, "rel-eng")))
         self.assertTrue(os.path.exists(os.path.join(self.repo_dir, "rel-eng",
@@ -73,18 +73,18 @@ class SingleProjectTests(TitoGitTestFixture):
     def test_tag_tgz(self):
         tito("build --tgz --tag=%s-0.0.1-1 -o %s" % (PKG_NAME,
             self.repo_dir))
-        self.assertTrue(os.path.exists(os.path.join(self.repo_dir, 
+        self.assertTrue(os.path.exists(os.path.join(self.repo_dir,
             "%s-0.0.1.tar.gz" % PKG_NAME)))
 
     def test_latest_srpm(self):
         tito("build --srpm")
 
     def test_tag_srpm(self):
-        tito("build --srpm --tag=%s-0.0.1-1 -o self.repo_dir" % PKG_NAME)
+        tito("build --srpm --tag=%s-0.0.1-1 -o %s" % (PKG_NAME, self.repo_dir))
 
     def test_latest_rpm(self):
         tito("build --rpm -o %s" % self.repo_dir)
 
     def test_tag_rpm(self):
-        tito("build --rpm --tag=%s-0.0.1-1 -o %s" % (PKG_NAME, 
+        tito("build --rpm --tag=%s-0.0.1-1 -o %s" % (PKG_NAME,
             self.repo_dir))
