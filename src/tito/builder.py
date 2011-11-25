@@ -20,6 +20,7 @@ import re
 import commands
 from pkg_resources import require
 from distutils.version import LooseVersion as loose_version
+from tempfile import mkdtemp
 
 from tito.common import *
 from tito.release import *
@@ -124,11 +125,9 @@ class Builder(object):
         self.tgz_dir = tgz_base
         self.artifacts = []
 
-        temp_dir = "rpmbuild-%s" % self.project_name_and_sha1
-        self.rpmbuild_dir = os.path.join(self.rpmbuild_basedir, temp_dir)
-        if os.path.exists(self.rpmbuild_dir):
-            print("WARNING: rpmbuild directory already exists, removing...")
-            run_command("rm -rf self.rpmbuild_dir")
+        self.rpmbuild_dir = mkdtemp(dir=self.rpmbuild_basedir,
+                prefix="rpmbuild-%s" % self.project_name_and_sha1)
+        debug("Building in temp dir: %s" % self.rpmbuild_dir)
         self.rpmbuild_sourcedir = os.path.join(self.rpmbuild_dir, "SOURCES")
         self.rpmbuild_builddir = os.path.join(self.rpmbuild_dir, "BUILD")
 
@@ -363,7 +362,7 @@ class Builder(object):
             debug("Cleaning up [%s]" % self.rpmbuild_dir)
             commands.getoutput("rm -rf %s" % self.rpmbuild_dir)
         else:
-            print("Leaving rpmbuild files in: %s" % self.rpmbuild_dir)
+            print("WARNING: Leaving rpmbuild files in: %s" % self.rpmbuild_dir)
 
     def _check_build_dirs_access(self):
         """

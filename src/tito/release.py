@@ -22,7 +22,6 @@ import tempfile
 import subprocess
 
 from tempfile import mkdtemp
-from shutil import rmtree, copy
 
 from tito.common import *
 from tito.exception import TitoException
@@ -268,7 +267,7 @@ class YumRepoReleaser(Releaser):
                     os.environ[RSYNC_USERNAME]))
             rsync_location = "%s@%s" % (os.environ[RSYNC_USERNAME], rsync_location)
         # Make a temp directory to sync the existing repo contents into:
-        yum_temp_dir = mkdtemp(dir=self.build_dir, prefix="tito-yumrepo-")
+        yum_temp_dir = mkdtemp(dir=self.build_dir, prefix="yumrepo-")
         print("Syncing yum repo: %s -> %s" % (rsync_location, yum_temp_dir))
         output = run_command("rsync -avtz %s %s" % (rsync_location, yum_temp_dir))
         debug(output)
