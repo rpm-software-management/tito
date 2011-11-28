@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.4.1
+Version: 0.4.2
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -76,6 +76,10 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Mon Nov 28 2011 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.2-1
+- Clean out old versions of RPMs when generating yum repos. (dgoodwin@rm-rf.ca)
+- Update manpage to show multiple rsync paths. (dgoodwin@rm-rf.ca)
+
 * Fri Nov 25 2011 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.1-1
 - Allow one build to go to multiple yum repo URLs. (dgoodwin@redhat.com)
 - Fix --no-cleanup for release module. (dgoodwin@redhat.com)
