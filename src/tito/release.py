@@ -20,6 +20,7 @@ import commands
 import fedora_cert
 import tempfile
 import subprocess
+import rpm
 
 from tempfile import mkdtemp
 from shutil import rmtree, copy
@@ -280,12 +281,29 @@ class YumRepoReleaser(Releaser):
             output = run_command("rsync -avtz %s %s" % (rsync_location, yum_temp_dir))
             debug(output)
 
+            rpm_ts = rpm.TransactionSet()
+            self.new_rpm_dep_sets = {}
             for artifact in self.builder.artifacts:
                 if artifact.endswith(".rpm") and not artifact.endswith(".src.rpm"):
+                    header = self._read_rpm_header(rpm_ts, artifact)
+                    self.new_rpm_dep_sets[header['name']] = header.dsOfHeader()
                     copy(artifact, yum_temp_dir)
                     print("Copied %s to yum repo." % artifact)
 
-            # TODO: should we clean up old versions of these packages in the repo?
+            # Now cleanout any other version of the package we just built,
+            # both older or newer. (can be used to downgrade the contents
+            # of a yum repo)
+            for filename in os.listdir(yum_temp_dir):
+                if not filename.endswith(".rpm"):
+                    continue
+                hdr = self._read_rpm_header(rpm_ts,
+                        os.path.join(yum_temp_dir, filename))
+                if hdr['name'] in self.new_rpm_dep_sets:
+                    dep_set = hdr.dsOfHeader()
+                    if dep_set.EVR() < self.new_rpm_dep_sets[hdr['name']].EVR():
+                        print("Deleting old package: %s" % filename)
+                        run_command("rm %s" % os.path.join(yum_temp_dir,
+                            filename))
 
             os.chdir(yum_temp_dir)
             print("Refreshing yum repodata...")
@@ -303,9 +321,19 @@ class YumRepoReleaser(Releaser):
                 debug(output)
             if not self.no_cleanup:
                 debug("Cleaning up [%s]" % yum_temp_dir)
+                os.chdir("/")
                 rmtree(yum_temp_dir)
             else:
                 print("WARNING: leaving %s (--no-cleanup)" % yum_temp_dir)
+
+    def _read_rpm_header(self, ts, new_rpm_path):
+        """
+        Read RPM header for the given file.
+        """
+        fd = os.open(new_rpm_path, os.O_RDONLY)
+        header = ts.hdrFromFdno(fd)
+        os.close(fd)
+        return header
 
     def cleanup(self):
         """ No-op, we clean up during self.release() """
