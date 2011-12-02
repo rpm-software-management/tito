@@ -312,7 +312,7 @@ class YumRepoReleaser(Releaser):
 
             print("Syncing yum repository back to: %s" % rsync_location)
             # TODO: configurable rsync options?
-            cmd = "rsync -avtz --no-p --no-g --delete %s/ %s" % \
+            cmd = "rsync -avtz -O --no-p --no-g --delete %s/ %s" % \
                     (yum_temp_dir, rsync_location)
             if self.dry_run:
                 self.print_dry_run_warning(cmd)
