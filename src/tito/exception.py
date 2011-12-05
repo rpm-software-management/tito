@@ -15,10 +15,11 @@
 Tito Exceptions
 """
 
+
 class TitoException(Exception):
-    """ 
-    Base Tito exception. 
-    
+    """
+    Base Tito exception.
+
     Does nothing but indicate that this is a custom Tito error.
     """
 
@@ -27,5 +28,3 @@ class TitoException(Exception):
 
     def __str__(self):
         return "TitoException: %s" % self.message
-
-

@@ -34,7 +34,8 @@ DEFAULT_CVS_BUILD_DIR = "cvswork"
 # List of CVS files to protect when syncing git with a CVS module:
 PROTECTED_BUILD_SYS_FILES = ('branch', 'CVS', '.cvsignore', 'Makefile', 'sources', ".git", ".gitignore")
 
-RSYNC_USERNAME = 'RSYNC_USERNAME' # environment variable name
+RSYNC_USERNAME = 'RSYNC_USERNAME'  # environment variable name
+
 
 class Releaser(object):
     """
@@ -108,7 +109,6 @@ class Releaser(object):
         #                "Release target '%s' has unknown option '%s'" %
         #                (self.target, opt))
 
-
     def _parse_builder_args(self, releaser_config, target):
         """
         Any properties found in a releaser target section starting with
@@ -152,7 +152,7 @@ class Releaser(object):
         """
         # Include the spec file explicitly, in the case of SatelliteBuilder
         # we modify and then use a spec file copy from a different location.
-        files_to_copy = [self.builder.spec_file] # full paths
+        files_to_copy = [self.builder.spec_file]  # full paths
 
         for filename in os.listdir(self.builder.rpmbuild_gitcopy):
             full_filepath = os.path.join(self.builder.rpmbuild_gitcopy, filename)
@@ -215,7 +215,6 @@ class Releaser(object):
                 new_files.append(base_filename)
             else:
                 print("   copying: %s" % base_filename)
-
 
             cmd = "cp %s %s" % (copy_me, dest_path)
             run_command(cmd)
@@ -885,9 +884,3 @@ class KojiGitReleaser(KojiReleaser):
 
         output = run_command(cmd)
         print(output)
-
-
-
-
-
-

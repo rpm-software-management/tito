@@ -1,5 +1,6 @@
 from tito.tagger import VersionTagger
 
+
 class zStreamTagger(VersionTagger):
     """
     Tagger which increments the spec file zstream number instead of version.

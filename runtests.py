@@ -22,7 +22,7 @@ import os
 # Make sure we run from the source, this is tricky because the functional
 # tests need to find both the location of the 'tito' executable script,
 # and the internal tito code needs to know where to find our auxiliary Perl
-# scripts. Adding an environment variable hack to the actual code to 
+# scripts. Adding an environment variable hack to the actual code to
 # accommodate this for now.
 
 TEST_SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -37,4 +37,3 @@ if __name__ == '__main__':
 
     import nose
     nose.main()
-

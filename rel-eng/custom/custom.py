@@ -18,10 +18,9 @@ class DummyReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None):
-        Releaser.__init__(self, name, version, tag, build_dir, pkg_config, 
+        Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
                 global_config, user_config)
         pass
 
     def release(self, dry_run=False):
         print("DUMMY RELEASE!!!!!!!!!!!!!!!!!")
-

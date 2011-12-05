@@ -182,6 +182,7 @@ def tag_exists_locally(tag):
     else:
         return True
 
+
 def tag_exists_remotely(tag):
     """ Returns True if the tag exists in the remote git repo. """
     try:
@@ -202,6 +203,7 @@ def get_local_tag_sha1(tag):
             % tag)
     return tag_sha1
 
+
 def head_points_to_tag(tag):
     """
     Ensure the current git head is the same commit as tag.
@@ -217,6 +219,7 @@ def head_points_to_tag(tag):
     debug("   tag_sha1 = %s" % tag_sha1)
     return head_sha1 == tag_sha1
 
+
 def undo_tag(tag):
     """
     Executes git commands to delete the given tag and undo the most recent
@@ -227,6 +230,7 @@ def undo_tag(tag):
     # but preserve any modified files:
     output = run_command("git tag -d %s && git reset --merge HEAD^1" % tag)
     print(output)
+
 
 def get_remote_tag_sha1(tag):
     """
@@ -239,6 +243,7 @@ def get_remote_tag_sha1(tag):
             (repo_url, tag)
     upstream_tag_sha1 = run_command(cmd)
     return upstream_tag_sha1
+
 
 def check_tag_exists(tag, offline=False):
     """
@@ -361,6 +366,7 @@ def get_build_commit(tag, test=False):
         commit_id = run_command('git rev-list --max-count=1 %s' % tag_sha1)
         return commit_id
 
+
 def get_commit_count(tag, commit_id):
     """ Return the number of commits between the tag and commit_id"""
     # git describe returns either a tag-commitcount-gSHA1 OR
@@ -384,10 +390,12 @@ def get_commit_count(tag, commit_id):
 
     return 0
 
+
 def get_latest_commit(path="."):
     """ Return the latest git commit for the given path. """
     commit_id = run_command("git log --pretty=format:%%H --max-count=1 %s" % path)
     return commit_id
+
 
 def get_commit_timestamp(sha1_or_tag):
     """
@@ -435,6 +443,7 @@ def get_git_repo_url():
     """
     return run_command("git config remote.origin.url")
 
+
 def get_latest_tagged_version(package_name):
     """
     Return the latest git tag for this package in the current branch.
@@ -475,7 +484,7 @@ def get_script_path(scriptname):
     test scripts, normally we assume scripts are on PATH.
     """
     # TODO: Would be nice to get rid of this hack.
-    scriptpath = scriptname # assume on PATH by default
+    scriptpath = scriptname  # assume on PATH by default
     if 'TITO_SRC_BIN_DIR' in os.environ:
         bin_dir = os.environ['TITO_SRC_BIN_DIR']
         scriptpath = os.path.join(bin_dir, scriptname)
@@ -499,6 +508,7 @@ def get_class_by_name(name):
     mod = __import__(module, globals(), locals(), [class_name])
     return getattr(mod, class_name)
 
+
 def increase_version(version_string):
     regex = re.compile(r"^(%.*)|(.+\.)?([0-9]+)(\..*|%.*|$)")
     match = re.match(regex, version_string)
@@ -513,9 +523,11 @@ def increase_version(version_string):
     # If no match, return an empty string
     return ""
 
+
 def reset_release(release_string):
     regex = re.compile(r"(^|\.)([.0-9]+)(\.|%|$)")
     return regex.sub(r"\g<1>1\g<3>", release_string)
+
 
 def increase_zstream(release_string):
     # If we do not have zstream, create .0 and then bump the version

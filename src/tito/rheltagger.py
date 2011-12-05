@@ -2,6 +2,7 @@ import re
 from tito.common import run_command
 from tito.tagger import ReleaseTagger
 
+
 class RHELTagger(ReleaseTagger):
     """
     Tagger which is based on ReleaseTagger and use Red Hat Enterprise Linux
@@ -44,7 +45,7 @@ class RHELTagger(ReleaseTagger):
                     line = "Resolves: #%s - %s" % (bz_number, m.group(2))
                     BZ[bz_number] = 1
             if result:
-	        result = line + "\n" + result
+                result = line + "\n" + result
             else:
                 result = line
         return result

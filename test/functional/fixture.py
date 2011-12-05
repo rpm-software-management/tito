@@ -98,9 +98,11 @@ class Empty(object):
     pass
 """
 
+
 def tito(argstring):
     """ Run Tito from source with given arguments. """
     return CLI().main(argstring.split(' '))
+
 
 class TitoGitTestFixture(unittest.TestCase):
     """
@@ -108,7 +110,7 @@ class TitoGitTestFixture(unittest.TestCase):
     an actual git repository.
     """
     def setUp(self):
-        # Create a temporary directory for our test git repository: 
+        # Create a temporary directory for our test git repository:
         self.repo_dir = tempfile.mkdtemp("-titotest")
         print
         print
@@ -135,7 +137,7 @@ class TitoGitTestFixture(unittest.TestCase):
         run_command('mkdir -p %s' % full_pkg_dir)
         os.chdir(full_pkg_dir)
 
-        # TODO: Test project needs work, doesn't work in some scenarios 
+        # TODO: Test project needs work, doesn't work in some scenarios
         # like UpstreamBuilder:
         filename = os.path.join(full_pkg_dir, "a.txt")
         out_f = open(filename, 'w')
@@ -172,7 +174,3 @@ class TitoGitTestFixture(unittest.TestCase):
         index.commit('Initial commit.')
 
         tito('tag --keep-version --debug --accept-auto-changelog')
-
-
-
-

@@ -39,6 +39,7 @@ builder = tito.builder.NoTgzBuilder
 tagger = tito.tagger.ReleaseTagger
 """
 
+
 def read_user_config():
     config = {}
     file_loc = os.path.expanduser("~/.spacewalk-build-rc")
@@ -134,7 +135,6 @@ class BaseCliModule(object):
                     "(default %s)"
                     % default_output_dir)
 
-
     def main(self, argv):
         (self.options, self.args) = self.parser.parse_args(argv)
 
@@ -167,7 +167,6 @@ class BaseCliModule(object):
             else:
                 print("WARNING: lib_dir specified but does not exist: %s" %
                         lib_dir)
-
 
     def _read_global_config(self):
         """
@@ -413,7 +412,7 @@ class BuildModule(BaseCliModule):
 
         try:
             for pair in self.options.builder_args:
-                key,value = pair.split("=")
+                key, value = pair.split("=")
                 args[key] = value
         except ValueError:
             error_out("Error parsing a --builder-arg, be sure to use key=value")
@@ -468,7 +467,6 @@ class ReleaseModule(BaseCliModule):
                 len(self.args) > 1:
             error_out("Cannot use explicit release targets with "
                     "--all or --all-starting-with.")
-
 
     def _read_releaser_config(self):
         """
@@ -554,7 +552,6 @@ class ReleaseModule(BaseCliModule):
         if len(self.args) < 2 and (self.options.all_starting_with is None) and \
                 (self.options.all is None):
             error_out("You must supply at least one release target.")
-
 
         self._legacy_builder_hack(releaser_config)
 
@@ -670,7 +667,7 @@ class TagModule(BaseCliModule):
         debug("Using tagger class: %s" % tagger_class)
 
         tagger = tagger_class(global_config=self.global_config,
-		user_config=self.user_config,
+        user_config=self.user_config,
                 keep_version=self.options.keep_version,
                 offline=self.options.offline)
 
@@ -892,5 +889,3 @@ CLI_MODULES = {
     "report": ReportModule,
     "init": InitModule,
 }
-
-

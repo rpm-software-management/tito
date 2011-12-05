@@ -47,14 +47,14 @@ class VersionTagger(object):
         self.git_root = find_git_root()
         self.rel_eng_dir = os.path.join(self.git_root, "rel-eng")
         self.config = global_config
-	self.user_config = user_config
+        self.user_config = user_config
 
         self.full_project_dir = os.getcwd()
         self.spec_file_name = find_spec_file()
         self.project_name = get_project_name(tag=None)
 
         self.relative_project_dir = self._get_relative_project_dir(
-                self.git_root) # i.e. java/
+                self.git_root)  # i.e. java/
 
         self.spec_file = os.path.join(self.full_project_dir,
                 self.spec_file_name)
@@ -84,9 +84,9 @@ class VersionTagger(object):
             print("WARNING: --tag-release option no longer necessary,"
                 " 'tito tag' will accomplish the same thing.")
         if options.no_auto_changelog:
-            self._no_auto_changelog=True
+            self._no_auto_changelog = True
         if options.accept_auto_changelog:
-            self._accept_auto_changelog=True
+            self._accept_auto_changelog = True
         if options.auto_changelog_msg:
             self._new_changelog_msg = options.auto_changelog_msg
         if options.use_version:
@@ -116,7 +116,7 @@ class VersionTagger(object):
         Tag commit must be the most recent commit, and the tag must not
         exist in the remote git repo, otherwise we report and error out.
         """
-        tag = "%s-%s" % (self.project_name, 
+        tag = "%s-%s" % (self.project_name,
                 get_latest_tagged_version(self.project_name))
         print("Undoing tag: %s" % tag)
         if not tag_exists_locally(tag):
@@ -125,7 +125,7 @@ class VersionTagger(object):
         if not self.offline and tag_exists_remotely(tag):
             raise TitoException("Cannot undo tag that has been pushed.")
 
-        # Tag must be the most recent commit. 
+        # Tag must be the most recent commit.
         if not head_points_to_tag(tag):
             raise TitoException("Cannot undo if tag is not the most recent commit.")
 
@@ -138,7 +138,7 @@ class VersionTagger(object):
         remove text "(cherry picked from commit ..." from line unless
         changelog_do_not_remove_cherrypick is specified in [globalconfig]
         """
-        if not (self.config.has_option("globalconfig", "changelog_do_not_remove_cherrypick") 
+        if not (self.config.has_option("globalconfig", "changelog_do_not_remove_cherrypick")
             and self.config.get("globalconfig", "changelog_do_not_remove_cherrypick")
             and self.config.get("globalconfig", "changelog_do_not_remove_cherrypick").strip() != '0'):
             m = re.match("(.+)(\(cherry picked from .*\))", line)
@@ -148,7 +148,7 @@ class VersionTagger(object):
 
     def _changelog_email(self):
         """
-        if you have set changelog_with_email in [globalconfig] set to 1, it will return 
+        if you have set changelog_with_email in [globalconfig] set to 1, it will return
         string '(%ae)'
         """
         result = ''
@@ -200,11 +200,11 @@ class VersionTagger(object):
 
                 fd, name = tempfile.mkstemp()
                 os.write(fd, "# Create your changelog entry below:\n")
-		if self.git_email is None or (('HIDE_EMAIL' in self.user_config) and (self.user_config['HIDE_EMAIL'])):
-			header = "* %s %s\n" % (self.today, self.git_user)
-		else:
-			header = "* %s %s <%s>\n" % (self.today, self.git_user,
-				self.git_email)
+                if self.git_email is None or (('HIDE_EMAIL' in self.user_config) and (self.user_config['HIDE_EMAIL'])):
+                    header = "* %s %s\n" % (self.today, self.git_user)
+                else:
+                    header = "* %s %s <%s>\n" % (self.today, self.git_user,
+                       self.git_email)
 
                 os.write(fd, header)
 
@@ -266,7 +266,7 @@ class VersionTagger(object):
 
     def _update_setup_py(self, new_version):
         """
-        If this project has a setup.py, attempt to update it's version. 
+        If this project has a setup.py, attempt to update it's version.
         """
         setup_file = os.path.join(self.full_project_dir, "setup.py")
         if not os.path.exists(setup_file):
@@ -274,8 +274,8 @@ class VersionTagger(object):
 
         debug("Found setup.py, attempting to update version.")
 
-        # We probably don't want version-release in setup.py as release is 
-        # an rpm concept. Hopefully this assumption on 
+        # We probably don't want version-release in setup.py as release is
+        # an rpm concept. Hopefully this assumption on
         py_new_version = new_version.split('-')[0]
 
         f = open(setup_file, 'r')
@@ -328,44 +328,44 @@ class VersionTagger(object):
                 if release:
                     match = re.match(release_regex, line)
                     if match:
-                        line = "".join((match.group(1)
-                                        , increase_version(match.group(2))
-                                        , "\n"
+                        line = "".join((match.group(1),
+                                        increase_version(match.group(2)),
+                                        "\n"
                         ))
                 elif zstream:
                     match = re.match(release_regex, line)
                     if match:
-                        line = "".join((match.group(1)
-                                        , increase_zstream(match.group(2))
-                                        , "\n"
+                        line = "".join((match.group(1),
+                                        increase_zstream(match.group(2)),
+                                        "\n"
                         ))
                 elif force:
                     match = re.match(version_regex, line)
                     if match:
-                        line = "".join((match.group(1)
-                                        , self._use_version
-                                        , "\n"
+                        line = "".join((match.group(1),
+                                        self._use_version,
+                                        "\n"
                         ))
 
                     match = re.match(release_regex, line)
                     if match:
-                        line = "".join((match.group(1)
-                                        , reset_release(match.group(2))
-                                        , "\n"
+                        line = "".join((match.group(1),
+                                        reset_release(match.group(2)),
+                                        "\n"
                         ))
                 else:
                     match = re.match(version_regex, line)
                     if match:
-                        line = "".join((match.group(1)
-                                        , increase_version(match.group(2))
-                                        , "\n"
+                        line = "".join((match.group(1),
+                                        increase_version(match.group(2)),
+                                        "\n"
                         ))
 
                     match = re.match(release_regex, line)
                     if match:
-                        line = "".join((match.group(1)
-                                        , reset_release(match.group(2))
-                                        , "\n"
+                        line = "".join((match.group(1),
+                                        reset_release(match.group(2)),
+                                        "\n"
                         ))
 
                 out_f.write(line)
@@ -384,7 +384,7 @@ class VersionTagger(object):
         return new_version
 
     def release_type(self):
-        """ return short string which explain type of release. 
+        """ return short string which explain type of release.
             e.g. 'minor release
             Child classes probably want to override this.
         """
@@ -450,14 +450,14 @@ class VersionTagger(object):
         """
         metadata_dir = os.path.join(self.rel_eng_dir, "packages")
         for filename in os.listdir(metadata_dir):
-            metadata_file = os.path.join(metadata_dir, filename) # full path
+            metadata_file = os.path.join(metadata_dir, filename)  # full path
 
             if os.path.isdir(metadata_file) or filename.startswith("."):
                 continue
 
             temp_file = open(metadata_file, 'r')
             (version, relative_dir) = temp_file.readline().split(" ")
-            relative_dir = relative_dir.strip() # sometimes has a newline
+            relative_dir = relative_dir.strip()  # sometimes has a newline
 
             if relative_dir == self.relative_project_dir:
                 debug("Found metadata for our prefix: %s" %
@@ -475,17 +475,17 @@ class VersionTagger(object):
 
     def _get_git_user_info(self):
         """ Return the user.name and user.email git config values. """
-	try:
-		name = run_command('git config --get user.name')
-	except:
-		sys.stderr.write('Warning: user.name in ~/.gitconfig not set.')
-		name = 'Unknown name'
-	try:
-		email = run_command('git config --get user.email')
-	except:
-		sys.stderr.write('Warning: user.email in ~/.gitconfig not set.')
-		email = None
-	return (name, email)
+        try:
+            name = run_command('git config --get user.name')
+        except:
+            sys.stderr.write('Warning: user.name in ~/.gitconfig not set.')
+            name = 'Unknown name'
+        try:
+            email = run_command('git config --get user.email')
+        except:
+            sys.stderr.write('Warning: user.email in ~/.gitconfig not set.')
+            email = None
+        return (name, email)
 
     def _get_spec_version_and_release(self):
         """ Get the package version from the spec file. """
@@ -524,6 +524,7 @@ class ReleaseTagger(VersionTagger):
     def release_type(self):
         """ return short string "minor release" """
         return "minor release"
+
 
 class ForceVersionTagger(VersionTagger):
     """

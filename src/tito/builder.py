@@ -26,6 +26,7 @@ from tito.common import *
 from tito.release import *
 from tito.exception import TitoException
 
+
 class Builder(object):
     """
     Parent builder class.
@@ -259,7 +260,7 @@ class Builder(object):
             output = run_command(cmd)
         except (KeyboardInterrupt, SystemExit):
             print ""
-            exit (1)
+            exit(1)
         except Exception, err:
             error_out('%s' % str(err))
         print(output)
@@ -271,7 +272,6 @@ class Builder(object):
 
         print
         print("Successfully built: %s" % ' '.join(files_written))
-
 
     def _auto_install(self):
         """
@@ -703,10 +703,10 @@ class UpstreamBuilder(NoTgzBuilder):
         source_pattern = re.compile('^Source(\d+)?:')
 
         # Find the largest PatchX: line, or failing that SourceX:
-        patch_number = 0 # What number should we use for our PatchX line
-        patch_insert_index = 0 # Where to insert our PatchX line in the list
-        patch_apply_index = 0 # Where to insert our %patchX line in the list
-        array_index = 0 # Current index in the array
+        patch_number = 0  # What number should we use for our PatchX line
+        patch_insert_index = 0  # Where to insert our PatchX line in the list
+        patch_apply_index = 0  # Where to insert our %patchX line in the list
+        array_index = 0  # Current index in the array
         for line in lines:
             match = source_pattern.match(line)
             if match:
@@ -721,7 +721,7 @@ class UpstreamBuilder(NoTgzBuilder):
                 # We'll apply patch right after prep if there's no %setup line
                 patch_apply_index = array_index + 2
             elif line.startswith("%setup"):
-                patch_apply_index = array_index + 2 # already added a line
+                patch_apply_index = array_index + 2  # already added a line
 
             array_index += 1
 
@@ -904,7 +904,7 @@ class BrewDownloadBuilder(Builder):
                 global_config=global_config, user_config=user_config,
                 options=options, args=args)
 
-        self.brew_tag = 'meow' #args['brewtag']
+        self.brew_tag = 'meow'  # args['brewtag']
         self.dist_tag = args['disttag']
 
     def _rpm(self):

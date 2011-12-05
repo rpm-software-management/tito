@@ -18,15 +18,16 @@ from tito.common import *
 
 import unittest
 
+
 class CommonTests(unittest.TestCase):
 
     def test_normalize_class_name(self):
         """ Test old spacewalk.releng namespace is converted to tito. """
-        self.assertEquals("tito.builder.Builder", 
+        self.assertEquals("tito.builder.Builder",
                 normalize_class_name("tito.builder.Builder"))
-        self.assertEquals("tito.builder.Builder", 
+        self.assertEquals("tito.builder.Builder",
                 normalize_class_name("spacewalk.releng.builder.Builder"))
-        self.assertEquals("tito.tagger.VersionTagger", 
+        self.assertEquals("tito.tagger.VersionTagger",
                 normalize_class_name("spacewalk.releng.tagger.VersionTagger"))
 
     def test_replace_version_leading_whitespace(self):
@@ -62,7 +63,7 @@ class CommonTests(unittest.TestCase):
     def test_replace_version_crazy_new_version(self):
         line = "version='1.0'\n"
         expected = "version='91asj.;]][[a]sd[]'\n"
-        self.assertEquals(expected, replace_version(line, 
+        self.assertEquals(expected, replace_version(line,
             "91asj.;]][[a]sd[]"))
 
     def test_replace_version_uppercase(self):
@@ -74,71 +75,73 @@ class CommonTests(unittest.TestCase):
         line = "this isn't a version fool.\n"
         self.assertEquals(line, replace_version(line, "2.5.3"))
 
+
 class VersionMathTest(unittest.TestCase):
     def test_increase_version_minor(self):
         line = "1.0.0"
-        expected="1.0.1"
+        expected = "1.0.1"
         self.assertEquals(expected, increase_version(line))
 
     def test_increase_version_major(self):
         line = "1.0"
-        expected="1.1"
+        expected = "1.1"
         self.assertEquals(expected, increase_version(line))
 
     def test_increase_release(self):
         line = "1"
-        expected="2"
+        expected = "2"
         self.assertEquals(expected, increase_version(line))
 
     def test_increase_versionless(self):
         line = "%{app_version}"
-        expected="%{app_version}"
-        self.assertEquals(expected, increase_version(line))        
+        expected = "%{app_version}"
+        self.assertEquals(expected, increase_version(line))
 
     def test_increase_release_with_rpm_cruft(self):
         line = "1%{?dist}"
-        expected="2%{?dist}"
+        expected = "2%{?dist}"
         self.assertEquals(expected, increase_version(line))
 
     def test_increase_release_with_zstream(self):
         line = "1%{?dist}.1"
-        expected="1%{?dist}.2"
+        expected = "1%{?dist}.2"
         self.assertEquals(expected, increase_version(line))
 
     def test_unknown_version(self):
         line = "somethingstrange"
-        expected=""
+        expected = ""
         self.assertEquals(expected, increase_version(line))
 
     def test_empty_string(self):
         line = ""
-        expected=""
-        self.assertEquals(expected, increase_version(line))        
+        expected = ""
+        self.assertEquals(expected, increase_version(line))
 
     def test_increase_zstream(self):
         line = "1%{?dist}"
-        expected="1%{?dist}.1"
+        expected = "1%{?dist}.1"
         self.assertEquals(expected, increase_zstream(line))
 
     def test_increase_zstream_already_appended(self):
         line = "1%{?dist}.1"
-        expected="1%{?dist}.2"
+        expected = "1%{?dist}.2"
         self.assertEquals(expected, increase_zstream(line))
 
     def test_reset_release_with_rpm_cruft(self):
         line = "2%{?dist}"
-        expected="1%{?dist}"
+        expected = "1%{?dist}"
         self.assertEquals(expected, reset_release(line))
 
     def test_reset_release_with_more_rpm_cruft(self):
         line = "2.beta"
-        expected="1.beta"
+        expected = "1.beta"
         self.assertEquals(expected, reset_release(line))
 
     def test_reset_release(self):
         line = "2"
-        expected="1"
+        expected = "1"
         self.assertEquals(expected, reset_release(line))
+
 
 class ExtractBugzillasTest(unittest.TestCase):
 
@@ -146,28 +149,28 @@ class ExtractBugzillasTest(unittest.TestCase):
         commit_log = "- 123456: Did something interesting."
         results = extract_bzs(commit_log)
         self.assertEquals(1, len(results))
-        self.assertEquals("Resolves: #123456 - Did something interesting.", 
+        self.assertEquals("Resolves: #123456 - Did something interesting.",
                 results[0])
 
     def test_single_with_dash(self):
         commit_log = "- 123456 - Did something interesting."
         results = extract_bzs(commit_log)
         self.assertEquals(1, len(results))
-        self.assertEquals("Resolves: #123456 - Did something interesting.", 
+        self.assertEquals("Resolves: #123456 - Did something interesting.",
                 results[0])
 
     def test_single_with_no_spaces(self):
         commit_log = "- 123456-Did something interesting."
         results = extract_bzs(commit_log)
         self.assertEquals(1, len(results))
-        self.assertEquals("Resolves: #123456 - Did something interesting.", 
+        self.assertEquals("Resolves: #123456 - Did something interesting.",
                 results[0])
 
     def test_diff_format(self):
         commit_log = "+- 123456: Did something interesting."
         results = extract_bzs(commit_log)
         self.assertEquals(1, len(results))
-        self.assertEquals("Resolves: #123456 - Did something interesting.", 
+        self.assertEquals("Resolves: #123456 - Did something interesting.",
                 results[0])
 
     def test_single_line_no_bz(self):
@@ -180,8 +183,7 @@ class ExtractBugzillasTest(unittest.TestCase):
                 "- 456789: A third commit."
         results = extract_bzs(commit_log)
         self.assertEquals(2, len(results))
-        self.assertEquals("Resolves: #123456 - Did something interesting.", 
+        self.assertEquals("Resolves: #123456 - Did something interesting.",
                 results[0])
-        self.assertEquals("Resolves: #456789 - A third commit.", 
+        self.assertEquals("Resolves: #456789 - A third commit.",
                 results[1])
-

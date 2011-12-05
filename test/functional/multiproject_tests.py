@@ -40,10 +40,12 @@ TEST_PKG_3_DIR = "blah/whatever/%s/" % TEST_PKG_3
 
 TEST_PKGS = [TEST_PKG_1, TEST_PKG_2, TEST_PKG_3]
 
+
 def release_bumped(initial_version, new_version):
     first_release = initial_version.split('-')[-1]
     new_release = new_version.split('-')[-1]
     return new_release == str(int(first_release) + 1)
+
 
 class MultiProjectTests(TitoGitTestFixture):
 
@@ -55,7 +57,7 @@ class MultiProjectTests(TitoGitTestFixture):
         self.create_project(TEST_PKG_3, os.path.join(self.repo_dir, 'pkg3'))
         os.chdir(self.repo_dir)
 
-        # For second test package, use a tito.props to override and use the 
+        # For second test package, use a tito.props to override and use the
         # ReleaseTagger:
         os.chdir(os.path.join(self.repo_dir, 'pkg2'))
         filename = os.path.join(self.repo_dir, 'pkg2', "tito.props")
@@ -72,7 +74,7 @@ class MultiProjectTests(TitoGitTestFixture):
         # Tags were actually created in setup code:
         for pkg_name in TEST_PKGS:
             self.assertTrue(tag_exists_locally("%s-0.0.1-1" % pkg_name))
-            self.assertTrue(os.path.exists(os.path.join(self.repo_dir, 
+            self.assertTrue(os.path.exists(os.path.join(self.repo_dir,
                 "rel-eng/packages", pkg_name)))
 
     def test_release_tagger(self):
@@ -99,7 +101,7 @@ class MultiProjectTests(TitoGitTestFixture):
         os.chdir(os.path.join(self.repo_dir, 'pkg1'))
         artifacts = tito('build --tgz')
         self.assertEquals(1, len(artifacts))
-        self.assertEquals('%s-0.0.1.tar.gz' % TEST_PKG_1, 
+        self.assertEquals('%s-0.0.1.tar.gz' % TEST_PKG_1,
                 os.path.basename(artifacts[0]))
 
     def test_build_rpm(self):
@@ -107,7 +109,3 @@ class MultiProjectTests(TitoGitTestFixture):
         artifacts = tito('build --rpm')
         self.assertEquals(3, len(artifacts))
         print artifacts
-
-
-
-

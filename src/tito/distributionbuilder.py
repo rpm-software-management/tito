@@ -3,6 +3,7 @@ import os
 from tito.builder import UpstreamBuilder
 from tito.common import debug, run_command
 
+
 class DistributionBuilder(UpstreamBuilder):
     """ This class is used for building packages for distributions.
     Parent class UpstreamBuilder build one big patch from upstream and create e.g.:
@@ -37,5 +38,3 @@ class DistributionBuilder(UpstreamBuilder):
             patch_insert_index += 1
             patch_apply_index += 2
         self._write_spec(lines)
-
- 
