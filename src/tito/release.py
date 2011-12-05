@@ -277,6 +277,7 @@ class YumRepoReleaser(Releaser):
                 rsync_location = "%s@%s" % (os.environ[RSYNC_USERNAME], rsync_location)
             # Make a temp directory to sync the existing repo contents into:
             yum_temp_dir = mkdtemp(dir=self.build_dir, prefix="yumrepo-")
+            os.chdir(yum_temp_dir)
             print("Syncing yum repo: %s -> %s" % (rsync_location, yum_temp_dir))
             output = run_command("rsync -avtz %s %s" % (rsync_location, yum_temp_dir))
             debug(output)
@@ -305,7 +306,6 @@ class YumRepoReleaser(Releaser):
                         run_command("rm %s" % os.path.join(yum_temp_dir,
                             filename))
 
-            os.chdir(yum_temp_dir)
             print("Refreshing yum repodata...")
             output = run_command("createrepo ./")
             debug(output)
