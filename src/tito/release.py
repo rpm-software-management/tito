@@ -279,7 +279,7 @@ class YumRepoReleaser(Releaser):
             yum_temp_dir = mkdtemp(dir=self.build_dir, prefix="yumrepo-")
             os.chdir(yum_temp_dir)
             print("Syncing yum repo: %s -> %s" % (rsync_location, yum_temp_dir))
-            output = run_command("rsync -avtz %s %s" % (rsync_location, yum_temp_dir))
+            output = run_command("rsync -avz %s %s" % (rsync_location, yum_temp_dir))
             debug(output)
 
             rpm_ts = rpm.TransactionSet()
@@ -312,7 +312,7 @@ class YumRepoReleaser(Releaser):
 
             print("Syncing yum repository back to: %s" % rsync_location)
             # TODO: configurable rsync options?
-            cmd = "rsync -avtz -O --no-p --no-g --delete %s/ %s" % \
+            cmd = "rsync -avz --no-p --no-g --delete %s/ %s" % \
                     (yum_temp_dir, rsync_location)
             if self.dry_run:
                 self.print_dry_run_warning(cmd)
