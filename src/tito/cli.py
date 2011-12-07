@@ -96,10 +96,11 @@ class CLI(object):
     def _usage(self):
         print("Usage: tito MODULENAME --help")
         print("Supported modules:")
-        print("   tag      - Tag package releases.")
         print("   build    - Build packages.")
-        print("   report   - Display various reports on the repo.")
         print("   init     - Initialize directory for use by tito.")
+        print("   release  - Build and release to yum repos")
+        print("   report   - Display various reports on the repo.")
+        print("   tag      - Tag package releases.")
 
 
 class BaseCliModule(object):
