@@ -49,7 +49,7 @@ class Releaser(object):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False):
+            target=None, releaser_config=None, no_cleanup=False, args=None):
 
         self.builder_args = self._parse_builder_args(releaser_config, target)
 
@@ -245,7 +245,7 @@ class YumRepoReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False):
+            target=None, releaser_config=None, no_cleanup=False, args=None):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
                 global_config, user_config, target, releaser_config, no_cleanup)
 
@@ -345,7 +345,7 @@ class FedoraGitReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False):
+            target=None, releaser_config=None, no_cleanup=False, args=None):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
                 global_config, user_config, target, releaser_config, no_cleanup)
 
@@ -523,7 +523,7 @@ class CvsReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False):
+            target=None, releaser_config=None, no_cleanup=False, args=None):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
                 global_config, user_config, target, releaser_config, no_cleanup)
 
