@@ -34,6 +34,7 @@ class RHELTagger(ReleaseTagger):
         result = None
         for line in reversed(output.split('\n')):
             line = self._changelog_remove_cherrypick(line)
+            line = line.replace('%', '%%')
 
             # prepend Related/Resolves if subject contains BZ number
             m = re.match("(\d+)\s+-\s+(.*)", line)

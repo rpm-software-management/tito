@@ -168,6 +168,7 @@ class VersionTagger(object):
         output = run_command(patch_command)
         result = []
         for line in output.split('\n'):
+            line = line.replace('%', '%%')
             result.extend([self._changelog_remove_cherrypick(line)])
         return '\n'.join(result)
 
