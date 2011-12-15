@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.4.2
+Version: 0.4.3
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -76,6 +76,18 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Thu Dec 15 2011 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.3-1
+- Escape percent character in changelog. (msuchy@redhat.com)
+- Fix distribution builder missing args in constructor.
+  (msuchy@redhat.com)
+- Add release to usage, alphabetize list. (jesusr@redhat.com)
+- PEP8 cleanup. (jesusr@redhat.com)
+- No need to maintain timestamps: remove -t and -O from rsync command.
+  (jesusr@redhat.com)
+- Chdir to yum_temp_dir after creating, avoids rsync's getcwd error
+  (jesusr@redhat.com)
+- Use -O during rsync commands to fix time setting errors. (dgoodwin@rm-rf.ca)
+
 * Mon Nov 28 2011 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.2-1
 - Clean out old versions of RPMs when generating yum repos. (dgoodwin@rm-rf.ca)
 - Update manpage to show multiple rsync paths. (dgoodwin@rm-rf.ca)
