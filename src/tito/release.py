@@ -63,12 +63,11 @@ class Releaser(object):
         # TODO: if it looks like we need custom CVSROOT's for different users,
         # allow setting of a property to lookup in ~/.spacewalk-build-rc to
         # use instead. (if defined)
-        self.cvs_workdir = os.path.join(self.builder.rpmbuild_basedir,
+        self.working_dir = os.path.join(self.builder.rpmbuild_basedir,
                 DEFAULT_CVS_BUILD_DIR)
-        debug("cvs_workdir = %s" % self.cvs_workdir)
-
-        self.cvs_package_workdir = os.path.join(self.cvs_workdir,
-                self.project_name)
+        self.working_dir = mkdtemp(dir=self.builder.rpmbuild_basedir,
+                prefix="release-%s" % self.builder.project_name_and_sha1)
+        print("Working in: %s" % self.working_dir)
 
         # When syncing files with CVS, only copy files with these extensions:
         self.cvs_copy_extensions = (".spec", ".patch")
@@ -133,10 +132,10 @@ class Releaser(object):
 
     def cleanup(self):
         if not self.no_cleanup:
-            debug("Cleaning up [%s]" % self.cvs_package_workdir)
-            run_command("rm -rf %s" % self.cvs_package_workdir)
+            debug("Cleaning up [%s]" % self.working_dir)
+            run_command("rm -rf %s" % self.working_dir)
         else:
-            print("WARNING: leaving %s (--no-cleanup)" % self.cvs_package_workdir)
+            print("WARNING: leaving %s (--no-cleanup)" % self.working_dir)
 
     def _list_files_to_copy(self):
         """
@@ -352,26 +351,22 @@ class FedoraGitReleaser(Releaser):
 
         self.git_branches = \
             self.releaser_config.get(self.target, "branches").split(" ")
+        self.package_workdir = os.path.join(self.working_dir,
+                self.project_name)
+
 
     def release(self, dry_run=False):
         self.dry_run = dry_run
         self._git_release()
 
-    def cleanup(self):
-        if not self.no_cleanup:
-            debug("Cleaning up [%s]" % self.cvs_package_workdir)
-            run_command("rm -rf %s" % self.cvs_package_workdir)
-        else:
-            print("WARNING: leaving %s (--no-cleanup)" % self.cvs_package_workdir)
-
     def _git_release(self):
 
-        commands.getoutput("mkdir -p %s" % self.cvs_workdir)
-        os.chdir(self.cvs_workdir)
+        commands.getoutput("mkdir -p %s" % self.working_dir)
+        os.chdir(self.working_dir)
         user = fedora_cert.read_user_cert()
         run_command("%s clone %s" % (self.cli_tool, self.project_name))
 
-        project_checkout = os.path.join(self.cvs_workdir, self.project_name)
+        project_checkout = os.path.join(self.working_dir, self.project_name)
         os.chdir(project_checkout)
         run_command("%s switch-branch %s" % (self.cli_tool, self.git_branches[0]))
 
@@ -416,7 +411,7 @@ class FedoraGitReleaser(Releaser):
                     self.project_name, self.builder.build_version)
             debug("git commit command: %s" % cmd)
             print
-            os.chdir(self.cvs_package_workdir)
+            os.chdir(self.package_workdir)
             output = run_command(cmd)
 
         cmd = "%s push" % self.cli_tool
@@ -536,6 +531,9 @@ class CvsReleaser(Releaser):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
                 global_config, user_config, target, releaser_config, no_cleanup)
 
+        self.package_workdir = os.path.join(self.working_dir,
+                self.project_name)
+
         # Configure CVS variables if possible. Will check later that
         # they're actually defined if the user requested CVS work be done.
         if self.releaser_config.has_option(target, "cvsroot"):
@@ -550,13 +548,6 @@ class CvsReleaser(Releaser):
 
         self._cvs_release()
 
-    def cleanup(self):
-        if not self.no_cleanup:
-            debug("Cleaning up [%s]" % self.cvs_package_workdir)
-            run_command("rm -rf %s" % self.cvs_package_workdir)
-        else:
-            print("WARNING: leaving %s (--no-cleanup)" % self.cvs_package_workdir)
-
     def _cvs_release(self):
         """
         Sync spec file/patches with CVS, create tags, and submit to brew/koji.
@@ -565,7 +556,7 @@ class CvsReleaser(Releaser):
         self._verify_cvs_module_not_already_checked_out()
 
         print("Building release in CVS...")
-        commands.getoutput("mkdir -p %s" % self.cvs_workdir)
+        commands.getoutput("mkdir -p %s" % self.working_dir)
         debug("cvs_branches = %s" % self.cvs_branches)
 
         self.cvs_checkout_module()
@@ -589,28 +580,28 @@ class CvsReleaser(Releaser):
     def _verify_cvs_module_not_already_checked_out(self):
         """ Exit if CVS module appears to already be checked out. """
         # Make sure the cvs checkout directory doesn't already exist:
-        cvs_co_dir = os.path.join(self.cvs_workdir, self.project_name)
+        cvs_co_dir = os.path.join(self.working_dir, self.project_name)
         if os.path.exists(cvs_co_dir):
             error_out("CVS workdir exists, please remove and try again: %s"
                     % cvs_co_dir)
 
     def cvs_checkout_module(self):
         print("Checking out cvs module [%s]" % self.project_name)
-        os.chdir(self.cvs_workdir)
+        os.chdir(self.working_dir)
         run_command("cvs -d %s co %s" % (self.cvs_root, self.project_name))
         for i in range(0, len(self.cvs_branches)):
             if self.cvs_branches[i].find('/') > -1:
                 debug("Checking out zstream branch %s" % self.cvs_branches[i])
                 (base, zstream) = self.cvs_branches[i].split('/')
                 run_command("make -C %s zstreams" %
-                        (os.path.join(self.cvs_package_workdir, base)))
+                        (os.path.join(self.package_workdir, base)))
                 self.cvs_branches[i] = zstream
 
     def cvs_verify_branches_exist(self):
         """ Check that CVS checkout contains the branches we expect. """
-        os.chdir(self.cvs_package_workdir)
+        os.chdir(self.package_workdir)
         for branch in self.cvs_branches:
-            if not os.path.exists(os.path.join(self.cvs_workdir,
+            if not os.path.exists(os.path.join(self.working_dir,
                 self.project_name, branch)):
                 error_out("%s CVS checkout is missing branch: %s" %
                         (self.project_name, branch))
@@ -631,7 +622,7 @@ class CvsReleaser(Releaser):
 
         for branch in self.cvs_branches:
             print("Syncing files with CVS branch [%s]" % branch)
-            branch_dir = os.path.join(self.cvs_workdir, self.project_name,
+            branch_dir = os.path.join(self.working_dir, self.project_name,
                     branch)
 
             new, copied, old =  \
@@ -659,7 +650,7 @@ class CvsReleaser(Releaser):
 
         print("Uploading sources to dist-cvs lookaside:")
         for branch in self.cvs_branches:
-            branch_dir = os.path.join(self.cvs_workdir, self.project_name,
+            branch_dir = os.path.join(self.working_dir, self.project_name,
                     branch)
             os.chdir(branch_dir)
             cmd = 'make new-sources FILES="%s"' % (" ".join(self.builder.sources))
@@ -674,13 +665,13 @@ class CvsReleaser(Releaser):
     def _cvs_user_confirm_commit(self):
         """ Prompt user if they wish to proceed with commit. """
         print("")
-        text = "Running 'cvs diff -u' in: %s" % self.cvs_package_workdir
+        text = "Running 'cvs diff -u' in: %s" % self.package_workdir
         print("#" * len(text))
         print(text)
         print("#" * len(text))
         print("")
 
-        os.chdir(self.cvs_package_workdir)
+        os.chdir(self.package_workdir)
         (status, diff_output) = commands.getstatusoutput("cvs diff -u")
         print(diff_output)
 
@@ -731,21 +722,21 @@ class CvsReleaser(Releaser):
             self.print_dry_run_warning(cmd)
         else:
             print("Proceeding with commit.")
-            os.chdir(self.cvs_package_workdir)
+            os.chdir(self.package_workdir)
             output = run_command(cmd)
 
         os.unlink(name)
 
     def _cvs_make_tag(self):
         """ Create a CVS tag based on what we just committed. """
-        os.chdir(self.cvs_package_workdir)
+        os.chdir(self.package_workdir)
         cmd = "make tag"
         if self.dry_run:
             self.print_dry_run_warning(cmd)
             return
         print("Creating CVS tags...")
         for branch in self.cvs_branches:
-            branch_dir = os.path.join(self.cvs_workdir, self.project_name,
+            branch_dir = os.path.join(self.working_dir, self.project_name,
                     branch)
             os.chdir(branch_dir)
             (status, output) = commands.getstatusoutput(cmd)
@@ -760,10 +751,10 @@ class CvsReleaser(Releaser):
         if self.dry_run:
             self.print_dry_run_warning(cmd)
             return
-        os.chdir(self.cvs_package_workdir)
+        os.chdir(self.package_workdir)
         print("Submitting CVS builds...")
         for branch in self.cvs_branches:
-            branch_dir = os.path.join(self.cvs_workdir, self.project_name,
+            branch_dir = os.path.join(self.working_dir, self.project_name,
                     branch)
             os.chdir(branch_dir)
             output = run_command(cmd)
