@@ -342,6 +342,7 @@ class YumRepoReleaser(Releaser):
 class FedoraGitReleaser(Releaser):
 
     REQUIRED_CONFIG = ['branches']
+    cli_tool = "fedpkg"
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
@@ -368,11 +369,11 @@ class FedoraGitReleaser(Releaser):
         commands.getoutput("mkdir -p %s" % self.cvs_workdir)
         os.chdir(self.cvs_workdir)
         user = fedora_cert.read_user_cert()
-        run_command("fedpkg clone %s" % self.project_name)
+        run_command("%s clone %s" % (self.cli_tool, self.project_name))
 
         project_checkout = os.path.join(self.cvs_workdir, self.project_name)
         os.chdir(project_checkout)
-        run_command("fedpkg switch-branch %s" % self.git_branches[0])
+        run_command("%s switch-branch %s" % (self.cli_tool, self.git_branches[0]))
 
         self.builder.tgz()
 
@@ -392,7 +393,11 @@ class FedoraGitReleaser(Releaser):
         main_branch = self.git_branches[0]
 
         os.chdir(project_checkout)
+
+        # Newer versions of git don't seem to want --cached here? Try both:
         (status, diff_output) = commands.getstatusoutput("git diff --cached")
+        if diff_output.strip() == "":
+            (status, diff_output) = commands.getstatusoutput("git diff")
 
         if diff_output.strip() == "":
             print("No changes in main branch, skipping commit for: %s" % main_branch)
@@ -407,14 +412,14 @@ class FedoraGitReleaser(Releaser):
                 sys.exit(1)
 
             print("Proceeding with commit.")
-            cmd = 'fedpkg commit -m "Update %s to %s"' % (self.project_name,
-                    self.builder.build_version)
+            cmd = '%s commit -m "Update %s to %s"' % (self.cli_tool,
+                    self.project_name, self.builder.build_version)
             debug("git commit command: %s" % cmd)
             print
             os.chdir(self.cvs_package_workdir)
             output = run_command(cmd)
 
-        cmd = "fedpkg push"
+        cmd = "%s push" % self.cli_tool
         if self.dry_run:
             self.print_dry_run_warning(cmd)
         else:
@@ -426,7 +431,7 @@ class FedoraGitReleaser(Releaser):
 
         for branch in self.git_branches[1:]:
             print("Merging %s into %s" % (main_branch, branch))
-            run_command("fedpkg switch-branch %s" % branch)
+            run_command("%s switch-branch %s" % (self.cli_tool, branch))
             run_command("git merge %s" % main_branch)
 
             cmd = "git push origin %s:%s" % (branch, branch)
@@ -441,7 +446,7 @@ class FedoraGitReleaser(Releaser):
 
     def _build(self):
         """ Submit a Fedora build from current directory. """
-        build_cmd = "fedpkg build --nowait"
+        build_cmd = "%s build --nowait" % self.cli_tool
 
         if self.dry_run:
             self.print_dry_run_warning(build_cmd)
@@ -461,7 +466,7 @@ class FedoraGitReleaser(Releaser):
     def _git_upload_sources(self, project_checkout):
         """
         Upload any tarballs to the lookaside directory. (if necessary)
-        Uses the "fedpkg new-sources" command
+        Uses the "fedpkg new-sources" command.
         """
         if not self.builder.sources:
             debug("No sources need to be uploaded.")
@@ -469,7 +474,7 @@ class FedoraGitReleaser(Releaser):
 
         print("Uploading sources to lookaside:")
         os.chdir(project_checkout)
-        cmd = 'fedpkg new-sources %s' % (" ".join(self.builder.sources))
+        cmd = '%s new-sources %s' % (self.cli_tool, " ".join(self.builder.sources))
         debug(cmd)
 
         if self.dry_run:
@@ -510,6 +515,10 @@ class FedoraGitReleaser(Releaser):
         for cleanup_file in old:
             # Can't delete via full path, must not chdir:
             run_command("git rm %s" % cleanup_file)
+
+
+class DistGitReleaser(FedoraGitReleaser):
+    cli_tool = "rhpkg"
 
 
 class CvsReleaser(Releaser):
