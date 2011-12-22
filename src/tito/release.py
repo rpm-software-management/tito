@@ -425,9 +425,9 @@ class FedoraGitReleaser(Releaser):
         self._build()
 
         for branch in self.git_branches[1:]:
-            print("Merging %s into %s" % (main_branch, branch))
+            print("Merging branch: '%s' -> '%s'" % (main_branch, branch))
             run_command("%s switch-branch %s" % (self.cli_tool, branch))
-            run_command("git merge %s" % main_branch)
+            self._merge(main_branch)
 
             cmd = "git push origin %s:%s" % (branch, branch)
             if self.dry_run:
@@ -438,6 +438,25 @@ class FedoraGitReleaser(Releaser):
 
             self._build()
             print
+
+    def _merge(self, main_branch):
+        try:
+            run_command("git merge %s" % main_branch)
+        except:
+            print
+            print("WARNING!!! Conflicts occurred during merge.")
+            print
+            print("You are being dropped to a shell in the working directory.")
+            print
+            print("Please resolve this by doing the following:")
+            print
+            print("  1. List the conflicting files: git ls-files --unmerged")
+            print("  2. Edit each resolving the conflict and then: git add FILENAME")
+            print("  4. Commit the result when you are done: git commit")
+            print("  4. Return to the tito release: exit")
+            print
+            # TODO: maybe prompt y/n here
+            os.system(os.environ['SHELL'])
 
     def _build(self):
         """ Submit a Fedora build from current directory. """
