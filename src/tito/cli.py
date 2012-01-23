@@ -754,14 +754,14 @@ class ReportModule(BaseCliModule):
 
         self.parser.add_option("--untagged-diffs", dest="untagged_report",
                 action="store_true",
-                help= "%s %s %s" % (
+                help="%s %s %s" % (
                     "Print out diffs for all packages with changes between",
                     "their most recent tag and HEAD. Useful for determining",
                     "which packages are in need of a re-tag.",
                 ))
         self.parser.add_option("--untagged-commits", dest="untagged_commits",
                 action="store_true",
-                help= "%s %s %s" % (
+                help="%s %s %s" % (
                     "Print out the list for all packages with changes between",
                     "their most recent tag and HEAD. Useful for determining",
                     "which packages are in need of a re-tag.",
