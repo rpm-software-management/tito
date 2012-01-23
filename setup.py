@@ -31,18 +31,18 @@ setup(
     package_dir={
         'tito': 'src/tito',
     },
-    packages = find_packages('src'),
-    include_package_data = True,
+    packages=find_packages('src'),
+    include_package_data=True,
 
     # non-python scripts go here
-    scripts = [
+    scripts=[
         'bin/tito',
         'bin/tar-fixup-stamp-comment.pl',
         'bin/test-setup-specfile.pl',
         'bin/generate-patches.pl'
     ],
 
-    classifiers = [
+    classifiers=[
         'License :: OSI Approved :: GNU General Public License (GPL)',
         'Development Status :: 2 - Pre-Alpha',
         'Environment :: Console',
