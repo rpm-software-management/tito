@@ -221,7 +221,7 @@ class VersionTagger(object):
                     editor = 'vi'
                     if "EDITOR" in os.environ:
                         editor = os.environ["EDITOR"]
-                    subprocess.call([editor, name])
+                    subprocess.call(editor.split() + [name])
 
                 os.lseek(fd, 0, 0)
                 file = os.fdopen(fd)
