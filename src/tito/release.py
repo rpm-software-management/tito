@@ -353,7 +353,6 @@ class FedoraGitReleaser(Releaser):
         self.package_workdir = os.path.join(self.working_dir,
                 self.project_name)
 
-
     def release(self, dry_run=False):
         self.dry_run = dry_run
         self._git_release()
