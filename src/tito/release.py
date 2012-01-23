@@ -17,7 +17,6 @@ Code for submitting builds for release.
 
 import os
 import commands
-import fedora_cert
 import tempfile
 import subprocess
 import rpm
@@ -363,7 +362,6 @@ class FedoraGitReleaser(Releaser):
 
         commands.getoutput("mkdir -p %s" % self.working_dir)
         os.chdir(self.working_dir)
-        user = fedora_cert.read_user_cert()
         run_command("%s clone %s" % (self.cli_tool, self.project_name))
 
         project_checkout = os.path.join(self.working_dir, self.project_name)
