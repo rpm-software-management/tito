@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.4.3
+Version: 0.4.4
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -76,6 +76,13 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Mon Jan 23 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.4-1
+- Issue #35: EDITOR with arguments produces backtrace (jeckersb@redhat.com)
+- remove unused fedora_cert reading (jesusr@redhat.com)
+- Drop to shell when dist-git merge errors encountered. (dgoodwin@redhat.com)
+- Use proper temp dirs for releasing. (dgoodwin@redhat.com)
+- Fix git release diff command. (dgoodwin@redhat.com)
+
 * Thu Dec 15 2011 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.3-1
 - Escape percent character in changelog. (msuchy@redhat.com)
 - Fix distribution builder missing args in constructor.
