@@ -730,7 +730,7 @@ class CvsReleaser(Releaser):
             editor = 'vi'
             if "EDITOR" in os.environ:
                 editor = os.environ["EDITOR"]
-            subprocess.call([editor, name])
+            subprocess.call(editor.split() + [name])
 
         cmd = 'cvs commit -F %s' % name
         debug("CVS commit command: %s" % cmd)
