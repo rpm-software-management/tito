@@ -373,6 +373,43 @@ class FedoraGitReleaser(Releaser):
         self._git_upload_sources(project_checkout)
         self._git_user_confirm_commit(project_checkout)
 
+    def _confirm_commit_msg(self, diff_output):
+        """
+        Generates a commit message in a temporary file, gives the user a
+        chance to edit it, and returns the filename to the caller.
+        """
+
+        fd, name = tempfile.mkstemp()
+        debug("Storing commit message in temp file: %s" % name)
+        os.write(fd, "Update %s to %s\n" % (self.project_name,
+            self.builder.build_version))
+        # Write out Resolves line for all bugzillas we see in commit diff:
+        for line in extract_bzs(diff_output):
+            os.write(fd, line + "\n")
+
+        print("")
+        print("##### Commit message: #####")
+        print("")
+
+        os.lseek(fd, 0, 0)
+        file = os.fdopen(fd)
+        for line in file.readlines():
+            print line
+        file.close()
+
+        print("")
+        print("###############################")
+        print("")
+        answer = raw_input("Would you like to edit this commit message? [y/n] ")
+        if answer.lower() in ['y', 'yes', 'ok', 'sure']:
+            debug("Opening editor for user to edit commit message in: %s" % name)
+            editor = 'vi'
+            if "EDITOR" in os.environ:
+                editor = os.environ["EDITOR"]
+            subprocess.call(editor.split() + [name])
+
+        return name
+
     def _git_user_confirm_commit(self, project_checkout):
         """ Prompt user if they wish to proceed with commit. """
         print("")
@@ -404,12 +441,19 @@ class FedoraGitReleaser(Releaser):
                 sys.exit(1)
 
             print("Proceeding with commit.")
-            cmd = '%s commit -m "Update %s to %s"' % (self.cli_tool,
-                    self.project_name, self.builder.build_version)
+            commit_msg_file = self._confirm_commit_msg(diff_output)
+            cmd = '%s commit -F %s' % (self.cli_tool,
+                    commit_msg_file)
             debug("git commit command: %s" % cmd)
             print
-            os.chdir(self.package_workdir)
-            output = run_command(cmd)
+            if self.dry_run:
+                self.print_dry_run_warning(cmd)
+            else:
+                print("Proceeding with commit.")
+                os.chdir(self.package_workdir)
+                output = run_command(cmd)
+
+            os.unlink(commit_msg_file)
 
         cmd = "%s push" % self.cli_tool
         if self.dry_run:
