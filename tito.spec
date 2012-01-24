@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.4.4
+Version: 0.4.5
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -76,6 +76,10 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Tue Jan 24 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.5-1
+- Extract bz's and prompt to modify commit message in git releasers.
+  (dgoodwin@redhat.com)
+
 * Mon Jan 23 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.4-1
 - Issue #35: EDITOR with arguments produces backtrace (jeckersb@redhat.com)
 - remove unused fedora_cert reading (jesusr@redhat.com)
