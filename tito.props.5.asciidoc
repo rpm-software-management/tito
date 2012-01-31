@@ -52,9 +52,16 @@ This option is used in project specific tito.props only, and allows that project
 tagger::
 This option is used in project specific tito.props only, and allows that project to override the default_tagger defined in rel-eng/tito.props.
 
+changelog_format::
+This option is used to control the formatting of entries when
+generating changelog entries.  The default value is "%s (%ae)".  See
+PRETTY FORMATS in git-log(1) for more information.
+
 changelog_with_email::
-If set to 0, then entries in changelog (subject of commits) are not followed by
-email of commiter. Default is 1.
+If set to 0, then entries in changelog (subject of commits) are not
+followed by email of commiter. Default is 1.  This option is
+deprecated and provided for backwards-compatibility only.  New
+configurations should consider changelog_format instead.
 
 changelog_do_not_remove_cherrypick::
 If set to 0, it will not remove from cherry picked commits the part "(cherry
