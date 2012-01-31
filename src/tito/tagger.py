@@ -146,25 +146,35 @@ class VersionTagger(object):
                 line = m.group(1)
         return line
 
-    def _changelog_email(self):
+
+    def _changelog_format(self):
         """
-        if you have set changelog_with_email in [globalconfig] set to 1, it will return
-        string '(%ae)'
+        If you have set changelog_format in [globalconfig], it will return
+        that string.  Otherwise, return one of two defaults:
+
+        - '%s (%ae)', if changelog_with_email is unset or evaluates to True
+        - '%s', if changelog_with_email is set and evaluates to False
         """
         result = ''
-        if (self.config.has_option("globalconfig", "changelog_with_email")
-            and self.config.get("globalconfig", "changelog_with_email")) or \
-            not self.config.has_option("globalconfig", "changelog_with_email"):
-            result = ' (%ae)'
+        if self.config.has_option("globalconfig", "changelog_format"):
+            result = self.config.get("globalconfig", "changelog_format")
+        else:
+            with_email = ''
+            if (self.config.has_option("globalconfig", "changelog_with_email")
+                and self.config.get("globalconfig", "changelog_with_email")) or \
+                not self.config.has_option("globalconfig", "changelog_with_email"):
+                with_email = ' (%ae)'
+            result = "%%s%s" % with_email
         return result
+
 
     def _generate_default_changelog(self, last_tag):
         """
         Run git-log and will generate changelog, which still can be edited by user
         in _make_changelog.
         """
-        patch_command = "git log --pretty='format:%%s%s'" \
-                         " --relative %s..%s -- %s" % (self._changelog_email(), last_tag, "HEAD", ".")
+        patch_command = "git log --pretty='format:%s'" \
+                         " --relative %s..%s -- %s" % (self._changelog_format(), last_tag, "HEAD", ".")
         output = run_command(patch_command)
         result = []
         for line in output.split('\n'):
