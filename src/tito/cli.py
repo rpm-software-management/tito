@@ -411,12 +411,13 @@ class BuildModule(BaseCliModule):
         if self.options.builder_args is None:
             return args
 
-        try:
-            for pair in self.options.builder_args:
-                key, value = pair.split("=")
+        for arg in self.options.builder_args:
+            if '=' in arg:
+                key, value = arg.split("=")
                 args[key] = value
-        except ValueError:
-            error_out("Error parsing a --builder-arg, be sure to use key=value")
+            else:
+                # Allow no value args such as 'myscript --auto'
+                args[arg] = ''
         return args
 
 
