@@ -844,6 +844,12 @@ class MockBuilder(Builder):
                 raise TitoException("No such mock config dir: %s" % mock_config_dir)
             self.mock_cmd_args = "%s --configdir=%s" % (self.mock_cmd_args, mock_config_dir)
 
+        if 'no-clean' in args:
+            self.mock_cmd_args = "%s --no-clean" % (self.mock_cmd_args)
+
+        if 'no-cleanup-after' in args:
+            self.mock_cmd_args = "%s --no-cleanup-after" % (self.mock_cmd_args)
+
         # TODO: error out if mock package is not installed
 
         # TODO: error out if user does not have mock group
