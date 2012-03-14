@@ -382,11 +382,18 @@ class BuildModule(BaseCliModule):
                 self.options.tag, self.options.no_cleanup)
 
         args = self._parse_builder_args()
+        kwargs = {
+                'dist': self.options.dist,
+                'test': self.options.test,
+                'offline': self.options.offline,
+                'auto_install': self.options.auto_install,
+                'rpmbuild_options': self.options.rpmbuild_options,
+        }
 
         builder = create_builder(package_name, build_tag,
-                build_version, self.options, self.pkg_config,
+                build_version, self.pkg_config,
                 build_dir, self.global_config, self.user_config, args,
-                builder_class=self.options.builder)
+                builder_class=self.options.builder, **kwargs)
         return builder.run(self.options)
 
     def _validate_options(self):

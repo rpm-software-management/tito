@@ -91,9 +91,9 @@ def error_out(error_msgs):
     sys.exit(1)
 
 
-def create_builder(package_name, build_tag, build_version, options,
+def create_builder(package_name, build_tag, build_version,
         pkg_config, build_dir, global_config, user_config, args,
-        builder_class=None):
+        builder_class=None, **kwargs):
     """
     Create (but don't run) the builder class. Builder object may be
     used by other objects without actually having run() called.
@@ -127,8 +127,8 @@ def create_builder(package_name, build_tag, build_version, options,
             pkg_config=pkg_config,
             global_config=global_config,
             user_config=user_config,
-            options=options,
-            args=args)
+            args=args,
+            **kwargs)
     return builder
 
 

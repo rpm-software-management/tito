@@ -39,7 +39,7 @@ class Builder(object):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            options=None, args=None):
+            args=None, **kwargs):
 
         """
         name - Package name that is being built.
@@ -55,8 +55,6 @@ class Builder(object):
         global_config - Global configuration from rel-eng/tito.props.
 
         user_config - User configuration from ~/.titorc.
-
-        options - Parsed CLI options.
 
         args - Optional arguments specific to each builder. Can be passed
         in explicitly by user on the CLI, or via a release target config
@@ -75,20 +73,18 @@ class Builder(object):
         self.no_cleanup = False
         self.args = args
 
-        # Probably not a great idea to be passing in CLI options directly to
-        # an object that gets re-used. This is however optional.
-        if options is not None:
-            self.dist = options.dist
-            self.test = options.test
-            self.offline = options.offline
-            self.auto_install = options.auto_install
-            self.rpmbuild_options = options.rpmbuild_options
-        else:
-            self.dist = self.test = self.offline = self.auto_install = \
-                    self.rpmbuild_options = None
-            self.dist = None
-            self.test = False
-            self.offline = False
+        # Optional keyword arguments:
+        self.dist = self._get_optional_arg(kwargs, 'dist', None)
+        self.test = self._get_optional_arg(kwargs, 'test', False)
+        self.offline = self._get_optional_arg(kwargs, 'offline', False)
+        self.auto_install = self._get_optional_arg(kwargs, 'auto_install',
+                False)
+        self.rpmbuild_options = self._get_optional_arg(kwargs,
+                'rpmbuild_options', None)
+
+        if 'options' in kwargs:
+            print("WARNING: 'options' no longer a supported builder "
+                    "constructor argument.")
 
         if not self.rpmbuild_options:
             self.rpmbuild_options = ''
@@ -158,6 +154,15 @@ class Builder(object):
         self.srpm_location = None
 
         self._check_required_args()
+
+    def _get_optional_arg(self, kwargs, arg, default):
+        """
+        Return the value of an optional keyword argument if it's present,
+        otherwise the default provided.
+        """
+        if arg in kwargs:
+            return kwargs[arg]
+        return default
 
     def _check_required_args(self):
         for arg in self.REQUIRED_ARGS:
@@ -447,12 +452,12 @@ class NoTgzBuilder(Builder):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            options=None, args=None):
+            args=None, **kwargs):
 
         Builder.__init__(self, name=name, version=version, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
-                options=options, args=args)
+                args=args, **kwargs)
 
         # When syncing files with CVS, copy everything from git:
         self.cvs_copy_extensions = ("", )
@@ -514,12 +519,12 @@ class CvsBuilder(NoTgzBuilder):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            options=None, args=None):
+            args=None, **kwargs):
 
         NoTgzBuilder.__init__(self, name=name, version=version, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
-                options=options, args=args)
+                args=args, **kwargs)
 
         # TODO: Hack to override here, patches are in a weird place with this
         # builder.
@@ -622,12 +627,12 @@ class UpstreamBuilder(NoTgzBuilder):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            options=None, args=None):
+            args=None, **kwargs):
 
         NoTgzBuilder.__init__(self, name=name, version=version, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
-                options=options, args=args)
+                args=args, **kwargs)
 
         if not pkg_config or not pkg_config.has_option("buildconfig",
                 "upstream_name"):
@@ -826,12 +831,12 @@ class MockBuilder(Builder):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            options=None, args=None):
+            args=None, **kwargs):
 
         Builder.__init__(self, name=name, version=version, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
-                options=options, args=args)
+                args=args, **kwargs)
 
         self.mock_tag = args['mock']
         self.mock_cmd_args = ""
@@ -909,12 +914,12 @@ class BrewDownloadBuilder(Builder):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            options=None, args=None):
+            args=None, **kwargs):
 
         Builder.__init__(self, name=name, version=version, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
-                options=options, args=args)
+                args=args, **kwargs)
 
         self.brew_tag = 'meow'  # args['brewtag']
         self.dist_tag = args['disttag']

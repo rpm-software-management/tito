@@ -55,7 +55,7 @@ class Releaser(object):
         # While we create a builder here, we don't actually call run on it
         # unless the releaser needs to:
         self.builder = create_builder(name, tag,
-                version, None, pkg_config,
+                version, pkg_config,
                 build_dir, global_config, user_config, self.builder_args)
         self.project_name = self.builder.project_name
 
@@ -252,7 +252,7 @@ class YumRepoReleaser(Releaser):
         # Use the builder from the release target, rather than the default
         # one defined for this git repo or sub-package:
         self.builder = create_builder(name, tag,
-                version, None, pkg_config,
+                version, pkg_config,
                 build_dir, global_config, user_config, self.builder_args,
                 builder_class=self.releaser_config.get(self.target, 'builder'))
 
