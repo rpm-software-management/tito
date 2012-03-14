@@ -146,7 +146,6 @@ class VersionTagger(object):
                 line = m.group(1)
         return line
 
-
     def _changelog_format(self):
         """
         If you have set changelog_format in [globalconfig], it will return
@@ -166,7 +165,6 @@ class VersionTagger(object):
                 with_email = ' (%ae)'
             result = "%%s%s" % with_email
         return result
-
 
     def _generate_default_changelog(self, last_tag):
         """
