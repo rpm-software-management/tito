@@ -22,6 +22,8 @@ RELEASERS
 
 Tito includes several releaser implementations that can be used in releasers.conf. Additionally you may define a lib_dir in your tito.props globalconfig section, and place your own custom implementation of a releaser there.
 
+Specify "builder.test = 1" in your releasers.conf target to enable --test builds. (uses the latest git HEAD rather than the latest tagged package) This can be useful for automating the publishing of a nightly build, which you would not want to continually have to tag.
+
 tito.release.YumRepoReleaser::
 Releaser which will build your packages, rsync down an existing yum repository, place your packages in it, regenerate the yum repodata, and rsync the yum repository back up.
 
@@ -67,6 +69,7 @@ EXAMPLE
  releaser = tito.release.YumRepoReleaser
  builder = tito.builder.MockBuilder
  builder.mock = epel-6-x86_64
+ builder.test = 1
  rsync = fedorapeople.org:/srv/repos/dgoodwin/tito/epel-6/x86_64/
 
  [cvs]

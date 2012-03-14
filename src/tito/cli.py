@@ -450,6 +450,9 @@ class ReleaseModule(BaseCliModule):
         self.parser.add_option("--all", action="store_true",
                 help="Run all release targets configured.")
 
+        self.parser.add_option("--test", dest="test", action="store_true",
+                help="use current branch HEAD instead of latest package tag")
+
         self.parser.add_option("--all-starting-with", dest="all_starting_with",
                 help="Run all release targets starting with the given string.")
 
