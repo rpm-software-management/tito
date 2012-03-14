@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.4.5
+Version: 0.4.6
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -76,6 +76,15 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Wed Mar 14 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.6-1
+- Issue 39: Create /tmp/tito if it doesn't already exist. (dgoodwin@redhat.com)
+- Add support for test build releases. (dgoodwin@redhat.com)
+- Stop passing all CLI args to builders. (dgoodwin@redhat.com)
+- Add mock builder speedup argument. (mstead@redhat.com)
+- Add support for no-value args in builder. (mstead@redhat.com)
+- Fix rsync options for yum repo releases. (jesusr@redhat.com)
+- Add support for customizable changelog formats (jeckersb@redhat.com)
+
 * Tue Jan 24 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.5-1
 - Extract bz's and prompt to modify commit message in git releasers.
   (dgoodwin@redhat.com)
