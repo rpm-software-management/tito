@@ -844,11 +844,13 @@ class MockBuilder(Builder):
                 raise TitoException("No such mock config dir: %s" % mock_config_dir)
             self.mock_cmd_args = "%s --configdir=%s" % (self.mock_cmd_args, mock_config_dir)
 
-        if 'no-clean' in args:
-            self.mock_cmd_args = "%s --no-clean" % (self.mock_cmd_args)
-
-        if 'no-cleanup-after' in args:
-            self.mock_cmd_args = "%s --no-cleanup-after" % (self.mock_cmd_args)
+        # Optional argument which will skip mock --init and add --no-clean
+        # and --no-cleanup-after:
+        self.speedup = False
+        if 'speedup' in args:
+            self.speedup = True
+            self.mock_cmd_args = "%s --no-clean --no-cleanup-after" % \
+                    (self.mock_cmd_args)
 
         # TODO: error out if mock package is not installed
 
@@ -868,8 +870,12 @@ class MockBuilder(Builder):
         self._build_in_mock()
 
     def _build_in_mock(self):
-        print("Initializing mock...")
-        output = run_command("mock %s -r %s --init" % (self.mock_cmd_args, self.mock_tag))
+        if not self.speedup:
+            print("Initializing mock...")
+            output = run_command("mock %s -r %s --init" % (self.mock_cmd_args, self.mock_tag))
+        else:
+            print("Skipping mock --init due to speedup option.")
+
         print("Installing deps in mock...")
         output = run_command("mock %s -r %s --installdeps %s" % (
             self.mock_cmd_args, self.mock_tag, self.srpm_location))
