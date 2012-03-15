@@ -84,10 +84,10 @@ class Builder(object):
 
         # Allow a builder arg to override the test setting passed in, used by
         # releasers in their config sections.
-        if 'test' in args:
+        if args and 'test' in args:
             self.test = True
 
-        if 'options' in kwargs:
+        if kwargs and 'options' in kwargs:
             print("WARNING: 'options' no longer a supported builder "
                     "constructor argument.")
 
