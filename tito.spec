@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.4.6
+Version: 0.4.7
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -76,6 +76,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Thu Mar 15 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.7-1
+- Fix issues with DistributionBuilder constructor (dgoodwin@redhat.com)
+
 * Wed Mar 14 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.6-1
 - Issue 39: Create /tmp/tito if it doesn't already exist. (dgoodwin@redhat.com)
 - Add support for test build releases. (dgoodwin@redhat.com)
