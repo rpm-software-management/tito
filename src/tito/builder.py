@@ -112,6 +112,9 @@ class Builder(object):
                     sys.exit(-1)
 
         self.rpmbuild_basedir = build_dir
+        if not os.path.isdir(build_dir):
+            os.makedirs(build_dir)
+
         self.display_version = self._get_display_version()
 
         self.git_commit_id = get_build_commit(tag=self.build_tag,
