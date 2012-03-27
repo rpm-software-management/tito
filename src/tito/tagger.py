@@ -160,7 +160,7 @@ class VersionTagger(object):
         else:
             with_email = ''
             if (self.config.has_option("globalconfig", "changelog_with_email")
-                and self.config.get("globalconfig", "changelog_with_email")) or \
+                and (self.config.get("globalconfig", "changelog_with_email")) not in ['0', '']) or \
                 not self.config.has_option("globalconfig", "changelog_with_email"):
                 with_email = ' (%ae)'
             result = "%%s%s" % with_email
@@ -209,7 +209,8 @@ class VersionTagger(object):
 
                 fd, name = tempfile.mkstemp()
                 os.write(fd, "# Create your changelog entry below:\n")
-                if self.git_email is None or (('HIDE_EMAIL' in self.user_config) and (self.user_config['HIDE_EMAIL'])):
+                if self.git_email is None or (('HIDE_EMAIL' in self.user_config) and \
+                        (self.user_config['HIDE_EMAIL'] not in ['0', ''])):
                     header = "* %s %s\n" % (self.today, self.git_user)
                 else:
                     header = "* %s %s <%s>\n" % (self.today, self.git_user,
