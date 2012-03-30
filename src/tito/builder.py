@@ -838,6 +838,11 @@ class MockBuilder(Builder):
             pkg_config=None, global_config=None, user_config=None,
             args=None, **kwargs):
 
+        # Mock builders need to use the packages normally configured builder
+        # to get at a proper SRPM:
+        self.normal_builder = create_builder(name, tag, version, pkg_config,
+                build_dir, global_config, user_config, args, **kwargs)
+
         Builder.__init__(self, name=name, version=version, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
@@ -865,6 +870,18 @@ class MockBuilder(Builder):
         # TODO: error out if mock package is not installed
 
         # TODO: error out if user does not have mock group
+
+    def srpm(self, dist=None, reuse_cvs_checkout=False):
+        """
+        Build a source RPM.
+
+        MockBuilder will use an instance of the normal builder for a package
+        internally just so we can generate a SRPM correctly before we pass it
+        into mock.
+        """
+        self.normal_builder.srpm(dist, reuse_cvs_checkout)
+        self.srpm_location = self.normal_builder.srpm_location
+        self.artifacts.append(self.srpm_location)
 
     def _rpm(self):
         """
