@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.4.7
+Version: 0.4.8
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -76,6 +76,11 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Mon Apr 02 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.8-1
+- Fix MockBuilder for packages that use non-standard builders normally.
+  (dgoodwin@redhat.com)
+- interpret '0' as False for changelog_with_email setting. (msuchy@redhat.com)
+
 * Thu Mar 15 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.7-1
 - Fix issues with DistributionBuilder constructor (dgoodwin@redhat.com)
 
