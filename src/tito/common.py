@@ -33,6 +33,23 @@ BUILDER_SHORTCUTS = {
 }
 
 
+def extract_sources(spec_file_lines):
+    """
+    Returns a list of sources from the given spec file.
+
+    Some of these will be URL's, which is fine they will be ignored.
+    We're really just after relative filenames that might live in the same
+    location as the spec file, mostly used with NoTgzBuilder packages.
+    """
+    filenames = []
+    source_pattern = re.compile('^Source\d+?:\s*(.*)')
+    for line in spec_file_lines:
+        match = source_pattern.match(line)
+        if match:
+            filenames.append(match.group(1))
+    return filenames
+
+
 def extract_bzs(output):
     """
     Parses the output of CVS diff or a series of git commit log entries,

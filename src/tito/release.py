@@ -152,6 +152,12 @@ class Releaser(object):
         # we modify and then use a spec file copy from a different location.
         files_to_copy = [self.builder.spec_file]  # full paths
 
+        f = open(self.builder.spec_file, 'r')
+        lines = f.readlines()
+        f.close()
+        source_filenames = extract_sources(lines)
+        debug("Watching for source filenames: %s" % source_filenames)
+
         for filename in os.listdir(self.builder.rpmbuild_gitcopy):
             full_filepath = os.path.join(self.builder.rpmbuild_gitcopy, filename)
             if os.path.isdir(full_filepath):
@@ -164,6 +170,12 @@ class Releaser(object):
                 # Skip the spec file, we already copy this explicitly as it
                 # can come from a couple different locations depending on which
                 # builder is in use.
+                continue
+
+            # Check if file looks like it matches a Source line in the spec file:
+            if filename in source_filenames:
+                debug("   copying:   %s" % filename)
+                files_to_copy.append(full_filepath)
                 continue
 
             # Check if file ends with something this builder subclass wants
