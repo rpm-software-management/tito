@@ -384,7 +384,10 @@ class YumRepoReleaser(RsyncReleaser):
         self.new_rpm_dep_sets = {}
         for artifact in self.builder.artifacts:
             if artifact.endswith(".rpm") and not artifact.endswith(".src.rpm"):
-                header = self._read_rpm_header(rpm_ts, artifact)
+		try:
+                    header = self._read_rpm_header(rpm_ts, artifact)
+                except rpm.error, e:
+		    continue 
                 self.new_rpm_dep_sets[header['name']] = header.dsOfHeader()
 
         # Now cleanout any other version of the package we just built,
@@ -393,8 +396,12 @@ class YumRepoReleaser(RsyncReleaser):
         for filename in os.listdir(self.temp_dir):
             if not filename.endswith(".rpm"):
                 continue
-            hdr = self._read_rpm_header(rpm_ts,
-                os.path.join(self.temp_dir, filename))
+            full_path = os.path.join(self.temp_dir, filename)
+            try:
+                hdr = self._read_rpm_header(rpm_ts, full_path)
+            except rpm.error, e:
+                print "error reading rpm header in '%s': %s" % (full_path, e)
+		continue 
             if hdr['name'] in self.new_rpm_dep_sets:
                 dep_set = hdr.dsOfHeader()
                 if dep_set.EVR() < self.new_rpm_dep_sets[hdr['name']].EVR():
