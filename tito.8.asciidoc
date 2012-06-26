@@ -35,7 +35,7 @@ to manage the tags and builds. A simple workflow may look like:
   .. Build: `tito build --rpm --test`
 . Finalize a release
   .. Tag: `tito tag`
-  .. Push: `git push && git push --tags`
+  .. Push: `git push && git push $ORIGIN $TAG`
   .. Build: `tito build [OPTIONS]`
 
 
