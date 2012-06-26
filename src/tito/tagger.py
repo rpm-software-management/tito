@@ -441,7 +441,7 @@ class VersionTagger(object):
         print("Created tag: %s" % new_tag)
         print("   View: git show HEAD")
         print("   Undo: tito tag -u")
-        print("   Push: git push && git push --tags")
+        print("   Push: git push && git push origin %s" % new_tag)
 
     def _check_tag_does_not_exist(self, new_tag):
         status, output = commands.getstatusoutput(
