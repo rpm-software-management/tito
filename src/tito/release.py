@@ -344,6 +344,9 @@ class YumRepoReleaser(RsyncReleaser):
 
     # Default list of packages to copy
     filetypes = ['rpm' ]
+    
+    # By default run createrepo without any paramaters
+    createrepo_command = "createrepo ." 
 
     def _read_rpm_header(self, ts, new_rpm_path):
         """
@@ -356,8 +359,10 @@ class YumRepoReleaser(RsyncReleaser):
 
     def process_packages(self):
         print("Refreshing yum repodata...")
+        if self.releaser_config.has_option(self.target,'createrepo_command'):
+            self.createrepo_command = self.releaser_config.get(self.target, 'createrepo_command')
         os.chdir(self.temp_dir)
-        output = run_command("createrepo ./")
+        output = run_command(self.createrepo_command)
         debug(output)
         self.prune_other_versions()
     def prune_other_versions(self):
