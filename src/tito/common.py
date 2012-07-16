@@ -18,6 +18,7 @@ import os
 import re
 import sys
 import commands
+import traceback
 
 DEFAULT_BUILD_DIR = "/tmp/tito"
 DEFAULT_BUILDER = "default_builder"
@@ -105,6 +106,8 @@ def error_out(error_msgs):
     else:
         print("ERROR: %s" % error_msgs)
     print
+    if 'DEBUG' in os.environ:
+       traceback.print_stack()
     sys.exit(1)
 
 
