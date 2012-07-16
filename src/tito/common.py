@@ -18,6 +18,7 @@ import os
 import re
 import sys
 import commands
+import traceback
 
 DEFAULT_BUILD_DIR = "/tmp/tito"
 DEFAULT_BUILDER = "default_builder"
