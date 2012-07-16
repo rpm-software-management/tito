@@ -27,6 +27,17 @@ Specify "builder.test = 1" in your releasers.conf target to enable --test builds
 tito.release.YumRepoReleaser::
 Releaser which will build your packages, rsync down an existing yum repository, place your packages in it, regenerate the yum repodata, and rsync the yum repository back up.
 
+Specify "filetypes = srpm" if you want to build a source rpm instead of a regular rpm.
+
+Specify "createrepo_command = createrepo -s sha1" if you are building on a recent distro and are working with yum repositories for rhel5.
+
+
+tito.release.RsyncReleaser::
+Releaser which will build your packages, and rsync up to a remote repository
+
+specify "filetypes = rpm srpm tgz" to choose what type of packages will be uploaded.
+
+
 tito.release.FedoraGitReleaser::
 
 Releaser which will checkout your project in Fedora git using fedpkg. Sources are then synced to the first branch your releaser lists. After this tito will git merge the first branch into all other listed branches, triggering builds in each.
@@ -53,27 +64,47 @@ Highly experimental, ignore for now.
 EXAMPLE
 -------
 
+ ; Release into fedora-15-x86_64 yum repo  
  [yum-f15-x86_64]
  releaser = tito.release.YumRepoReleaser
  builder = tito.builder.MockBuilder
  builder.mock = fedora-15-x86_64
  rsync = fedorapeople.org:/srv/repos/dgoodwin/tito/fedora-15/x86_64/ fedorapeople.org:/srv/repos/dgoodwin/tito/fedora-15/x86_64/
 
- [yum-f16-x86_64]
- releaser = tito.release.YumRepoReleaser
- builder = tito.builder.MockBuilder
- builder.mock = fedora-16-x86_64
- rsync = fedorapeople.org:/srv/repos/dgoodwin/tito/fedora-16/x86_64/
-
+ ; Release into el6 yum repository. specify builder.test=1 so that
+ ; we build on latest commit (instead of latest tito tag)
  [yum-el6-x86_64]
  releaser = tito.release.YumRepoReleaser
  builder = tito.builder.MockBuilder
  builder.mock = epel-6-x86_64
  builder.test = 1
- rsync = fedorapeople.org:/srv/repos/dgoodwin/tito/epel-6/x86_64/
+ rsync = remoteserver.org:/srv/repos/el6/testing/x86_64
+
+ ; Upload into source repository
+ [yum-fc15-sources]
+ releaser = tito.release.YumRepoReleaser
+ builder = tito.builder.MockBuilder
+ builder.mock = fedora-15-x86_64
+ filetypes = srpm
+ rsync = remoteserver.org:/srv/repos/fedora-15/SRPMS
+
+ ; el5 yum repository. Overloading createrepo_command to make
+ ; el5 compatible repo.
+ [yum-el5-i386]
+ releaser = tito.release.YumRepoReleaser
+ builder = tito.builder.MockBuilder
+ builder.mock = epel-5-i386
+ createrepo_command = createrepo -s sha1
+ rsync = remoteserver.org:/srv/repos/rhel5/i386
 
  [cvs]
  cvsroot = :gserver:cvs.example.com:/cvs/dist
  branches = FEDORA-15
 
-
+ ; rsync tgz file to remote site
+ [rsync]
+ releaser = tito.release.RsyncReleaser
+ builder = tito.builder.MockBuilder
+ builder.mock = fedora-15-x86_64
+ filetypes = tgz
+ rsync = remoteserver.org:/srv/tarballs/
