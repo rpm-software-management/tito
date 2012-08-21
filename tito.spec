@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.4.7
+Version: 0.4.8
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -76,6 +76,18 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Tue Aug 21 2012 Unknown name 0.4.8-1
+- manpages for releasers.conf now have updated information for rsyncreleaser
+  and yumreporeleaser (palli@opensource.is)
+- YumRepoReleaser feature: createrepo command can now be specified from
+  releasers.conf with the 'createrepo_command' config option
+  (palli@opensource.is)
+- Fixed: Crash when yumreporeleaser encounters a signed rpm and does not have
+  the public key (palli@opensource.is)
+- Created new releaser called RsyncReleaser. Based heavily on YumRepoReleaser.
+  Refactored YumRepoReleaser to inherit most code from RsyncReleaser.
+  (palli@opensource.is)
+
 * Thu Mar 15 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.7-1
 - Fix issues with DistributionBuilder constructor (dgoodwin@redhat.com)
 
