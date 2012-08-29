@@ -257,6 +257,7 @@ def get_remote_tag_sha1(tag):
     Get the SHA1 referenced by this git tag in the remote git repo.
     Will return "" if the git tag does not exist remotely.
     """
+    # TODO: X11 forwarding messages can appear in this output, find a better way
     repo_url = get_git_repo_url()
     print("Checking for tag [%s] in git repo [%s]" % (tag, repo_url))
     cmd = "git ls-remote %s --tag %s | awk '{ print $1 ; exit }'" % \
