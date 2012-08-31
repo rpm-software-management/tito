@@ -166,6 +166,20 @@ def find_spec_file(in_dir=None):
             return f
     error_out(["Unable to locate a spec file in %s" % in_dir])
 
+def find_gemspec_file(in_dir=None):
+    """
+    Find the first spec file in the current directory. (hopefully there's
+    only one)
+
+    Returns only the file name, rather than the full path.
+    """
+    if in_dir == None:
+        in_dir = os.getcwd()
+    for f in os.listdir(in_dir):
+        if f.endswith(".gemspec"):
+            return f
+    error_out(["Unable to locate a spec file in %s" % in_dir])
+
 
 def find_git_root():
     """
