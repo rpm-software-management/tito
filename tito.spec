@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.4.8
+Version: 0.4.9
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -76,6 +76,18 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Tue Sep 04 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.9-1
+- Stop passing --installdeps for mock builds. (dgoodwin@redhat.com)
+- YumRepoReleaser feature: createrepo command can now be specified from
+  releasers.conf with the 'createrepo_command' config option
+  (palli@opensource.is)
+- Created new releaser called RsyncReleaser. Based heavily on YumRepoReleaser.
+  Refactored YumRepoReleaser to inherit most code from RsyncReleaser.
+  (palli@opensource.is)
+- Optionally print stacktrace whenever error_out is hit (bleanhar@redhat.com)
+- encourage users to push only their new tag (jbowes@redhat.com)
+- Attempt to copy local Sources during releases. (dgoodwin@redhat.com)
+
 * Mon Apr 02 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.8-1
 - Fix MockBuilder for packages that use non-standard builders normally.
   (dgoodwin@redhat.com)
