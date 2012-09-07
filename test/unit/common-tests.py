@@ -75,6 +75,11 @@ class CommonTests(unittest.TestCase):
         line = "this isn't a version fool.\n"
         self.assertEquals(line, replace_version(line, "2.5.3"))
 
+    def test_extract_sha1(self):
+        ls_remote_output = "Could not chdir to home directory\n" + \
+                           "fe87e2b75ed1850718d99c797cc171b88bfad5ca ref/origin/sometag"
+        self.assertEquals("fe87e2b75ed1850718d99c797cc171b88bfad5ca",
+                          extract_sha1(ls_remote_output))
 
 class VersionMathTest(unittest.TestCase):
     def test_increase_version_minor(self):
