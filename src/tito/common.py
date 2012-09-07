@@ -24,7 +24,7 @@ DEFAULT_BUILD_DIR = "/tmp/tito"
 DEFAULT_BUILDER = "default_builder"
 DEFAULT_TAGGER = "default_tagger"
 GLOBALCONFIG_SECTION = "globalconfig"
-
+SHA_RE=re.compile(r'\b[0-9a-f]{30,}\b')
 
 # Define some shortcuts to fully qualified Builder classes to make things
 # a little more concise for CLI users. Mock is probably the only one this
@@ -182,6 +182,10 @@ def find_git_root():
         cdup = "./"
     return os.path.abspath(cdup)
 
+def extract_sha1(output):
+    match = SHA_RE.search(output)
+    if match: return match.group(0)
+    else: return ""
 
 def run_command(command):
     debug(command)
@@ -221,6 +225,7 @@ def get_local_tag_sha1(tag):
     tag_sha1 = run_command(
             "git ls-remote ./. --tag %s | awk '{ print $1 ; exit }'"
             % tag)
+    tag_sha1 = extract_sha1(tag_sha1)
     return tag_sha1
 
 
@@ -263,6 +268,7 @@ def get_remote_tag_sha1(tag):
     cmd = "git ls-remote %s --tag %s | awk '{ print $1 ; exit }'" % \
             (repo_url, tag)
     upstream_tag_sha1 = run_command(cmd)
+    upstream_tag_sha1 = extract_sha1(upstream_tag_sha1)
     return upstream_tag_sha1
 
 
@@ -384,6 +390,7 @@ def get_build_commit(tag, test=False):
         tag_sha1 = run_command(
                 "git ls-remote ./. --tag %s | awk '{ print $1 ; exit }'"
                 % tag)
+        tag_sha1 = extract_sha1(tag_sha1)
         commit_id = run_command('git rev-list --max-count=1 %s' % tag_sha1)
         return commit_id
 
