@@ -867,6 +867,9 @@ class MockBuilder(Builder):
             self.mock_cmd_args = "%s --no-clean --no-cleanup-after" % \
                     (self.mock_cmd_args)
 
+        if 'args' in args:
+            self.mock_cmd_args = "%s %s" % (self.mock_cmd_args, args['args'])
+
         # TODO: error out if mock package is not installed
 
         # TODO: error out if user does not have mock group
