@@ -239,6 +239,7 @@ class Releaser(object):
 
         return new_files, copied_files, old_files
 
+
 class RsyncReleaser(Releaser):
     """
     A releaser which will rsync from a remote host, build the desired packages,
@@ -253,15 +254,17 @@ class RsyncReleaser(Releaser):
     REQUIRED_CONFIG = ['rsync', 'builder']
 
     # Default list of packages to copy
-    filetypes = ['rpm', 'srpm', 'tgz' ]
+    filetypes = ['rpm', 'srpm', 'tgz']
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False):
+            target=None, releaser_config=None, no_cleanup=False,
+            prefix="temp_dir="):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
                 global_config, user_config, target, releaser_config, no_cleanup)
 
         self.build_dir = build_dir
+        self.prefix = prefix
 
         # Use the builder from the release target, rather than the default
         # one defined for this git repo or sub-package:
@@ -280,15 +283,6 @@ class RsyncReleaser(Releaser):
         self.builder._rpm()
         self.builder.cleanup()
 
-        # Make a temp directory to sync the existing repo contents into:
-        self.temp_dir = mkdtemp(dir=self.build_dir, prefix="temp_dir-")
-
-        self.rsync_from_remote()
-        self.copy_files_to_temp_dir()
-        self.process_packages()
-        self.rsync_to_remote()
-
-    def rsync_from_remote(self):
         rsync_locations = self.releaser_config.get(self.target, 'rsync').split(" ")
         for rsync_location in rsync_locations:
             if RSYNC_USERNAME in os.environ:
@@ -296,48 +290,59 @@ class RsyncReleaser(Releaser):
                         os.environ[RSYNC_USERNAME]))
                 rsync_location = "%s@%s" % (os.environ[RSYNC_USERNAME], rsync_location)
 
-            os.chdir(self.temp_dir)
-            print("rsync: %s -> %s" % (rsync_location, self.temp_dir))
-            self.rsync_location = rsync_location
-            output = run_command("rsync -rlvz %s %s" % (rsync_location, self.temp_dir))
-            debug(output)
+            # Make a temp directory to sync the existing repo contents into:
+            temp_dir = mkdtemp(dir=self.build_dir, prefix=self.prefix)
 
-    def rsync_to_remote(self):
-        print("rsync: %s -> %s" % (self.rsync_location, self.rsync_location))
-        os.chdir(self.temp_dir)
+            self._rsync_from_remote(rsync_location, temp_dir)
+            self._copy_files_to_temp_dir(temp_dir)
+            self.process_packages(temp_dir)
+            self.rsync_to_remote(temp_dir, rsync_location)
+
+    def _rsync_from_remote(self, rsync_location, temp_dir):
+        os.chdir(temp_dir)
+        print("rsync: %s -> %s" % (rsync_location, temp_dir))
+        output = run_command("rsync -rlvz %s %s" % (rsync_location, temp_dir))
+        debug(output)
+
+    def rsync_to_remote(self, temp_dir, rsync_location):
+        print("rsync: %s -> %s" % (temp_dir, rsync_location))
+        os.chdir(temp_dir)
         # TODO: configurable rsync options?
-        cmd = "rsync -rlvz --delete %s/ %s" %\
-              (self.temp_dir, self.rsync_location)
+        cmd = "rsync -rlvz --delete %s/ %s" % (temp_dir, rsync_location)
         if self.dry_run:
             self.print_dry_run_warning(cmd)
         else:
             output = run_command(cmd)
             debug(output)
         if not self.no_cleanup:
-            debug("Cleaning up [%s]" % self.temp_dir)
+            debug("Cleaning up [%s]" % temp_dir)
             os.chdir("/")
-            rmtree(self.temp_dir)
+            rmtree(temp_dir)
         else:
-            print("WARNING: leaving %s (--no-cleanup)" % self.temp_dir)
+            print("WARNING: leaving %s (--no-cleanup)" % temp_dir)
 
-    def copy_files_to_temp_dir(self):
-        os.chdir(self.temp_dir)
+    def _copy_files_to_temp_dir(self, temp_dir):
+        os.chdir(temp_dir)
 
         # overwrite default self.filetypes if filetypes option is specified in config
-        if self.releaser_config.has_option(self.target,'filetypes'):
+        if self.releaser_config.has_option(self.target, 'filetypes'):
             self.filetypes = self.releaser_config.get(self.target, 'filetypes').split(" ")
 
         for artifact in self.builder.artifacts:
-            if artifact.endswith('.tar.gz'): artifact_type = 'tgz'
-            elif artifact.endswith('src.rpm'): artifact_type = 'srpm'
-            elif artifact.endswith('.rpm'): artifact_type = 'rpm'
-            else: continue
+            if artifact.endswith('.tar.gz'):
+                artifact_type = 'tgz'
+            elif artifact.endswith('src.rpm'):
+                artifact_type = 'srpm'
+            elif artifact.endswith('.rpm'):
+                artifact_type = 'rpm'
+            else:
+                continue
 
             if artifact_type in self.filetypes:
-                copy(artifact, self.temp_dir)
-                print("copy: %s > %s" % (artifact, self.temp_dir))
+                print("copy: %s > %s" % (artifact, temp_dir))
+                copy(artifact, temp_dir)
 
-    def process_packages(self):
+    def process_packages(self, temp_dir):
         """ no-op. This will be overloaded by a subclass if needed. """
         pass
 
@@ -359,10 +364,17 @@ class YumRepoReleaser(RsyncReleaser):
     """
 
     # Default list of packages to copy
-    filetypes = ['rpm' ]
+    filetypes = ['rpm']
 
     # By default run createrepo without any paramaters
     createrepo_command = "createrepo ."
+
+    def __init__(self, name=None, version=None, tag=None, build_dir=None,
+            pkg_config=None, global_config=None, user_config=None,
+            target=None, releaser_config=None, no_cleanup=False):
+        RsyncReleaser.__init__(self, name, version, tag, build_dir, pkg_config,
+                global_config, user_config, target, releaser_config, no_cleanup,
+                prefix="yumrepo-")
 
     def _read_rpm_header(self, ts, new_rpm_path):
         """
@@ -373,23 +385,23 @@ class YumRepoReleaser(RsyncReleaser):
         os.close(fd)
         return header
 
-    def process_packages(self):
+    def process_packages(self, temp_dir):
         print("Refreshing yum repodata...")
-        if self.releaser_config.has_option(self.target,'createrepo_command'):
+        if self.releaser_config.has_option(self.target, 'createrepo_command'):
             self.createrepo_command = self.releaser_config.get(self.target, 'createrepo_command')
-        os.chdir(self.temp_dir)
+        os.chdir(temp_dir)
         output = run_command(self.createrepo_command)
         debug(output)
-        self.prune_other_versions()
+        self.prune_other_versions(temp_dir)
 
-    def prune_other_versions(self):
+    def prune_other_versions(self, temp_dir):
         """
         Cleanout any other version of the package we just built.
 
         Both older and newer packages will be removed (can be used
         to downgrade the contents of a yum repo).
         """
-        os.chdir(self.temp_dir)
+        os.chdir(temp_dir)
         rpm_ts = rpm.TransactionSet()
         self.new_rpm_dep_sets = {}
         for artifact in self.builder.artifacts:
@@ -403,10 +415,10 @@ class YumRepoReleaser(RsyncReleaser):
         # Now cleanout any other version of the package we just built,
         # both older or newer. (can be used to downgrade the contents
         # of a yum repo)
-        for filename in os.listdir(self.temp_dir):
+        for filename in os.listdir(temp_dir):
             if not filename.endswith(".rpm"):
                 continue
-            full_path = os.path.join(self.temp_dir, filename)
+            full_path = os.path.join(temp_dir, filename)
             try:
                 hdr = self._read_rpm_header(rpm_ts, full_path)
             except rpm.error, e:
@@ -416,8 +428,9 @@ class YumRepoReleaser(RsyncReleaser):
                 dep_set = hdr.dsOfHeader()
                 if dep_set.EVR() < self.new_rpm_dep_sets[hdr['name']].EVR():
                     print("Deleting old package: %s" % filename)
-                    run_command("rm %s" % os.path.join(self.temp_dir,
+                    run_command("rm %s" % os.path.join(temp_dir,
                         filename))
+
 
 class FedoraGitReleaser(Releaser):
 
