@@ -243,9 +243,9 @@ class RsyncReleaser(Releaser):
     """
     A releaser which will rsync from a remote host, build the desired packages,
     plug them in, and upload to server.
-    
+
     Building of the packages is done via mock.
-    
+
     WARNING: This will not work in all
     situations, depending on the current OS, and the mock target you
     are attempting to use.
@@ -301,6 +301,7 @@ class RsyncReleaser(Releaser):
             self.rsync_location = rsync_location
             output = run_command("rsync -rlvz %s %s" % (rsync_location, self.temp_dir))
             debug(output)
+
     def rsync_to_remote(self):
         print("rsync: %s -> %s" % (self.rsync_location, self.rsync_location))
         os.chdir(self.temp_dir)
@@ -318,6 +319,7 @@ class RsyncReleaser(Releaser):
             rmtree(self.temp_dir)
         else:
             print("WARNING: leaving %s (--no-cleanup)" % self.temp_dir)
+
     def copy_files_to_temp_dir(self):
         os.chdir(self.temp_dir)
 
@@ -334,9 +336,11 @@ class RsyncReleaser(Releaser):
             if artifact_type in self.filetypes:
                 copy(artifact, self.temp_dir)
                 print("copy: %s > %s" % (artifact, self.temp_dir))
+
     def process_packages(self):
         """ no-op. This will be overloaded by a subclass if needed. """
         pass
+
     def cleanup(self):
         """ No-op, we clean up during self.release() """
         pass
@@ -356,9 +360,9 @@ class YumRepoReleaser(RsyncReleaser):
 
     # Default list of packages to copy
     filetypes = ['rpm' ]
-    
+
     # By default run createrepo without any paramaters
-    createrepo_command = "createrepo ." 
+    createrepo_command = "createrepo ."
 
     def _read_rpm_header(self, ts, new_rpm_path):
         """
@@ -377,6 +381,7 @@ class YumRepoReleaser(RsyncReleaser):
         output = run_command(self.createrepo_command)
         debug(output)
         self.prune_other_versions()
+
     def prune_other_versions(self):
         """
         Cleanout any other version of the package we just built.
@@ -389,10 +394,10 @@ class YumRepoReleaser(RsyncReleaser):
         self.new_rpm_dep_sets = {}
         for artifact in self.builder.artifacts:
             if artifact.endswith(".rpm") and not artifact.endswith(".src.rpm"):
-		try:
+                try:
                     header = self._read_rpm_header(rpm_ts, artifact)
                 except rpm.error, e:
-		    continue 
+                    continue
                 self.new_rpm_dep_sets[header['name']] = header.dsOfHeader()
 
         # Now cleanout any other version of the package we just built,
@@ -406,7 +411,7 @@ class YumRepoReleaser(RsyncReleaser):
                 hdr = self._read_rpm_header(rpm_ts, full_path)
             except rpm.error, e:
                 print "error reading rpm header in '%s': %s" % (full_path, e)
-		continue 
+                continue
             if hdr['name'] in self.new_rpm_dep_sets:
                 dep_set = hdr.dsOfHeader()
                 if dep_set.EVR() < self.new_rpm_dep_sets[hdr['name']].EVR():
