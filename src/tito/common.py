@@ -24,7 +24,7 @@ DEFAULT_BUILD_DIR = "/tmp/tito"
 DEFAULT_BUILDER = "default_builder"
 DEFAULT_TAGGER = "default_tagger"
 GLOBALCONFIG_SECTION = "globalconfig"
-SHA_RE=re.compile(r'\b[0-9a-f]{30,}\b')
+SHA_RE = re.compile(r'\b[0-9a-f]{30,}\b')
 
 # Define some shortcuts to fully qualified Builder classes to make things
 # a little more concise for CLI users. Mock is probably the only one this
@@ -107,7 +107,7 @@ def error_out(error_msgs):
         print("ERROR: %s" % error_msgs)
     print
     if 'DEBUG' in os.environ:
-       traceback.print_stack()
+        traceback.print_stack()
     sys.exit(1)
 
 
@@ -182,10 +182,14 @@ def find_git_root():
         cdup = "./"
     return os.path.abspath(cdup)
 
+
 def extract_sha1(output):
     match = SHA_RE.search(output)
-    if match: return match.group(0)
-    else: return ""
+    if match:
+        return match.group(0)
+    else:
+        return ""
+
 
 def run_command(command):
     debug(command)
