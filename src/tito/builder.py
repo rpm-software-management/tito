@@ -514,6 +514,82 @@ class NoTgzBuilder(Builder):
                     )
             run_command(cmd)
 
+class GemBuilder(NoTgzBuilder):
+    """
+    Gem Builder
+
+    Builder for packages whose sources are managed as gem source structures
+    and the upstream project does not want to store gem files in git.
+    """
+
+    def __init__(self, name=None, version=None, tag=None, build_dir=None,
+            pkg_config=None, global_config=None, user_config=None,
+            args=None, **kwargs):
+
+        NoTgzBuilder.__init__(self, name=name, version=version, tag=tag,
+                build_dir=build_dir, pkg_config=pkg_config,
+                global_config=global_config, user_config=user_config,
+                args=args, **kwargs)
+    
+    def _setup_sources(self):
+        """
+        Create a copy of the git source for the project at the point in time
+        our build tag was created.
+
+        Created in the temporary rpmbuild SOURCES directory.
+        """
+        self._create_build_dirs()
+
+        debug("Creating %s from git tag: %s..." % (self.tgz_filename,
+            self.git_commit_id))
+        create_tgz(self.git_root, self.tgz_dir, self.git_commit_id,
+                self.relative_project_dir, self.rel_eng_dir,
+                os.path.join(self.rpmbuild_sourcedir, self.tgz_filename))
+
+        # Extract the source so we can get at the spec file, etc.
+        debug("Copying git source to: %s" % self.rpmbuild_gitcopy)
+        run_command("cd %s/ && tar xzf %s" % (self.rpmbuild_sourcedir,
+            self.tgz_filename))
+        
+        # Find the gemspec
+        gemspec_filename = find_gemspec_file(in_dir=self.rpmbuild_gitcopy)
+        
+        debug("Building gem: %s in %s" % (gemspec_filename, 
+            self.rpmbuild_gitcopy))
+        # FIXME - this is ugly and should probably be handled better
+        cmd = "gem_name=$(cd %s/ && gem build %s | awk '/File/ {print $2}'); \
+            cp %s/$gem_name %s/" % (self.rpmbuild_gitcopy, gemspec_filename, 
+            self.rpmbuild_gitcopy, self.rpmbuild_sourcedir)
+        
+        run_command(cmd)
+
+        # NOTE: The spec file we actually use is the one exported by git
+        # archive into the temp build directory. This is done so we can
+        # modify the version/release on the fly when building test rpms
+        # that use a git SHA1 for their version.
+        self.spec_file_name = find_spec_file(in_dir=self.rpmbuild_gitcopy)
+        self.spec_file = os.path.join(
+            self.rpmbuild_gitcopy, self.spec_file_name)
+    
+    def tgz(self):
+        """ Override parent behavior, we don't have or need a tgz. """
+        # This method is named tgz to maintain consistent with the api
+        # but it is misnamed and possibly confusing.
+        self._setup_sources()
+        self.ran_tgz = True
+
+
+        # This isn't required to be a tuple but left that way in case of the
+        # need for flexibility later (Gemfile, Gemfile.lock)
+        source_suffixes = ('.gemspec')
+        debug("Scanning for sources.")
+        for filename in os.listdir(self.rpmbuild_gitcopy):
+            for suffix in source_suffixes:
+                if filename.endswith(suffix):
+                    self.sources.append(os.path.join(self.rpmbuild_gitcopy,
+                        filename))
+        debug("  Sources: %s" % self.sources)
+
 
 class CvsBuilder(NoTgzBuilder):
     """
