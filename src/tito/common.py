@@ -107,7 +107,7 @@ def error_out(error_msgs):
         print("ERROR: %s" % error_msgs)
     print
     if 'DEBUG' in os.environ:
-       traceback.print_stack()
+        traceback.print_stack()
     sys.exit(1)
 
 
@@ -165,6 +165,7 @@ def find_spec_file(in_dir=None):
         if f.endswith(".spec"):
             return f
     error_out(["Unable to locate a spec file in %s" % in_dir])
+
 
 def find_gemspec_file(in_dir=None):
     """

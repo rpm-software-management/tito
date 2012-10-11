@@ -514,6 +514,7 @@ class NoTgzBuilder(Builder):
                     )
             run_command(cmd)
 
+
 class GemBuilder(NoTgzBuilder):
     """
     Gem Builder
@@ -530,7 +531,7 @@ class GemBuilder(NoTgzBuilder):
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
                 args=args, **kwargs)
-    
+
     def _setup_sources(self):
         """
         Create a copy of the git source for the project at the point in time
@@ -550,17 +551,17 @@ class GemBuilder(NoTgzBuilder):
         debug("Copying git source to: %s" % self.rpmbuild_gitcopy)
         run_command("cd %s/ && tar xzf %s" % (self.rpmbuild_sourcedir,
             self.tgz_filename))
-        
+
         # Find the gemspec
         gemspec_filename = find_gemspec_file(in_dir=self.rpmbuild_gitcopy)
-        
-        debug("Building gem: %s in %s" % (gemspec_filename, 
+
+        debug("Building gem: %s in %s" % (gemspec_filename,
             self.rpmbuild_gitcopy))
         # FIXME - this is ugly and should probably be handled better
         cmd = "gem_name=$(cd %s/ && gem build %s | awk '/File/ {print $2}'); \
-            cp %s/$gem_name %s/" % (self.rpmbuild_gitcopy, gemspec_filename, 
+            cp %s/$gem_name %s/" % (self.rpmbuild_gitcopy, gemspec_filename,
             self.rpmbuild_gitcopy, self.rpmbuild_sourcedir)
-        
+
         run_command(cmd)
 
         # NOTE: The spec file we actually use is the one exported by git
@@ -570,14 +571,13 @@ class GemBuilder(NoTgzBuilder):
         self.spec_file_name = find_spec_file(in_dir=self.rpmbuild_gitcopy)
         self.spec_file = os.path.join(
             self.rpmbuild_gitcopy, self.spec_file_name)
-    
+
     def tgz(self):
         """ Override parent behavior, we don't have or need a tgz. """
         # This method is named tgz to maintain consistent with the api
         # but it is misnamed and possibly confusing.
         self._setup_sources()
         self.ran_tgz = True
-
 
         # This isn't required to be a tuple but left that way in case of the
         # need for flexibility later (Gemfile, Gemfile.lock)

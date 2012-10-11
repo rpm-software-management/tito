@@ -239,13 +239,14 @@ class Releaser(object):
 
         return new_files, copied_files, old_files
 
+
 class RsyncReleaser(Releaser):
     """
     A releaser which will rsync from a remote host, build the desired packages,
     plug them in, and upload to server.
-    
+
     Building of the packages is done via mock.
-    
+
     WARNING: This will not work in all
     situations, depending on the current OS, and the mock target you
     are attempting to use.
@@ -253,7 +254,7 @@ class RsyncReleaser(Releaser):
     REQUIRED_CONFIG = ['rsync', 'builder']
 
     # Default list of packages to copy
-    filetypes = ['rpm', 'srpm', 'tgz' ]
+    filetypes = ['rpm', 'srpm', 'tgz']
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
@@ -301,6 +302,7 @@ class RsyncReleaser(Releaser):
             self.rsync_location = rsync_location
             output = run_command("rsync -rlvz %s %s" % (rsync_location, self.temp_dir))
             debug(output)
+
     def rsync_to_remote(self):
         print("rsync: %s -> %s" % (self.rsync_location, self.rsync_location))
         os.chdir(self.temp_dir)
@@ -318,25 +320,33 @@ class RsyncReleaser(Releaser):
             rmtree(self.temp_dir)
         else:
             print("WARNING: leaving %s (--no-cleanup)" % self.temp_dir)
+
     def copy_files_to_temp_dir(self):
         os.chdir(self.temp_dir)
 
         # overwrite default self.filetypes if filetypes option is specified in config
-        if self.releaser_config.has_option(self.target,'filetypes'):
+        if self.releaser_config.has_option(self.target, 'filetypes'):
             self.filetypes = self.releaser_config.get(self.target, 'filetypes').split(" ")
 
         for artifact in self.builder.artifacts:
-            if artifact.endswith('.tar.gz'): artifact_type = 'tgz'
-            elif artifact.endswith('src.rpm'): artifact_type = 'srpm'
-            elif artifact.endswith('.rpm'): artifact_type = 'rpm'
-            else: continue
+
+            if artifact.endswith('.tar.gz'):
+                artifact_type = 'tgz'
+            elif artifact.endswith('src.rpm'):
+                artifact_type = 'srpm'
+            elif artifact.endswith('.rpm'):
+                artifact_type = 'rpm'
+            else:
+                continue
 
             if artifact_type in self.filetypes:
                 copy(artifact, self.temp_dir)
                 print("copy: %s > %s" % (artifact, self.temp_dir))
+
     def process_packages(self):
         """ no-op. This will be overloaded by a subclass if needed. """
         pass
+
     def cleanup(self):
         """ No-op, we clean up during self.release() """
         pass
@@ -355,10 +365,10 @@ class YumRepoReleaser(RsyncReleaser):
     """
 
     # Default list of packages to copy
-    filetypes = ['rpm' ]
-    
+    filetypes = ['rpm']
+
     # By default run createrepo without any paramaters
-    createrepo_command = "createrepo ." 
+    createrepo_command = "createrepo ."
 
     def _read_rpm_header(self, ts, new_rpm_path):
         """
@@ -371,12 +381,13 @@ class YumRepoReleaser(RsyncReleaser):
 
     def process_packages(self):
         print("Refreshing yum repodata...")
-        if self.releaser_config.has_option(self.target,'createrepo_command'):
+        if self.releaser_config.has_option(self.target, 'createrepo_command'):
             self.createrepo_command = self.releaser_config.get(self.target, 'createrepo_command')
         os.chdir(self.temp_dir)
         output = run_command(self.createrepo_command)
         debug(output)
         self.prune_other_versions()
+
     def prune_other_versions(self):
         """
         Cleanout any other version of the package we just built.
@@ -389,10 +400,10 @@ class YumRepoReleaser(RsyncReleaser):
         self.new_rpm_dep_sets = {}
         for artifact in self.builder.artifacts:
             if artifact.endswith(".rpm") and not artifact.endswith(".src.rpm"):
-		try:
+                try:
                     header = self._read_rpm_header(rpm_ts, artifact)
                 except rpm.error, e:
-		    continue 
+                    continue
                 self.new_rpm_dep_sets[header['name']] = header.dsOfHeader()
 
         # Now cleanout any other version of the package we just built,
@@ -406,13 +417,14 @@ class YumRepoReleaser(RsyncReleaser):
                 hdr = self._read_rpm_header(rpm_ts, full_path)
             except rpm.error, e:
                 print "error reading rpm header in '%s': %s" % (full_path, e)
-		continue 
+                continue
             if hdr['name'] in self.new_rpm_dep_sets:
                 dep_set = hdr.dsOfHeader()
                 if dep_set.EVR() < self.new_rpm_dep_sets[hdr['name']].EVR():
                     print("Deleting old package: %s" % filename)
                     run_command("rm %s" % os.path.join(self.temp_dir,
                         filename))
+
 
 class FedoraGitReleaser(Releaser):
 
