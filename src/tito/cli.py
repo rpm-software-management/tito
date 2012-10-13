@@ -439,7 +439,7 @@ class ReleaseModule(BaseCliModule):
                 action="store_true", default=False,
                 help="Do not actually commit/push anything during release.")
 
-        self.parser.add_option("--all",
+        self.parser.add_option("--all", action="store_true",
                 help="Run all release targets configured.")
 
         self.parser.add_option("--all-starting-with", dest="all_starting_with",
