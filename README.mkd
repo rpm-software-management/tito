@@ -138,11 +138,11 @@ Tito supports a mechanism where you can define multiple release targets.
 
 In rel-eng/releasers.conf, create a section like:
 
-[yum-f15-x86_64]
-releaser = tito.release.YumRepoReleaser
-builder = tito.builder.MockBuilder
-builder.mock = fedora-15-x86_64
-rsync = fedorapeople.org:/srv/repos/dgoodwin/tito/fedora-15/x86_64/
+    [yum-f15-x86_64]
+    releaser = tito.release.YumRepoReleaser
+    builder = tito.builder.MockBuilder
+    builder.mock = fedora-15-x86_64
+    rsync = fedorapeople.org:/srv/repos/dgoodwin/tito/fedora-15/x86_64/
 
 You can define as many release targets as you like with various configurations.
 To publish the most recently tagged build in your current branch you would run:
