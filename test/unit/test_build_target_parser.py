@@ -1,6 +1,6 @@
 
 import unittest
-from tito.release import BuildTargetParser
+from tito.buildparser import BuildTargetParser
 from ConfigParser import ConfigParser
 from tito.exception import TitoException
 
