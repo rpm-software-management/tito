@@ -455,8 +455,9 @@ class FedoraGitReleaser(Releaser):
                                                 self.git_branches)
         self.build_targets = build_target_parser.get_build_targets()
 
-    def release(self, dry_run=False):
+    def release(self, dry_run=False, no_build=False):
         self.dry_run = dry_run
+        self.no_build = no_build
         self._git_release()
 
     def _get_build_target_for_branch(self, branch):
@@ -570,7 +571,8 @@ class FedoraGitReleaser(Releaser):
             print(cmd)
             run_command(cmd)
 
-        self._build(main_branch)
+        if not self.no_build:
+            self._build(main_branch)
 
         for branch in self.git_branches[1:]:
             print("Merging branch: '%s' -> '%s'" % (main_branch, branch))
@@ -584,7 +586,9 @@ class FedoraGitReleaser(Releaser):
                 print(cmd)
                 run_command(cmd)
 
-            self._build(branch)
+            if not no_build:
+                self._build(branch)
+
             print
 
     def _merge(self, main_branch):

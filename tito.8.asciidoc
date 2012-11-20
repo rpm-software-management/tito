@@ -191,6 +191,9 @@ build a specific tag instead of the latest version
 --dry-run::
 Do not actually commit/push anything during release.
 
+--no-build::
+Do not perform a brew/koji build, only DistGit (only for Koji/DistGit releasers)
+
 --all::
 Run all release targets defined in rel-eng/releasers.conf.
 
