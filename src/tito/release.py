@@ -586,7 +586,7 @@ class FedoraGitReleaser(Releaser):
                 print(cmd)
                 run_command(cmd)
 
-            if not no_build:
+            if not self.no_build:
                 self._build(branch)
 
             print
