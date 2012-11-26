@@ -464,6 +464,10 @@ class ReleaseModule(BaseCliModule):
                 action="store_true",
                 help="List all configured release targets.")
 
+        self.parser.add_option("--no-build", dest="no_build",
+                action="store_true", default=False,
+                help="Do not perform a build after a DistGit commit")
+
 #        self.parser.add_option("--list-tags", dest="list_tags",
 #                action="store_true",
 #                help="List tags for which we build this package",
@@ -615,7 +619,8 @@ class ReleaseModule(BaseCliModule):
                     target=target,
                     releaser_config=releaser_config,
                     no_cleanup=self.options.no_cleanup)
-            releaser.release(dry_run=self.options.dry_run)
+            releaser.release(dry_run=self.options.dry_run,
+                    no_build=self.options.no_build)
             releaser.cleanup()
 
             # Make sure we go back to where we started, otherwise multiple
