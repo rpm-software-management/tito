@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.4.9
+Version: 0.4.10
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -76,6 +76,20 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Wed Nov 28 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.10-1
+- Add --no-build; this will allow scripted DistGit commits and
+  koji/brew chain-builds (admiller@redhat.com)
+- Added gembuilder, cleaned up pep8 (admiller@redhat.com)
+- Add a Travis configuration (jbowes@repl.ca)
+- Update README.mkd (misc@zarb.org)
+- fix: RsyncReleaser doesn't handle multiple rsync locations
+  (jesusr@redhat.com)
+- remove tabs and trailing whitespace. add whitespace between methods
+  (jesusr@redhat.com)
+- Handle stderr noise getting from remote server (inecas@redhat.com)
+- Can now specify a build target for fedora and distgit releasers
+  (mstead@redhat.com)
+
 * Tue Sep 04 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.9-1
 - Stop passing --installdeps for mock builds. (dgoodwin@redhat.com)
 - YumRepoReleaser feature: createrepo command can now be specified from
