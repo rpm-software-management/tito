@@ -131,6 +131,11 @@ For example - you are building package foo-1.2-3... Tar.gz file is created from
 commit, which is tagged by foo-1.2-1 and the diff between release 1 and 3 is
 put in spec file as Patch0.
 
+tito.builder.GemBuilder::
+Builder for packages that list a .gem as Source0, the .gemspec shares a
+directory hierarchy with the .spec file and the upstream does not want to check
+.gem files into their git repository.
+
 tito.distributionbuilder.DistributionBuilder::
 Behave similar as tito.builder.UpstreamBuilder, but patch is created for every
 release. Therefore package from previous example will end up with tar.gz file
