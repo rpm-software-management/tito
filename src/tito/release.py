@@ -128,7 +128,7 @@ class Releaser(object):
         debug("Parsed custom builder args: %s" % args)
         return args
 
-    def release(self, dry_run=False):
+    def release(self, dry_run=False, no_build=False, scratch=False):
         pass
 
     def cleanup(self):
@@ -275,7 +275,7 @@ class RsyncReleaser(Releaser):
                 build_dir, global_config, user_config, self.builder_args,
                 builder_class=self.releaser_config.get(self.target, 'builder'))
 
-    def release(self, dry_run=False):
+    def release(self, dry_run=False, no_build=False, scratch=False):
         self.dry_run = dry_run
 
         # Should this run?
@@ -455,7 +455,7 @@ class FedoraGitReleaser(Releaser):
                                                 self.git_branches)
         self.build_targets = build_target_parser.get_build_targets()
 
-    def release(self, dry_run=False, no_build=False):
+    def release(self, dry_run=False, no_build=False, scratch=False):
         self.dry_run = dry_run
         self.no_build = no_build
         self._git_release()
@@ -719,7 +719,7 @@ class CvsReleaser(Releaser):
             self.cvs_branches = \
                 self.releaser_config.get(target, "branches").split(" ")
 
-    def release(self, dry_run=False):
+    def release(self, dry_run=False, no_build=False, scratch=False):
         self.dry_run = dry_run
 
         self._cvs_release()
@@ -959,8 +959,9 @@ class KojiReleaser(Releaser):
 
         self.skip_srpm = False
 
-    def release(self, dry_run=False):
+    def release(self, dry_run=False, no_build=False, scratch=False):
         self.dry_run = dry_run
+        self.scratch = scratch
 
         self._koji_release()
 
@@ -978,7 +979,7 @@ class KojiReleaser(Releaser):
         if 'KOJI_OPTIONS' in self.builder.user_config:
             koji_opts = self.builder.user_config['KOJI_OPTIONS']
 
-        if 'SCRATCH' in os.environ and os.environ['SCRATCH'] == '1':
+        if self.scratch or ('SCRATCH' in os.environ and os.environ['SCRATCH'] == '1'):
             koji_opts = ' '.join([koji_opts, '--scratch'])
 
         # TODO: need to re-do this metaphor to use release targets instead:

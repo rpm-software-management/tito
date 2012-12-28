@@ -468,6 +468,10 @@ class ReleaseModule(BaseCliModule):
                 action="store_true", default=False,
                 help="Do not perform a build after a DistGit commit")
 
+        self.parser.add_option("-s", "--scratch", dest="scratch",
+                action="store_true",
+                help="Perform a scratch build in Koji")
+
 #        self.parser.add_option("--list-tags", dest="list_tags",
 #                action="store_true",
 #                help="List tags for which we build this package",
@@ -620,7 +624,8 @@ class ReleaseModule(BaseCliModule):
                     releaser_config=releaser_config,
                     no_cleanup=self.options.no_cleanup)
             releaser.release(dry_run=self.options.dry_run,
-                    no_build=self.options.no_build)
+                    no_build=self.options.no_build,
+                    scratch=self.options.scratch)
             releaser.cleanup()
 
             # Make sure we go back to where we started, otherwise multiple
