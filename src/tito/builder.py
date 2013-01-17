@@ -474,13 +474,10 @@ class NoTgzBuilder(Builder):
         self._setup_sources()
         self.ran_tgz = True
 
-        source_suffixes = ('.tar.gz', '.tgz', '.tar.bz2', '.tar', '.zip', '.jar', '.gem')
         debug("Scanning for sources.")
-        for filename in os.listdir(self.rpmbuild_gitcopy):
-            for suffix in source_suffixes:
-                if filename.endswith(suffix):
-                    self.sources.append(os.path.join(self.rpmbuild_gitcopy,
-                        filename))
+        cmd = "/usr/bin/spectool --list-files '%s' | awk '{print $2}' |xargs -l1 basename " % self.spec_file
+        result = run_command(cmd)
+        self.sources = map(lambda x: os.path.join(self.rpmbuild_gitcopy, x), result.split("\n"))
         debug("  Sources: %s" % self.sources)
 
     def _get_rpmbuild_dir_options(self):
