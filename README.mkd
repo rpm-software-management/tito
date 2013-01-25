@@ -26,6 +26,24 @@ Tito offers the following features:
  - Manage all of the above for a git repository with many disjoint packages
    within it.
 
+INSTALL
+=======
+
+To install from source
+
+    git clone https://github.com/dgoodwin/tito.git
+    cd tito/
+    sudo yum install python-setuptools
+    ./setup.py build
+    sudo ./setup.py install
+
+To make an rpm of tito to install elsewhere
+
+    sudo yum install python-devel asciidoc
+    tito build --rpm
+    # see what's in the package 
+    rpm -ql -p /tmp/tito/noarch/tito-*.noarch.rpm
+
 
 GETTING STARTED
 ===============
