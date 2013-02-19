@@ -475,7 +475,7 @@ class NoTgzBuilder(Builder):
         self.ran_tgz = True
 
         debug("Scanning for sources.")
-        cmd = "/usr/bin/spectool --list-files '%s' | awk '{print $2}' |xargs -l1 basename " % self.spec_file
+        cmd = "/usr/bin/spectool --list-files '%s' | awk '{print $2}' |xargs -l1 --no-run-if-empty basename " % self.spec_file
         result = run_command(cmd)
         self.sources = map(lambda x: os.path.join(self.rpmbuild_gitcopy, x), result.split("\n"))
         debug("  Sources: %s" % self.sources)
