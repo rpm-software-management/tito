@@ -445,7 +445,7 @@ class VersionTagger(object):
 
     def _check_tag_does_not_exist(self, new_tag):
         status, output = commands.getstatusoutput(
-            'git tag | grep %s' % new_tag)
+            'git tag -l %s|grep ""' % new_tag)
         if status == 0:
             raise Exception("Tag %s already exists!" % new_tag)
 
