@@ -16,6 +16,7 @@ Code for tagging Spacewalk/Satellite packages.
 
 import os
 import re
+import rpm
 import commands
 import StringIO
 import shutil
@@ -26,15 +27,15 @@ import sys
 
 from time import strftime
 
-from tito.common import (debug, error_out, run_command, find_git_root,
+from tito.common import (debug, error_out, run_command,
         find_spec_file, get_project_name, get_latest_tagged_version,
         get_script_path, get_spec_version_and_release, replace_version,
         tag_exists_locally, tag_exists_remotely, head_points_to_tag, undo_tag,
         increase_version, reset_release, increase_zstream)
 from tito.exception import TitoException
+from tito.config_object import ConfigObject
 
-
-class VersionTagger(object):
+class VersionTagger(ConfigObject):
     """
     Standard Tagger class, used for tagging packages built from source in
     git. (as opposed to packages which commit a tarball directly into git).
@@ -43,10 +44,13 @@ class VersionTagger(object):
     and the actual RPM "release" will always be set to 1.
     """
 
-    def __init__(self, global_config=None, keep_version=False, offline=False, user_config=None):
-        self.git_root = find_git_root()
-        self.rel_eng_dir = os.path.join(self.git_root, "rel-eng")
-        self.config = global_config
+    def __init__(self, global_config=None, keep_version=False, offline=False, user_config=None, pkg_config=None):
+        """ 
+        pkg_config - Package specific configuration.
+
+        global_config - Global configuration from rel-eng/tito.props.
+        """
+        ConfigObject.__init__(self, pkg_config=pkg_config, global_config=global_config)
         self.user_config = user_config
 
         self.full_project_dir = os.getcwd()
@@ -92,11 +96,27 @@ class VersionTagger(object):
         if options.use_version:
             self._use_version = options.use_version
 
+        self.check_tag_precondition()
+
         # Only two paths through the tagger module right now:
         if options.undo:
             self._undo()
         else:
             self._tag_release()
+
+    def check_tag_precondition(self):
+        if self.config.has_option("tagconfig", "require_package"):
+            packages = self.config.get("tagconfig", "require_package").split(',')
+            ts = rpm.TransactionSet()
+            missing_packages = []
+            for p in packages:
+                p = p.strip()
+                mi = ts.dbMatch('name', p)
+                if not mi:
+                    missing_packages.append(p)
+            if missing_packages:
+                raise TitoException("To tag this package, you must first install: %s" %
+                    ', '.join(missing_packages))
 
     def _tag_release(self):
         """
