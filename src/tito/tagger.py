@@ -44,7 +44,12 @@ class VersionTagger(object):
     and the actual RPM "release" will always be set to 1.
     """
 
-    def __init__(self, global_config=None, keep_version=False, offline=False, user_config=None):
+    def __init__(self, global_config=None, keep_version=False, offline=False, user_config=None, pkg_config=None):
+        """ 
+        pkg_config - Package specific configuration.
+
+        global_config - Global configuration from rel-eng/tito.props.
+        """
         self.git_root = find_git_root()
         self.rel_eng_dir = os.path.join(self.git_root, "rel-eng")
         self.config = global_config
@@ -53,6 +58,14 @@ class VersionTagger(object):
         self.full_project_dir = os.getcwd()
         self.spec_file_name = find_spec_file()
         self.project_name = get_project_name(tag=None)
+
+        # Override global configurations using local configurations
+        for section in pkg_config.sections():
+            for options in pkg_config.options(section):
+                if not self.config.has_section(section):
+                    self.config.add_section(section)
+                self.config.set(section, options,
+                        pkg_config.get(section, options))
 
         self.relative_project_dir = self._get_relative_project_dir(
                 self.git_root)  # i.e. java/
@@ -103,7 +116,7 @@ class VersionTagger(object):
 
     def check_tag_precondition(self):
         if self.config.has_option("tagconfig", "require_package"):
-            packages = self.config.get_option("taggerconfig", "require_package").split(',')
+            packages = self.config.get("tagconfig", "require_package").split(',')
             ts = rpm.TransactionSet()
             missing_packages = []
             for p in packages:
@@ -112,7 +125,7 @@ class VersionTagger(object):
                 if not mi:
                     missing_packages.append(p)
             if missing_packages:
-                raise TitoException("To tag this package, you must first install: %s"
+                raise TitoException("To tag this package, you must first install: %s" %
                     ', '.join(missing_packages))
 
     def _tag_release(self):

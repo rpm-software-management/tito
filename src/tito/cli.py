@@ -694,6 +694,7 @@ class TagModule(BaseCliModule):
 
         tagger = tagger_class(global_config=self.global_config,
         user_config=self.user_config,
+                pkg_config=self.pkg_config,
                 keep_version=self.options.keep_version,
                 offline=self.options.offline)
 
