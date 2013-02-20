@@ -25,9 +25,10 @@ from tempfile import mkdtemp
 from tito.common import *
 from tito.release import *
 from tito.exception import TitoException
+from tito.config_object import ConfigObject
 
 
-class Builder(object):
+class Builder(ConfigObject):
     """
     Parent builder class.
 
@@ -61,14 +62,11 @@ class Builder(object):
         entry. Only for things which vary on invocations of the builder,
         avoid using these if possible.
         """
-
-        self.git_root = find_git_root()
-        self.rel_eng_dir = os.path.join(self.git_root, "rel-eng")
+        ConfigObject.__init__(self, pkg_config=pkg_config, global_config=global_config)
 
         self.project_name = name
         self.build_tag = tag
         self.build_version = version
-        self.config = global_config
         self.user_config = user_config
         self.no_cleanup = False
         self.args = args
@@ -93,14 +91,6 @@ class Builder(object):
 
         if not self.rpmbuild_options:
             self.rpmbuild_options = ''
-
-        # Override global configurations using local configurations
-        for section in pkg_config.sections():
-            for options in pkg_config.options(section):
-                if not self.config.has_section(section):
-                    self.config.add_section(section)
-                self.config.set(section, options,
-                        pkg_config.get(section, options))
 
         if self.config.has_section("requirements"):
             if self.config.has_option("requirements", "tito"):
