@@ -27,15 +27,15 @@ import sys
 
 from time import strftime
 
-from tito.common import (debug, error_out, run_command, find_git_root,
+from tito.common import (debug, error_out, run_command,
         find_spec_file, get_project_name, get_latest_tagged_version,
         get_script_path, get_spec_version_and_release, replace_version,
         tag_exists_locally, tag_exists_remotely, head_points_to_tag, undo_tag,
         increase_version, reset_release, increase_zstream)
 from tito.exception import TitoException
+from tito.config_object import ConfigObject
 
-
-class VersionTagger(object):
+class VersionTagger(ConfigObject):
     """
     Standard Tagger class, used for tagging packages built from source in
     git. (as opposed to packages which commit a tarball directly into git).
@@ -50,22 +50,12 @@ class VersionTagger(object):
 
         global_config - Global configuration from rel-eng/tito.props.
         """
-        self.git_root = find_git_root()
-        self.rel_eng_dir = os.path.join(self.git_root, "rel-eng")
-        self.config = global_config
+        ConfigObject.__init__(self, pkg_config=pkg_config, global_config=global_config)
         self.user_config = user_config
 
         self.full_project_dir = os.getcwd()
         self.spec_file_name = find_spec_file()
         self.project_name = get_project_name(tag=None)
-
-        # Override global configurations using local configurations
-        for section in pkg_config.sections():
-            for options in pkg_config.options(section):
-                if not self.config.has_section(section):
-                    self.config.add_section(section)
-                self.config.set(section, options,
-                        pkg_config.get(section, options))
 
         self.relative_project_dir = self._get_relative_project_dir(
                 self.git_root)  # i.e. java/
