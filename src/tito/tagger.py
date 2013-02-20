@@ -16,6 +16,7 @@ Code for tagging Spacewalk/Satellite packages.
 
 import os
 import re
+import rpm
 import commands
 import StringIO
 import shutil
@@ -92,11 +93,27 @@ class VersionTagger(object):
         if options.use_version:
             self._use_version = options.use_version
 
+        self.check_tag_precondition()
+
         # Only two paths through the tagger module right now:
         if options.undo:
             self._undo()
         else:
             self._tag_release()
+
+    def check_tag_precondition(self):
+        if self.config.has_option("tagconfig", "require_package"):
+            packages = self.config.get_option("taggerconfig", "require_package").split(',')
+            ts = rpm.TransactionSet()
+            missing_packages = []
+            for p in packages:
+                p = p.strip()
+                mi = ts.dbMatch('name', p)
+                if not mi:
+                    missing_packages.append(p)
+            if missing_packages:
+                raise TitoException("To tag this package, you must first install: %s"
+                    ', '.join(missing_packages))
 
     def _tag_release(self):
         """

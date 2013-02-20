@@ -108,6 +108,11 @@ REQUIREMENTS
 tito::
 If tito is older then specified version, it will refuse to continue.
 
+TAGCONFIG
+---------
+require_package::
+Comma separated list of packages, which needs to be installed prior tagging. If those
+packages are not installed, tito will refuse to continue.
 
 BUILDERS
 --------
