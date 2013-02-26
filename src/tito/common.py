@@ -557,7 +557,7 @@ def get_class_by_name(name):
 
 
 def increase_version(version_string):
-    regex = re.compile(r"^(%.*)|(.+\.)?([0-9]+)(\..*|%.*|$)")
+    regex = re.compile(r"^(%.*)|(.+\.)?([0-9]+)(\..*|_.*|%.*|$)")
     match = re.match(regex, version_string)
     if match:
         matches = list(match.groups())
@@ -567,8 +567,8 @@ def increase_version(version_string):
         # Join everything back up, skipping match groups with None
         return "".join([x for x in matches if x])
 
-    # If no match, return an empty string
-    return ""
+    # If no match, return the original string
+    return version_string
 
 
 def reset_release(release_string):
