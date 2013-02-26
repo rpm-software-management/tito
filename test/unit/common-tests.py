@@ -97,6 +97,11 @@ class VersionMathTest(unittest.TestCase):
         expected = "2"
         self.assertEquals(expected, increase_version(line))
 
+    def test_underscore_release(self):
+        line = "1_PG5"
+        expected = "2_PG5"
+        self.assertEquals(expected, increase_version(line))
+
     def test_increase_versionless(self):
         line = "%{app_version}"
         expected = "%{app_version}"
@@ -114,7 +119,7 @@ class VersionMathTest(unittest.TestCase):
 
     def test_unknown_version(self):
         line = "somethingstrange"
-        expected = ""
+        expected = "somethingstrange"
         self.assertEquals(expected, increase_version(line))
 
     def test_empty_string(self):
