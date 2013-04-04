@@ -154,17 +154,23 @@ def create_builder(package_name, build_tag, build_version,
 
 def find_spec_file(in_dir=None):
     """
-    Find the first spec file in the current directory. (hopefully there's
-    only one)
+    Find the first spec file in the current directory.
 
     Returns only the file name, rather than the full path.
     """
     if in_dir == None:
         in_dir = os.getcwd()
+    spec_file_name = None
     for f in os.listdir(in_dir):
         if f.endswith(".spec"):
-            return f
-    error_out(["Unable to locate a spec file in %s" % in_dir])
+            if spec_file_name is not None:
+                error_out("At least two spec files in directory: %s and %s" % [spec_file_name, f])
+            spec_file_name = f
+            debug("Using spec file: %s" % f)
+    if spec_file_name is None: 
+        error_out(["Unable to locate a spec file in %s" % in_dir])
+    else:
+        return spec_file_name
 
 
 def find_gemspec_file(in_dir=None):
