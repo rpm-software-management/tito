@@ -152,34 +152,38 @@ def create_builder(package_name, build_tag, build_version,
     return builder
 
 
+def find_file_with_extension(in_dir=None, suffix=None):
+    """ Find the file with given extension in the current directory. """
+    if in_dir == None:
+        in_dir = os.getcwd()
+    file_name = None
+    for f in os.listdir(in_dir):
+        if f.endswith(suffix):
+            if file_name is not None:
+                error_out("At least two %s files in directory: %s and %s" % (suffix, file_name, f))
+            file_name = f
+            debug("Using file: %s" % f)
+    if file_name is None:
+        error_out("Unable to locate a %s file in %s" % (suffix, in_dir))
+    else:
+        return file_name
+
 def find_spec_file(in_dir=None):
     """
-    Find the first spec file in the current directory. (hopefully there's
-    only one)
+    Find the first spec file in the current directory.
 
     Returns only the file name, rather than the full path.
     """
-    if in_dir == None:
-        in_dir = os.getcwd()
-    for f in os.listdir(in_dir):
-        if f.endswith(".spec"):
-            return f
-    error_out(["Unable to locate a spec file in %s" % in_dir])
+    return find_file_with_extension(in_dir, '.spec')
 
 
 def find_gemspec_file(in_dir=None):
     """
-    Find the first spec file in the current directory. (hopefully there's
-    only one)
+    Find the first spec file in the current directory.
 
     Returns only the file name, rather than the full path.
     """
-    if in_dir == None:
-        in_dir = os.getcwd()
-    for f in os.listdir(in_dir):
-        if f.endswith(".gemspec"):
-            return f
-    error_out(["Unable to locate a spec file in %s" % in_dir])
+    return find_spec_file(in_dir, '.gemspec')
 
 
 def find_git_root():
