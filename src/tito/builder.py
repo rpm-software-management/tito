@@ -828,6 +828,11 @@ class UpstreamBuilder(NoTgzBuilder):
         debug("Generating patch with: %s" % patch_command)
         output = run_command(patch_command)
         print(output)
+        (status, output) = commands.getstatusoutput(
+            "grep 'Binary files .* differ' %s " % patch_file)
+        if status == 0 and output != "":
+            error_out("You are doomed. Diff contains binary files. You can not use this builder")
+
         # Creating two copies of the patch here in the temp build directories
         # just out of laziness. Some builders need sources in SOURCES and
         # others need them in the git copy. Being lazy here avoids one-off

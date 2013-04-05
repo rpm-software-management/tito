@@ -27,6 +27,11 @@ class DistributionBuilder(UpstreamBuilder):
                % (self.rpmbuild_gitcopy, self.project_name, self.upstream_version, self.build_version, self.git_commit_id))
         self.patch_files = output.split("\n")
         for p_file in self.patch_files:
+            (status, output) = commands.getstatusoutput(
+                "grep 'Binary files .* differ' %s/%s " % (self.rpmbuild_gitcopy, p_file))
+            if status == 0 and output != "":
+                error_out("You are doomed. Diff contains binary files. You can not use this builder")
+
             run_command("cp %s/%s %s" % (self.rpmbuild_gitcopy, p_file, self.rpmbuild_sourcedir))
 
         (patch_number, patch_insert_index, patch_apply_index, lines) = self._patch_upstream()
