@@ -164,6 +164,8 @@ path or one of the pre-configured shortcuts. Only useful if you need to override
 --builder-arg='BUILDER_ARGS'::
 Custom arguments specific to a particular builder. (key=value)
 
+--scl='COLLECTION'::
+Build package for software collection. This is mostly usefull for building src.rpm, because for rpm you want to define this option for specific tag in tito.props
 
 
 `tito release [options] TARGETS`

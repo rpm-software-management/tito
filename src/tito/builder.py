@@ -80,6 +80,8 @@ class Builder(ConfigObject):
                 False)
         self.rpmbuild_options = self._get_optional_arg(kwargs,
                 'rpmbuild_options', None)
+        self.scl = self._get_optional_arg(kwargs,
+                'scl', '')
 
         # Allow a builder arg to override the test setting passed in, used by
         # releasers in their config sections.
@@ -232,9 +234,24 @@ class Builder(ConfigObject):
         else:
             debug("*NOT* using dist at all")
 
+        rpmbuild_options = self.rpmbuild_options
+        cmd = "rpm --eval '%scl'"
+        output = run_command(cmd).rstrip()
+        if self.scl:
+            if (output != self.scl) and (output != "%scl"):
+                print "Warning: Meta package of software collection %s installed, but --scl defines %s" % (output, self.scl)
+                print "         Redefining scl macro to %s for this package." % self.scl
+            rpmbuild_options += " --define 'scl %s'" % self.scl
+        else:
+            if output != "%scl":
+                print "Warning: Meta package of software collection %s installed, but --scl is not present." % output
+                print "         Undefining scl macro for this package."
+            # can be replaced by "--undefined scl" when el6 and fc17 is retired
+            rpmbuild_options += " --eval '%undefine scl'"
+
         cmd = ('LC_ALL=C rpmbuild --define "_source_filedigest_algorithm md5"  --define'
             ' "_binary_filedigest_algorithm md5" %s %s %s --nodeps -bs %s' % (
-            self.rpmbuild_options, self._get_rpmbuild_dir_options(),
+            rpmbuild_options, self._get_rpmbuild_dir_options(),
             define_dist, self.spec_file))
         output = run_command(cmd)
         print(output)
