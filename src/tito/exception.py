@@ -28,3 +28,11 @@ class TitoException(Exception):
 
     def __str__(self):
         return "TitoException: %s" % self.message
+
+class RunCommandException(Exception):
+    """ Raised by run_command() """
+    def __init__(self, msg, command, status, output):
+        Exception.__init__(self, msg)
+        self.command = command
+        self.status = status
+        self.output = output
