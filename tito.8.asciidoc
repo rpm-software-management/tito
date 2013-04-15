@@ -147,6 +147,7 @@ or blacklisted.
 
 --only-tags='KOJI_TAG'::
 Build in koji only for specified tags. Can be specified multiple times.
+Can be specified using environment variable ONLY_TAGS as well.
 
 --upload-new-source='CVS_NEW_SOURCES'::
 Upload a new source tarball to CVS lookaside. (i.e.
