@@ -265,7 +265,7 @@ class Builder(ConfigObject):
         except RunCommandException, err:
             msg = str(err)
             if (re.search('Failed build dependencies', err.output)):
-                msg = "Please run 'yum-builddep %s' as root." % find_spec_file()
+                msg = "Please run 'yum-builddep %s' as root." % find_spec_file(self.relative_project_dir)
             error_out('%s' % msg)
         except Exception, err:
             error_out('%s' % str(err))
