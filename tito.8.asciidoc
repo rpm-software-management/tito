@@ -207,7 +207,8 @@ if you have defined release targets yum-f15 and yum-f14 in releasers.conf,
 --all-starting-with=yum will run only these targets, and ignore any others.)
 
 --scratch::
-Perform a scratch build in Koji
+Perform a scratch build in Koji.
+Can be specified using environment variable SCRATCH set to 1 as well.
 
 `tito report`
 ~~~~~~~~~~~~~
