@@ -211,6 +211,24 @@ class Builder(ConfigObject):
         self.artifacts.append(full_path)
         return full_path
 
+    def _scl_to_rpmbuild_option(self):
+        """ Returns rpmbuild option which disable or enable SC and print warning if needed """
+        rpmbuild_options = ""
+        cmd = "rpm --eval '%scl'"
+        output = run_command(cmd).rstrip()
+        if self.scl:
+            if (output != self.scl) and (output != "%scl"):
+                print "Warning: Meta package of software collection %s installed, but --scl defines %s" % (output, self.scl)
+                print "         Redefining scl macro to %s for this package." % self.scl
+            rpmbuild_options += " --define 'scl %s'" % self.scl
+        else:
+            if output != "%scl":
+                print "Warning: Meta package of software collection %s installed, but --scl is not present." % output
+                print "         Undefining scl macro for this package."
+            # can be replaced by "--undefined scl" when el6 and fc17 is retired
+            rpmbuild_options += " --eval '%undefine scl'"
+        return rpmbuild_options
+
     # TODO: reuse_cvs_checkout isn't needed here, should be cleaned up:
     def srpm(self, dist=None, reuse_cvs_checkout=False):
         """
@@ -234,20 +252,7 @@ class Builder(ConfigObject):
         else:
             debug("*NOT* using dist at all")
 
-        rpmbuild_options = self.rpmbuild_options
-        cmd = "rpm --eval '%scl'"
-        output = run_command(cmd).rstrip()
-        if self.scl:
-            if (output != self.scl) and (output != "%scl"):
-                print "Warning: Meta package of software collection %s installed, but --scl defines %s" % (output, self.scl)
-                print "         Redefining scl macro to %s for this package." % self.scl
-            rpmbuild_options += " --define 'scl %s'" % self.scl
-        else:
-            if output != "%scl":
-                print "Warning: Meta package of software collection %s installed, but --scl is not present." % output
-                print "         Undefining scl macro for this package."
-            # can be replaced by "--undefined scl" when el6 and fc17 is retired
-            rpmbuild_options += " --eval '%undefine scl'"
+        rpmbuild_options = self.rpmbuild_options + self._scl_to_rpmbuild_option()
 
         cmd = ('LC_ALL=C rpmbuild --define "_source_filedigest_algorithm md5"  --define'
             ' "_binary_filedigest_algorithm md5" %s %s %s --nodeps -bs %s' % (
@@ -270,9 +275,12 @@ class Builder(ConfigObject):
         define_dist = ""
         if self.dist:
             define_dist = "--define 'dist %s'" % self.dist
+
+        rpmbuild_options = self.rpmbuild_options + self._scl_to_rpmbuild_option()
+
         cmd = ('LC_ALL=C rpmbuild --define "_source_filedigest_algorithm md5"  '
             '--define "_binary_filedigest_algorithm md5" %s %s %s --clean '
-            '-ba %s' % (self.rpmbuild_options,
+            '-ba %s' % (rpmbuild_options,
                 self._get_rpmbuild_dir_options(), define_dist, self.spec_file))
         try:
             output = run_command(cmd)
