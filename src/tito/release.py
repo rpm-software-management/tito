@@ -303,14 +303,14 @@ class RsyncReleaser(Releaser):
     def _rsync_from_remote(self, rsync_location, temp_dir):
         os.chdir(temp_dir)
         print("rsync: %s -> %s" % (rsync_location, temp_dir))
-        output = run_command("rsync -rlvz %s %s" % (rsync_location, temp_dir))
+        output = run_command("rsync -rlptvz %s %s" % (rsync_location, temp_dir))
         debug(output)
 
     def rsync_to_remote(self, temp_dir, rsync_location):
         print("rsync: %s -> %s" % (temp_dir, rsync_location))
         os.chdir(temp_dir)
         # TODO: configurable rsync options?
-        cmd = "rsync -rlvz --delete %s/ %s" % (temp_dir, rsync_location)
+        cmd = "rsync -rlptvz --delete %s/ %s" % (temp_dir, rsync_location)
         if self.dry_run:
             self.print_dry_run_warning(cmd)
         else:
