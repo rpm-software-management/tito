@@ -26,6 +26,11 @@ KOJI_OPTIONS::
 Specify strings of options, which is passed to koji on commandline when you
 execute --koji-release. For example:
 
+
+NO_AUTO_INSTALL::
+Specify list of packages (separated by space), which should NOT be installed,
+when tito is run with -i option.
+
 RPMBUILD_BASEDIR::
 Specifies a base directory for temp files, tarballs, and RPMs.
 If defined, and if the directory exists, `tito` will automatically
