@@ -258,6 +258,9 @@ class RsyncReleaser(Releaser):
     # Default list of packages to copy
     filetypes = ['rpm', 'srpm', 'tgz']
 
+    # By default run rsync with these paramaters
+    rsync_args = "-rlvz"
+
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
             target=None, releaser_config=None, no_cleanup=False,
@@ -285,6 +288,9 @@ class RsyncReleaser(Releaser):
         self.builder._rpm()
         self.builder.cleanup()
 
+        if self.releaser_config.has_option(self.target, 'rsync_args'):
+            self.rsync_args = self.releaser_config.get(self.target, 'rsync_args')
+
         rsync_locations = self.releaser_config.get(self.target, 'rsync').split(" ")
         for rsync_location in rsync_locations:
             if RSYNC_USERNAME in os.environ:
@@ -295,22 +301,22 @@ class RsyncReleaser(Releaser):
             # Make a temp directory to sync the existing repo contents into:
             temp_dir = mkdtemp(dir=self.build_dir, prefix=self.prefix)
 
-            self._rsync_from_remote(rsync_location, temp_dir)
+            self._rsync_from_remote(self.rsync_args, rsync_location, temp_dir)
             self._copy_files_to_temp_dir(temp_dir)
             self.process_packages(temp_dir)
-            self.rsync_to_remote(temp_dir, rsync_location)
+            self.rsync_to_remote(self.rsync_args, temp_dir, rsync_location)
 
-    def _rsync_from_remote(self, rsync_location, temp_dir):
+    def _rsync_from_remote(self, rsync_args, rsync_location, temp_dir):
         os.chdir(temp_dir)
-        print("rsync: %s -> %s" % (rsync_location, temp_dir))
-        output = run_command("rsync -rlptvz %s %s" % (rsync_location, temp_dir))
+        print("rsync %s %s %s" % (rsync_args, rsync_location, temp_dir))
+        output = run_command("rsync %s %s %s" % (rsync_args, rsync_location, temp_dir))
         debug(output)
 
-    def rsync_to_remote(self, temp_dir, rsync_location):
-        print("rsync: %s -> %s" % (temp_dir, rsync_location))
+    def rsync_to_remote(self, rsync_args, temp_dir, rsync_location):
+        print("rsync %s --delete %s/ %s" % (rsync_args, temp_dir, rsync_location))
         os.chdir(temp_dir)
         # TODO: configurable rsync options?
-        cmd = "rsync -rlptvz --delete %s/ %s" % (temp_dir, rsync_location)
+        cmd = "rsync %s --delete %s/ %s" % (rsync_args, temp_dir, rsync_location)
         if self.dry_run:
             self.print_dry_run_warning(cmd)
         else:

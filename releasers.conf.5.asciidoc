@@ -101,10 +101,11 @@ EXAMPLE
  cvsroot = :gserver:cvs.example.com:/cvs/dist
  branches = FEDORA-15
 
- ; rsync tgz file to remote site
+ ; rsync tgz file to remote site with custom rsync arguments
  [rsync]
  releaser = tito.release.RsyncReleaser
  builder = tito.builder.MockBuilder
  builder.mock = fedora-15-x86_64
  filetypes = tgz
  rsync = remoteserver.org:/srv/tarballs/
+ rsync_args = -rlvzpt
