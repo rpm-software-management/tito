@@ -227,6 +227,7 @@ class Releaser(object):
                 new_files.append(base_filename)
             else:
                 print("   copying: %s" % base_filename)
+                copied_files.append(base_filename)
 
             cmd = "cp %s %s" % (copy_me, dest_path)
             run_command(cmd)
@@ -534,6 +535,7 @@ class FedoraGitReleaser(Releaser):
         # Newer versions of git don't seem to want --cached here? Try both:
         (status, diff_output) = commands.getstatusoutput("git diff --cached")
         if diff_output.strip() == "":
+            debug("git diff --cached returned nothing, falling back to git diff.")
             (status, diff_output) = commands.getstatusoutput("git diff")
 
         if diff_output.strip() == "":
@@ -683,7 +685,7 @@ class FedoraGitReleaser(Releaser):
 
         # Git add everything:
         for add_file in (new + copied):
-            commands.getstatusoutput("git add %s" % add_file)
+            run_command("git add %s" % add_file)
 
         # Cleanup obsolete files:
         for cleanup_file in old:
