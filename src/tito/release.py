@@ -16,6 +16,7 @@ from ConfigParser import NoOptionError
 Code for submitting builds for release.
 """
 
+import copy
 import os
 import commands
 import tempfile
@@ -23,7 +24,7 @@ import subprocess
 import rpm
 
 from tempfile import mkdtemp
-from shutil import rmtree, copy
+import shutil
 
 from tito.common import *
 from tito.buildparser import BuildTargetParser
@@ -320,7 +321,7 @@ class RsyncReleaser(Releaser):
         if not self.no_cleanup:
             debug("Cleaning up [%s]" % temp_dir)
             os.chdir("/")
-            rmtree(temp_dir)
+            shutil.rmtree(temp_dir)
         else:
             print("WARNING: leaving %s (--no-cleanup)" % temp_dir)
 
@@ -343,7 +344,7 @@ class RsyncReleaser(Releaser):
 
             if artifact_type in self.filetypes:
                 print("copy: %s > %s" % (artifact, temp_dir))
-                copy(artifact, temp_dir)
+                shutil.copy(artifact, temp_dir)
 
     def process_packages(self, temp_dir):
         """ no-op. This will be overloaded by a subclass if needed. """
@@ -991,17 +992,20 @@ class KojiReleaser(Releaser):
         for koji_tag in koji_tags:
             if self.only_tags and koji_tag not in self.only_tags:
                 continue
+            scl = None
+            if self.builder.config.has_option(koji_tag, "scl"):
+                scl = self.builder.config.get(koji_tag, "scl")
             # Lookup the disttag configured for this Koji tag:
             disttag = self.builder.config.get(koji_tag, "disttag")
             if self.builder.config.has_option(koji_tag, "whitelist"):
                 # whitelist implies only those packages can be built to the
                 # tag,regardless if blacklist is also defined.
-                if not self.__is_whitelisted(koji_tag):
+                if not self.__is_whitelisted(koji_tag, scl):
                     print("WARNING: %s not specified in whitelist for %s" % (
                         self.project_name, koji_tag))
                     print("   Package *NOT* submitted to Koji.")
                     continue
-            elif self.__is_blacklisted(koji_tag):
+            elif self.__is_blacklisted(koji_tag, scl):
                 print("WARNING: %s specified in blacklist for %s" % (
                     self.project_name, koji_tag))
                 print("   Package *NOT* submitted to Koji.")
@@ -1010,26 +1014,30 @@ class KojiReleaser(Releaser):
             # Getting tricky here, normally Builder's are only used to
             # create one rpm and then exit. Here we're going to try
             # to run multiple srpm builds:
+            builder = self.builder
             if not self.skip_srpm:
-                self.builder.srpm(dist=disttag, reuse_cvs_checkout=True)
+                if scl:
+                    builder = copy.copy(self.builder)
+                    builder.scl = scl
+                builder.srpm(dist=disttag, reuse_cvs_checkout=True)
 
-            self._submit_build("koji", koji_opts, koji_tag)
+            self._submit_build("koji", koji_opts, koji_tag, builder.srpm_location)
 
-    def __is_whitelisted(self, koji_tag):
+    def __is_whitelisted(self, koji_tag, scl):
         """ Return true if package is whitelisted in tito.props"""
         return self.builder.config.has_option(koji_tag, "whitelist") and \
-            self.project_name in self.builder.config.get(koji_tag,
+            get_project_name(self.builder.build_tag, scl) in self.builder.config.get(koji_tag,
                         "whitelist").strip().split(" ")
 
-    def __is_blacklisted(self, koji_tag):
+    def __is_blacklisted(self, koji_tag, scl):
         """ Return true if package is blacklisted in tito.props"""
         return self.builder.config.has_option(koji_tag, "blacklist") and \
-            self.project_name in self.builder.config.get(koji_tag,
+            get_project_name(self.builder.build_tag, scl) in self.builder.config.get(koji_tag,
                         "blacklist").strip().split(" ")
 
-    def _submit_build(self, executable, koji_opts, tag):
+    def _submit_build(self, executable, koji_opts, tag, srpm_location):
         """ Submit srpm to brew/koji. """
-        cmd = "%s %s %s %s" % (executable, koji_opts, tag, self.builder.srpm_location)
+        cmd = "%s %s %s %s" % (executable, koji_opts, tag, srpm_location)
         print("\nSubmitting build with: %s" % cmd)
 
         if self.dry_run:

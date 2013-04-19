@@ -23,6 +23,7 @@ from distutils.version import LooseVersion as loose_version
 from tempfile import mkdtemp
 
 from tito.common import *
+from tito.common import scl_to_rpm_option
 from tito.exception import RunCommandException
 from tito.release import *
 from tito.exception import TitoException
@@ -213,21 +214,7 @@ class Builder(ConfigObject):
 
     def _scl_to_rpmbuild_option(self):
         """ Returns rpmbuild option which disable or enable SC and print warning if needed """
-        rpmbuild_options = ""
-        cmd = "rpm --eval '%scl'"
-        output = run_command(cmd).rstrip()
-        if self.scl:
-            if (output != self.scl) and (output != "%scl"):
-                print "Warning: Meta package of software collection %s installed, but --scl defines %s" % (output, self.scl)
-                print "         Redefining scl macro to %s for this package." % self.scl
-            rpmbuild_options += " --define 'scl %s'" % self.scl
-        else:
-            if output != "%scl":
-                print "Warning: Meta package of software collection %s installed, but --scl is not present." % output
-                print "         Undefining scl macro for this package."
-            # can be replaced by "--undefined scl" when el6 and fc17 is retired
-            rpmbuild_options += " --eval '%undefine scl'"
-        return rpmbuild_options
+        return scl_to_rpm_option(self.scl)
 
     # TODO: reuse_cvs_checkout isn't needed here, should be cleaned up:
     def srpm(self, dist=None, reuse_cvs_checkout=False):
