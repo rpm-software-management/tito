@@ -50,9 +50,11 @@ class Releaser(object):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False):
+            target=None, releaser_config=None, no_cleanup=False, test=False):
 
         self.builder_args = self._parse_builder_args(releaser_config, target)
+	if test:
+	    self.builder_args['test'] = True # builder must know to build from HEAD
 
         # While we create a builder here, we don't actually call run on it
         # unless the releaser needs to:
@@ -80,7 +82,7 @@ class Releaser(object):
         self.target = target
 
         self.dry_run = False
-
+        self.test = test # releaser must know to use builder designation rather than tag
         self.no_cleanup = no_cleanup
 
         self._check_releaser_config()
@@ -261,10 +263,10 @@ class RsyncReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False,
+            target=None, releaser_config=None, no_cleanup=False, test=False,
             prefix="temp_dir="):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
-                global_config, user_config, target, releaser_config, no_cleanup)
+                global_config, user_config, target, releaser_config, no_cleanup, test)
 
         self.build_dir = build_dir
         self.prefix = prefix
@@ -374,9 +376,9 @@ class YumRepoReleaser(RsyncReleaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False):
+            target=None, releaser_config=None, no_cleanup=False, test=False):
         RsyncReleaser.__init__(self, name, version, tag, build_dir, pkg_config,
-                global_config, user_config, target, releaser_config, no_cleanup,
+                global_config, user_config, target, releaser_config, no_cleanup, test,
                 prefix="yumrepo-")
 
     def _read_rpm_header(self, ts, new_rpm_path):
@@ -442,9 +444,9 @@ class FedoraGitReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False):
+            target=None, releaser_config=None, no_cleanup=False, test=False):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
-                global_config, user_config, target, releaser_config, no_cleanup)
+                global_config, user_config, target, releaser_config, no_cleanup, test)
 
         self.git_branches = \
             self.releaser_config.get(self.target, "branches").split(" ")
@@ -477,6 +479,8 @@ class FedoraGitReleaser(Releaser):
         run_command("%s switch-branch %s" % (self.cli_tool, self.git_branches[0]))
 
         self.builder.tgz()
+	if self.test:
+	    self.builder._setup_test_specfile()
 
         self._git_sync_files(project_checkout)
         self._git_upload_sources(project_checkout)
@@ -708,9 +712,9 @@ class CvsReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False):
+            target=None, releaser_config=None, no_cleanup=False, test=False):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
-                global_config, user_config, target, releaser_config, no_cleanup)
+                global_config, user_config, target, releaser_config, no_cleanup, test)
 
         self.package_workdir = os.path.join(self.working_dir,
                 self.project_name)
@@ -954,9 +958,9 @@ class KojiReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False):
+            target=None, releaser_config=None, no_cleanup=False, test=False):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
-                global_config, user_config, target, releaser_config, no_cleanup)
+                global_config, user_config, target, releaser_config, no_cleanup, test)
 
         self.only_tags = []
         if 'ONLY_TAGS' in os.environ:

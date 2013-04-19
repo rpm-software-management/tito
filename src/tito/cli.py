@@ -622,7 +622,8 @@ class ReleaseModule(BaseCliModule):
                     user_config=self.user_config,
                     target=target,
                     releaser_config=releaser_config,
-                    no_cleanup=self.options.no_cleanup)
+                    no_cleanup=self.options.no_cleanup,
+		    test=self.options.test)
             releaser.release(dry_run=self.options.dry_run,
                     no_build=self.options.no_build,
                     scratch=self.options.scratch)
