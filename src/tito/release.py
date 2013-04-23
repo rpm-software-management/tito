@@ -50,7 +50,7 @@ class Releaser(object):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False, test=False):
+            target=None, releaser_config=None, no_cleanup=False, test=False, auto_accept=False):
 
         self.builder_args = self._parse_builder_args(releaser_config, target)
 	if test:
@@ -83,9 +83,17 @@ class Releaser(object):
 
         self.dry_run = False
         self.test = test # releaser must know to use builder designation rather than tag
+        self.auto_accept = auto_accept # don't ask for input, just go ahead
         self.no_cleanup = no_cleanup
 
         self._check_releaser_config()
+
+    def _ask_yes_no(self, prompt="Y/N? ", default_auto_answer=True):
+	if self.auto_accept:
+            return default_auto_answer
+        else:
+	    answer = raw_input(prompt)
+	    return answer.lower() in ['y', 'yes', 'ok', 'sure']
 
     def _check_releaser_config(self):
         """
@@ -263,10 +271,10 @@ class RsyncReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False, test=False,
+            target=None, releaser_config=None, no_cleanup=False, test=False, auto_accept=False,
             prefix="temp_dir="):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
-                global_config, user_config, target, releaser_config, no_cleanup, test)
+                global_config, user_config, target, releaser_config, no_cleanup, test, auto_accept)
 
         self.build_dir = build_dir
         self.prefix = prefix
@@ -376,9 +384,9 @@ class YumRepoReleaser(RsyncReleaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False, test=False):
+            target=None, releaser_config=None, no_cleanup=False, test=False, auto_accept=False):
         RsyncReleaser.__init__(self, name, version, tag, build_dir, pkg_config,
-                global_config, user_config, target, releaser_config, no_cleanup, test,
+                global_config, user_config, target, releaser_config, no_cleanup, test, auto_accept,
                 prefix="yumrepo-")
 
     def _read_rpm_header(self, ts, new_rpm_path):
@@ -444,9 +452,9 @@ class FedoraGitReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False, test=False):
+            target=None, releaser_config=None, no_cleanup=False, test=False, auto_accept=False):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
-                global_config, user_config, target, releaser_config, no_cleanup, test)
+                global_config, user_config, target, releaser_config, no_cleanup, test, auto_accept)
 
         self.git_branches = \
             self.releaser_config.get(self.target, "branches").split(" ")
@@ -513,8 +521,7 @@ class FedoraGitReleaser(Releaser):
         print("")
         print("###############################")
         print("")
-        answer = raw_input("Would you like to edit this commit message? [y/n] ")
-        if answer.lower() in ['y', 'yes', 'ok', 'sure']:
+        if self._ask_yes_no("Would you like to edit this commit message? [y/n] ", False):
             debug("Opening editor for user to edit commit message in: %s" % name)
             editor = 'vi'
             if "EDITOR" in os.environ:
@@ -548,8 +555,7 @@ class FedoraGitReleaser(Releaser):
             print(diff_output)
             print("")
             print("##### Please review the above diff #####")
-            answer = raw_input("Do you wish to proceed with commit? [y/n] ")
-            if answer.lower() not in ['y', 'yes', 'ok', 'sure']:
+	    if not self._ask_yes_no("Do you wish to proceed with commit? [y/n] "):
                 print("Fine, you're on your own!")
                 self.cleanup()
                 sys.exit(1)
@@ -712,9 +718,9 @@ class CvsReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False, test=False):
+            target=None, releaser_config=None, no_cleanup=False, test=False, auto_accept=False):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
-                global_config, user_config, target, releaser_config, no_cleanup, test)
+                global_config, user_config, target, releaser_config, no_cleanup, test, auto_accept)
 
         self.package_workdir = os.path.join(self.working_dir,
                 self.project_name)
@@ -862,8 +868,7 @@ class CvsReleaser(Releaser):
 
         print("")
         print("##### Please review the above diff #####")
-        answer = raw_input("Do you wish to proceed with commit? [y/n] ")
-        if answer.lower() not in ['y', 'yes', 'ok', 'sure']:
+        if not self._ask_yes_no("Do you wish to proceed with commit? [y/n] "):
             print("Fine, you're on your own!")
             self.cleanup()
             sys.exit(1)
@@ -893,8 +898,7 @@ class CvsReleaser(Releaser):
         print("")
         print("###############################")
         print("")
-        answer = raw_input("Would you like to edit this commit message? [y/n] ")
-        if answer.lower() in ['y', 'yes', 'ok', 'sure']:
+	if self._ask_yes_no("Would you like to edit this commit message? [y/n] ", False):
             debug("Opening editor for user to edit commit message in: %s" % name)
             editor = 'vi'
             if "EDITOR" in os.environ:
@@ -958,9 +962,9 @@ class KojiReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False, test=False):
+            target=None, releaser_config=None, no_cleanup=False, test=False, auto_accept=False):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
-                global_config, user_config, target, releaser_config, no_cleanup, test)
+                global_config, user_config, target, releaser_config, no_cleanup, test, auto_accept)
 
         self.only_tags = []
         if 'ONLY_TAGS' in os.environ:

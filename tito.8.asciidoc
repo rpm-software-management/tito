@@ -17,6 +17,8 @@ tito build --test --rpm
 
 tito build [OPTIONS]
 
+tito release [OPTIONS] TARGET
+
 tito report
 
 
@@ -210,6 +212,9 @@ if you have defined release targets yum-f15 and yum-f14 in releasers.conf,
 --scratch::
 Perform a scratch build in Koji.
 Can be specified using environment variable SCRATCH set to 1 as well.
+
+--yes::
+Do not ask to confirm release commits or edit their messages.
 
 `tito report`
 ~~~~~~~~~~~~~
