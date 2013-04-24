@@ -289,8 +289,7 @@ class RsyncReleaser(Releaser):
                 version, pkg_config,
                 build_dir, global_config, user_config, self.builder_args,
                 builder_class=self.releaser_config.get(self.target, 'builder'))
-        if self.releaser_config.config.has_option(koji_tag, "scl"):
-                self.builder.scl = self.releaser_config.config.get(koji_tag, "scl")
+
 
     def release(self, dry_run=False, no_build=False, scratch=False):
         self.dry_run = dry_run
