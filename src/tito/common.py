@@ -337,7 +337,7 @@ def debug(text):
 def get_spec_version_and_release(sourcedir, spec_file_name):
     command = ("""rpm -q --qf '%%{version}-%%{release}\n' --define """
         """"_sourcedir %s" --define 'dist %%undefined' --specfile """
-        """%s 2> /dev/null | head -1""" % (sourcedir, spec_file_name))
+        """%s 2> /dev/null | grep -e '^$' -v | head -1""" % (sourcedir, spec_file_name))
     return run_command(command)
 
 
@@ -376,7 +376,7 @@ def get_project_name(tag=None, scl=None):
             error_out("spec file: %s does not exist" % spec_file_path)
 
         output = run_command(
-            "rpm -q --qf '%%{name}\n' %s --specfile %s 2> /dev/null | head -1" %
+            "rpm -q --qf '%%{name}\n' %s --specfile %s 2> /dev/null | grep -e '^$' -v | head -1" %
             (scl_to_rpm_option(scl, silent=True), spec_file_path))
         if not output:
             error_out(["Unable to determine project name from spec file: %s" % spec_file_path,
