@@ -34,6 +34,7 @@ tito.release.RsyncReleaser::
 Releaser which will build your packages, and rsync up to a remote repository.
 Specify "filetypes = rpm srpm tgz" to choose what type of packages will be uploaded.
 You can use environment variable RSYNC_USERNAME to override rsync username.
+Specify "scl = COLLECTION" to build into Software Collection.
 
 tito.release.FedoraGitReleaser::
 
@@ -75,6 +76,7 @@ EXAMPLE
  builder = tito.builder.MockBuilder
  builder.mock = epel-6-x86_64
  builder.test = 1
+ scl = ruby193
  rsync = remoteserver.org:/srv/repos/el6/testing/x86_64
 
  ; Upload into source repository
