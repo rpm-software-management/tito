@@ -23,6 +23,7 @@ from distutils.version import LooseVersion as loose_version
 from tempfile import mkdtemp
 
 from tito.common import *
+from tito.exception import RunCommandException
 from tito.release import *
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
@@ -261,6 +262,11 @@ class Builder(ConfigObject):
         except (KeyboardInterrupt, SystemExit):
             print ""
             exit(1)
+        except RunCommandException, err:
+            msg = str(err)
+            if (re.search('Failed build dependencies', err.output)):
+                msg = "Please run 'yum-builddep %s' as root." % find_spec_file(self.relative_project_dir)
+            error_out('%s' % msg)
         except Exception, err:
             error_out('%s' % str(err))
         print(output)

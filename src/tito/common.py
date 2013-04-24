@@ -20,6 +20,8 @@ import sys
 import commands
 import traceback
 
+from tito.exception import RunCommandException
+
 DEFAULT_BUILD_DIR = "/tmp/tito"
 DEFAULT_BUILDER = "default_builder"
 DEFAULT_TAGGER = "default_tagger"
@@ -209,7 +211,6 @@ def extract_sha1(output):
     else:
         return ""
 
-
 def run_command(command):
     debug(command)
     (status, output) = commands.getstatusoutput(command)
@@ -218,7 +219,7 @@ def run_command(command):
         sys.stderr.write("Error running command: %s\n" % command)
         sys.stderr.write("Status code: %s\n" % status)
         sys.stderr.write("Command output: %s\n" % output)
-        raise Exception("Error running command")
+        raise RunCommandException("Error running command", command, status, output)
     return output
 
 
