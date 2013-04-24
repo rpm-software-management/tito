@@ -74,20 +74,18 @@ An optional specification of a suffix to append to all tags created by tito for 
 KOJI
 ----
 
-WARNING: very experimental, and not tested against Fedora's Koji.
-
-autobuild_tags::
-If you use --koji-relase it will try to build src.rpm package in specified tags
-in koji.
-Also see KOJI_OPTIONS in titorc(5).
-You can specify section which is named as the tag and put there following
-options:
-
 disttag::
 Dist tag variable, which is passed to rpmbuild for packages build in this tag.
 
 blacklist::
 Space separated list of packages, which should not be built in this tag.
+
+whitelist::
+If whitelist is present, only packages listed here can be built in this tag.
+This also override blacklist.
+
+scl::
+Specify name of Software Collection into which package should be build.
 
 CVS
 ---

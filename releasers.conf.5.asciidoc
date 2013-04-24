@@ -55,8 +55,21 @@ Releaser which will submit builds through CVS build systems. (no longer useful f
  branches = BRANCH1 BRANCH2
 
 tito.release.KojiReleaser::
-Highly experimental, ignore for now.
-
+Releaser which create src.rpm and submit them into Koji. Can submit more then one build at once.
++
+NOTE: This is targeted for private instances of Koji. You can not submit regular build into Fedora Koji using this releaser, because Fedora Koji do not allow builds from src.rpm - for building into Fedora see FedoraGitReleaser above.
++
+  [koji]
+  releaser = tito.release.KojiReleaser
+  autobuild_tags = my-koji-tag-rhel6 my-koji-tag-fedora18
++
+In this example, releaser will create src.rpm according the definition of [my-koji-tag-rhel6] in tito.props. You usually want to set up there at least disttag. See KOJI section in tito.props(5).
++
+If --scratch option or SCRATCH environment variable is set, package is build as scratch in Koji.
++
+You can specify KOJI_OPTIONS in titorc(5) and it is passed to koji command as option. Usually you want to specify at least --config option.
++
+Variable autobuild_tags is required for KojiReleaser.
 
 
 EXAMPLE
