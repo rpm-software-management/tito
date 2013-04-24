@@ -69,7 +69,7 @@ package specific `tito.props`.
 show this help message and exit
 
 --debug::
-print debug messages
+print debug messages (can be also set using DEBUG environment variable)
 
 --offline::
 do not attempt any remote communication (avoid using
@@ -113,7 +113,7 @@ environment variable EDITOR.
 show this help message and exit
 
 --debug::
-print debug messages
+print debug messages (can be also set using DEBUG environment variable)
 
 --offline::
 do not attempt any remote communication (avoid using
@@ -183,7 +183,7 @@ Runs the release targets defined in rel-eng/releasers.conf.
 show this help message and exit
 
 --debug::
-print debug messages
+print debug messages (can be also set using DEBUG environment variable)
 
 --offline::
 do not attempt any remote communication (avoid using
