@@ -355,6 +355,9 @@ class BuildModule(BaseCliModule):
         self.parser.add_option("--rpmbuild-options", dest='rpmbuild_options',
                 default='',
                 metavar="OPTIONS", help="Options to pass to rpmbuild.")
+        self.parser.add_option("--scl", dest='scl',
+                default='',
+                metavar="COLLECTION", help="Build package for software collection.")
 
     def main(self, argv):
         BaseCliModule.main(self, argv)
@@ -392,6 +395,7 @@ class BuildModule(BaseCliModule):
                 'offline': self.options.offline,
                 'auto_install': self.options.auto_install,
                 'rpmbuild_options': self.options.rpmbuild_options,
+                'scl': self.options.scl,
         }
 
         builder = create_builder(package_name, build_tag,

@@ -26,17 +26,15 @@ Specify "builder.test = 1" in your releasers.conf target to enable --test builds
 
 tito.release.YumRepoReleaser::
 Releaser which will build your packages, rsync down an existing yum repository, place your packages in it, regenerate the yum repodata, and rsync the yum repository back up.
-
 Specify "filetypes = srpm" if you want to build a source rpm instead of a regular rpm.
-
 Specify "createrepo_command = createrepo -s sha1" if you are building on a recent distro and are working with yum repositories for rhel5.
-
+You can use environment variable RSYNC_USERNAME to override rsync username.
 
 tito.release.RsyncReleaser::
-Releaser which will build your packages, and rsync up to a remote repository
-
-specify "filetypes = rpm srpm tgz" to choose what type of packages will be uploaded.
-
+Releaser which will build your packages, and rsync up to a remote repository.
+Specify "filetypes = rpm srpm tgz" to choose what type of packages will be uploaded.
+You can use environment variable RSYNC_USERNAME to override rsync username.
+Specify "scl = COLLECTION" to build into Software Collection.
 
 tito.release.FedoraGitReleaser::
 
@@ -78,6 +76,7 @@ EXAMPLE
  builder = tito.builder.MockBuilder
  builder.mock = epel-6-x86_64
  builder.test = 1
+ scl = ruby193
  rsync = remoteserver.org:/srv/repos/el6/testing/x86_64
 
  ; Upload into source repository

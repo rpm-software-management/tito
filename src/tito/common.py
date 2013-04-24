@@ -337,11 +337,29 @@ def debug(text):
 def get_spec_version_and_release(sourcedir, spec_file_name):
     command = ("""rpm -q --qf '%%{version}-%%{release}\n' --define """
         """"_sourcedir %s" --define 'dist %%undefined' --specfile """
-        """%s 2> /dev/null | head -1""" % (sourcedir, spec_file_name))
+        """%s 2> /dev/null | grep -e '^$' -v | head -1""" % (sourcedir, spec_file_name))
     return run_command(command)
 
 
-def get_project_name(tag=None):
+def scl_to_rpm_option(scl, silent=None):
+    """ Returns rpm option which disable or enable SC and print warning if needed """
+    rpm_options = ""
+    cmd = "rpm --eval '%scl'"
+    output = run_command(cmd).rstrip()
+    if scl:
+        if (output != scl) and (output != "%scl") and not silent:
+            print "Warning: Meta package of software collection %s installed, but --scl defines %s" % (output, scl)
+            print "         Redefining scl macro to %s for this package." % scl
+        rpm_options += " --define 'scl %s'" % scl
+    else:
+        if (output != "%scl") and (not silent):
+            print "Warning: Meta package of software collection %s installed, but --scl is not present." % output
+            print "         Undefining scl macro for this package."
+        # can be replaced by "--undefined scl" when el6 and fc17 is retired
+        rpm_options += " --eval '%undefine scl'"
+    return rpm_options
+
+def get_project_name(tag=None, scl=None):
     """
     Extract the project name from the specified tag or a spec file in the
     current working directory. Error out if neither is present.
@@ -358,8 +376,8 @@ def get_project_name(tag=None):
             error_out("spec file: %s does not exist" % spec_file_path)
 
         output = run_command(
-            "rpm -q --qf '%%{name}\n' --specfile %s 2> /dev/null | head -1" %
-            spec_file_path)
+            "rpm -q --qf '%%{name}\n' %s --specfile %s 2> /dev/null | grep -e '^$' -v | head -1" %
+            (scl_to_rpm_option(scl, silent=True), spec_file_path))
         if not output:
             error_out(["Unable to determine project name from spec file: %s" % spec_file_path,
                 "Try rpm -q --specfile %s" % spec_file_path,
