@@ -543,6 +543,7 @@ def normalize_class_name(name):
     """
     look_for = "spacewalk.releng."
     if name.startswith(look_for):
+        sys.stderr.write("Warning: spacewalk.releng.* namespace in tito.props is obsolete. Use tito.* instead.\n")
         name = "%s%s" % ("tito.", name[len(look_for):])
     return name
 
