@@ -26,7 +26,7 @@ KOJI_OPTIONS::
 Specify strings of options, which is passed to koji on commandline when you
 use KojiReleaser. For example:
 
-  KOJI_OPTIONS=-c ~/.koji/katello-config --nowait
+  KOJI_OPTIONS=-c ~/.koji/katello-config build --nowait
 
 NO_AUTO_INSTALL::
 Specify list of packages (separated by space), which should NOT be installed,

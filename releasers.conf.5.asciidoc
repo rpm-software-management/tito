@@ -6,10 +6,10 @@ NAME
 ----
 releasers.conf - Config file defining release targets where builds can be published.
 
-
 SYNOPSIS
 --------
 None
+// older asciidoc versions (such as the version for .el5) require a synopsis section
 
 
 DESCRIPTION
@@ -26,29 +26,39 @@ Specify "builder.test = 1" in your releasers.conf target to enable --test builds
 
 tito.release.YumRepoReleaser::
 Releaser which will build your packages, rsync down an existing yum repository, place your packages in it, regenerate the yum repodata, and rsync the yum repository back up.
++
 Specify "filetypes = srpm" if you want to build a source rpm instead of a regular rpm.
++
 Specify "createrepo_command = createrepo -s sha1" if you are building on a recent distro and are working with yum repositories for rhel5.
++
 You can use environment variable RSYNC_USERNAME to override rsync username.
 
 tito.release.RsyncReleaser::
 Releaser which will build your packages, and rsync up to a remote repository.
++
 Specify "filetypes = rpm srpm tgz" to choose what type of packages will be uploaded.
++
 You can use environment variable RSYNC_USERNAME to override rsync username.
++
 Specify "scl = COLLECTION" to build into Software Collection.
++
+Variable "rsync_args" can specify addiontal argument passed to rsync. Default is "-rlvz".
 
 tito.release.FedoraGitReleaser::
-
 Releaser which will checkout your project in Fedora git using fedpkg. Sources are then synced to the first branch your releaser lists. After this tito will git merge the first branch into all other listed branches, triggering builds in each.
-
++
 WARNING: Highly experimental, very prone to failure if merging master into your branches is likely to cause a conflict. You will need to cleanup manually if this occurs.
-
++
  [fedora-git]
  releaser = tito.release.FedoraGitReleaser
  branches = master el5 el6 f14 f15 f16
 
+tito.release.DistGitReleaser::
+Same as FedoraGitReleaser, but use rhpkg instead of fedpkg.
+
 tito.release.CvsReleaser::
 Releaser which will submit builds through CVS build systems. (no longer useful for Fedora) The CVS module is checked out, sources, spec file, and patches are synced and committed, the release is tagged (make tag), and then submitted to the build system. (make build)
-
++
  [cvs]
  releaser = tito.release.CvsReleaser
  cvsroot = :ext:myuser@cvs.fedoraproject.org:/cvs/extra
@@ -71,6 +81,14 @@ You can specify KOJI_OPTIONS in titorc(5) and it is passed to koji command as op
 +
 Variable autobuild_tags is required for KojiReleaser.
 
+tito.release.KojiGitReleaser::
+Build into Koji through dist-git. It behaves as KojiReleaser. Only difference is that src.rpm is not passed to Koji. Instead is sent to koji git hash from which Koji should build package.
++
+Note: This feature is not in upstream Koji (although is submited for long time).
++
+Please do not confuse with FedoraGitReleaser. KojiGitReleaser is intended for private instances of Koji.
++
+You need to specify git_url, which specify url of git repository. This url needs to be reachable from Koji.
 
 EXAMPLE
 -------
