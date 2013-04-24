@@ -23,6 +23,7 @@ from distutils.version import LooseVersion as loose_version
 from tempfile import mkdtemp
 
 from tito.common import *
+from tito.common import scl_to_rpm_option
 from tito.exception import RunCommandException
 from tito.release import *
 from tito.exception import TitoException
@@ -80,6 +81,8 @@ class Builder(ConfigObject):
                 False)
         self.rpmbuild_options = self._get_optional_arg(kwargs,
                 'rpmbuild_options', None)
+        self.scl = self._get_optional_arg(kwargs,
+                'scl', '')
 
         # Allow a builder arg to override the test setting passed in, used by
         # releasers in their config sections.
@@ -209,6 +212,10 @@ class Builder(ConfigObject):
         self.artifacts.append(full_path)
         return full_path
 
+    def _scl_to_rpmbuild_option(self):
+        """ Returns rpmbuild option which disable or enable SC and print warning if needed """
+        return scl_to_rpm_option(self.scl)
+
     # TODO: reuse_cvs_checkout isn't needed here, should be cleaned up:
     def srpm(self, dist=None, reuse_cvs_checkout=False):
         """
@@ -232,9 +239,11 @@ class Builder(ConfigObject):
         else:
             debug("*NOT* using dist at all")
 
+        rpmbuild_options = self.rpmbuild_options + self._scl_to_rpmbuild_option()
+
         cmd = ('LC_ALL=C rpmbuild --define "_source_filedigest_algorithm md5"  --define'
             ' "_binary_filedigest_algorithm md5" %s %s %s --nodeps -bs %s' % (
-            self.rpmbuild_options, self._get_rpmbuild_dir_options(),
+            rpmbuild_options, self._get_rpmbuild_dir_options(),
             define_dist, self.spec_file))
         output = run_command(cmd)
         print(output)
@@ -253,9 +262,12 @@ class Builder(ConfigObject):
         define_dist = ""
         if self.dist:
             define_dist = "--define 'dist %s'" % self.dist
+
+        rpmbuild_options = self.rpmbuild_options + self._scl_to_rpmbuild_option()
+
         cmd = ('LC_ALL=C rpmbuild --define "_source_filedigest_algorithm md5"  '
             '--define "_binary_filedigest_algorithm md5" %s %s %s --clean '
-            '-ba %s' % (self.rpmbuild_options,
+            '-ba %s' % (rpmbuild_options,
                 self._get_rpmbuild_dir_options(), define_dist, self.spec_file))
         try:
             output = run_command(cmd)
