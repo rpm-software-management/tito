@@ -101,6 +101,10 @@ packages
 -u, --undo::
 Undo the most recent (un-pushed) tag.
 
+NOTE: Tito will create automatic changelog from git commits.
+Unless you specify one of auto options, tito will open text editor and allow
+you to edit the text. Editor is by default. This can be changes by
+environment variable EDITOR.
 
 `tito build [options]`
 ~~~~~~~~~~~~~~~~~~~~~~
