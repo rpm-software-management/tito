@@ -626,8 +626,8 @@ class ReleaseModule(BaseCliModule):
                     target=target,
                     releaser_config=releaser_config,
                     no_cleanup=self.options.no_cleanup,
-		    test=self.options.test,
-		    auto_accept=self.options.auto_accept)
+                    test=self.options.test,
+                    auto_accept=self.options.auto_accept)
             releaser.release(dry_run=self.options.dry_run,
                     no_build=self.options.no_build,
                     scratch=self.options.scratch)

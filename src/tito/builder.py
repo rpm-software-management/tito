@@ -404,7 +404,7 @@ class Builder(ConfigObject):
                         self.tgz_filename,
                     )
             run_command(cmd)
-	    self.build_version += ".git." + str(self.commit_count) + "." + str(self.git_commit_id[:7])
+            self.build_version += ".git." + str(self.commit_count) + "." + str(self.git_commit_id[:7])
             self.ran_setup_test_specfile = True
 
     def _get_rpmbuild_dir_options(self):

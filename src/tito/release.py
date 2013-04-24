@@ -53,8 +53,8 @@ class Releaser(object):
             target=None, releaser_config=None, no_cleanup=False, test=False, auto_accept=False):
 
         self.builder_args = self._parse_builder_args(releaser_config, target)
-	if test:
-	    self.builder_args['test'] = True # builder must know to build from HEAD
+        if test:
+            self.builder_args['test'] = True # builder must know to build from HEAD
 
         # While we create a builder here, we don't actually call run on it
         # unless the releaser needs to:
@@ -89,11 +89,11 @@ class Releaser(object):
         self._check_releaser_config()
 
     def _ask_yes_no(self, prompt="Y/N? ", default_auto_answer=True):
-	if self.auto_accept:
+        if self.auto_accept:
             return default_auto_answer
         else:
-	    answer = raw_input(prompt)
-	    return answer.lower() in ['y', 'yes', 'ok', 'sure']
+            answer = raw_input(prompt)
+            return answer.lower() in ['y', 'yes', 'ok', 'sure']
 
     def _check_releaser_config(self):
         """
@@ -487,8 +487,8 @@ class FedoraGitReleaser(Releaser):
         run_command("%s switch-branch %s" % (self.cli_tool, self.git_branches[0]))
 
         self.builder.tgz()
-	if self.test:
-	    self.builder._setup_test_specfile()
+        if self.test:
+            self.builder._setup_test_specfile()
 
         self._git_sync_files(project_checkout)
         self._git_upload_sources(project_checkout)
@@ -555,7 +555,7 @@ class FedoraGitReleaser(Releaser):
             print(diff_output)
             print("")
             print("##### Please review the above diff #####")
-	    if not self._ask_yes_no("Do you wish to proceed with commit? [y/n] "):
+            if not self._ask_yes_no("Do you wish to proceed with commit? [y/n] "):
                 print("Fine, you're on your own!")
                 self.cleanup()
                 sys.exit(1)
@@ -898,7 +898,7 @@ class CvsReleaser(Releaser):
         print("")
         print("###############################")
         print("")
-	if self._ask_yes_no("Would you like to edit this commit message? [y/n] ", False):
+        if self._ask_yes_no("Would you like to edit this commit message? [y/n] ", False):
             debug("Opening editor for user to edit commit message in: %s" % name)
             editor = 'vi'
             if "EDITOR" in os.environ:
