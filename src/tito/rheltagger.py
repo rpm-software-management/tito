@@ -15,7 +15,7 @@ class RHELTagger(ReleaseTagger):
     Used for:
         - Red Hat Enterprise Linux
 
-    If you want it put in tito.pros (global) or localy in build.py.props:
+    If you want it put in tito.pros:
     [buildconfig]
     tagger = tito.rheltagger.RHELTagger
     """

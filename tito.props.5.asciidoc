@@ -177,7 +177,7 @@ EXAMPLE
 -------
  [globalconfig]
  default_builder = tito.builder.Builder
- default_tagger = spacewalk.releng.tagger.VersionTagger
+ default_tagger = tito.tagger.VersionTagger
 
  [koji]
  autobuild_tags = dist-5E-sw-1.2-candidate dist-f12-sw-1.2-candidate dist-f13-sw-1.2-candidate

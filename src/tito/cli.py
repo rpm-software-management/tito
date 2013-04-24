@@ -236,6 +236,7 @@ class BaseCliModule(object):
             current_props_file = os.path.join(os.getcwd(),
                     "build.py.props")
             if (os.path.exists(current_props_file)):
+                sys.stderr.write("Warning: build.py.props file is obsolete. Please rename it to 'tito.props'.\n")
                 properties_file = current_props_file
 
         # Check for a build.py.props back when this tag was created and use it
