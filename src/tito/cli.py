@@ -458,8 +458,11 @@ class ReleaseModule(BaseCliModule):
         self.parser.add_option("--all", action="store_true",
                 help="Run all release targets configured.")
 
-        self.parser.add_option("--test", dest="test", action="store_true",
+        self.parser.add_option("--test", action="store_true",
                 help="use current branch HEAD instead of latest package tag")
+
+        self.parser.add_option("-y", "--yes", dest="auto_accept", action="store_true",
+                help="Do not require input, just accept commits and builds")
 
         self.parser.add_option("--all-starting-with", dest="all_starting_with",
                 help="Run all release targets starting with the given string.")
@@ -626,7 +629,9 @@ class ReleaseModule(BaseCliModule):
                     user_config=self.user_config,
                     target=target,
                     releaser_config=releaser_config,
-                    no_cleanup=self.options.no_cleanup)
+                    no_cleanup=self.options.no_cleanup,
+                    test=self.options.test,
+                    auto_accept=self.options.auto_accept)
             releaser.release(dry_run=self.options.dry_run,
                     no_build=self.options.no_build,
                     scratch=self.options.scratch)
