@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.4.11
+Version: 0.4.12
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -79,6 +79,55 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Fri Apr 26 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.12-1
+- mark build.py.props as obsolete (msuchy@redhat.com)
+- mark spacewalk.releng namespace as obsolete (msuchy@redhat.com)
+- various enhancement to man pages (msuchy@redhat.com)
+- document KojiReleaser and do not mark it as experimental any more
+  (msuchy@redhat.com)
+- document DEBUG environment variable (msuchy@redhat.com)
+- document environment variable EDITOR for tagger (msuchy@redhat.com)
+- Fix bad copy paste in releaser. (dgoodwin@redhat.com)
+- document scl option for rsync releaser (msuchy@redhat.com)
+- document RSYNC_USERNAME (msuchy@redhat.com)
+- add SCL support to RsyncReleaser (msuchy@redhat.com)
+- remove empty lines from rpm output (msuchy@redhat.com)
+- use SCL for KojiReleaser (msuchy@redhat.com)
+- move scl rpmbuild options to function and allow to build rpm using SC
+  (msuchy@redhat.com)
+- new option --scl which will allows you to build srpm for software collection
+  (msuchy@redhat.com)
+- fix the whitespace - tabs->spaces (lmeyer@redhat.com)
+- add --yes on tito release to keep from requiring input (lmeyer@redhat.com)
+- Enable tito release --test for git releasers * Store the --test flag on the
+  releaser and pass it to the builder * With --test in effect, have the builder
+  update the spec file * When the builder does so it also updates the
+  build_version to include git hash (lmeyer@redhat.com)
+- Add ability to customize rsync arguments (skane@kavi.com)
+- Fix broken extraction of bugzilla numbers from commits. (dgoodwin@redhat.com)
+- Re-add write permission fedpkg takes away. (dgoodwin@redhat.com)
+- Ensure rsync preserves timestamps and permissions (skane@kavi.com)
+- document SCRATCH environment variable (msuchy@redhat.com)
+- look for spec file in project directory (msuchy@redhat.com)
+- document NO_AUTO_INSTALL option (msuchy@redhat.com)
+- 31 - if build fails due missing dependecies, suggest to run yum-builddep
+  (msuchy@redhat.com)
+- document ONLY_TAGS variable (msuchy@redhat.com)
+- Do not create patch if there are binary files (msuchy@redhat.com)
+- Raise error if there are two spec files (msuchy@redhat.com)
+- Make increase_version _ aware and return original string upon failures
+  (skane@kavi.com)
+- merge common code from tagger and builder (msuchy@redhat.com)
+- allow tagger to get values from package config and override values in
+  global_config (msuchy@redhat.com)
+- Allow user to define which package need to be installed before tagging.
+  (msuchy@redhat.com)
+- Fixed check for existing tag (mbacovsk@redhat.com)
+- do not fail if spec does not have any source (msuchy@redhat.com)
+- Add install instructions (sean@practicalweb.co.uk)
+- NoTgzBuilder - do not guess source, get it correctly from spec file
+  (msuchy@redhat.com)
+
 * Thu Jan 17 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.11-1
 - add a --scratch option for KojiReleaser (aronparsons@gmail.com)
 - Fix no_build error in KojiReleaser.
