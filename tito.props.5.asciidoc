@@ -4,8 +4,7 @@ include::man.asciidoc[]
 
 NAME
 ----
-tito.props - Settings file for whole git repository with multiple packages.
-build.py.props - Setting file in package directory, which override values in tito.props
+tito.props - directives for tito(5) how to build package.
 
 
 SYNOPSIS
@@ -37,20 +36,14 @@ default builder and tagger for you project. You can use following variables:
 
 default_builder::
 The fully qualified Builder class implementation to use.
-You can either specify builders shipped with Tito (see BUILDERS section below), or a custom builder located within the directory your `lib_dir` option points to.
+You can either specify builders shipped with tito(5) (see BUILDERS section below), or a custom builder located within the directory your `lib_dir` option points to.
 
 default_tagger::
 The fully qualified Tagger class implementation to use.
-You can either specify builders shipped with Tito (see TAGGERS section below), or a custom builder located within the directory your `lib_dir` option points to.
+You can either specify builders shipped with tito(5) (see TAGGERS section below), or a custom builder located within the directory your `lib_dir` option points to.
 
 lib_dir::
 Optional property defining a directory to be added to the Python path when executing tito. Allows you to store custom implementations of Builder, Tagger, and Releaser.
-
-builder::
-This option is used in project specific tito.props only, and allows that project to override the default_builder defined in rel-eng/tito.props.
-
-tagger::
-This option is used in project specific tito.props only, and allows that project to override the default_tagger defined in rel-eng/tito.props.
 
 changelog_format::
 This option is used to control the formatting of entries when
@@ -74,20 +67,18 @@ An optional specification of a suffix to append to all tags created by tito for 
 KOJI
 ----
 
-WARNING: very experimental, and not tested against Fedora's Koji.
-
-autobuild_tags::
-If you use --koji-relase it will try to build src.rpm package in specified tags
-in koji.
-Also see KOJI_OPTIONS in titorc(5).
-You can specify section which is named as the tag and put there following
-options:
-
 disttag::
 Dist tag variable, which is passed to rpmbuild for packages build in this tag.
 
 blacklist::
 Space separated list of packages, which should not be built in this tag.
+
+whitelist::
+If whitelist is present, only packages listed here can be built in this tag.
+This also override blacklist.
+
+scl::
+Specify name of Software Collection into which package should be build.
 
 CVS
 ---
@@ -107,6 +98,15 @@ REQUIREMENTS
 ------------
 tito::
 If tito is older then specified version, it will refuse to continue.
+
+BUILDCONFIG
+-----------
+builder::
+This option is used in package specific tito.props only, and allows that project to override the default_builder defined in rel-eng/tito.props.
+
+tagger::
+This option is used in package specific tito.props only, and allows that project to override the default_tagger defined in rel-eng/tito.props.
+
 
 TAGCONFIG
 ---------
