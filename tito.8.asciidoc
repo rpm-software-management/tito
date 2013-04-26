@@ -69,7 +69,7 @@ package specific `tito.props`.
 show this help message and exit
 
 --debug::
-print debug messages
+print debug messages (can be also set using DEBUG environment variable)
 
 --offline::
 do not attempt any remote communication (avoid using
@@ -101,6 +101,10 @@ packages
 -u, --undo::
 Undo the most recent (un-pushed) tag.
 
+NOTE: Tito will create automatic changelog from git commits.
+Unless you specify one of auto options, tito will open text editor and allow
+you to edit the text. Editor is by default. This can be changes by
+environment variable EDITOR.
 
 `tito build [options]`
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -109,7 +113,7 @@ Undo the most recent (un-pushed) tag.
 show this help message and exit
 
 --debug::
-print debug messages
+print debug messages (can be also set using DEBUG environment variable)
 
 --offline::
 do not attempt any remote communication (avoid using
@@ -179,7 +183,7 @@ Runs the release targets defined in rel-eng/releasers.conf.
 show this help message and exit
 
 --debug::
-print debug messages
+print debug messages (can be also set using DEBUG environment variable)
 
 --offline::
 do not attempt any remote communication (avoid using
