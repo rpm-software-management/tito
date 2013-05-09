@@ -470,6 +470,10 @@ class FedoraGitReleaser(Releaser):
         self.git_branches = \
             self.releaser_config.get(self.target, "branches").split(" ")
 
+        overwrite_checkout = self.config.get(self.target, "remote_git_name")
+        if overwrite_checkout:
+            self.project_name = overwrite_checkout
+
         self.package_workdir = os.path.join(self.working_dir,
                 self.project_name)
 

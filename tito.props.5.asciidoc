@@ -173,6 +173,15 @@ changelog format:
 - Resolves: #1111 - description
 - Related: #1111 - description
 
+RELEASER
+--------
+You can create section with the name same as releaser target and there you can
+specify this option:
+
+remote_git_name::
+This is usefull for FedoraGitReleaser and DistGitReleaser and will allow you to
+specify name of remote dist-git branch.
+
 EXAMPLE
 -------
  [globalconfig]
