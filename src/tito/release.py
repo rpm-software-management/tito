@@ -470,7 +470,10 @@ class FedoraGitReleaser(Releaser):
         self.git_branches = \
             self.releaser_config.get(self.target, "branches").split(" ")
 
-        overwrite_checkout = self.config.get(self.target, "remote_git_name")
+        if self.config.has_option(self.target, "remote_git_name"):
+            overwrite_checkout = self.config.get(self.target, "remote_git_name")
+        else:
+            overwrite_checkout = None
         if overwrite_checkout:
             self.project_name = overwrite_checkout
 
