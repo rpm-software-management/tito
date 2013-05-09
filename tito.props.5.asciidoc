@@ -173,6 +173,27 @@ changelog format:
 - Resolves: #1111 - description
 - Related: #1111 - description
 
+RELEASER
+--------
+You can create section with the name same as releaser target and there you can
+specify this option:
+
+remote_git_name::
+This is usefull for FedoraGitReleaser and DistGitReleaser and will allow you to
+specify name of remote dist-git branch.
++
+For example let say you have in releaser.conf:
+ [git-sat]
+ releaser = tito.release.DistGitReleaser
+ branches = satellite-6.0-rhel-6
++
+and then in package directory you can create tito.props with content:
+ [git-sat]
+ remote_git_name = ruby193-rubygem-simple-navigation
+And it will push package into ruby193-rubygem-simple-navigation dist-git despite the
+fact that it is in /rubygem-simple-navigation directory. And project name (as taken
+from spec file) is rubygem-simple-navigation.
+
 EXAMPLE
 -------
  [globalconfig]
