@@ -29,6 +29,7 @@ import shutil
 from tito.common import *
 from tito.buildparser import BuildTargetParser
 from tito.exception import TitoException
+from tito.config_object import ConfigObject
 
 DEFAULT_KOJI_OPTS = "build --nowait"
 DEFAULT_CVS_BUILD_DIR = "cvswork"
@@ -39,7 +40,7 @@ PROTECTED_BUILD_SYS_FILES = ('branch', 'CVS', '.cvsignore', 'Makefile', 'sources
 RSYNC_USERNAME = 'RSYNC_USERNAME'  # environment variable name
 
 
-class Releaser(object):
+class Releaser(ConfigObject):
     """
     Parent class of all releasers.
 
@@ -53,6 +54,7 @@ class Releaser(object):
             pkg_config=None, global_config=None, user_config=None,
             target=None, releaser_config=None, no_cleanup=False, test=False, auto_accept=False):
 
+        ConfigObject.__init__(self, pkg_config=pkg_config, global_config=global_config)
         self.builder_args = self._parse_builder_args(releaser_config, target)
         if test:
             self.builder_args['test'] = True # builder must know to build from HEAD
