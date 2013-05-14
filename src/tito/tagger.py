@@ -333,6 +333,8 @@ class VersionTagger(ConfigObject):
         """
         current_dir = os.getcwd()
         relative = current_dir[len(git_root) + 1:] + "/"
+        if relative == "/":
+            relative = "./"
         return relative
 
     def _bump_version(self, release=False, zstream=False, force=False):
