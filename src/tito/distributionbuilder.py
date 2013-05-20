@@ -1,7 +1,7 @@
 import os
 
 from tito.builder import UpstreamBuilder
-from tito.common import debug, run_command
+from tito.common import debug, run_command, error_out
 import commands
 
 class DistributionBuilder(UpstreamBuilder):
