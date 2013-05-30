@@ -578,24 +578,6 @@ class GemBuilder(NoTgzBuilder):
         self.spec_file = os.path.join(
             self.rpmbuild_gitcopy, self.spec_file_name)
 
-    def tgz(self):
-        """ Override parent behavior, we don't have or need a tgz. """
-        # This method is named tgz to maintain consistent with the api
-        # but it is misnamed and possibly confusing.
-        self._setup_sources()
-        self.ran_tgz = True
-
-        # This isn't required to be a tuple but left that way in case of the
-        # need for flexibility later (Gemfile, Gemfile.lock)
-        source_suffixes = ('.gemspec')
-        debug("Scanning for sources.")
-        for filename in os.listdir(self.rpmbuild_gitcopy):
-            for suffix in source_suffixes:
-                if filename.endswith(suffix):
-                    self.sources.append(os.path.join(self.rpmbuild_gitcopy,
-                        filename))
-        debug("  Sources: %s" % self.sources)
-
 
 class CvsBuilder(NoTgzBuilder):
     """
