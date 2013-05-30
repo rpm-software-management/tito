@@ -185,7 +185,7 @@ def find_gemspec_file(in_dir=None):
 
     Returns only the file name, rather than the full path.
     """
-    return find_spec_file(in_dir, '.gemspec')
+    return find_file_with_extension(in_dir, '.gemspec')
 
 
 def find_git_root():
