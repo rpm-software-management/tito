@@ -264,6 +264,9 @@ class VersionTagger(ConfigObject):
                 file.close()
                 os.unlink(name)
 
+        if not found_changelog:
+            print("WARNING: no %changelog section find in spec file. Changelog entry was not appended.")
+
         in_f.close()
         out_f.close()
 
