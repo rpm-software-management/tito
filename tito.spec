@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.4.12
+Version: 0.4.13
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -79,6 +79,23 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Thu Jun 13 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.13-1
+- allow multiline blacklist/whitelist (lzap+git@redhat.com)
+- warn when no %%changelog section is present (msuchy@redhat.com)
+- Fix DistributionReleaser with GemBuilder (inecas@redhat.com)
+- Fix gem builder (necasik@gmail.com)
+- import error_out from tito.common (msuchy@redhat.com)
+- use correct path in rel-eng/packages if package reside in git-root for
+  DistributionBuilder (msuchy@redhat.com)
+- add missing import of commands (msuchy@redhat.com)
+- check if option in config exist (msuchy@redhat.com)
+- add example for remote_git_name (msuchy@redhat.com)
+- allow to override name of remote dist-git repo (msuchy@redhat.com)
+- add to releaser self.config which will contains values from global and pkg
+  config (msuchy@redhat.com)
+- use correct path in rel-eng/packages if package reside in git-root
+  (msuchy@redhat.com)
+
 * Fri Apr 26 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.12-1
 - mark build.py.props as obsolete (msuchy@redhat.com)
 - mark spacewalk.releng namespace as obsolete (msuchy@redhat.com)
