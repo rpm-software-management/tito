@@ -1052,13 +1052,13 @@ class KojiReleaser(Releaser):
         """ Return true if package is whitelisted in tito.props"""
         return self.builder.config.has_option(koji_tag, "whitelist") and \
             get_project_name(self.builder.build_tag, scl) in self.builder.config.get(koji_tag,
-                        "whitelist").strip().split(" ")
+                        "whitelist").strip().split()
 
     def __is_blacklisted(self, koji_tag, scl):
         """ Return true if package is blacklisted in tito.props"""
         return self.builder.config.has_option(koji_tag, "blacklist") and \
             get_project_name(self.builder.build_tag, scl) in self.builder.config.get(koji_tag,
-                        "blacklist").strip().split(" ")
+                        "blacklist").strip().split()
 
     def _submit_build(self, executable, koji_opts, tag, srpm_location):
         """ Submit srpm to brew/koji. """
