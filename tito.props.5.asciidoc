@@ -21,7 +21,10 @@ Project settings can be stored in files:
 
 `GITROOT/SOME/PACKAGE/tito.props`
 
-The global rel-eng/tito.props is generally where settings are defined. For some multi-project git repositories, individual packages can override these settings by placing a tito.props in the project directory. (i.e. same location as it's .spec file)
+The global rel-eng/tito.props is generally where settings are defined. For 
+some multi-project git repositories, individual packages can override these 
+settings by placing a tito.props in the project directory. (i.e. same location 
+as it's .spec file)
 
 
 SECTIONS
@@ -36,14 +39,20 @@ default builder and tagger for you project. You can use following variables:
 
 default_builder::
 The fully qualified Builder class implementation to use.
-You can either specify builders shipped with tito(5) (see BUILDERS section below), or a custom builder located within the directory your `lib_dir` option points to.
+You can either specify builders shipped with tito(5) (see BUILDERS section 
+below), or a custom builder located within the directory your `lib_dir` option 
+points to.
 
 default_tagger::
 The fully qualified Tagger class implementation to use.
-You can either specify builders shipped with tito(5) (see TAGGERS section below), or a custom builder located within the directory your `lib_dir` option points to.
+You can either specify builders shipped with tito(5) (see TAGGERS section 
+below), or a custom builder located within the directory your `lib_dir` option 
+points to.
 
 lib_dir::
-Optional property defining a directory to be added to the Python path when executing tito. Allows you to store custom implementations of Builder, Tagger, and Releaser.
+Optional property defining a directory to be added to the Python path when 
+executing tito. Allows you to store custom implementations of Builder, Tagger, 
+and Releaser.
 
 changelog_format::
 This option is used to control the formatting of entries when
@@ -61,7 +70,10 @@ If set to 0, it will not remove from cherry picked commits the part "(cherry
 picked from commit ...)"
 
 tag_suffix::
-An optional specification of a suffix to append to all tags created by tito for this repo. Can be useful for situations where one git repository is inheriting from another, but tags are created in both. The suffix will be an indicator as to which repo the tag originated in. (i.e. tag_suffix = -mysuffix)
+An optional specification of a suffix to append to all tags created by tito 
+for this repo. Can be useful for situations where one git repository is 
+inheriting from another, but tags are created in both. The suffix will be an 
+indicator as to which repo the tag originated in. (i.e. tag_suffix = -mysuffix)
 
 
 KOJI
@@ -102,10 +114,12 @@ If tito is older then specified version, it will refuse to continue.
 BUILDCONFIG
 -----------
 builder::
-This option is used in package specific tito.props only, and allows that project to override the default_builder defined in rel-eng/tito.props.
+This option is used in package specific tito.props only, and allows that 
+project to override the default_builder defined in rel-eng/tito.props.
 
 tagger::
-This option is used in package specific tito.props only, and allows that project to override the default_tagger defined in rel-eng/tito.props.
+This option is used in package specific tito.props only, and allows that 
+project to override the default_tagger defined in rel-eng/tito.props.
 
 
 TAGCONFIG
