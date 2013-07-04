@@ -349,6 +349,9 @@ class Builder(ConfigObject):
         run_command("cd %s/ && tar xzf %s" % (self.rpmbuild_sourcedir,
             self.tgz_filename))
 
+        # Show contents of the directory structure we just extracted.
+        debug('', 'ls -lR %s/' % self.rpmbuild_gitcopy)
+
         # NOTE: The spec file we actually use is the one exported by git
         # archive into the temp build directory. This is done so we can
         # modify the version/release on the fly when building test rpms

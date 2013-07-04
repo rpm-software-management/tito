@@ -243,6 +243,7 @@ class BaseCliModule(object):
         # instead. (if it exists)
         if tag:
             relative_dir = get_relative_project_dir(project_name, tag)
+            debug("Relative project dir: %s" % relative_dir)
 
             cmd = "git show %s:%s%s" % (tag, relative_dir,
                     BUILD_PROPS_FILENAME)
