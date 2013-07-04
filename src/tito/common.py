@@ -507,7 +507,7 @@ def create_tgz(git_root, prefix, commit, relative_dir, rel_eng_dir,
 
     # Accomodate standalone projects with specfile in root of git repo:
     relative_git_dir = "%s" % relative_dir
-    if relative_git_dir == '/':
+    if relative_git_dir in ['/', './']:
         relative_git_dir = ""
 
     # command to generate a git-archive
@@ -516,6 +516,7 @@ def create_tgz(git_root, prefix, commit, relative_dir, rel_eng_dir,
 
     # Run git-archive separately if --debug was specified.
     # This allows us to detect failure early.
+    # On git < 1.7.4-rc0, `git archive ... commit:./` fails!
     debug('git-archive fails if relative dir is not in git tree',
         '%s > /dev/null' % git_archive_cmd)
 
