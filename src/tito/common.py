@@ -159,6 +159,7 @@ def find_file_with_extension(in_dir=None, suffix=None):
     if in_dir == None:
         in_dir = os.getcwd()
     file_name = None
+    debug("Looking for %s in %s" % (suffix, in_dir))
     for f in os.listdir(in_dir):
         if f.endswith(suffix):
             if file_name is not None:
@@ -211,8 +212,13 @@ def extract_sha1(output):
     else:
         return ""
 
-def run_command(command):
-    debug(command)
+def run_command(command, print_on_success=False):
+    """
+    Run command.
+    If command fails, print status code and command output.
+    If print_on_success is True, print status and output even
+    when command succeeds.
+    """
     (status, output) = commands.getstatusoutput(command)
     if status > 0:
         sys.stderr.write("\n########## ERROR ############\n")
@@ -220,6 +226,10 @@ def run_command(command):
         sys.stderr.write("Status code: %s\n" % status)
         sys.stderr.write("Command output: %s\n" % output)
         raise RunCommandException("Error running command", command, status, output)
+    elif print_on_success:
+        sys.stderr.write("Command: %s\n" % command)
+        sys.stderr.write("Status code: %s\n" % status)
+        sys.stderr.write("Command output: %s\n" % output)
     return output
 
 
@@ -326,12 +336,15 @@ def check_tag_exists(tag, offline=False):
             tag_sha1, upstream_tag_sha1))
 
 
-def debug(text):
+def debug(text, cmd=None):
     """
     Print the text if --debug was specified.
+    If cmd is specified, run the command and print its output after text.
     """
     if 'DEBUG' in os.environ:
         print(text)
+        if cmd:
+            run_command(cmd, True)
 
 
 def get_spec_version_and_release(sourcedir, spec_file_name):
@@ -494,12 +507,22 @@ def create_tgz(git_root, prefix, commit, relative_dir, rel_eng_dir,
 
     # Accomodate standalone projects with specfile in root of git repo:
     relative_git_dir = "%s" % relative_dir
-    if relative_git_dir == '/':
+    if relative_git_dir in ['/', './']:
         relative_git_dir = ""
 
-    archive_cmd = ('git archive --format=tar --prefix=%s/ %s:%s '
-        '| %s %s %s | gzip -n -c - | tee %s' % (
-        prefix, commit, relative_git_dir, timestamp_script,
+    # command to generate a git-archive
+    git_archive_cmd = 'git archive --format=tar --prefix=%s/ %s:%s' % (
+        prefix, commit, relative_git_dir)
+
+    # Run git-archive separately if --debug was specified.
+    # This allows us to detect failure early.
+    # On git < 1.7.4-rc0, `git archive ... commit:./` fails!
+    debug('git-archive fails if relative dir is not in git tree',
+        '%s > /dev/null' % git_archive_cmd)
+
+    # If we're still alive, the previous command worked
+    archive_cmd = ('%s | %s %s %s | gzip -n -c - | tee %s' % (
+        git_archive_cmd, timestamp_script,
         timestamp, commit, dest_tgz))
     debug(archive_cmd)
     run_command(archive_cmd)
