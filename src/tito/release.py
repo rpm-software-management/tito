@@ -1085,8 +1085,13 @@ class KojiGitReleaser(KojiReleaser):
         self.skip_srpm = True
         KojiReleaser._koji_release(self)
 
-    def _submit_build(self, executable, koji_opts, tag):
-        """ Submit build to koji. """
+    def _submit_build(self, executable, koji_opts, tag, srpm_location):
+        """
+        Submit build to koji using the git URL from config. We will ignore
+        srpm_location here.
+
+        NOTE: overrides KojiReleaser._submit_build.
+        """
         cmd = "%s %s %s %s/#%s" % \
                 (executable, koji_opts, tag,
                         self.releaser_config.get(self.target, 'git_url'),
