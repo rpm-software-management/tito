@@ -686,7 +686,7 @@ class FedoraGitReleaser(Releaser):
         debug(output)
         debug("Removing write-only permission on:")
         for filename in self.builder.sources:
-            run_command("chmod o+w %s" % filename)
+            run_command("chmod u+w %s" % filename)
 
     def _git_sync_files(self, project_checkout):
         """
