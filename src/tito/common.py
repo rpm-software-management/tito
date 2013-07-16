@@ -246,7 +246,7 @@ def tag_exists_remotely(tag):
     try:
         repo_url = get_git_repo_url()
     except:
-        sys.stderr.write('Warning: remote.origin do not exist. Assuming --offline, for remote tag checking.')
+        sys.stderr.write('Warning: remote.origin do not exist. Assuming --offline, for remote tag checking.\n')
         return False
     sha1 = get_remote_tag_sha1(tag)
     debug("sha1 = %s" % sha1)
@@ -322,7 +322,7 @@ def check_tag_exists(tag, offline=False):
     try:
         repo_url = get_git_repo_url()
     except:
-        sys.stderr.write('Warning: remote.origin do not exist. Assuming --offline, for remote tag checking.')
+        sys.stderr.write('Warning: remote.origin do not exist. Assuming --offline, for remote tag checking.\n')
         return
     upstream_tag_sha1 = get_remote_tag_sha1(tag)
     if upstream_tag_sha1 == "":
