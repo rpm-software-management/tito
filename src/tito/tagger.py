@@ -513,12 +513,12 @@ class VersionTagger(ConfigObject):
         try:
             name = run_command('git config --get user.name')
         except:
-            sys.stderr.write('Warning: user.name in ~/.gitconfig not set.')
+            sys.stderr.write('Warning: user.name in ~/.gitconfig not set.\n')
             name = 'Unknown name'
         try:
             email = run_command('git config --get user.email')
         except:
-            sys.stderr.write('Warning: user.email in ~/.gitconfig not set.')
+            sys.stderr.write('Warning: user.email in ~/.gitconfig not set.\n')
             email = None
         return (name, email)
 
