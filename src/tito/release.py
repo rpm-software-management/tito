@@ -659,9 +659,9 @@ class FedoraGitReleaser(Releaser):
             if "already been built" in output:
                 print("Build has been submitted previously, continuing...")
             else:
-                sys.stderr.write("ERROR: Unable to submit build.")
-                sys.stderr.write("  Status code: %s" % status)
-                sys.stderr.write("  Output: %s" % output)
+                sys.stderr.write("ERROR: Unable to submit build.\n")
+                sys.stderr.write("  Status code: %s\n" % status)
+                sys.stderr.write("  Output: %s\n" % output)
                 sys.exit(1)
 
     def _git_upload_sources(self, project_checkout):
