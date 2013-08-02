@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.4.16
+Version: 0.4.17
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -79,6 +79,11 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Fri Aug 02 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.17-1
+- Fix permissions after a Fedora/Brew build. (dgoodwin@redhat.com)
+- Comment out old nightly releaser. (dgoodwin@redhat.com)
+- add newline to sys.stderr.write (msuchy@redhat.com)
+
 * Tue Jul 09 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.16-1
 - Fix KojiGitReleaser method arguments. (dgoodwin@redhat.com)
 
