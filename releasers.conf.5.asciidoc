@@ -139,6 +139,14 @@ private instances of Koji.
 You need to specify git_url, which specify url of git repository. This url 
 needs to be reachable from Koji.
 
+tito.release.ObsReleaser::
+Build into Open Build Service using osc command.
++
+You must specify "project_name" in config. You can optionaly specify "package_name",
+but if it is not present name of package directory is used.
++
+This releaser assume that you have ~/.oscrc correctly configured.
+
 EXAMPLE
 -------
 
@@ -188,3 +196,8 @@ EXAMPLE
  filetypes = tgz
  rsync = remoteserver.org:/srv/tarballs/
  rsync_args = -rlvzpt
+
+ ; Release using OBS
+ [obs-project]
+ releaser=tito.release.ObsReleaser
+ project_name=home:xsuchy
