@@ -35,7 +35,7 @@ DEFAULT_KOJI_OPTS = "build --nowait"
 DEFAULT_CVS_BUILD_DIR = "cvswork"
 
 # List of CVS files to protect when syncing git with a CVS module:
-PROTECTED_BUILD_SYS_FILES = ('branch', 'CVS', '.cvsignore', 'Makefile', 'sources', ".git", ".gitignore")
+PROTECTED_BUILD_SYS_FILES = ('branch', 'CVS', '.cvsignore', 'Makefile', 'sources', ".git", ".gitignore", ".osc")
 
 RSYNC_USERNAME = 'RSYNC_USERNAME'  # environment variable name
 
@@ -1104,3 +1104,7 @@ class KojiGitReleaser(KojiReleaser):
 
         output = run_command(cmd)
         print(output)
+
+# create alias tito.release.ObsReleaser
+# pylint: disable=W0611
+from tito.obs import ObsReleaser
