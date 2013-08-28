@@ -224,13 +224,37 @@ Can be specified using environment variable SCRATCH set to 1 as well.
 --yes::
 Do not ask to confirm release commits or edit their messages.
 
-`tito report`
+`tito report [options]`
 ~~~~~~~~~~~~~
 
 Display a report of all packages with differences between
 HEAD and their most recent tag, as well as a patch for
 that diff. Used to determine which packages are in need
 of a rebuild.
+
+-h, --help::
+show this help message and exit
+
+--debug::
+print debug messages (can be also set using DEBUG environment variable)
+
+--offline::
+do not attempt any remote communication (avoid using
+this please)
+
+-o 'OUTPUTDIR', --output='OUTPUTDIR'::
+Write temp files, tarballs and RPMs to 'OUTPUTDIR'.
+(default /tmp/tito)
+
+--untagged-diffs::
+Print out diffs for all packages with changes between
+their most recent tag and HEAD. Useful for determining
+which packages are in need of a re-tag.
+
+--untagged-commits::
+Print out the list for all packages with changes
+between their most recent tag and HEAD. Useful for
+determining which packages are in need of a re-tag.
 
 EXAMPLES
 --------
