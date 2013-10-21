@@ -25,6 +25,8 @@ import tempfile
 import textwrap
 import sys
 
+from string import Template
+
 from time import strftime
 
 from tito.common import (debug, error_out, run_command,
@@ -577,3 +579,93 @@ class ForceVersionTagger(VersionTagger):
         self._update_changelog(new_version)
         self._update_setup_py(new_version)
         self._update_package_metadata(new_version)
+
+class FiledVersionTagger(VersionTagger):
+    """
+    Default VersionTagger,
+    but land a file with the version of tagged
+    """
+
+    # override
+    def _update_setup_py (self, new_version):
+        """
+        I would rather have hooked into _tag_release(), but there
+        would not be easy access to the +new_version+
+
+        So we'll hook onto one of the things called that receives that argument
+        """
+        self._update_version_file(new_version)
+        super(FiledVersionTagger, self)._update_setup_py(new_version)
+
+
+    # added
+    def _update_version_file (self, new_version):
+        """
+        land this new_version in the designated file
+        and stages that file for a git commit
+        """
+        version_file = self._version_file_path()
+
+        print "writing version file out to %s" % version_file
+
+        t = Template(self._version_file_template())
+        f = open(version_file, 'w')
+        f.write(t.safe_substitute(
+            version_name = self._version_file_variable_name(),
+            version = new_version
+            ))
+        f.close()
+
+        run_command("git add %s" % version_file)
+
+
+    def _version_file_template (self):
+        """
+        "$version_name = $version"
+        or provide a configuration in tito.props to a file that is a
+        python string.Template conforming blob, like
+            [version]
+            template_file = ./rel-eng/templates/my_java_properties
+
+        see also, http://docs.python.org/2/library/string.html#template-strings
+        """
+        if self.config.has_option("version", "template_file"):
+            f = open(self.config.get("version", "template_file"), 'r')
+            buf = f.read()
+            f.close()
+            return buf
+        return "$version_name = $version"
+
+
+    # added
+    def _version_file_variable_name (self):
+        """
+        "TAGGED_VERSION"
+        or provide a configuration in tito.props, like
+            [version]
+            variable_name = MY_TAGGED_VERSION
+        """
+        if self.config.has_option("version", "variable_name"):
+            return self.config.get("version", "variable_name")
+        return "TAGGED_VERSION"
+
+
+    # added
+    def _version_file_path (self):
+        """
+        standard ${project_name}-version.conf
+        or provide a configuration in tito.props, like
+            [version]
+            file = ./foo.rb
+        """
+        if self.config.has_option("version", "file"):
+            return self.config.get("version", "file")
+        return "%s-version.conf" % (self.project_name)
+
+
+    # added: helper for relative path of this package
+    def _path(self):
+        if self.relative_project_dir != None: return self.relative_project_dir
+        return self.git_root
+
+
