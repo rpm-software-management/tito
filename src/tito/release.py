@@ -410,13 +410,13 @@ class YumRepoReleaser(RsyncReleaser):
         return header
 
     def process_packages(self, temp_dir):
+        self.prune_other_versions(temp_dir)
         print("Refreshing yum repodata...")
         if self.releaser_config.has_option(self.target, 'createrepo_command'):
             self.createrepo_command = self.releaser_config.get(self.target, 'createrepo_command')
         os.chdir(temp_dir)
         output = run_command(self.createrepo_command)
         debug(output)
-        self.prune_other_versions(temp_dir)
 
     def prune_other_versions(self, temp_dir):
         """
