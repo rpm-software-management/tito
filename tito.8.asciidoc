@@ -165,14 +165,14 @@ Pass 'OPTIONS' to rpmbuild.
 
 --builder='BUILDER'::
 Override the normal builder by specifying a full class
-path or one of the pre-configured shortcuts. Only useful if you need to 
+path or one of the pre-configured shortcuts. Only useful if you need to
 override the default builder for some purpose, such as testing a build via mock.
 
 --builder-arg='BUILDER_ARGS'::
 Custom arguments specific to a particular builder. (key=value)
 
 --scl='COLLECTION'::
-Build package for software collection. This is mostly usefull for building 
+Build package for software collection. This is mostly usefull for building
 src.rpm, because for rpm you want to define this option for specific tag in tito.props
 
 
@@ -203,7 +203,7 @@ build a specific tag instead of the latest version
 Do not actually commit/push anything during release.
 
 --no-build::
-Do not perform a brew/koji build, only DistGit commit. 
+Do not perform a brew/koji build, only DistGit commit.
 (only for Koji/DistGit releasers)
 
 --all::
@@ -225,7 +225,7 @@ Can be specified using environment variable SCRATCH set to 1 as well.
 Do not ask to confirm release commits or edit their messages.
 
 `tito report [options]`
-~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Display a report of all packages with differences between
 HEAD and their most recent tag, as well as a patch for
