@@ -221,6 +221,10 @@ if you have defined release targets yum-f15 and yum-f14 in releasers.conf,
 Perform a scratch build in Koji.
 Can be specified using environment variable SCRATCH set to 1 as well.
 
+--releaser-output::
+Print output from releaser build commend (currently only supported by FedoraGit
+and DistGit releasers).
+
 --yes::
 Do not ask to confirm release commits or edit their messages.
 

@@ -481,6 +481,10 @@ class ReleaseModule(BaseCliModule):
                 action="store_true",
                 help="Perform a scratch build in Koji")
 
+        self.parser.add_option("--releaser-output", dest="releaser_output",
+                action="store_true",
+                help="Display output of the releaser build command")
+
 #        self.parser.add_option("--list-tags", dest="list_tags",
 #                action="store_true",
 #                help="List tags for which we build this package",
@@ -633,7 +637,8 @@ class ReleaseModule(BaseCliModule):
                     releaser_config=releaser_config,
                     no_cleanup=self.options.no_cleanup,
                     test=self.options.test,
-                    auto_accept=self.options.auto_accept)
+                    auto_accept=self.options.auto_accept,
+                    releaser_output=self.options.releaser_output)
             releaser.release(dry_run=self.options.dry_run,
                     no_build=self.options.no_build,
                     scratch=self.options.scratch)
