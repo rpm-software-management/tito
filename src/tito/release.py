@@ -977,6 +977,7 @@ class KojiReleaser(Releaser):
     """
 
     REQUIRED_CONFIG = ['autobuild_tags']
+    NAME = "Koji"
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
@@ -996,15 +997,19 @@ class KojiReleaser(Releaser):
 
         self._koji_release()
 
+    def autobuild_tags(self):
+        """ will return list of tags for which we are building """
+        result = self.releaser_config.get(self.target, "autobuild_tags")
+        return result.strip().split(" ")
+
     def _koji_release(self):
         """
         Lookup autobuild Koji tags from global config, create srpms with
         appropriate disttags, and submit builds to Koji.
         """
-        autobuild_tags = self.releaser_config.get(self.target, "autobuild_tags")
-        print("Building release in Koji...")
-        debug("Koji tags: %s" % autobuild_tags)
-        koji_tags = autobuild_tags.strip().split(" ")
+        koji_tags = self.autobuild_tags()
+        print("Building release in %s..." % self.NAME)
+        debug("%s tags: %s" % (self.NAME, koji_tags))
 
         koji_opts = DEFAULT_KOJI_OPTS
         if 'KOJI_OPTIONS' in self.builder.user_config:
@@ -1028,12 +1033,12 @@ class KojiReleaser(Releaser):
                 if not self.__is_whitelisted(koji_tag, scl):
                     print("WARNING: %s not specified in whitelist for %s" % (
                         self.project_name, koji_tag))
-                    print("   Package *NOT* submitted to Koji.")
+                    print("   Package *NOT* submitted to %s." % self.NAME)
                     continue
             elif self.__is_blacklisted(koji_tag, scl):
                 print("WARNING: %s specified in blacklist for %s" % (
                     self.project_name, koji_tag))
-                print("   Package *NOT* submitted to Koji.")
+                print("   Package *NOT* submitted to %s." % self.NAME)
                 continue
 
             # Getting tricky here, normally Builder's are only used to
@@ -1108,3 +1113,4 @@ class KojiGitReleaser(KojiReleaser):
 # create alias tito.release.ObsReleaser
 # pylint: disable=W0611
 from tito.obs import ObsReleaser
+from tito.copr import CoprReleaser
