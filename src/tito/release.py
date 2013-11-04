@@ -1026,7 +1026,10 @@ class KojiReleaser(Releaser):
             if self.builder.config.has_option(koji_tag, "scl"):
                 scl = self.builder.config.get(koji_tag, "scl")
             # Lookup the disttag configured for this Koji tag:
-            disttag = self.builder.config.get(koji_tag, "disttag")
+            if self.builder.config.has_option(koji_tag, "disttag"):
+                disttag = self.builder.config.get(koji_tag, "disttag")
+            else:
+                disttag = ''
             if self.builder.config.has_option(koji_tag, "whitelist"):
                 # whitelist implies only those packages can be built to the
                 # tag,regardless if blacklist is also defined.

@@ -42,6 +42,8 @@ class CoprReleaser(KojiReleaser):
 
     def _koji_release(self):
         self.srpm_submitted = False
+        if not self.builder.config.has_section(self.copr_project_name):
+            self.builder.config.add_section(self.copr_project_name)
         KojiReleaser._koji_release(self)
 
     def _submit_build(self, executable, koji_opts, tag, srpm_location):
