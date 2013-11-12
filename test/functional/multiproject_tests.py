@@ -18,25 +18,20 @@ NOTE: These tests require a makeshift git repository created in /tmp.
 """
 
 import os
+from os.path import join
 
-import unittest
-
-from tito.common import check_tag_exists, commands, run_command, \
+from tito.common import run_command, \
         get_latest_tagged_version, tag_exists_locally
 from fixture import *
-
 
 # A location where we can safely create a test git repository.
 # WARNING: This location will be destroyed if present.
 
 TEST_PKG_1 = 'titotestpkg'
-TEST_PKG_1_DIR = "%s/" % TEST_PKG_1
 
 TEST_PKG_2 = 'titotestpkg2'
-TEST_PKG_2_DIR = "%s/" % TEST_PKG_2
 
 TEST_PKG_3 = 'titotestpkg3'
-TEST_PKG_3_DIR = "blah/whatever/%s/" % TEST_PKG_3
 
 TEST_PKGS = [TEST_PKG_1, TEST_PKG_2, TEST_PKG_3]
 
@@ -46,6 +41,23 @@ def release_bumped(initial_version, new_version):
     new_release = new_version.split('-')[-1]
     return new_release == str(int(first_release) + 1)
 
+TEMPLATE_TAGGER_TITO_PROPS = """
+[buildconfig]
+tagger = tito.tagger.VersionTagger
+builder = tito.builder.Builder
+
+[version_template]
+destination_file = version.txt
+template_file = rel-eng/templates/version.rb
+"""
+
+VERSION_TEMPLATE_FILE = """
+module Iteng
+    module Util
+      VERSION = "$version-$release"
+    end
+  end
+"""
 
 class MultiProjectTests(TitoGitTestFixture):
 
@@ -69,6 +81,37 @@ class MultiProjectTests(TitoGitTestFixture):
         index = self.repo.index
         index.add(['pkg2/tito.props'])
         index.commit("Adding tito.props for pkg2.")
+
+    def test_template_version_tagger(self):
+        """
+        Make sure the template is applied and results in the correct file
+        being included in the tag.
+        """
+        pkg_dir = join(self.repo_dir, 'pkg3')
+        filename = join(pkg_dir, "tito.props")
+        self.write_file(filename, TEMPLATE_TAGGER_TITO_PROPS)
+        run_command('mkdir -p %s' % join(self.repo_dir, 'rel-eng/templates'))
+        self.write_file(join(self.repo_dir,
+            'rel-eng/templates/version.rb'), VERSION_TEMPLATE_FILE)
+        index = self.repo.index
+        index.add(['pkg3/tito.props'])
+        index.commit("Adding tito.props for pkg3.")
+
+        # Create another pkg3 tag and make sure we got a generated
+        # template file.
+        os.chdir(os.path.join(self.repo_dir, 'pkg3'))
+        tito('tag --debug --accept-auto-changelog')
+        new_ver = get_latest_tagged_version(TEST_PKG_3)
+        self.assertEquals("0.0.2-1", new_ver)
+
+        dest_file = os.path.join(self.repo_dir, 'pkg3', "version.txt")
+        self.assertTrue(os.path.exists(dest_file))
+
+        f = open(dest_file, 'r')
+        contents = f.read()
+        f.close()
+
+        self.assertTrue("VERSION = \"0.0.2-1\"" in contents)
 
     def test_initial_tag_keep_version(self):
         # Tags were actually created in setup code:

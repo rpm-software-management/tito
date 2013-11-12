@@ -128,6 +128,12 @@ class TitoGitTestFixture(unittest.TestCase):
         index.add(['rel-eng/tito.props'])
         index.commit('Setting offline.')
 
+    def write_file(self, path, contents):
+        print path
+        out_f = open(path, 'w')
+        out_f.write(contents)
+        out_f.close()
+
     def create_project(self, pkg_name, pkg_dir=''):
         """
         Create a test project at the given location, assumed to be within

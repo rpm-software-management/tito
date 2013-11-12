@@ -14,12 +14,9 @@
 
 import os
 import shutil
-import unittest
-
-import git
 
 from tito.common import *
-from fixture import TitoGitTestFixture, TEST_SPEC, tito
+from fixture import TitoGitTestFixture, tito
 
 #TITO_REPO = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 PKG_NAME = "titotestpkg"
