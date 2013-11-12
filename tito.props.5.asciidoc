@@ -76,8 +76,8 @@ inheriting from another, but tags are created in both. The suffix will be an
 indicator as to which repo the tag originated in. (i.e. tag_suffix = -mysuffix)
 
 
-KOJI
-----
+KOJI and COPR
+-------------
 
 disttag::
 Dist tag variable, which is passed to rpmbuild for packages build in this tag.
