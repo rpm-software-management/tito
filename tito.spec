@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.4.17
+Version: 0.4.18
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -79,6 +79,17 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Thu Nov 14 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.18-1
+- Merge the FiledVersionTagger into the base VersionTagger.
+  (dgoodwin@redhat.com)
+- add Copr releaser (msuchy@redhat.com)
+- Fix broken asciidoc. (dgoodwin@redhat.com)
+- Fix old versions in yum repodata. (dgoodwin@redhat.com)
+- adding the FiledVersionTagger class that we are using internally
+  (vbatts@redhat.com)
+- tito report man page missing options (admiller@redhat.com)
+- Implement OBS releaser (msuchy@redhat.com)
+
 * Fri Aug 02 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.17-1
 - Fix permissions after a Fedora/Brew build. (dgoodwin@redhat.com)
 - Comment out old nightly releaser. (dgoodwin@redhat.com)
