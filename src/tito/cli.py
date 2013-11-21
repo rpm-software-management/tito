@@ -678,6 +678,10 @@ class TagModule(BaseCliModule):
         self.parser.add_option("--undo", "-u", dest="undo", action="store_true",
                 help="Undo the most recent (un-pushed) tag.")
 
+        self.parser.add_option("--dry-run", dest="dry_run",
+                action="store_true", default=False,
+                help="Do not actually tag. Spit out the would-be tag.")
+
     def main(self, argv):
         BaseCliModule.main(self, argv)
 
