@@ -40,6 +40,17 @@ PROTECTED_BUILD_SYS_FILES = ('branch', 'CVS', '.cvsignore', 'Makefile', 'sources
 RSYNC_USERNAME = 'RSYNC_USERNAME'  # environment variable name
 
 
+def extract_task_info(output):
+    """ Extracts task ID and URL from koji/brew build output. """
+    task_lines = []
+    for line in output.splitlines():
+        if "Created task" in line:
+            task_lines.append(line)
+        elif "Task info" in line:
+            task_lines.append(line)
+    return task_lines
+
+
 class Releaser(ConfigObject):
     """
     Parent class of all releasers.
@@ -663,6 +674,10 @@ class FedoraGitReleaser(Releaser):
                 sys.stderr.write("  Status code: %s\n" % status)
                 sys.stderr.write("  Output: %s\n" % output)
                 sys.exit(1)
+
+        # Print the task ID and URL:
+        for line in extract_task_info(output):
+            print line
 
     def _git_upload_sources(self, project_checkout):
         """
