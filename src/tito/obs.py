@@ -29,9 +29,11 @@ class ObsReleaser(Releaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False, test=False, auto_accept=False):
+            target=None, releaser_config=None, no_cleanup=False, test=False,
+            auto_accept=False, **kwargs):
         Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
-                global_config, user_config, target, releaser_config, no_cleanup, test, auto_accept)
+                global_config, user_config, target, releaser_config, no_cleanup,
+                test, auto_accept, **kwargs)
 
         self.obs_project_name = \
             self.releaser_config.get(self.target, "project_name")
