@@ -104,7 +104,7 @@ class VersionTagger(ConfigObject):
         if options.undo:
             self._undo()
         else:
-            self._tag_release()
+            self._tag_release(dry_run=options.dry_run)
 
     def check_tag_precondition(self):
         if self.config.has_option("tagconfig", "require_package"):
@@ -120,16 +120,22 @@ class VersionTagger(ConfigObject):
                 raise TitoException("To tag this package, you must first install: %s" %
                     ', '.join(missing_packages))
 
-    def _tag_release(self):
+    def _tag_release(self, **kwargs):
         """
         Tag a new version of the package. (i.e. x.y.z+1)
         """
-        self._make_changelog()
-        new_version = self._bump_version()
-        self._check_tag_does_not_exist(self._get_new_tag(new_version))
-        self._update_changelog(new_version)
-        self._update_setup_py(new_version)
-        self._update_package_metadata(new_version)
+        dry_run = kwargs.get('dry_run')
+        new_version = self._bump_version(dry_run=dry_run)
+        new_tag = self._get_new_tag(new_version)
+
+        if dry_run:
+            print(new_tag)
+        else:
+            self._make_changelog()
+            self._check_tag_does_not_exist(new_tag)
+            self._update_changelog(new_version)
+            self._update_setup_py(new_version)
+            self._update_package_metadata(new_version)
 
     def _undo(self):
         """
@@ -344,7 +350,7 @@ class VersionTagger(ConfigObject):
             relative = "./"
         return relative
 
-    def _bump_version(self, release=False, zstream=False, force=False):
+    def _bump_version(self, release=False, zstream=False, force=False, dry_run=False):
         """
         Bump up the package version in the spec file.
 
@@ -356,7 +362,7 @@ class VersionTagger(ConfigObject):
         old_version = get_latest_tagged_version(self.project_name)
         if old_version == None:
             old_version = "untagged"
-        if not self.keep_version:
+        if not self.keep_version and not dry_run:
             version_regex = re.compile("^(version:\s*)(.+)$", re.IGNORECASE)
             release_regex = re.compile("^(release:\s*)(.+)$", re.IGNORECASE)
 
@@ -418,8 +424,9 @@ class VersionTagger(ConfigObject):
             msg = "Error getting bumped package version, try: \n"
             msg = msg + "  'rpm -q --specfile %s'" % self.spec_file
             error_out(msg)
-        print("Tagging new version of %s: %s -> %s" % (self.project_name,
-            old_version, new_version))
+        if not dry_run:
+            print("Tagging new version of %s: %s -> %s" % (self.project_name,
+                                                           old_version, new_version))
         return new_version
 
     def release_type(self):
@@ -605,16 +612,22 @@ class ReleaseTagger(VersionTagger):
       - Satellite packages built on top of Spacewalk tarballs.
     """
 
-    def _tag_release(self):
+    def _tag_release(self, **kwargs):
         """
         Tag a new release of the package. (i.e. x.y.z-r+1)
         """
-        self._make_changelog()
-        new_version = self._bump_version(release=True)
+        dry_run = kwargs.get('dry_run')
 
-        self._check_tag_does_not_exist(self._get_new_tag(new_version))
-        self._update_changelog(new_version)
-        self._update_package_metadata(new_version)
+        new_version = self._bump_version(release=True, dry_run=dry_run)
+        new_tag = self._get_new_tag(new_version)
+
+        if dry_run:
+            print(new_tag)
+        else:
+            self._make_changelog()
+            self._check_tag_does_not_exist(new_tag)
+            self._update_changelog(new_version)
+            self._update_package_metadata(new_version)
 
     def release_type(self):
         """ return short string "minor release" """
@@ -627,15 +640,20 @@ class ForceVersionTagger(VersionTagger):
     command line by the --use-version option.
     """
 
-    def _tag_release(self):
+    def _tag_release(self, **kwargs):
         """
         Tag a new release of the package.
         """
-        self._make_changelog()
-        new_version = self._bump_version(force=True)
-        self._check_tag_does_not_exist(self._get_new_tag(new_version))
-        self._update_changelog(new_version)
-        self._update_setup_py(new_version)
-        self._update_package_metadata(new_version)
+        dry_run = kwargs.get('dry_run')
+        new_version = self._bump_version(force=True, dry_run=dry_run)
+        new_tag = self._get_new_tag(new_version)
 
+        if dry_run:
+            print(new_tag)
+        else:
+            self._make_changelog()
+            self._check_tag_does_not_exist(new_tag)
+            self._update_changelog(new_version)
+            self._update_setup_py(new_version)
+            self._update_package_metadata(new_version)
 

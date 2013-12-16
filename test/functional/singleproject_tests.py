@@ -85,3 +85,12 @@ class SingleProjectTests(TitoGitTestFixture):
     def test_tag_rpm(self):
         tito("build --rpm --tag=%s-0.0.1-1 -o %s" % (PKG_NAME,
             self.repo_dir))
+
+    def test_tag_rpm_dry_run(self):
+        import StringIO
+        output = StringIO.StringIO()
+        orig_stdout = sys.stdout
+        sys.stdout = output
+        tito("tag --dry-run")
+        self.assertIn(PKG_NAME, output.getvalue().split('\n')[-2])
+        sys.stdout = orig_stdout
