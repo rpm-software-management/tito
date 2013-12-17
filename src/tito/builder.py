@@ -23,7 +23,7 @@ from distutils.version import LooseVersion as loose_version
 from tempfile import mkdtemp
 
 from tito.common import *
-from tito.common import scl_to_rpm_option
+from tito.common import scl_to_rpm_option, get_latest_tagged_version
 from tito.exception import RunCommandException
 from tito.release import *
 from tito.exception import TitoException
@@ -40,7 +40,8 @@ class Builder(ConfigObject):
     """
     REQUIRED_ARGS = []
 
-    def __init__(self, name=None, version=None, tag=None, build_dir=None,
+    # TODO: drop version
+    def __init__(self, name=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
             args=None, **kwargs):
 
@@ -68,7 +69,6 @@ class Builder(ConfigObject):
 
         self.project_name = name
         self.build_tag = tag
-        self.build_version = version
         self.user_config = user_config
         self.no_cleanup = False
         self.args = args
@@ -83,6 +83,8 @@ class Builder(ConfigObject):
                 'rpmbuild_options', None)
         self.scl = self._get_optional_arg(kwargs,
                 'scl', '')
+
+        self.build_version = self._get_build_version()
 
         # Allow a builder arg to override the test setting passed in, used by
         # releasers in their config sections.
@@ -146,6 +148,7 @@ class Builder(ConfigObject):
         self.spec_file_name = None
         self.spec_file = None
 
+
         # List of full path to all sources for this package.
         self.sources = []
 
@@ -153,6 +156,25 @@ class Builder(ConfigObject):
         self.srpm_location = None
 
         self._check_required_args()
+
+    def _get_build_version(self):
+        """
+        Figure out the git tag and version-release we're building.
+        """
+        # Determine which package version we should build:
+        build_version = None
+        if self.build_tag:
+            build_version = self.build_tag[len(self.project_name + "-"):]
+        else:
+            build_version = get_latest_tagged_version(self.project_name)
+            if build_version == None:
+                error_out(["Unable to lookup latest package info.",
+                        "Perhaps you need to tag first?"])
+            self.build_tag = "%s-%s" % (self.project_name, build_version)
+
+        if not self.test:
+            check_tag_exists(self.build_tag, offline=self.offline)
+        return build_version
 
     def _get_optional_arg(self, kwargs, arg, default):
         """
@@ -464,14 +486,13 @@ class NoTgzBuilder(Builder):
     """
     Builder for packages that do not require the creation of a tarball.
     Usually these packages have source tarballs checked directly into git.
-    i.e. most of the packages in spec-tree.
     """
 
-    def __init__(self, name=None, version=None, tag=None, build_dir=None,
+    def __init__(self, name=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
             args=None, **kwargs):
 
-        Builder.__init__(self, name=name, version=version, tag=tag,
+        Builder.__init__(self, name=name, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
                 args=args, **kwargs)
@@ -532,11 +553,11 @@ class GemBuilder(NoTgzBuilder):
     and the upstream project does not want to store gem files in git.
     """
 
-    def __init__(self, name=None, version=None, tag=None, build_dir=None,
+    def __init__(self, name=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
             args=None, **kwargs):
 
-        NoTgzBuilder.__init__(self, name=name, version=version, tag=tag,
+        NoTgzBuilder.__init__(self, name=name, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
                 args=args, **kwargs)
@@ -589,11 +610,11 @@ class CvsBuilder(NoTgzBuilder):
     Builder for packages whose sources are managed in dist-cvs/Fedora CVS.
     """
 
-    def __init__(self, name=None, version=None, tag=None, build_dir=None,
+    def __init__(self, name=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
             args=None, **kwargs):
 
-        NoTgzBuilder.__init__(self, name=name, version=version, tag=tag,
+        NoTgzBuilder.__init__(self, name=name, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
                 args=args, **kwargs)
@@ -697,11 +718,11 @@ class UpstreamBuilder(NoTgzBuilder):
     patches applied in satellite git.
     """
 
-    def __init__(self, name=None, version=None, tag=None, build_dir=None,
+    def __init__(self, name=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
             args=None, **kwargs):
 
-        NoTgzBuilder.__init__(self, name=name, version=version, tag=tag,
+        NoTgzBuilder.__init__(self, name=name, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
                 args=args, **kwargs)
@@ -906,7 +927,7 @@ class MockBuilder(Builder):
     """
     REQUIRED_ARGS = ['mock']
 
-    def __init__(self, name=None, version=None, tag=None, build_dir=None,
+    def __init__(self, name=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
             args=None, **kwargs):
 
@@ -915,7 +936,7 @@ class MockBuilder(Builder):
         self.normal_builder = create_builder(name, tag, version, pkg_config,
                 build_dir, global_config, user_config, args, **kwargs)
 
-        Builder.__init__(self, name=name, version=version, tag=tag,
+        Builder.__init__(self, name=name, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
                 args=args, **kwargs)
@@ -1009,11 +1030,11 @@ class BrewDownloadBuilder(Builder):
     """
     REQUIRED_ARGS = ['disttag']
 
-    def __init__(self, name=None, version=None, tag=None, build_dir=None,
+    def __init__(self, name=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
             args=None, **kwargs):
 
-        Builder.__init__(self, name=name, version=version, tag=tag,
+        Builder.__init__(self, name=name, tag=tag,
                 build_dir=build_dir, pkg_config=pkg_config,
                 global_config=global_config, user_config=user_config,
                 args=args, **kwargs)
@@ -1054,3 +1075,112 @@ class BrewDownloadBuilder(Builder):
             print("  %s" % rpm_path)
             self.artifacts.append(rpm_path)
         print
+
+
+class ExternalSourceBuilder(Builder):
+    """
+    Builder for packages that do not require the creation of a tarball.
+    Instead sources are fetched and dynamically inserted into the spec file.
+    """
+    # TODO: test only for now, setup a tagger to fetch sources and store in git annex,
+    # then we can do official builds as well.
+
+    def __init__(self, name=None, tag=None, build_dir=None,
+            pkg_config=None, global_config=None, user_config=None,
+            args=None, **kwargs):
+
+        Builder.__init__(self, name=name, tag=tag,
+                build_dir=build_dir, pkg_config=pkg_config,
+                global_config=global_config, user_config=user_config,
+                args=args, **kwargs)
+
+        print os.getcwd()
+
+        # When syncing files with CVS, copy everything from git:
+        self.cvs_copy_extensions = ("", )
+
+    def tgz(self):
+        """ Override parent behavior, we already have a tgz. """
+        # TODO: Does it make sense to allow user to create a tgz for this type
+        # of project?
+        self._setup_sources()
+        self.ran_tgz = True
+
+        debug("Scanning for sources.")
+
+        # TODO: Make this a configurable strategy:
+
+        cmd = "/usr/bin/spectool --list-files '%s' | awk '{print $2}' |xargs -l1 --no-run-if-empty basename " % self.spec_file
+        result = run_command(cmd)
+        self.sources = map(lambda x: os.path.join(self.rpmbuild_gitcopy, x), result.split("\n"))
+        debug("  Sources: %s" % self.sources)
+
+    def _get_rpmbuild_dir_options(self):
+        """
+        Override parent behavior slightly.
+
+        These packages store tar's, patches, etc, directly in their project
+        dir, use the git copy we create as the sources directory when
+        building package so everything can be found:
+        """
+        return ('--define "_sourcedir %s" --define "_builddir %s" '
+            '--define "_srcrpmdir %s" --define "_rpmdir %s" ' % (
+            self.rpmbuild_gitcopy, self.rpmbuild_builddir,
+            self.rpmbuild_basedir, self.rpmbuild_basedir))
+
+    def _setup_test_specfile(self):
+        """ Override parent behavior. """
+        if self.test:
+            # If making a test rpm we need to get a little crazy with the spec
+            # file we're building off. (note that this is a temp copy of the
+            # spec) Swap out the actual release for one that includes the git
+            # SHA1 we're building for our test package:
+            debug("setup_test_specfile:commit_count = %s" % str(self.commit_count))
+            script = "test-setup-specfile.pl"
+            cmd = "%s %s %s %s" % \
+                    (
+                        script,
+                        self.spec_file,
+                        self.git_commit_id[:7],
+                        self.commit_count,
+                    )
+            run_command(cmd)
+
+    def _get_build_version(self):
+        """
+        Override parent method to allow for execution without a pre-existing tag.
+        """
+        # Determine which package version we should build:
+        build_version = None
+        if self.build_tag:
+            build_version = self.build_tag[len(self.project_name + "-"):]
+        else:
+            build_version = get_latest_tagged_version(package_name)
+            if build_version == None:
+                pass
+            self.build_tag = "%s-%s" % (self.project_name, build_version)
+
+        if not self.test:
+            check_tag_exists(self.build_tag, offline=self.offline)
+        return build_version
+
+    def _get_display_version(self):
+        """
+        Get the package display version to build.
+
+        Normally this is whatever is rel-eng/packages/. In the case of a --test
+        build it will be the SHA1 for the HEAD commit of the current git
+        branch.
+        """
+        if self.test:
+            # should get latest commit for given directory *NOT* HEAD
+            latest_commit = get_latest_commit(".")
+            self.commit_count = get_commit_count(self.build_tag, latest_commit)
+            version = "git-%s.%s" % (self.commit_count, latest_commit[:7])
+        else:
+            version = self.build_version.split("-")[0]
+        return version
+
+
+
+

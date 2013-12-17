@@ -61,7 +61,7 @@ class Releaser(ConfigObject):
     REQUIRED_CONFIG = []
     OPTIONAL_CONFIG = []
 
-    def __init__(self, name=None, version=None, tag=None, build_dir=None,
+    def __init__(self, name=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
             target=None, releaser_config=None, no_cleanup=False, test=False, auto_accept=False):
 
@@ -73,7 +73,7 @@ class Releaser(ConfigObject):
         # While we create a builder here, we don't actually call run on it
         # unless the releaser needs to:
         self.builder = create_builder(name, tag,
-                version, pkg_config,
+                pkg_config,
                 build_dir, global_config, user_config, self.builder_args)
         self.project_name = self.builder.project_name
 
@@ -286,11 +286,11 @@ class RsyncReleaser(Releaser):
     # By default run rsync with these paramaters
     rsync_args = "-rlvz"
 
-    def __init__(self, name=None, version=None, tag=None, build_dir=None,
+    def __init__(self, name=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
             target=None, releaser_config=None, no_cleanup=False, test=False, auto_accept=False,
             prefix="temp_dir="):
-        Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
+        Releaser.__init__(self, name, tag, build_dir, pkg_config,
                 global_config, user_config, target, releaser_config, no_cleanup, test, auto_accept)
 
         self.build_dir = build_dir
@@ -299,7 +299,7 @@ class RsyncReleaser(Releaser):
         # Use the builder from the release target, rather than the default
         # one defined for this git repo or sub-package:
         self.builder = create_builder(name, tag,
-                version, pkg_config,
+                pkg_config,
                 build_dir, global_config, user_config, self.builder_args,
                 builder_class=self.releaser_config.get(self.target, 'builder'))
         if self.releaser_config.has_option(self.target, "scl"):
@@ -404,10 +404,10 @@ class YumRepoReleaser(RsyncReleaser):
     # By default run createrepo without any paramaters
     createrepo_command = "createrepo ."
 
-    def __init__(self, name=None, version=None, tag=None, build_dir=None,
+    def __init__(self, name=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
             target=None, releaser_config=None, no_cleanup=False, test=False, auto_accept=False):
-        RsyncReleaser.__init__(self, name, version, tag, build_dir, pkg_config,
+        RsyncReleaser.__init__(self, name, tag, build_dir, pkg_config,
                 global_config, user_config, target, releaser_config, no_cleanup, test, auto_accept,
                 prefix="yumrepo-")
 
@@ -472,10 +472,10 @@ class FedoraGitReleaser(Releaser):
     REQUIRED_CONFIG = ['branches']
     cli_tool = "fedpkg"
 
-    def __init__(self, name=None, version=None, tag=None, build_dir=None,
+    def __init__(self, name=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
             target=None, releaser_config=None, no_cleanup=False, test=False, auto_accept=False):
-        Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
+        Releaser.__init__(self, name, tag, build_dir, pkg_config,
                 global_config, user_config, target, releaser_config, no_cleanup, test, auto_accept)
 
         self.git_branches = \
@@ -749,10 +749,10 @@ class CvsReleaser(Releaser):
 
     REQUIRED_CONFIG = ['cvsroot', 'branches']
 
-    def __init__(self, name=None, version=None, tag=None, build_dir=None,
+    def __init__(self, name=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
             target=None, releaser_config=None, no_cleanup=False, test=False, auto_accept=False):
-        Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
+        Releaser.__init__(self, name, tag, build_dir, pkg_config,
                 global_config, user_config, target, releaser_config, no_cleanup, test, auto_accept)
 
         self.package_workdir = os.path.join(self.working_dir,
@@ -994,10 +994,10 @@ class KojiReleaser(Releaser):
     REQUIRED_CONFIG = ['autobuild_tags']
     NAME = "Koji"
 
-    def __init__(self, name=None, version=None, tag=None, build_dir=None,
+    def __init__(self, name=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
             target=None, releaser_config=None, no_cleanup=False, test=False, auto_accept=False):
-        Releaser.__init__(self, name, version, tag, build_dir, pkg_config,
+        Releaser.__init__(self, name, tag, build_dir, pkg_config,
                 global_config, user_config, target, releaser_config, no_cleanup, test, auto_accept)
 
         self.only_tags = []

@@ -28,7 +28,6 @@ from tito.exception import *
 # Hack for Python 2.4, seems to require we import these so they get compiled
 # before we try to dynamically import them based on a string name.
 import tito.tagger
-import tito.builder
 
 BUILD_PROPS_FILENAME = "tito.props"
 GLOBAL_BUILD_PROPS_FILENAME = "tito.props"
@@ -221,6 +220,7 @@ class BaseCliModule(object):
         global tito.props in rel-eng/.
         """
         debug("Determined package name to be: %s" % project_name)
+        debug("build_dir = %s" % build_dir)
 
         properties_file = None
         wrote_temp_file = False
@@ -282,6 +282,7 @@ class BaseCliModule(object):
                     f.close()
                     wrote_temp_file = True
 
+        # TODO: can we parse config from a string and stop writing temp files?
         config = ConfigParser.ConfigParser()
         if properties_file != None:
             debug("Using build properties: %s" % properties_file)
@@ -368,24 +369,9 @@ class BuildModule(BaseCliModule):
         package_name = get_project_name(tag=self.options.tag)
 
         build_tag = None
-        build_version = None
 
         if self.options.release:
             error_out("'tito build --release' is now deprecated. Please see 'tito release'.")
-
-        # Determine which package version we should build:
-        if self.options.tag:
-            build_tag = self.options.tag
-            build_version = build_tag[len(package_name + "-"):]
-        else:
-            build_version = get_latest_tagged_version(package_name)
-            if build_version == None:
-                error_out(["Unable to lookup latest package info.",
-                        "Perhaps you need to tag first?"])
-            build_tag = "%s-%s" % (package_name, build_version)
-
-        if not self.options.test:
-            check_tag_exists(build_tag, offline=self.options.offline)
 
         self.pkg_config = self._read_project_config(package_name, build_dir,
                 self.options.tag, self.options.no_cleanup)
@@ -401,7 +387,7 @@ class BuildModule(BaseCliModule):
         }
 
         builder = create_builder(package_name, build_tag,
-                build_version, self.pkg_config,
+                self.pkg_config,
                 build_dir, self.global_config, self.user_config, args,
                 builder_class=self.options.builder, **kwargs)
         return builder.run(self.options)
@@ -594,19 +580,7 @@ class ReleaseModule(BaseCliModule):
         build_dir = os.path.normpath(os.path.abspath(self.options.output_dir))
         package_name = get_project_name(tag=self.options.tag)
 
-        build_tag = None
-        build_version = None
-        # Determine which package version we should build:
-        if self.options.tag:
-            build_tag = self.options.tag
-            build_version = build_tag[len(package_name + "-"):]
-        else:
-            build_version = get_latest_tagged_version(package_name)
-            if build_version == None:
-                error_out(["Unable to lookup latest package info.",
-                        "Perhaps you need to tag first?"])
-            build_tag = "%s-%s" % (package_name, build_version)
-        check_tag_exists(build_tag, offline=self.options.offline)
+        build_tag = self.options.tag
 
         self.pkg_config = self._read_project_config(package_name, build_dir,
                 self.options.tag, self.options.no_cleanup)
@@ -623,7 +597,6 @@ class ReleaseModule(BaseCliModule):
 
             releaser = releaser_class(
                     name=package_name,
-                    version=build_version,
                     tag=build_tag,
                     build_dir=build_dir,
                     pkg_config=self.pkg_config,

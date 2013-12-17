@@ -113,7 +113,7 @@ def error_out(error_msgs):
     sys.exit(1)
 
 
-def create_builder(package_name, build_tag, build_version,
+def create_builder(package_name, build_tag,
         pkg_config, build_dir, global_config, user_config, args,
         builder_class=None, **kwargs):
     """
@@ -143,7 +143,6 @@ def create_builder(package_name, build_tag, build_version,
     # Instantiate the builder:
     builder = builder_class(
             name=package_name,
-            version=build_version,
             tag=build_tag,
             build_dir=build_dir,
             pkg_config=pkg_config,
