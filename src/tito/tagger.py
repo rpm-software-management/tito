@@ -413,7 +413,8 @@ class VersionTagger(ConfigObject):
             out_f.close()
             shutil.move(self.spec_file + ".new", self.spec_file)
 
-        new_version = self._get_spec_version_and_release()
+        new_version = get_spec_version_and_release(self.full_project_dir,
+                self.spec_file_name)
         if new_version.strip() == "":
             msg = "Error getting bumped package version, try: \n"
             msg = msg + "  'rpm -q --specfile %s'" % self.spec_file
@@ -525,11 +526,6 @@ class VersionTagger(ConfigObject):
             sys.stderr.write('Warning: user.email in ~/.gitconfig not set.\n')
             email = None
         return (name, email)
-
-    def _get_spec_version_and_release(self):
-        """ Get the package version from the spec file. """
-        return get_spec_version_and_release(self.full_project_dir,
-                self.spec_file_name)
 
     def _get_new_tag(self, new_version):
         """ Returns the actual tag we'll be creating. """

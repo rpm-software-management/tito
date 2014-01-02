@@ -13,8 +13,6 @@
 # in this software or its documentation.
 
 import os
-import shutil
-
 from tito.common import *
 from fixture import TitoGitTestFixture, tito
 
@@ -29,10 +27,6 @@ class SingleProjectTests(TitoGitTestFixture):
 
         self.create_project(PKG_NAME)
         os.chdir(self.repo_dir)
-
-    def tearDown(self):
-        shutil.rmtree(self.repo_dir)
-        pass
 
     def test_init_worked(self):
         # Not actually running init here, just making sure it worked when

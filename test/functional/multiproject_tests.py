@@ -59,6 +59,39 @@ module Iteng
   end
 """
 
+EXT_SRC_PKG = "extsrc"
+
+class ExternalSourceBuilderTests(TitoGitTestFixture):
+
+    def setUp(self):
+        TitoGitTestFixture.setUp(self)
+        self.pkg_dir = os.path.join(self.repo_dir, EXT_SRC_PKG)
+        spec = os.path.join(os.path.dirname(__file__), "specs/extsrc.spec")
+        self.create_project_from_spec(EXT_SRC_PKG, pkg_dir=self.pkg_dir,
+                spec=spec,
+                builder='tito.builder.ExternalSourceBuilder')
+        run_command('touch %s/extsrc-0.0.1.tar.gz' % self.pkg_dir)
+        os.chdir(self.pkg_dir)
+
+        self.output_dir = tempfile.mkdtemp("-titotestoutput")
+
+    def tearDown(self):
+        TitoGitTestFixture.tearDown(self)
+        #shutil.rmtree(self.output_dir)
+
+    def test_simple_build_no_tag(self):
+        # We have not tagged here. Build --rpm should just work:
+        self.assertFalse(os.path.exists(
+            os.path.join(self.pkg_dir, 'rel-eng/packages/extsrc')))
+        tito('build --rpm --output=%s --no-cleanup' % self.output_dir)
+        self.assertTrue(os.path.exists(
+            os.path.join(self.output_dir, 'extsrc-0.0.1-1.fc20.src.rpm')))
+        self.assertTrue(os.path.exists(
+            os.path.join(self.output_dir, 'noarch/extsrc-0.0.1-1.fc20.noarch.rpm')))
+
+    # test_tag_rejected
+
+
 class MultiProjectTests(TitoGitTestFixture):
 
     def setUp(self):

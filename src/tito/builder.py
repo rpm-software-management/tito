@@ -10,8 +10,10 @@
 # Red Hat trademarks are not licensed under GPLv2. No permission is
 # granted to use or replicate Red Hat trademarks that are incorporated
 # in this software or its documentation.
+
 """
-Code for building Spacewalk/Satellite tarballs, srpms, and rpms.
+Tito builders for a variety of common methods of building sources, srpms,
+and rpms.
 """
 
 import os
@@ -23,158 +25,73 @@ from distutils.version import LooseVersion as loose_version
 from tempfile import mkdtemp
 
 from tito.common import *
-from tito.common import scl_to_rpm_option, get_latest_tagged_version
+from tito.common import scl_to_rpm_option, get_latest_tagged_version, \
+        find_wrote_in_rpmbuild_output
 from tito.exception import RunCommandException
 from tito.release import *
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
 
 
-class Builder(ConfigObject):
+class BuilderBase(object):
     """
-    Parent builder class.
+    A base class for all builders.
 
-    Includes functionality for a standard Spacewalk package build. Packages
-    which require other unusual behavior can subclass this to inject the
-    desired behavior.
+    Handles things we will *always* do, primarily handling temporary directories
+    for rpmbuild.
+
+    This class should *not* assume we're even using git.
     """
-    REQUIRED_ARGS = []
-
-    # TODO: drop version
-    def __init__(self, name=None, tag=None, build_dir=None,
+    # TODO: merge config into an object and kill the ConfigObject parent class
+    def __init__(self, name=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
             args=None, **kwargs):
 
-        """
-        name - Package name that is being built.
-
-        version - Version and release being built.
-
-        tag - The git tag being built.
-
-        build_dir - Temporary build directory where we can safely work.
-
-        pkg_config - Package specific configuration.
-
-        global_config - Global configuration from rel-eng/tito.props.
-
-        user_config - User configuration from ~/.titorc.
-
-        args - Optional arguments specific to each builder. Can be passed
-        in explicitly by user on the CLI, or via a release target config
-        entry. Only for things which vary on invocations of the builder,
-        avoid using these if possible.
-        """
-        ConfigObject.__init__(self, pkg_config=pkg_config, global_config=global_config)
-
         self.project_name = name
-        self.build_tag = tag
         self.user_config = user_config
-        self.no_cleanup = False
         self.args = args
 
         # Optional keyword arguments:
         self.dist = self._get_optional_arg(kwargs, 'dist', None)
-        self.test = self._get_optional_arg(kwargs, 'test', False)
+
         self.offline = self._get_optional_arg(kwargs, 'offline', False)
         self.auto_install = self._get_optional_arg(kwargs, 'auto_install',
                 False)
-        self.rpmbuild_options = self._get_optional_arg(kwargs,
-                'rpmbuild_options', None)
         self.scl = self._get_optional_arg(kwargs,
                 'scl', '')
 
-        self.build_version = self._get_build_version()
+        self.rpmbuild_options = self._get_optional_arg(kwargs,
+                'rpmbuild_options', None)
+        if not self.rpmbuild_options:
+            self.rpmbuild_options = ''
 
+        self.test = self._get_optional_arg(kwargs, 'test', False)
         # Allow a builder arg to override the test setting passed in, used by
         # releasers in their config sections.
         if args and 'test' in args:
             self.test = True
 
-        if kwargs and 'options' in kwargs:
-            print("WARNING: 'options' no longer a supported builder "
-                    "constructor argument.")
-
-        if not self.rpmbuild_options:
-            self.rpmbuild_options = ''
-
-        if self.config.has_section("requirements"):
-            if self.config.has_option("requirements", "tito"):
-                if loose_version(self.config.get("requirements", "tito")) > \
-                        loose_version(require('tito')[0].version):
-                    print("Error: tito version %s or later is needed to build this project." %
-                            self.config.get("requirements", "tito"))
-                    print("Your version: %s" % require('tito')[0].version)
-                    sys.exit(-1)
-
+        # Location where we do all tito work and store resulting rpms:
         self.rpmbuild_basedir = build_dir
-        self.display_version = self._get_display_version()
-
-        self.git_commit_id = get_build_commit(tag=self.build_tag,
-                test=self.test)
-        self.project_name_and_sha1 = "%s-%s" % (self.project_name,
-                self.git_commit_id)
-
-        self.relative_project_dir = get_relative_project_dir(
-                project_name=self.project_name, commit=self.git_commit_id)
-
-        tgz_base = self._get_tgz_name_and_ver()
-        self.tgz_filename = tgz_base + ".tar.gz"
-        self.tgz_dir = tgz_base
-        self.artifacts = []
-
+        # Location where we do actual rpmbuilds
         self.rpmbuild_dir = mkdtemp(dir=self.rpmbuild_basedir,
-                prefix="rpmbuild-%s" % self.project_name_and_sha1)
+                prefix="rpmbuild-%s" % self.project_name)
         debug("Building in temp dir: %s" % self.rpmbuild_dir)
         self.rpmbuild_sourcedir = os.path.join(self.rpmbuild_dir, "SOURCES")
         self.rpmbuild_builddir = os.path.join(self.rpmbuild_dir, "BUILD")
 
-        # A copy of the git code from commit we're building:
-        self.rpmbuild_gitcopy = os.path.join(self.rpmbuild_sourcedir,
-                self.tgz_dir)
+        self._check_required_args()
 
-        # Set to true if we've already created a tgz:
+        # Set to true once we've created/setup sources: (i.e. tar.gz)
         self.ran_tgz = False
 
-        # Used to make sure we only modify the spec file for a test build
-        # once. The srpm method may be called multiple times during koji
-        # releases to create the proper disttags, but we only want to modify
-        # the spec file once.
-        self.ran_setup_test_specfile = False
-
-        # NOTE: These are defined later when/if we actually dump a copy of the
-        # project source at the tag we're building. Only then can we search for
-        # a spec file.
-        self.spec_file_name = None
-        self.spec_file = None
-
+        self.no_cleanup = False
 
         # List of full path to all sources for this package.
         self.sources = []
 
-        # Set to path to srpm once we build one.
-        self.srpm_location = None
-
-        self._check_required_args()
-
-    def _get_build_version(self):
-        """
-        Figure out the git tag and version-release we're building.
-        """
-        # Determine which package version we should build:
-        build_version = None
-        if self.build_tag:
-            build_version = self.build_tag[len(self.project_name + "-"):]
-        else:
-            build_version = get_latest_tagged_version(self.project_name)
-            if build_version == None:
-                error_out(["Unable to lookup latest package info.",
-                        "Perhaps you need to tag first?"])
-            self.build_tag = "%s-%s" % (self.project_name, build_version)
-
-        if not self.test:
-            check_tag_exists(self.build_tag, offline=self.offline)
-        return build_version
+        # Artifacts we built:
+        self.artifacts = []
 
     def _get_optional_arg(self, kwargs, arg, default):
         """
@@ -209,77 +126,50 @@ class Builder(ConfigObject):
         if options.srpm:
             self.srpm()
         if options.rpm:
-            self._rpm()
+            # TODO: not protected anymore
+            self.rpm()
             self._auto_install()
 
         self.cleanup()
         return self.artifacts
 
-    def tgz(self):
+    def cleanup(self):
         """
-        Create the .tar.gz required to build this package.
-
-        Returns full path to the created tarball.
+        Remove all temporary files and directories.
         """
-        self._setup_sources()
-
-        run_command("cp %s/%s %s/" %  \
-                (self.rpmbuild_sourcedir, self.tgz_filename,
-                    self.rpmbuild_basedir))
-
-        self.ran_tgz = True
-        full_path = os.path.join(self.rpmbuild_basedir, self.tgz_filename)
-        print("Wrote: %s" % full_path)
-        self.sources.append(full_path)
-        self.artifacts.append(full_path)
-        return full_path
-
-    def _scl_to_rpmbuild_option(self):
-        """ Returns rpmbuild option which disable or enable SC and print warning if needed """
-        return scl_to_rpm_option(self.scl)
-
-    # TODO: reuse_cvs_checkout isn't needed here, should be cleaned up:
-    def srpm(self, dist=None, reuse_cvs_checkout=False):
-        """
-        Build a source RPM.
-        """
-        self._create_build_dirs()
-        if not self.ran_tgz:
-            self.tgz()
-
-        if self.test:
-            self._setup_test_specfile()
-
-        debug("Creating srpm from spec file: %s" % self.spec_file)
-        define_dist = ""
-        if self.dist:
-            debug("using self.dist: %s" % self.dist)
-            define_dist = "--define 'dist %s'" % self.dist
-        elif dist:
-            debug("using dist: %s" % dist)
-            define_dist = "--define 'dist %s'" % dist
+        if not self.no_cleanup:
+            debug("Cleaning up [%s]" % self.rpmbuild_dir)
+            commands.getoutput("rm -rf %s" % self.rpmbuild_dir)
         else:
-            debug("*NOT* using dist at all")
+            print("WARNING: Leaving rpmbuild files in: %s" % self.rpmbuild_dir)
 
-        rpmbuild_options = self.rpmbuild_options + self._scl_to_rpmbuild_option()
+    def _check_build_dirs_access(self):
+        """
+        Ensure the build directories are writable.
+        """
+        if not os.access(self.rpmbuild_basedir, os.W_OK):
+            error_out("%s is not writable." % self.rpmbuild_basedir)
+        if not os.access(self.rpmbuild_dir, os.W_OK):
+            error_out("%s is not writable." % self.rpmbuild_dir)
+        if not os.access(self.rpmbuild_sourcedir, os.W_OK):
+            error_out("%s is not writable." % self.rpmbuild_sourcedir)
+        if not os.access(self.rpmbuild_builddir, os.W_OK):
+            error_out("%s is not writable." % self.rpmbuild_builddir)
 
-        cmd = ('LC_ALL=C rpmbuild --define "_source_filedigest_algorithm md5"  --define'
-            ' "_binary_filedigest_algorithm md5" %s %s %s --nodeps -bs %s' % (
-            rpmbuild_options, self._get_rpmbuild_dir_options(),
-            define_dist, self.spec_file))
-        output = run_command(cmd)
-        print(output)
-        self.srpm_location = self._find_wrote_in_rpmbuild_output(output)[0]
-        self.artifacts.append(self.srpm_location)
+    def _create_build_dirs(self):
+        """
+        Create the build directories. Can safely be called multiple times.
+        """
+        commands.getoutput("mkdir -p %s %s %s %s" % (
+            self.rpmbuild_basedir, self.rpmbuild_dir,
+            self.rpmbuild_sourcedir, self.rpmbuild_builddir))
+        self._check_build_dirs_access()
 
-    def _rpm(self):
+    def rpm(self):
         """ Build an RPM. """
         self._create_build_dirs()
         if not self.ran_tgz:
             self.tgz()
-
-        if self.test:
-            self._setup_test_specfile()
 
         define_dist = ""
         if self.dist:
@@ -299,12 +189,13 @@ class Builder(ConfigObject):
         except RunCommandException, err:
             msg = str(err)
             if (re.search('Failed build dependencies', err.output)):
-                msg = "Please run 'yum-builddep %s' as root." % find_spec_file(self.relative_project_dir)
+                msg = "Please run 'yum-builddep %s' as root." % \
+                    find_spec_file(self.relative_project_dir)
             error_out('%s' % msg)
         except Exception, err:
             error_out('%s' % str(err))
         print(output)
-        files_written = self._find_wrote_in_rpmbuild_output(output)
+        files_written = find_wrote_in_rpmbuild_output(output)
         if len(files_written) < 2:
             error_out("Error parsing rpmbuild output")
         self.srpm_location = files_written[0]
@@ -312,6 +203,10 @@ class Builder(ConfigObject):
 
         print
         print("Successfully built: %s" % ' '.join(files_written))
+
+    def _scl_to_rpmbuild_option(self):
+        """ Returns rpmbuild option which disable or enable SC and print warning if needed """
+        return scl_to_rpm_option(self.scl)
 
     def _auto_install(self):
         """
@@ -351,6 +246,176 @@ class Builder(ConfigObject):
             except KeyboardInterrupt:
                 pass
 
+
+
+class Builder(ConfigObject, BuilderBase):
+    """
+    Parent builder class.
+
+    Includes functionality for a standard Spacewalk package build. Packages
+    which require other unusual behavior can subclass this to inject the
+    desired behavior.
+    """
+    REQUIRED_ARGS = []
+
+    # TODO: drop version
+    def __init__(self, name=None, tag=None, build_dir=None,
+            pkg_config=None, global_config=None, user_config=None,
+            args=None, **kwargs):
+
+        """
+        name - Package name that is being built.
+
+        version - Version and release being built.
+
+        tag - The git tag being built.
+
+        build_dir - Temporary build directory where we can safely work.
+
+        pkg_config - Package specific configuration.
+
+        global_config - Global configuration from rel-eng/tito.props.
+
+        user_config - User configuration from ~/.titorc.
+
+        args - Optional arguments specific to each builder. Can be passed
+        in explicitly by user on the CLI, or via a release target config
+        entry. Only for things which vary on invocations of the builder,
+        avoid using these if possible.
+        """
+        ConfigObject.__init__(self, pkg_config=pkg_config, global_config=global_config)
+        BuilderBase.__init__(self, name=name, build_dir=build_dir, pkg_config=pkg_config, global_config=global_config, user_config=user_config, args=args, **kwargs)
+        self.build_tag = tag
+
+        self.build_version = self._get_build_version()
+
+        if kwargs and 'options' in kwargs:
+            print("WARNING: 'options' no longer a supported builder "
+                    "constructor argument.")
+
+        if self.config.has_section("requirements"):
+            if self.config.has_option("requirements", "tito"):
+                if loose_version(self.config.get("requirements", "tito")) > \
+                        loose_version(require('tito')[0].version):
+                    print("Error: tito version %s or later is needed to build this project." %
+                            self.config.get("requirements", "tito"))
+                    print("Your version: %s" % require('tito')[0].version)
+                    sys.exit(-1)
+
+        self.display_version = self._get_display_version()
+
+        self.git_commit_id = get_build_commit(tag=self.build_tag,
+                test=self.test)
+
+        self.relative_project_dir = get_relative_project_dir(
+                project_name=self.project_name, commit=self.git_commit_id)
+
+        tgz_base = self._get_tgz_name_and_ver()
+        self.tgz_filename = tgz_base + ".tar.gz"
+        self.tgz_dir = tgz_base
+        self.artifacts = []
+
+        # A copy of the git code from commit we're building:
+        self.rpmbuild_gitcopy = os.path.join(self.rpmbuild_sourcedir,
+                self.tgz_dir)
+
+        # Used to make sure we only modify the spec file for a test build
+        # once. The srpm method may be called multiple times during koji
+        # releases to create the proper disttags, but we only want to modify
+        # the spec file once.
+        self.ran_setup_test_specfile = False
+
+        # NOTE: These are defined later when/if we actually dump a copy of the
+        # project source at the tag we're building. Only then can we search for
+        # a spec file.
+        self.spec_file_name = None
+        self.spec_file = None
+
+        # Set to path to srpm once we build one.
+        self.srpm_location = None
+
+
+    def _get_build_version(self):
+        """
+        Figure out the git tag and version-release we're building.
+        """
+        # Determine which package version we should build:
+        build_version = None
+        if self.build_tag:
+            build_version = self.build_tag[len(self.project_name + "-"):]
+        else:
+            build_version = get_latest_tagged_version(self.project_name)
+            if build_version == None:
+                error_out(["Unable to lookup latest package info.",
+                        "Perhaps you need to tag first?"])
+            self.build_tag = "%s-%s" % (self.project_name, build_version)
+
+        if not self.test:
+            check_tag_exists(self.build_tag, offline=self.offline)
+        return build_version
+
+    def tgz(self):
+        """
+        Create the .tar.gz required to build this package.
+
+        Returns full path to the created tarball.
+        """
+        self._setup_sources()
+
+        run_command("cp %s/%s %s/" %  \
+                (self.rpmbuild_sourcedir, self.tgz_filename,
+                    self.rpmbuild_basedir))
+
+        self.ran_tgz = True
+        full_path = os.path.join(self.rpmbuild_basedir, self.tgz_filename)
+        print("Wrote: %s" % full_path)
+        self.sources.append(full_path)
+        self.artifacts.append(full_path)
+        return full_path
+
+    # TODO: reuse_cvs_checkout isn't needed here, should be cleaned up:
+    def srpm(self, dist=None, reuse_cvs_checkout=False):
+        """
+        Build a source RPM.
+        """
+        self._create_build_dirs()
+        if not self.ran_tgz:
+            self.tgz()
+
+        if self.test:
+            self._setup_test_specfile()
+
+        debug("Creating srpm from spec file: %s" % self.spec_file)
+        define_dist = ""
+        if self.dist:
+            debug("using self.dist: %s" % self.dist)
+            define_dist = "--define 'dist %s'" % self.dist
+        elif dist:
+            debug("using dist: %s" % dist)
+            define_dist = "--define 'dist %s'" % dist
+        else:
+            debug("*NOT* using dist at all")
+
+        rpmbuild_options = self.rpmbuild_options + self._scl_to_rpmbuild_option()
+
+        cmd = ('LC_ALL=C rpmbuild --define "_source_filedigest_algorithm md5"  --define'
+            ' "_binary_filedigest_algorithm md5" %s %s %s --nodeps -bs %s' % (
+            rpmbuild_options, self._get_rpmbuild_dir_options(),
+            define_dist, self.spec_file))
+        output = run_command(cmd)
+        print(output)
+        self.srpm_location = find_wrote_in_rpmbuild_output(output)[0]
+        self.artifacts.append(self.srpm_location)
+
+    def rpm(self):
+        """ Build an RPM. """
+        self._create_build_dirs()
+        if not self.ran_tgz:
+            self.tgz()
+        if self.test:
+            self._setup_test_specfile()
+        BuilderBase.rpm(self)
+
     def _setup_sources(self):
         """
         Create a copy of the git source for the project at the point in time
@@ -381,53 +446,6 @@ class Builder(ConfigObject):
         self.spec_file_name = find_spec_file(in_dir=self.rpmbuild_gitcopy)
         self.spec_file = os.path.join(
             self.rpmbuild_gitcopy, self.spec_file_name)
-
-    def _find_wrote_in_rpmbuild_output(self, output):
-        """
-        Parse the output from rpmbuild looking for lines beginning with
-        "Wrote:". Return a list of file names for each path found.
-        """
-        paths = []
-        look_for = "Wrote: "
-        for line in output.split("\n"):
-            if line.startswith(look_for):
-                paths.append(line[len(look_for):])
-                debug("Found wrote line: %s" % paths[-1])
-        if not paths:
-            error_out("Unable to locate 'Wrote: ' lines in rpmbuild output")
-        return paths
-
-    def cleanup(self):
-        """
-        Remove all temporary files and directories.
-        """
-        if not self.no_cleanup:
-            debug("Cleaning up [%s]" % self.rpmbuild_dir)
-            commands.getoutput("rm -rf %s" % self.rpmbuild_dir)
-        else:
-            print("WARNING: Leaving rpmbuild files in: %s" % self.rpmbuild_dir)
-
-    def _check_build_dirs_access(self):
-        """
-        Ensure the build directories are writable.
-        """
-        if not os.access(self.rpmbuild_basedir, os.W_OK):
-            error_out("%s is not writable." % self.rpmbuild_basedir)
-        if not os.access(self.rpmbuild_dir, os.W_OK):
-            error_out("%s is not writable." % self.rpmbuild_dir)
-        if not os.access(self.rpmbuild_sourcedir, os.W_OK):
-            error_out("%s is not writable." % self.rpmbuild_sourcedir)
-        if not os.access(self.rpmbuild_builddir, os.W_OK):
-            error_out("%s is not writable." % self.rpmbuild_builddir)
-
-    def _create_build_dirs(self):
-        """
-        Create the build directories. Can safely be called multiple times.
-        """
-        commands.getoutput("mkdir -p %s %s %s %s" % (
-            self.rpmbuild_basedir, self.rpmbuild_dir,
-            self.rpmbuild_sourcedir, self.rpmbuild_builddir))
-        self._check_build_dirs_access()
 
     def _setup_test_specfile(self):
         if self.test and not self.ran_setup_test_specfile:
@@ -640,7 +658,7 @@ class CvsBuilder(NoTgzBuilder):
         # Should only be one rpm returned for srpm:
         self.srpm_location = rpms[0]
 
-    def _rpm(self):
+    def rpm(self):
         # Lookup the architecture of the system for the correct make target:
         arch = run_command("uname -i")
         self._cvs_rpm_common(target=arch, all_branches=True)
@@ -979,7 +997,7 @@ class MockBuilder(Builder):
         self.srpm_location = self.normal_builder.srpm_location
         self.artifacts.append(self.srpm_location)
 
-    def _rpm(self):
+    def rpm(self):
         """
         Uses the SRPM
         Override the base builder rpm method.
@@ -1042,7 +1060,7 @@ class BrewDownloadBuilder(Builder):
         self.brew_tag = 'meow'  # args['brewtag']
         self.dist_tag = args['disttag']
 
-    def _rpm(self):
+    def rpm(self):
         """
         Uses the SRPM
         Override the base builder rpm method.
@@ -1077,55 +1095,67 @@ class BrewDownloadBuilder(Builder):
         print
 
 
-class ExternalSourceBuilder(Builder):
+class ExternalSourceBuilder(ConfigObject, BuilderBase):
     """
-    Builder for packages that do not require the creation of a tarball.
-    Instead sources are fetched and dynamically inserted into the spec file.
+    A separate Builder class for projects whose source is not in git. Source
+    is fetched via a configurable strategy, which also determines what version
+    and release to insert into the spec file.
+
+    Cannot build past tags.
     """
     # TODO: test only for now, setup a tagger to fetch sources and store in git annex,
     # then we can do official builds as well.
+    REQUIRED_ARGS = []
 
     def __init__(self, name=None, tag=None, build_dir=None,
             pkg_config=None, global_config=None, user_config=None,
             args=None, **kwargs):
 
-        Builder.__init__(self, name=name, tag=tag,
-                build_dir=build_dir, pkg_config=pkg_config,
-                global_config=global_config, user_config=user_config,
-                args=args, **kwargs)
+        BuilderBase.__init__(self, name=name, build_dir=build_dir,
+                pkg_config=pkg_config, global_config=global_config,
+                user_config=user_config, args=args, **kwargs)
 
-        print os.getcwd()
+        # Project directory where we started this build:
+        self.pkg_dir = os.getcwd()
 
-        # When syncing files with CVS, copy everything from git:
-        self.cvs_copy_extensions = ("", )
+        self.build_tag = '%s-%s' % (self.project_name,
+                get_spec_version_and_release(self.pkg_dir,
+                    '%s.spec' % self.project_name))
 
     def tgz(self):
-        """ Override parent behavior, we already have a tgz. """
-        # TODO: Does it make sense to allow user to create a tgz for this type
-        # of project?
-        self._setup_sources()
         self.ran_tgz = True
+        self._create_build_dirs()
 
-        debug("Scanning for sources.")
+        print("Fetching sources...")
+
+        # Copy the live spec from our starting location. Unlike most builders,
+        # we are not using a copy from a past git commit.
+        self.spec_file = os.path.join(self.rpmbuild_sourcedir,
+                    '%s.spec' % self.project_name)
+        shutil.copyfile(
+                os.path.join(self.pkg_dir, '%s.spec' % self.project_name),
+                self.spec_file)
+        print("  %s.spec" % self.project_name)
 
         # TODO: Make this a configurable strategy:
-
+        files_in_src_dir = [f for f in os.listdir(self.pkg_dir) \
+                if os.path.isfile(os.path.join(self.pkg_dir, f)) ]
+        print files_in_src_dir
+        for f in files_in_src_dir:
+            shutil.copyfile(os.path.join(self.pkg_dir, f),
+                    os.path.join(self.rpmbuild_sourcedir, f))
+        # Copy every normal file in the directory we ran tito from. This
+        # will pick up any sources that were sitting around locally.
+        # TODO: how to copy only sources?
         cmd = "/usr/bin/spectool --list-files '%s' | awk '{print $2}' |xargs -l1 --no-run-if-empty basename " % self.spec_file
         result = run_command(cmd)
-        self.sources = map(lambda x: os.path.join(self.rpmbuild_gitcopy, x), result.split("\n"))
-        debug("  Sources: %s" % self.sources)
+        self.sources = map(lambda x: os.path.join(self.rpmbuild_sourcedir, x), result.split("\n"))
+        print("  Sources: %s" % self.sources)
 
     def _get_rpmbuild_dir_options(self):
-        """
-        Override parent behavior slightly.
-
-        These packages store tar's, patches, etc, directly in their project
-        dir, use the git copy we create as the sources directory when
-        building package so everything can be found:
-        """
         return ('--define "_sourcedir %s" --define "_builddir %s" '
             '--define "_srcrpmdir %s" --define "_rpmdir %s" ' % (
-            self.rpmbuild_gitcopy, self.rpmbuild_builddir,
+            self.rpmbuild_sourcedir, self.rpmbuild_builddir,
             self.rpmbuild_basedir, self.rpmbuild_basedir))
 
     def _setup_test_specfile(self):
@@ -1155,7 +1185,7 @@ class ExternalSourceBuilder(Builder):
         if self.build_tag:
             build_version = self.build_tag[len(self.project_name + "-"):]
         else:
-            build_version = get_latest_tagged_version(package_name)
+            build_version = get_latest_tagged_version(self.project_name)
             if build_version == None:
                 pass
             self.build_tag = "%s-%s" % (self.project_name, build_version)
@@ -1168,15 +1198,11 @@ class ExternalSourceBuilder(Builder):
         """
         Get the package display version to build.
 
-        Normally this is whatever is rel-eng/packages/. In the case of a --test
-        build it will be the SHA1 for the HEAD commit of the current git
-        branch.
+        Taken from source files?
         """
         if self.test:
-            # should get latest commit for given directory *NOT* HEAD
-            latest_commit = get_latest_commit(".")
-            self.commit_count = get_commit_count(self.build_tag, latest_commit)
-            version = "git-%s.%s" % (self.commit_count, latest_commit[:7])
+            self.commit_count = 15000
+            version = "testing-100.100"
         else:
             version = self.build_version.split("-")[0]
         return version

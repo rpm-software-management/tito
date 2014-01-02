@@ -12,11 +12,11 @@
 # granted to use or replicate Red Hat trademarks that are incorporated
 # in this software or its documentation.
 
-import os
-import unittest
-
 import git
+import os
+import shutil
 import tempfile
+import unittest
 
 from tito.cli import CLI
 from tito.common import run_command
@@ -128,11 +128,32 @@ class TitoGitTestFixture(unittest.TestCase):
         index.add(['rel-eng/tito.props'])
         index.commit('Setting offline.')
 
+    def tearDown(self):
+        #shutil.rmtree(self.repo_dir)
+        pass
+
     def write_file(self, path, contents):
         print path
         out_f = open(path, 'w')
         out_f.write(contents)
         out_f.close()
+
+    def create_project_from_spec(self, pkg_name, pkg_dir='', spec=None,
+            builder=None):
+        """
+        Create a sample tito project and copy the given test spec file over.
+        """
+        full_pkg_dir = os.path.join(self.repo_dir, pkg_dir)
+        run_command('mkdir -p %s' % full_pkg_dir)
+        os.chdir(full_pkg_dir)
+
+        shutil.copyfile(spec, os.path.join(full_pkg_dir, os.path.basename(spec)))
+
+        if builder:
+            tito_props_f = open(os.path.join(full_pkg_dir, 'tito.props'), 'w')
+            tito_props_f.write('[buildconfig]\n')
+            tito_props_f.write('builder = %s' % builder)
+            tito_props_f.close()
 
     def create_project(self, pkg_name, pkg_dir=''):
         """

@@ -219,16 +219,6 @@ def run_command(command, print_on_success=False):
     when command succeeds.
     """
     (status, output) = commands.getstatusoutput(command)
-    if status > 0:
-        sys.stderr.write("\n########## ERROR ############\n")
-        sys.stderr.write("Error running command: %s\n" % command)
-        sys.stderr.write("Status code: %s\n" % status)
-        sys.stderr.write("Command output: %s\n" % output)
-        raise RunCommandException("Error running command", command, status, output)
-    elif print_on_success:
-        sys.stderr.write("Command: %s\n" % command)
-        sys.stderr.write("Status code: %s\n" % status)
-        sys.stderr.write("Command output: %s\n" % output)
     return output
 
 
@@ -627,3 +617,20 @@ def increase_zstream(release_string):
     regex = re.compile(r"^(.*%{\?dist})$")
     bumped_string = regex.sub(r"\g<1>.0", release_string)
     return increase_version(bumped_string)
+
+
+def find_wrote_in_rpmbuild_output(output):
+    """
+    Parse the output from rpmbuild looking for lines beginning with
+    "Wrote:". Return a list of file names for each path found.
+    """
+    paths = []
+    look_for = "Wrote: "
+    for line in output.split("\n"):
+        if line.startswith(look_for):
+            paths.append(line[len(look_for):])
+            debug("Found wrote line: %s" % paths[-1])
+    if not paths:
+        error_out("Unable to locate 'Wrote: ' lines in rpmbuild output")
+    return paths
+
