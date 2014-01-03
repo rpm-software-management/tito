@@ -70,8 +70,11 @@ class ExternalSourceBuilderTests(TitoGitTestFixture):
         self.create_project_from_spec(EXT_SRC_PKG, pkg_dir=self.pkg_dir,
                 spec=spec,
                 builder='tito.builder.ExternalSourceBuilder')
-        run_command('touch %s/extsrc-0.0.1.tar.gz' % self.pkg_dir)
+        self.source_filename = 'extsrc-0.0.2.tar.gz'
         os.chdir(self.pkg_dir)
+
+        # Make a fake source file, do we need something more real?
+        run_command('touch %s' % self.source_filename)
 
         self.output_dir = tempfile.mkdtemp("-titotestoutput")
 
@@ -83,7 +86,8 @@ class ExternalSourceBuilderTests(TitoGitTestFixture):
         # We have not tagged here. Build --rpm should just work:
         self.assertFalse(os.path.exists(
             os.path.join(self.pkg_dir, 'rel-eng/packages/extsrc')))
-        tito('build --rpm --output=%s --no-cleanup' % self.output_dir)
+        tito('build --rpm --output=%s --no-cleanup --source=%s --debug' %
+                (self.output_dir, self.source_filename))
         self.assertTrue(os.path.exists(
             os.path.join(self.output_dir, 'extsrc-0.0.1-1.fc20.src.rpm')))
         self.assertTrue(os.path.exists(

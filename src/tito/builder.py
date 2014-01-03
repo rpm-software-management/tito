@@ -1116,11 +1116,16 @@ class ExternalSourceBuilder(ConfigObject, BuilderBase):
                 user_config=user_config, args=args, **kwargs)
 
         # Project directory where we started this build:
-        self.pkg_dir = os.getcwd()
+        self.start_dir = os.getcwd()
 
         self.build_tag = '%s-%s' % (self.project_name,
-                get_spec_version_and_release(self.pkg_dir,
+                get_spec_version_and_release(self.start_dir,
                     '%s.spec' % self.project_name))
+
+        # Assuming we're still in the start directory, get the absolute path
+        # to all sources specified:
+        self.manual_sources = [os.path.abspath(s) for s in kwargs['sources']]
+        debug("Got sources: %s" % self.manual_sources)
 
     def tgz(self):
         self.ran_tgz = True
@@ -1133,24 +1138,66 @@ class ExternalSourceBuilder(ConfigObject, BuilderBase):
         self.spec_file = os.path.join(self.rpmbuild_sourcedir,
                     '%s.spec' % self.project_name)
         shutil.copyfile(
-                os.path.join(self.pkg_dir, '%s.spec' % self.project_name),
+                os.path.join(self.start_dir, '%s.spec' % self.project_name),
                 self.spec_file)
         print("  %s.spec" % self.project_name)
 
         # TODO: Make this a configurable strategy:
-        files_in_src_dir = [f for f in os.listdir(self.pkg_dir) \
-                if os.path.isfile(os.path.join(self.pkg_dir, f)) ]
-        print files_in_src_dir
-        for f in files_in_src_dir:
-            shutil.copyfile(os.path.join(self.pkg_dir, f),
-                    os.path.join(self.rpmbuild_sourcedir, f))
+        i = 0
+        replacements = []
+        for s in self.manual_sources:
+            base_name = os.path.basename(s)
+            dest_filepath = os.path.join(self.rpmbuild_sourcedir, base_name)
+            shutil.copyfile(s, dest_filepath)
+            self.sources.append(dest_filepath)
+
+            # Add a line to replace in the spec for each source:
+            source_regex = re.compile("^(source%s:\s*)(.+)$" % i, re.IGNORECASE)
+            new_line = "Source%s: %s" % (i, base_name)
+            replacements.append((source_regex, new_line))
+
+        # Replace version and release in spec:
+        version_regex = re.compile("^(version:\s*)(.+)$", re.IGNORECASE)
+        release_regex = re.compile("^(release:\s*)(.+)$", re.IGNORECASE)
+
+        self.replace_in_spec(replacements)
+
         # Copy every normal file in the directory we ran tito from. This
         # will pick up any sources that were sitting around locally.
         # TODO: how to copy only sources?
-        cmd = "/usr/bin/spectool --list-files '%s' | awk '{print $2}' |xargs -l1 --no-run-if-empty basename " % self.spec_file
-        result = run_command(cmd)
-        self.sources = map(lambda x: os.path.join(self.rpmbuild_sourcedir, x), result.split("\n"))
-        print("  Sources: %s" % self.sources)
+        #files_in_src_dir = [f for f in os.listdir(self.start_dir) \
+                #        if os.path.isfile(os.path.join(self.start_dir, f)) ]
+        #print files_in_src_dir
+        #for f in files_in_src_dir:
+        #    shutil.copyfile(os.path.join(self.start_dir, f),
+        #            os.path.join(self.rpmbuild_sourcedir, f))
+        # TODO: extract version/release from filename?
+        # TODO: what filename?
+        #cmd = "/usr/bin/spectool --list-files '%s' | awk '{print $2}' |xargs -l1 --no-run-if-empty basename " % self.spec_file
+        #result = run_command(cmd)
+        #self.sources = map(lambda x: os.path.join(self.rpmbuild_sourcedir, x), result.split("\n"))
+
+    def replace_in_spec(self, replacements):
+        """
+        Replace lines in the spec file using the given replacements.
+
+        Replacements are a tuple of a regex to look for, and a new line to
+        substitute in when the regex matches.
+
+        Replaces all lines with one pass through the file.
+        """
+        in_f = open(self.spec_file, 'r')
+        out_f = open(self.spec_file + ".new", 'w')
+        for line in in_f.readlines():
+            for line_regex, new_line in replacements:
+                match = re.match(line_regex, line)
+                if match:
+                    line = new_line
+                out_f.write(line)
+
+        in_f.close()
+        out_f.close()
+        shutil.move(self.spec_file + ".new", self.spec_file)
 
     def _get_rpmbuild_dir_options(self):
         return ('--define "_sourcedir %s" --define "_builddir %s" '

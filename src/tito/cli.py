@@ -362,6 +362,12 @@ class BuildModule(BaseCliModule):
                 default='',
                 metavar="COLLECTION", help="Build package for software collection.")
 
+        # TODO: this is specific to the external source builder, implement a way for builders
+        # to inject additional cli options if they are configured.
+        self.parser.add_option("--source", dest="sources",
+                action="append", metavar="SOURCE_FILE",
+                help="Manually specified source file to be replaced in spec during build.")
+
     def main(self, argv):
         BaseCliModule.main(self, argv)
 
@@ -384,6 +390,7 @@ class BuildModule(BaseCliModule):
                 'auto_install': self.options.auto_install,
                 'rpmbuild_options': self.options.rpmbuild_options,
                 'scl': self.options.scl,
+                'sources': self.options.sources,
         }
 
         builder = create_builder(package_name, build_tag,
