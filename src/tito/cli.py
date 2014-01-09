@@ -374,7 +374,7 @@ class BuildModule(BaseCliModule):
         build_dir = os.path.normpath(os.path.abspath(self.options.output_dir))
         package_name = get_project_name(tag=self.options.tag)
 
-        build_tag = None
+        build_tag = self.options.tag
 
         if self.options.release:
             error_out("'tito build --release' is now deprecated. Please see 'tito release'.")

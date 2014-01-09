@@ -93,7 +93,10 @@ class ExternalSourceBuilderTests(TitoGitTestFixture):
         self.assertTrue(os.path.exists(
             os.path.join(self.output_dir, 'noarch/extsrc-0.0.2-1.fc20.noarch.rpm')))
 
-    # test_tag_rejected
+    def test_tag_rejected(self):
+        self.assertRaises(SystemExit, tito,
+                'build --tag=extsrc-0.0.1-1 --rpm --output=%s --source=%s' %
+                (self.output_dir, self.source_filename))
 
 
 class MultiProjectTests(TitoGitTestFixture):

@@ -1115,6 +1115,10 @@ class ExternalSourceBuilder(ConfigObject, BuilderBase):
                 pkg_config=pkg_config, global_config=global_config,
                 user_config=user_config, args=args, **kwargs)
 
+        if tag:
+            error_out("ExternalSourceBuilder does not support building "
+                    "specific tags.")
+
         # Project directory where we started this build:
         self.start_dir = os.getcwd()
 
