@@ -1127,6 +1127,30 @@ class ExternalSourceBuilder(ConfigObject, BuilderBase):
         self.manual_sources = [os.path.abspath(s) for s in kwargs['sources']]
         debug("Got sources: %s" % self.manual_sources)
 
+    def _get_version_and_release(self):
+        """
+        Get the version and release from the builder.
+        Sources are configured at this point.
+        """
+        # Assuming source0 is a tar.gz we can extract a version and possibly
+        # release from:
+        base_name = os.path.basename(self.sources[0])
+        debug("Extracting version/release from: %s" % base_name)
+
+        # usually a source tarball won't have a release, that is an RPM concept.
+        # Don't forget dist!
+        release = "1%{?dist}"
+
+        # Example filename: tito-0.4.18.tar.gz:
+        simple_version_re = re.compile(".*-(.*).(tar.gz|tgz|zip|bz2)")
+        match = re.search(simple_version_re, base_name)
+        if match:
+            version = match.group(1)
+        else:
+            error_out("Unable to determine version from file: %s" % base_name)
+
+        return (version, release)
+
     def tgz(self):
         self.ran_tgz = True
         self._create_build_dirs()
@@ -1159,6 +1183,12 @@ class ExternalSourceBuilder(ConfigObject, BuilderBase):
         # Replace version and release in spec:
         version_regex = re.compile("^(version:\s*)(.+)$", re.IGNORECASE)
         release_regex = re.compile("^(release:\s*)(.+)$", re.IGNORECASE)
+
+        (version, release) = self._get_version_and_release()
+        print("Building version: %s" % version)
+        print("Building release: %s" % release)
+        replacements.append((version_regex, "Version: %s\n" % version))
+        replacements.append((release_regex, "Release: %s\n" % release))
 
         self.replace_in_spec(replacements)
 
@@ -1193,7 +1223,7 @@ class ExternalSourceBuilder(ConfigObject, BuilderBase):
                 match = re.match(line_regex, line)
                 if match:
                     line = new_line
-                out_f.write(line)
+            out_f.write(line)
 
         in_f.close()
         out_f.close()

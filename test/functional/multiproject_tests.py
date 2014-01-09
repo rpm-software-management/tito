@@ -89,9 +89,9 @@ class ExternalSourceBuilderTests(TitoGitTestFixture):
         tito('build --rpm --output=%s --no-cleanup --source=%s --debug' %
                 (self.output_dir, self.source_filename))
         self.assertTrue(os.path.exists(
-            os.path.join(self.output_dir, 'extsrc-0.0.1-1.fc20.src.rpm')))
+            os.path.join(self.output_dir, 'extsrc-0.0.2-1.fc20.src.rpm')))
         self.assertTrue(os.path.exists(
-            os.path.join(self.output_dir, 'noarch/extsrc-0.0.1-1.fc20.noarch.rpm')))
+            os.path.join(self.output_dir, 'noarch/extsrc-0.0.2-1.fc20.noarch.rpm')))
 
     # test_tag_rejected
 
