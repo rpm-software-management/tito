@@ -18,8 +18,7 @@ import shutil
 
 from tito.builder.main import BuilderBase
 from tito.config_object import ConfigObject
-from tito.common import error_out, debug, get_spec_version_and_release, \
-        run_command, get_latest_tagged_version, check_tag_exists
+from tito.common import error_out, debug, get_spec_version_and_release
 
 class ExternalSourceBuilder(ConfigObject, BuilderBase):
     """
@@ -164,54 +163,4 @@ class ExternalSourceBuilder(ConfigObject, BuilderBase):
             '--define "_srcrpmdir %s" --define "_rpmdir %s" ' % (
             self.rpmbuild_sourcedir, self.rpmbuild_builddir,
             self.rpmbuild_basedir, self.rpmbuild_basedir))
-
-    def _setup_test_specfile(self):
-        """ Override parent behavior. """
-        if self.test:
-            # If making a test rpm we need to get a little crazy with the spec
-            # file we're building off. (note that this is a temp copy of the
-            # spec) Swap out the actual release for one that includes the git
-            # SHA1 we're building for our test package:
-            debug("setup_test_specfile:commit_count = %s" % str(self.commit_count))
-            script = "test-setup-specfile.pl"
-            cmd = "%s %s %s %s" % \
-                    (
-                        script,
-                        self.spec_file,
-                        self.git_commit_id[:7],
-                        self.commit_count,
-                    )
-            run_command(cmd)
-
-    def _get_build_version(self):
-        """
-        Override parent method to allow for execution without a pre-existing tag.
-        """
-        # Determine which package version we should build:
-        build_version = None
-        if self.build_tag:
-            build_version = self.build_tag[len(self.project_name + "-"):]
-        else:
-            build_version = get_latest_tagged_version(self.project_name)
-            if build_version == None:
-                pass
-            self.build_tag = "%s-%s" % (self.project_name, build_version)
-
-        if not self.test:
-            check_tag_exists(self.build_tag, offline=self.offline)
-        return build_version
-
-    def _get_display_version(self):
-        """
-        Get the package display version to build.
-
-        Taken from source files?
-        """
-        if self.test:
-            self.commit_count = 15000
-            version = "testing-100.100"
-        else:
-            version = self.build_version.split("-")[0]
-        return version
-
 
