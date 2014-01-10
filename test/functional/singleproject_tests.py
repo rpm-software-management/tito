@@ -32,7 +32,6 @@ class SingleProjectTests(TitoGitTestFixture):
 
     def tearDown(self):
         shutil.rmtree(self.repo_dir)
-        pass
 
     def test_init_worked(self):
         # Not actually running init here, just making sure it worked when
@@ -67,21 +66,22 @@ class SingleProjectTests(TitoGitTestFixture):
     def test_latest_tgz(self):
         tito("build --tgz -o %s" % self.repo_dir)
 
-    def test_tag_tgz(self):
+    def test_build_tgz_tag(self):
         tito("build --tgz --tag=%s-0.0.1-1 -o %s" % (PKG_NAME,
             self.repo_dir))
         self.assertTrue(os.path.exists(os.path.join(self.repo_dir,
             "%s-0.0.1.tar.gz" % PKG_NAME)))
 
-    def test_latest_srpm(self):
+    def test_build_latest_srpm(self):
         tito("build --srpm")
 
-    def test_tag_srpm(self):
+    def test_build_srpm_tag(self):
         tito("build --srpm --tag=%s-0.0.1-1 -o %s" % (PKG_NAME, self.repo_dir))
 
-    def test_latest_rpm(self):
+    def test_build_latest_rpm(self):
         tito("build --rpm -o %s" % self.repo_dir)
 
-    def test_tag_rpm(self):
+    def test_build_rpm_tag(self):
         tito("build --rpm --tag=%s-0.0.1-1 -o %s" % (PKG_NAME,
             self.repo_dir))
+

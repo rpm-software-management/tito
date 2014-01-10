@@ -269,6 +269,7 @@ class Builder(ConfigObject):
             '--define "_binary_filedigest_algorithm md5" %s %s %s --clean '
             '-ba %s' % (rpmbuild_options,
                 self._get_rpmbuild_dir_options(), define_dist, self.spec_file))
+        debug(cmd)
         try:
             output = run_command(cmd)
         except (KeyboardInterrupt, SystemExit):
@@ -429,8 +430,9 @@ class Builder(ConfigObject):
             self.ran_setup_test_specfile = True
 
     def _get_rpmbuild_dir_options(self):
-        return ('--define "_sourcedir %s" --define "_builddir %s" --define '
+        return ('--define "_topdir %s" --define "_sourcedir %s" --define "_builddir %s" --define '
             '"_srcrpmdir %s" --define "_rpmdir %s" ' % (
+            self.rpmbuild_dir,
             self.rpmbuild_sourcedir, self.rpmbuild_builddir,
             self.rpmbuild_basedir, self.rpmbuild_basedir))
 
@@ -500,8 +502,9 @@ class NoTgzBuilder(Builder):
         dir, use the git copy we create as the sources directory when
         building package so everything can be found:
         """
-        return ('--define "_sourcedir %s" --define "_builddir %s" '
+        return ('--define "_topdir %s" --define "_sourcedir %s" --define "_builddir %s" '
             '--define "_srcrpmdir %s" --define "_rpmdir %s" ' % (
+            self.rpmbuild_dir,
             self.rpmbuild_gitcopy, self.rpmbuild_builddir,
             self.rpmbuild_basedir, self.rpmbuild_basedir))
 
@@ -888,8 +891,9 @@ class UpstreamBuilder(NoTgzBuilder):
         dir, use the git copy we create as the sources directory when
         building package so everything can be found:
         """
-        return ('--define "_sourcedir %s" --define "_builddir %s" '
+        return ('--define "_topdir %s" --define "_sourcedir %s" --define "_builddir %s" '
             '--define "_srcrpmdir %s" --define "_rpmdir %s" ' % (
+            self.rpmbuild_dir,
             self.rpmbuild_sourcedir, self.rpmbuild_builddir,
             self.rpmbuild_basedir, self.rpmbuild_basedir))
 
