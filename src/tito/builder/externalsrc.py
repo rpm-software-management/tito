@@ -44,17 +44,129 @@ class ExternalSourceBuilder(ConfigObject, BuilderBase):
             error_out("ExternalSourceBuilder does not support building "
                     "specific tags.")
 
-        # Project directory where we started this build:
-        self.start_dir = os.getcwd()
-
         self.build_tag = '%s-%s' % (self.project_name,
                 get_spec_version_and_release(self.start_dir,
                     '%s.spec' % self.project_name))
 
+    def tgz(self):
+        self.ran_tgz = True
+        self._create_build_dirs()
+
+        print("Fetching sources...")
+        source_strat = KeywordArgSourceStrategy(self)
+        source_strat.fetch()
+        self.sources = source_strat.sources
+        self.spec_file = source_strat.spec_file
+
+        # Copy every normal file in the directory we ran tito from. This
+        # will pick up any sources that were sitting around locally.
+        # TODO: how to copy only sources?
+        #files_in_src_dir = [f for f in os.listdir(self.start_dir) \
+                #        if os.path.isfile(os.path.join(self.start_dir, f)) ]
+        #print files_in_src_dir
+        #for f in files_in_src_dir:
+        #    shutil.copyfile(os.path.join(self.start_dir, f),
+        #            os.path.join(self.rpmbuild_sourcedir, f))
+        # TODO: extract version/release from filename?
+        # TODO: what filename?
+        #cmd = "/usr/bin/spectool --list-files '%s' | awk '{print $2}' |xargs -l1 --no-run-if-empty basename " % self.spec_file
+        #result = run_command(cmd)
+        #self.sources = map(lambda x: os.path.join(self.rpmbuild_sourcedir, x), result.split("\n"))
+
+    def _get_rpmbuild_dir_options(self):
+        return ('--define "_sourcedir %s" --define "_builddir %s" '
+            '--define "_srcrpmdir %s" --define "_rpmdir %s" ' % (
+            self.rpmbuild_sourcedir, self.rpmbuild_builddir,
+            self.rpmbuild_basedir, self.rpmbuild_basedir))
+
+
+class SourceStrategy(object):
+    """
+    Base class for source strategies. These are responsible for fetching the
+    sources the builder will use, and determining what version/release we're
+    building.
+
+    This is created and run in the tgz step of the builder. It will be passed
+    a reference to the builder calling it, which will be important for accessing
+    a lot of required information.
+
+    Ideally sources and the spec file to be used should be copied into
+    builder.rpmbuild_sourcedir, which will be cleaned up automatically after
+    the builder runs.
+    """
+    def __init__(self, builder):
+        """
+        Defines fields that should be set when a sub-class runs fetch.
+        """
+        self.builder = builder
+
+        # Full path to the spec file we'll actually use to build, should be a
+        # copy, never a live spec file in a git repo as sometimes it will be
+        # modified:
+        self.spec_file = None
+
+        # Will contain the full path to each source we gather:
+        self.sources = []
+
+        # The version we're building:
+        self.version = None
+
+        # The release we're building:
+        self.release = None
+
+    def fetch(self):
+        raise NotImplementedError()
+
+
+class KeywordArgSourceStrategy(SourceStrategy):
+    """
+    Assumes the builder was passed an explicit argument specifying which source
+    file(s) to use.
+    """
+    def fetch(self):
+
         # Assuming we're still in the start directory, get the absolute path
         # to all sources specified:
-        self.manual_sources = [os.path.abspath(s) for s in kwargs['sources']]
-        debug("Got sources: %s" % self.manual_sources)
+        manual_sources = [os.path.abspath(s) for s in \
+                self.builder.kwargs['sources']]
+        debug("Got sources: %s" % manual_sources)
+
+        # Copy the live spec from our starting location. Unlike most builders,
+        # we are not using a copy from a past git commit.
+        self.spec_file = os.path.join(self.builder.rpmbuild_sourcedir,
+                    '%s.spec' % self.builder.project_name)
+        shutil.copyfile(
+                os.path.join(self.builder.start_dir, '%s.spec' %
+                    self.builder.project_name),
+                self.spec_file)
+        print("  %s.spec" % self.builder.project_name)
+
+        # TODO: Make this a configurable strategy:
+        i = 0
+        replacements = []
+        for s in manual_sources:
+            base_name = os.path.basename(s)
+            dest_filepath = os.path.join(self.builder.rpmbuild_sourcedir,
+                    base_name)
+            shutil.copyfile(s, dest_filepath)
+            self.sources.append(dest_filepath)
+
+            # Add a line to replace in the spec for each source:
+            source_regex = re.compile("^(source%s:\s*)(.+)$" % i, re.IGNORECASE)
+            new_line = "Source%s: %s" % (i, base_name)
+            replacements.append((source_regex, new_line))
+
+        # Replace version and release in spec:
+        version_regex = re.compile("^(version:\s*)(.+)$", re.IGNORECASE)
+        release_regex = re.compile("^(release:\s*)(.+)$", re.IGNORECASE)
+
+        (self.version, self.release) = self._get_version_and_release()
+        print("Building version: %s" % self.version)
+        print("Building release: %s" % self.release)
+        replacements.append((version_regex, "Version: %s\n" % self.version))
+        replacements.append((release_regex, "Release: %s\n" % self.release))
+
+        self.replace_in_spec(replacements)
 
     def _get_version_and_release(self):
         """
@@ -80,62 +192,6 @@ class ExternalSourceBuilder(ConfigObject, BuilderBase):
 
         return (version, release)
 
-    def tgz(self):
-        self.ran_tgz = True
-        self._create_build_dirs()
-
-        print("Fetching sources...")
-
-        # Copy the live spec from our starting location. Unlike most builders,
-        # we are not using a copy from a past git commit.
-        self.spec_file = os.path.join(self.rpmbuild_sourcedir,
-                    '%s.spec' % self.project_name)
-        shutil.copyfile(
-                os.path.join(self.start_dir, '%s.spec' % self.project_name),
-                self.spec_file)
-        print("  %s.spec" % self.project_name)
-
-        # TODO: Make this a configurable strategy:
-        i = 0
-        replacements = []
-        for s in self.manual_sources:
-            base_name = os.path.basename(s)
-            dest_filepath = os.path.join(self.rpmbuild_sourcedir, base_name)
-            shutil.copyfile(s, dest_filepath)
-            self.sources.append(dest_filepath)
-
-            # Add a line to replace in the spec for each source:
-            source_regex = re.compile("^(source%s:\s*)(.+)$" % i, re.IGNORECASE)
-            new_line = "Source%s: %s" % (i, base_name)
-            replacements.append((source_regex, new_line))
-
-        # Replace version and release in spec:
-        version_regex = re.compile("^(version:\s*)(.+)$", re.IGNORECASE)
-        release_regex = re.compile("^(release:\s*)(.+)$", re.IGNORECASE)
-
-        (version, release) = self._get_version_and_release()
-        print("Building version: %s" % version)
-        print("Building release: %s" % release)
-        replacements.append((version_regex, "Version: %s\n" % version))
-        replacements.append((release_regex, "Release: %s\n" % release))
-
-        self.replace_in_spec(replacements)
-
-        # Copy every normal file in the directory we ran tito from. This
-        # will pick up any sources that were sitting around locally.
-        # TODO: how to copy only sources?
-        #files_in_src_dir = [f for f in os.listdir(self.start_dir) \
-                #        if os.path.isfile(os.path.join(self.start_dir, f)) ]
-        #print files_in_src_dir
-        #for f in files_in_src_dir:
-        #    shutil.copyfile(os.path.join(self.start_dir, f),
-        #            os.path.join(self.rpmbuild_sourcedir, f))
-        # TODO: extract version/release from filename?
-        # TODO: what filename?
-        #cmd = "/usr/bin/spectool --list-files '%s' | awk '{print $2}' |xargs -l1 --no-run-if-empty basename " % self.spec_file
-        #result = run_command(cmd)
-        #self.sources = map(lambda x: os.path.join(self.rpmbuild_sourcedir, x), result.split("\n"))
-
     def replace_in_spec(self, replacements):
         """
         Replace lines in the spec file using the given replacements.
@@ -158,9 +214,5 @@ class ExternalSourceBuilder(ConfigObject, BuilderBase):
         out_f.close()
         shutil.move(self.spec_file + ".new", self.spec_file)
 
-    def _get_rpmbuild_dir_options(self):
-        return ('--define "_sourcedir %s" --define "_builddir %s" '
-            '--define "_srcrpmdir %s" --define "_rpmdir %s" ' % (
-            self.rpmbuild_sourcedir, self.rpmbuild_builddir,
-            self.rpmbuild_basedir, self.rpmbuild_basedir))
+
 

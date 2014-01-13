@@ -129,7 +129,7 @@ class TitoGitTestFixture(unittest.TestCase):
         index.commit('Setting offline.')
 
     def tearDown(self):
-        #shutil.rmtree(self.repo_dir)
+        shutil.rmtree(self.repo_dir)
         pass
 
     def write_file(self, path, contents):

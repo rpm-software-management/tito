@@ -59,45 +59,6 @@ module Iteng
   end
 """
 
-EXT_SRC_PKG = "extsrc"
-
-class ExternalSourceBuilderTests(TitoGitTestFixture):
-
-    def setUp(self):
-        TitoGitTestFixture.setUp(self)
-        self.pkg_dir = os.path.join(self.repo_dir, EXT_SRC_PKG)
-        spec = os.path.join(os.path.dirname(__file__), "specs/extsrc.spec")
-        self.create_project_from_spec(EXT_SRC_PKG, pkg_dir=self.pkg_dir,
-                spec=spec,
-                builder='tito.builder.ExternalSourceBuilder')
-        self.source_filename = 'extsrc-0.0.2.tar.gz'
-        os.chdir(self.pkg_dir)
-
-        # Make a fake source file, do we need something more real?
-        run_command('touch %s' % self.source_filename)
-
-        self.output_dir = tempfile.mkdtemp("-titotestoutput")
-
-    def tearDown(self):
-        TitoGitTestFixture.tearDown(self)
-        #shutil.rmtree(self.output_dir)
-
-    def test_simple_build_no_tag(self):
-        # We have not tagged here. Build --rpm should just work:
-        self.assertFalse(os.path.exists(
-            os.path.join(self.pkg_dir, 'rel-eng/packages/extsrc')))
-        tito('build --rpm --output=%s --no-cleanup --source=%s --debug' %
-                (self.output_dir, self.source_filename))
-        self.assertTrue(os.path.exists(
-            os.path.join(self.output_dir, 'extsrc-0.0.2-1.fc20.src.rpm')))
-        self.assertTrue(os.path.exists(
-            os.path.join(self.output_dir, 'noarch/extsrc-0.0.2-1.fc20.noarch.rpm')))
-
-    def test_tag_rejected(self):
-        self.assertRaises(SystemExit, tito,
-                'build --tag=extsrc-0.0.1-1 --rpm --output=%s --source=%s' %
-                (self.output_dir, self.source_filename))
-
 
 class MultiProjectTests(TitoGitTestFixture):
 
@@ -191,4 +152,3 @@ class MultiProjectTests(TitoGitTestFixture):
         os.chdir(os.path.join(self.repo_dir, 'pkg1'))
         artifacts = tito('build --rpm')
         self.assertEquals(3, len(artifacts))
-        print artifacts
