@@ -54,6 +54,7 @@ class BuilderBase(object):
         self.user_config = user_config
         self.args = args
         self.kwargs = kwargs
+        self.pkg_config = pkg_config
 
         # Optional keyword arguments:
         self.dist = self._get_optional_arg(kwargs, 'dist', None)

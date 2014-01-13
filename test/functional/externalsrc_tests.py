@@ -17,6 +17,7 @@ Functional Tests for the ExternalSource builder.
 
 import os
 import tempfile
+import ConfigParser
 
 from tito.common import run_command
 from fixture import TitoGitTestFixture, tito
@@ -29,9 +30,19 @@ class ExternalSourceBuilderTests(TitoGitTestFixture):
         TitoGitTestFixture.setUp(self)
         self.pkg_dir = os.path.join(self.repo_dir, EXT_SRC_PKG)
         spec = os.path.join(os.path.dirname(__file__), "specs/extsrc.spec")
-        self.create_project_from_spec(EXT_SRC_PKG, pkg_dir=self.pkg_dir,
-                spec=spec,
-                builder='tito.builder.ExternalSourceBuilder')
+
+        # Setup test config:
+        self.config = ConfigParser.RawConfigParser()
+        self.config.add_section("buildconfig")
+        self.config.set("buildconfig", "builder",
+                "tito.builder.ExternalSourceBuilder")
+
+        self.config.add_section('externalsourcebuilder')
+        self.config.set('externalsourcebuilder', 'source_strategy',
+                'tito.builder.externalsrc.KeywordArgSourceStrategy')
+
+        self.create_project_from_spec(EXT_SRC_PKG, self.config,
+                pkg_dir=self.pkg_dir, spec=spec)
         self.source_filename = 'extsrc-0.0.2.tar.gz'
         os.chdir(self.pkg_dir)
 

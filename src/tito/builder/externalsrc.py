@@ -18,7 +18,8 @@ import shutil
 
 from tito.builder.main import BuilderBase
 from tito.config_object import ConfigObject
-from tito.common import error_out, debug, get_spec_version_and_release
+from tito.common import error_out, debug, get_spec_version_and_release, \
+    get_class_by_name
 
 class ExternalSourceBuilder(ConfigObject, BuilderBase):
     """
@@ -44,6 +45,10 @@ class ExternalSourceBuilder(ConfigObject, BuilderBase):
             error_out("ExternalSourceBuilder does not support building "
                     "specific tags.")
 
+        if not pkg_config.has_option("externalsourcebuilder",
+                "source_strategy"):
+            error_out("ExternalSourceBuilder requires [externalsourcebuilder] source_strategy in tito.props.")
+
         self.build_tag = '%s-%s' % (self.project_name,
                 get_spec_version_and_release(self.start_dir,
                     '%s.spec' % self.project_name))
@@ -53,25 +58,12 @@ class ExternalSourceBuilder(ConfigObject, BuilderBase):
         self._create_build_dirs()
 
         print("Fetching sources...")
-        source_strat = KeywordArgSourceStrategy(self)
+        source_strat_class = get_class_by_name(self.pkg_config.get(
+            'externalsourcebuilder', 'source_strategy'))
+        source_strat = source_strat_class(self)
         source_strat.fetch()
         self.sources = source_strat.sources
         self.spec_file = source_strat.spec_file
-
-        # Copy every normal file in the directory we ran tito from. This
-        # will pick up any sources that were sitting around locally.
-        # TODO: how to copy only sources?
-        #files_in_src_dir = [f for f in os.listdir(self.start_dir) \
-                #        if os.path.isfile(os.path.join(self.start_dir, f)) ]
-        #print files_in_src_dir
-        #for f in files_in_src_dir:
-        #    shutil.copyfile(os.path.join(self.start_dir, f),
-        #            os.path.join(self.rpmbuild_sourcedir, f))
-        # TODO: extract version/release from filename?
-        # TODO: what filename?
-        #cmd = "/usr/bin/spectool --list-files '%s' | awk '{print $2}' |xargs -l1 --no-run-if-empty basename " % self.spec_file
-        #result = run_command(cmd)
-        #self.sources = map(lambda x: os.path.join(self.rpmbuild_sourcedir, x), result.split("\n"))
 
     def _get_rpmbuild_dir_options(self):
         return ('--define "_sourcedir %s" --define "_builddir %s" '

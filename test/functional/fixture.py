@@ -138,8 +138,8 @@ class TitoGitTestFixture(unittest.TestCase):
         out_f.write(contents)
         out_f.close()
 
-    def create_project_from_spec(self, pkg_name, pkg_dir='', spec=None,
-            builder=None):
+    def create_project_from_spec(self, pkg_name, config,
+            pkg_dir='', spec=None):
         """
         Create a sample tito project and copy the given test spec file over.
         """
@@ -149,11 +149,10 @@ class TitoGitTestFixture(unittest.TestCase):
 
         shutil.copyfile(spec, os.path.join(full_pkg_dir, os.path.basename(spec)))
 
-        if builder:
-            tito_props_f = open(os.path.join(full_pkg_dir, 'tito.props'), 'w')
-            tito_props_f.write('[buildconfig]\n')
-            tito_props_f.write('builder = %s' % builder)
-            tito_props_f.close()
+        # Write the config object we were given out to the project repo:
+        with open(os.path.join(full_pkg_dir, 'tito.props'), 'w') \
+                as configfile:
+            config.write(configfile)
 
     def create_project(self, pkg_name, pkg_dir=''):
         """
