@@ -83,7 +83,7 @@ class Releaser(ConfigObject):
         self.working_dir = os.path.join(self.builder.rpmbuild_basedir,
                 DEFAULT_CVS_BUILD_DIR)
         self.working_dir = mkdtemp(dir=self.builder.rpmbuild_basedir,
-                prefix="release-%s" % self.builder.project_name_and_sha1)
+                prefix="release-%s" % self.builder.project_name)
         print("Working in: %s" % self.working_dir)
 
         # When syncing files with CVS, only copy files with these extensions:
