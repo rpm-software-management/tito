@@ -22,21 +22,19 @@ class ConfigObject(object):
     Perent class for Builder and Tagger with shared code
     """
 
-    def __init__(self, pkg_config=None, global_config=None):
+    def __init__(self, config=None):
         """
-        pkg_config - Package specific configuration.
+        config - Merged configuration. (global plus package specific)
+        """
+        self.config = config
 
-        global_config - Global configuration from rel-eng/tito.props.
-        """
-        self.config = global_config
-        
         # Override global configurations using local configurations
-        for section in pkg_config.sections():
-            for options in pkg_config.options(section):
+        for section in config.sections():
+            for options in config.options(section):
                 if not self.config.has_section(section):
                     self.config.add_section(section)
                 self.config.set(section, options,
-                        pkg_config.get(section, options))
+                        config.get(section, options))
 
         self.git_root = find_git_root()
         self.rel_eng_dir = os.path.join(self.git_root, "rel-eng")

@@ -34,18 +34,18 @@ class ExternalSourceBuilder(ConfigObject, BuilderBase):
     REQUIRED_ARGS = []
 
     def __init__(self, name=None, tag=None, build_dir=None,
-            pkg_config=None, global_config=None, user_config=None,
+            config=None, user_config=None,
             args=None, **kwargs):
 
         BuilderBase.__init__(self, name=name, build_dir=build_dir,
-                pkg_config=pkg_config, global_config=global_config,
+                config=config,
                 user_config=user_config, args=args, **kwargs)
 
         if tag:
             error_out("ExternalSourceBuilder does not support building "
                     "specific tags.")
 
-        if not pkg_config.has_option("externalsourcebuilder",
+        if not config.has_option("externalsourcebuilder",
                 "source_strategy"):
             error_out("ExternalSourceBuilder requires [externalsourcebuilder] source_strategy in tito.props.")
 
@@ -58,7 +58,7 @@ class ExternalSourceBuilder(ConfigObject, BuilderBase):
         self._create_build_dirs()
 
         print("Fetching sources...")
-        source_strat_class = get_class_by_name(self.pkg_config.get(
+        source_strat_class = get_class_by_name(self.config.get(
             'externalsourcebuilder', 'source_strategy'))
         source_strat = source_strat_class(self)
         source_strat.fetch()

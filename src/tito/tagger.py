@@ -46,13 +46,8 @@ class VersionTagger(ConfigObject):
     and the actual RPM "release" will always be set to 1.
     """
 
-    def __init__(self, global_config=None, keep_version=False, offline=False, user_config=None, pkg_config=None):
-        """
-        pkg_config - Package specific configuration.
-
-        global_config - Global configuration from rel-eng/tito.props.
-        """
-        ConfigObject.__init__(self, pkg_config=pkg_config, global_config=global_config)
+    def __init__(self, config=None, keep_version=False, offline=False, user_config=None):
+        ConfigObject.__init__(self, config=config)
         self.user_config = user_config
 
         self.full_project_dir = os.getcwd()

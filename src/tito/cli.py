@@ -107,9 +107,8 @@ class BaseCliModule(object):
 
     def __init__(self, usage):
         self.parser = OptionParser(usage)
-        self.global_config = None
+        self.config = None
         self.options = None
-        self.pkg_config = None
         self.user_config = read_user_config()
 
         self._add_common_options()
@@ -148,18 +147,19 @@ class BaseCliModule(object):
             print(self.parser.error("Must supply an argument. "
                 "Try -h for help."))
 
-        self.global_config = self._read_global_config()
-        if self.global_config.has_option(GLOBALCONFIG_SECTION,
+        self.config = self._read_config()
+        if self.config.has_option(GLOBALCONFIG_SECTION,
                 "offline"):
             self.options.offline = True
 
+        # TODO: Not ideal:
         if self.options.debug:
             os.environ['DEBUG'] = "true"
 
         # Check if global config defines a custom lib dir:
-        if self.global_config.has_option(GLOBALCONFIG_SECTION,
+        if self.config.has_option(GLOBALCONFIG_SECTION,
                 "lib_dir"):
-            lib_dir = self.global_config.get(GLOBALCONFIG_SECTION,
+            lib_dir = self.config.get(GLOBALCONFIG_SECTION,
                     "lib_dir")
             if lib_dir[0] != '/':
                 # Looks like a relative path, assume from the git root:
@@ -172,19 +172,29 @@ class BaseCliModule(object):
                 print("WARNING: lib_dir specified but does not exist: %s" %
                         lib_dir)
 
-    def _read_global_config(self):
+    def _read_config(self):
         """
         Read global build.py configuration from the rel-eng dir of the git
         repository we're being run from.
+
+        NOTE: We always load the latest config file, not tito.props as it
+        was for the tag being operated on.
         """
+        # List of filepaths to config files we'll be loading:
         rel_eng_dir = os.path.join(find_git_root(), "rel-eng")
         filename = os.path.join(rel_eng_dir, GLOBAL_BUILD_PROPS_FILENAME)
         if not os.path.exists(filename):
             # HACK: Try the old filename location, pre-tito rename:
             oldfilename = os.path.join(rel_eng_dir, "global.build.py.props")
-            if not os.path.exists(oldfilename):
+            if os.path.exists(oldfilename):
+                filename = oldfilename
+            else:
                 error_out("Unable to locate branch configuration: %s"
                     "\nPlease run 'tito init'" % filename)
+
+        # Load the global config. Later, when we know what tag/package we're
+        # building, we may also load that and potentially override some global
+        # settings.
         config = ConfigParser.ConfigParser()
         config.read(filename)
 
@@ -216,8 +226,12 @@ class BaseCliModule(object):
         the presence of a Makefile with NO_TAR_GZ, and include a hack to
         assume build properties in this scenario.
 
+        If we can find project specific config, we return the path to that
+        config file, and a boolean indicating if that file needs to be cleaned
+        up after reading.
+
         If no project specific config can be found, settings come from the
-        global tito.props in rel-eng/.
+        global tito.props in rel-eng/, and we return None as the filepath.
         """
         debug("Determined package name to be: %s" % project_name)
         debug("build_dir = %s" % build_dir)
@@ -283,20 +297,17 @@ class BaseCliModule(object):
                     wrote_temp_file = True
 
         # TODO: can we parse config from a string and stop writing temp files?
-        config = ConfigParser.ConfigParser()
         if properties_file != None:
-            debug("Using build properties: %s" % properties_file)
-            config.read(properties_file)
+            debug("Using package specific properties: %s" % properties_file)
+            self.config.read(properties_file)
         else:
             debug("Unable to locate custom build properties for this package.")
-            debug("   Using global.tito.props")
 
         # TODO: Not thrilled with this:
         if wrote_temp_file and not no_cleanup:
             # Delete the temp properties file we created.
             run_command("rm %s" % properties_file)
 
-        return config
 
     def _validate_options(self):
         """
@@ -379,7 +390,7 @@ class BuildModule(BaseCliModule):
         if self.options.release:
             error_out("'tito build --release' is now deprecated. Please see 'tito release'.")
 
-        self.pkg_config = self._read_project_config(package_name, build_dir,
+        self._read_project_config(package_name, build_dir,
                 self.options.tag, self.options.no_cleanup)
 
         args = self._parse_builder_args()
@@ -394,8 +405,8 @@ class BuildModule(BaseCliModule):
         }
 
         builder = create_builder(package_name, build_tag,
-                self.pkg_config,
-                build_dir, self.global_config, self.user_config, args,
+                self.config,
+                build_dir, self.user_config, args,
                 builder_class=self.options.builder, **kwargs)
         return builder.run(self.options)
 
@@ -513,7 +524,7 @@ class ReleaseModule(BaseCliModule):
         """
 
         # Handle cvs:
-        if self.global_config.has_section('cvs') and not \
+        if self.config.has_section('cvs') and not \
                 releaser_config.has_section("cvs"):
             print("WARNING: legacy 'cvs' section in tito.props, please "
                     "consider creating a target in releasers.conf.")
@@ -521,12 +532,12 @@ class ReleaseModule(BaseCliModule):
             releaser_config.add_section('cvs')
             releaser_config.set('cvs', 'releaser', 'tito.release.CvsReleaser')
             for opt in ["cvsroot", "branches"]:
-                if self.global_config.has_option("cvs", opt):
-                    releaser_config.set('cvs', opt, self.global_config.get(
+                if self.config.has_option("cvs", opt):
+                    releaser_config.set('cvs', opt, self.config.get(
                         "cvs", opt))
 
         # Handle koji:
-        if self.global_config.has_section("koji") and not \
+        if self.config.has_section("koji") and not \
                 releaser_config.has_section("koji"):
             print("WARNING: legacy 'koji' section in tito.props, please "
                     "consider creating a target in releasers.conf.")
@@ -534,7 +545,7 @@ class ReleaseModule(BaseCliModule):
             releaser_config.add_section('koji')
             releaser_config.set('koji', 'releaser', 'tito.release.KojiReleaser')
             releaser_config.set('koji', 'autobuild_tags',
-                    self.global_config.get('koji', 'autobuild_tags'))
+                    self.config.get('koji', 'autobuild_tags'))
 
             # TODO: find a way to get koji builds going through the new release
             # target config file, tricky as each koji tag gets it's own
@@ -542,8 +553,8 @@ class ReleaseModule(BaseCliModule):
             # target.
 
             #for opt in ["autobuild_tags", "disttag", "whitelist", "blacklist"]:
-            #    if self.global_config.has_option("koji", opt):
-            #        releaser_config.set('koji', opt, self.global_config.get(
+            #    if self.config.has_option("koji", opt):
+            #        releaser_config.set('koji', opt, self.config.get(
             #            "koji", opt))
 
     def _print_releasers(self, releaser_config):
@@ -589,7 +600,7 @@ class ReleaseModule(BaseCliModule):
 
         build_tag = self.options.tag
 
-        self.pkg_config = self._read_project_config(package_name, build_dir,
+        self._read_project_config(package_name, build_dir,
                 self.options.tag, self.options.no_cleanup)
 
         orig_cwd = os.getcwd()
@@ -606,8 +617,7 @@ class ReleaseModule(BaseCliModule):
                     name=package_name,
                     tag=build_tag,
                     build_dir=build_dir,
-                    pkg_config=self.pkg_config,
-                    global_config=self.global_config,
+                    config=self.config,
                     user_config=self.user_config,
                     target=target,
                     releaser_config=releaser_config,
@@ -661,7 +671,7 @@ class TagModule(BaseCliModule):
     def main(self, argv):
         BaseCliModule.main(self, argv)
 
-        if self.global_config.has_option(GLOBALCONFIG_SECTION,
+        if self.config.has_option(GLOBALCONFIG_SECTION,
                 "block_tagging"):
             debug("block_tagging defined in tito.props")
             error_out("Tagging has been disabled in this git branch.")
@@ -669,23 +679,22 @@ class TagModule(BaseCliModule):
         build_dir = os.path.normpath(os.path.abspath(self.options.output_dir))
         package_name = get_project_name(tag=None)
 
-        self.pkg_config = self._read_project_config(package_name, build_dir,
+        self._read_project_config(package_name, build_dir,
                 None, None)
 
         tagger_class = None
         if self.options.use_version:
             tagger_class = get_class_by_name("tito.tagger.ForceVersionTagger")
-        elif self.pkg_config.has_option("buildconfig", "tagger"):
-            tagger_class = get_class_by_name(self.pkg_config.get("buildconfig",
+        elif self.config.has_option("buildconfig", "tagger"):
+            tagger_class = get_class_by_name(self.config.get("buildconfig",
                 "tagger"))
         else:
-            tagger_class = get_class_by_name(self.global_config.get(
+            tagger_class = get_class_by_name(self.config.get(
                 GLOBALCONFIG_SECTION, DEFAULT_TAGGER))
         debug("Using tagger class: %s" % tagger_class)
 
-        tagger = tagger_class(global_config=self.global_config,
-        user_config=self.user_config,
-                pkg_config=self.pkg_config,
+        tagger = tagger_class(config=self.config,
+                user_config=self.user_config,
                 keep_version=self.options.keep_version,
                 offline=self.options.offline)
 
@@ -788,15 +797,15 @@ class ReportModule(BaseCliModule):
         BaseCliModule.main(self, argv)
 
         if self.options.untagged_report:
-            self._run_untagged_report(self.global_config)
+            self._run_untagged_report(self.config)
             sys.exit(1)
 
         if self.options.untagged_commits:
-            self._run_untagged_commits(self.global_config)
+            self._run_untagged_commits(self.config)
             sys.exit(1)
         return []
 
-    def _run_untagged_commits(self, global_config):
+    def _run_untagged_commits(self, config):
         """
         Display a report of all packages with differences between HEAD and
         their most recent tag, as well as a patch for that diff. Used to
@@ -820,9 +829,9 @@ class ReportModule(BaseCliModule):
                     relative_dir = ""
 
                 project_dir = os.path.join(git_root, relative_dir)
-                self._print_log(global_config, md_file, version, project_dir)
+                self._print_log(config, md_file, version, project_dir)
 
-    def _run_untagged_report(self, global_config):
+    def _run_untagged_report(self, config):
         """
         Display a report of all packages with differences between HEAD and
         their most recent tag, as well as a patch for that diff. Used to
@@ -846,10 +855,10 @@ class ReportModule(BaseCliModule):
                     relative_dir = ""
 
                 project_dir = os.path.join(git_root, relative_dir)
-                self._print_diff(global_config, md_file, version, project_dir,
+                self._print_diff(config, md_file, version, project_dir,
                         relative_dir)
 
-    def _print_log(self, global_config, package_name, version, project_dir):
+    def _print_log(self, config, package_name, version, project_dir):
         """
         Print the log between the most recent package tag and HEAD, if
         necessary.
@@ -867,7 +876,7 @@ class ReportModule(BaseCliModule):
         except:
             print("%s no longer exists" % project_dir)
 
-    def _print_diff(self, global_config, package_name, version,
+    def _print_diff(self, config, package_name, version,
             full_project_dir, relative_project_dir):
         """
         Print a diff between the most recent package tag and HEAD, if

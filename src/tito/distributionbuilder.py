@@ -13,9 +13,9 @@ class DistributionBuilder(UpstreamBuilder):
       Patch1: foo-1.2.13-2-to-foo-1.2.13-3-sat.patch
     """
     def __init__(self, name=None, tag=None, build_dir=None,
-            pkg_config=None, global_config=None, user_config=None, args=None, **kwargs):
-        UpstreamBuilder.__init__(self, name, tag, build_dir, pkg_config,
-                global_config, user_config, args, **kwargs)
+            config=None, user_config=None, args=None, **kwargs):
+        UpstreamBuilder.__init__(self, name, tag, build_dir, config,
+                user_config, args, **kwargs)
         self.patch_files = []
 
     def patch_upstream(self):

@@ -44,7 +44,7 @@ class BuilderBase(object):
     """
     # TODO: merge config into an object and kill the ConfigObject parent class
     def __init__(self, name=None, build_dir=None,
-            pkg_config=None, global_config=None, user_config=None,
+            config=None, user_config=None,
             args=None, **kwargs):
 
         # Project directory where we started this build:
@@ -54,7 +54,7 @@ class BuilderBase(object):
         self.user_config = user_config
         self.args = args
         self.kwargs = kwargs
-        self.pkg_config = pkg_config
+        self.config = config
 
         # Optional keyword arguments:
         self.dist = self._get_optional_arg(kwargs, 'dist', None)
@@ -266,7 +266,7 @@ class Builder(ConfigObject, BuilderBase):
 
     # TODO: drop version
     def __init__(self, name=None, tag=None, build_dir=None,
-            pkg_config=None, global_config=None, user_config=None,
+            config=None, user_config=None,
             args=None, **kwargs):
 
         """
@@ -278,9 +278,7 @@ class Builder(ConfigObject, BuilderBase):
 
         build_dir - Temporary build directory where we can safely work.
 
-        pkg_config - Package specific configuration.
-
-        global_config - Global configuration from rel-eng/tito.props.
+        config - Merged configuration. (global plus package specific)
 
         user_config - User configuration from ~/.titorc.
 
@@ -289,8 +287,9 @@ class Builder(ConfigObject, BuilderBase):
         entry. Only for things which vary on invocations of the builder,
         avoid using these if possible.
         """
-        ConfigObject.__init__(self, pkg_config=pkg_config, global_config=global_config)
-        BuilderBase.__init__(self, name=name, build_dir=build_dir, pkg_config=pkg_config, global_config=global_config, user_config=user_config, args=args, **kwargs)
+        ConfigObject.__init__(self, config=config)
+        BuilderBase.__init__(self, name=name, build_dir=build_dir, config=config,
+                user_config=user_config, args=args, **kwargs)
         self.build_tag = tag
 
         self.build_version = self._get_build_version()
@@ -514,12 +513,12 @@ class NoTgzBuilder(Builder):
     """
 
     def __init__(self, name=None, tag=None, build_dir=None,
-            pkg_config=None, global_config=None, user_config=None,
+            config=None, user_config=None,
             args=None, **kwargs):
 
         Builder.__init__(self, name=name, tag=tag,
-                build_dir=build_dir, pkg_config=pkg_config,
-                global_config=global_config, user_config=user_config,
+                build_dir=build_dir, config=config,
+                user_config=user_config,
                 args=args, **kwargs)
 
         # When syncing files with CVS, copy everything from git:
@@ -580,12 +579,12 @@ class GemBuilder(NoTgzBuilder):
     """
 
     def __init__(self, name=None, tag=None, build_dir=None,
-            pkg_config=None, global_config=None, user_config=None,
+            config=None, user_config=None,
             args=None, **kwargs):
 
         NoTgzBuilder.__init__(self, name=name, tag=tag,
-                build_dir=build_dir, pkg_config=pkg_config,
-                global_config=global_config, user_config=user_config,
+                build_dir=build_dir, config=config,
+                user_config=user_config,
                 args=args, **kwargs)
 
     def _setup_sources(self):
@@ -637,12 +636,12 @@ class CvsBuilder(NoTgzBuilder):
     """
 
     def __init__(self, name=None, tag=None, build_dir=None,
-            pkg_config=None, global_config=None, user_config=None,
+            config=None, user_config=None,
             args=None, **kwargs):
 
         NoTgzBuilder.__init__(self, name=name, tag=tag,
-                build_dir=build_dir, pkg_config=pkg_config,
-                global_config=global_config, user_config=user_config,
+                build_dir=build_dir, config=config,
+                user_config=user_config,
                 args=args, **kwargs)
 
         # TODO: Hack to override here, patches are in a weird place with this
@@ -745,20 +744,20 @@ class UpstreamBuilder(NoTgzBuilder):
     """
 
     def __init__(self, name=None, tag=None, build_dir=None,
-            pkg_config=None, global_config=None, user_config=None,
+            config=None, user_config=None,
             args=None, **kwargs):
 
         NoTgzBuilder.__init__(self, name=name, tag=tag,
-                build_dir=build_dir, pkg_config=pkg_config,
-                global_config=global_config, user_config=user_config,
+                build_dir=build_dir, config=config,
+                user_config=user_config,
                 args=args, **kwargs)
 
-        if not pkg_config or not pkg_config.has_option("buildconfig",
+        if not config or not config.has_option("buildconfig",
                 "upstream_name"):
             # No upstream_name defined, assume we're keeping the project name:
             self.upstream_name = self.project_name
         else:
-            self.upstream_name = pkg_config.get("buildconfig", "upstream_name")
+            self.upstream_name = config.get("buildconfig", "upstream_name")
         # Need to assign these after we've exported a copy of the spec file:
         self.upstream_version = None
         self.upstream_tag = None
@@ -955,17 +954,17 @@ class MockBuilder(Builder):
     REQUIRED_ARGS = ['mock']
 
     def __init__(self, name=None, tag=None, build_dir=None,
-            pkg_config=None, global_config=None, user_config=None,
+            config=None, user_config=None,
             args=None, **kwargs):
 
         # Mock builders need to use the packages normally configured builder
         # to get at a proper SRPM:
-        self.normal_builder = create_builder(name, tag, version, pkg_config,
-                build_dir, global_config, user_config, args, **kwargs)
+        self.normal_builder = create_builder(name, tag, version, config,
+                build_dir, user_config, args, **kwargs)
 
         Builder.__init__(self, name=name, tag=tag,
-                build_dir=build_dir, pkg_config=pkg_config,
-                global_config=global_config, user_config=user_config,
+                build_dir=build_dir, config=config,
+                user_config=user_config,
                 args=args, **kwargs)
 
         self.mock_tag = args['mock']
@@ -1058,12 +1057,12 @@ class BrewDownloadBuilder(Builder):
     REQUIRED_ARGS = ['disttag']
 
     def __init__(self, name=None, tag=None, build_dir=None,
-            pkg_config=None, global_config=None, user_config=None,
+            config=None, user_config=None,
             args=None, **kwargs):
 
         Builder.__init__(self, name=name, tag=tag,
-                build_dir=build_dir, pkg_config=pkg_config,
-                global_config=global_config, user_config=user_config,
+                build_dir=build_dir, config=config,
+                user_config=user_config,
                 args=args, **kwargs)
 
         self.brew_tag = 'meow'  # args['brewtag']
@@ -1117,11 +1116,11 @@ class ExternalSourceBuilder(ConfigObject, BuilderBase):
     REQUIRED_ARGS = []
 
     def __init__(self, name=None, tag=None, build_dir=None,
-            pkg_config=None, global_config=None, user_config=None,
+            config=None, user_config=None,
             args=None, **kwargs):
 
         BuilderBase.__init__(self, name=name, build_dir=build_dir,
-                pkg_config=pkg_config, global_config=global_config,
+                config=config,
                 user_config=user_config, args=args, **kwargs)
 
         if tag:

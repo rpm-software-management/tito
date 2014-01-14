@@ -114,7 +114,7 @@ def error_out(error_msgs):
 
 
 def create_builder(package_name, build_tag,
-        pkg_config, build_dir, global_config, user_config, args,
+        config, build_dir, user_config, args,
         builder_class=None, **kwargs):
     """
     Create (but don't run) the builder class. Builder object may be
@@ -127,12 +127,12 @@ def create_builder(package_name, build_tag,
 
     if builder_class is None:
         debug("---- Builder class is None")
-        if pkg_config.has_option("buildconfig", "builder"):
-            builder_class = get_class_by_name(pkg_config.get("buildconfig",
+        if config.has_option("buildconfig", "builder"):
+            builder_class = get_class_by_name(config.get("buildconfig",
                 "builder"))
         else:
             debug("---- Global config")
-            builder_class = get_class_by_name(global_config.get(
+            builder_class = get_class_by_name(config.get(
                 GLOBALCONFIG_SECTION, DEFAULT_BUILDER))
     else:
         # We were given an explicit builder class as a str, get the actual
@@ -145,8 +145,7 @@ def create_builder(package_name, build_tag,
             name=package_name,
             tag=build_tag,
             build_dir=build_dir,
-            pkg_config=pkg_config,
-            global_config=global_config,
+            config=config,
             user_config=user_config,
             args=args,
             **kwargs)

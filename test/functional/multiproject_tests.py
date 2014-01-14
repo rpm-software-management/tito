@@ -83,6 +83,26 @@ class MultiProjectTests(TitoGitTestFixture):
         index.add(['pkg2/tito.props'])
         index.commit("Adding tito.props for pkg2.")
 
+    def test_multi_config(self):
+        c1 = "[s1]\na = 1\nb = 1\nc=1\n"
+        c2 = "[s1]\na = 2\nb = 2\nd=1\n[s2]\ne=5\n"
+        out_f = open(os.path.join(self.repo_dir, "1.props"), 'w')
+        out_f.write(c1)
+        out_f.close()
+        out_f = open(os.path.join(self.repo_dir, "2.props"), 'w')
+        out_f.write(c2)
+        out_f.close()
+        import ConfigParser
+        config = ConfigParser.ConfigParser()
+        config.read(os.path.join(self.repo_dir, "1.props"))
+        config.read(os.path.join(self.repo_dir, "2.props"))
+        self.assertEquals("2", config.get("s1", "a"))
+        self.assertEquals("2", config.get("s1", "b"))
+        self.assertEquals("1", config.get("s1", "c"))
+        self.assertEquals("1", config.get("s1", "d"))
+        self.assertEquals("5", config.get("s2", "e"))
+
+
     def test_template_version_tagger(self):
         """
         Make sure the template is applied and results in the correct file
