@@ -21,7 +21,7 @@ from tito.config_object import ConfigObject
 from tito.common import error_out, debug, get_spec_version_and_release, \
     get_class_by_name
 
-class ExternalSourceBuilder(ConfigObject, BuilderBase):
+class FetchBuilder(ConfigObject, BuilderBase):
     """
     A separate Builder class for projects whose source is not in git. Source
     is fetched via a configurable strategy, which also determines what version
@@ -42,12 +42,12 @@ class ExternalSourceBuilder(ConfigObject, BuilderBase):
                 user_config=user_config, args=args, **kwargs)
 
         if tag:
-            error_out("ExternalSourceBuilder does not support building "
+            error_out("FetchBuilder does not support building "
                     "specific tags.")
 
-        if not config.has_option("externalsourcebuilder",
-                "source_strategy"):
-            error_out("ExternalSourceBuilder requires [externalsourcebuilder] source_strategy in tito.props.")
+        if not config.has_option("builder",
+                "fetch_strategy"):
+            error_out("FetchBuilder requires [builder] fetch_strategy in tito.props.")
 
         self.build_tag = '%s-%s' % (self.project_name,
                 get_spec_version_and_release(self.start_dir,
@@ -59,7 +59,7 @@ class ExternalSourceBuilder(ConfigObject, BuilderBase):
 
         print("Fetching sources...")
         source_strat_class = get_class_by_name(self.config.get(
-            'externalsourcebuilder', 'source_strategy'))
+            'builder', 'fetch_strategy'))
         source_strat = source_strat_class(self)
         source_strat.fetch()
         self.sources = source_strat.sources

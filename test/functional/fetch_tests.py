@@ -12,19 +12,20 @@
 # granted to use or replicate Red Hat trademarks that are incorporated
 # in this software or its documentation.
 """
-Functional Tests for the ExternalSource builder.
+Functional Tests for the FetchBuilder.
 """
 
-import os
-import tempfile
 import ConfigParser
+import os
+import shutil
+import tempfile
 
 from tito.common import run_command
 from fixture import TitoGitTestFixture, tito
 
 EXT_SRC_PKG = "extsrc"
 
-class ExternalSourceBuilderTests(TitoGitTestFixture):
+class FetchBuilderTests(TitoGitTestFixture):
 
     def setUp(self):
         TitoGitTestFixture.setUp(self)
@@ -35,11 +36,11 @@ class ExternalSourceBuilderTests(TitoGitTestFixture):
         self.config = ConfigParser.RawConfigParser()
         self.config.add_section("buildconfig")
         self.config.set("buildconfig", "builder",
-                "tito.builder.ExternalSourceBuilder")
+                "tito.builder.FetchBuilder")
 
-        self.config.add_section('externalsourcebuilder')
-        self.config.set('externalsourcebuilder', 'source_strategy',
-                'tito.builder.externalsrc.KeywordArgSourceStrategy')
+        self.config.add_section('builder')
+        self.config.set('builder', 'fetch_strategy',
+                'tito.builder.fetch.KeywordArgSourceStrategy')
 
         self.create_project_from_spec(EXT_SRC_PKG, self.config,
                 pkg_dir=self.pkg_dir, spec=spec)
@@ -53,7 +54,7 @@ class ExternalSourceBuilderTests(TitoGitTestFixture):
 
     def tearDown(self):
         TitoGitTestFixture.tearDown(self)
-        #shutil.rmtree(self.output_dir)
+        shutil.rmtree(self.output_dir)
 
     def test_simple_build_no_tag(self):
         # We have not tagged here. Build --rpm should just work:

@@ -10,4 +10,4 @@ from tito.builder.main import \
         MockBuilder, \
         BrewDownloadBuilder
 
-from tito.builder.externalsrc import ExternalSourceBuilder
+from tito.builder.fetch import FetchBuilder
