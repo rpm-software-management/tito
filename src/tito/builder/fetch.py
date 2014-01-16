@@ -119,8 +119,8 @@ class KeywordArgSourceStrategy(SourceStrategy):
 
         # Assuming we're still in the start directory, get the absolute path
         # to all sources specified:
-        manual_sources = [os.path.abspath(s) for s in \
-                self.builder.kwargs['sources']]
+        # TODO: support passing of multiple sources here.
+        manual_sources = [self.builder.args['source']]
         debug("Got sources: %s" % manual_sources)
 
         # Copy the live spec from our starting location. Unlike most builders,

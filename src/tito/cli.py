@@ -351,7 +351,7 @@ class BuildModule(BaseCliModule):
                 help="Override the normal builder by specifying a full class "
                     "path or one of the pre-configured shortcuts.")
 
-        self.parser.add_option("--builder-arg", dest="builder_args",
+        self.parser.add_option("--arg", dest="builder_args",
                 action="append",
                 help="Custom arguments specific to a particular builder."
                     " (key=value)")
@@ -372,12 +372,6 @@ class BuildModule(BaseCliModule):
         self.parser.add_option("--scl", dest='scl',
                 default='',
                 metavar="COLLECTION", help="Build package for software collection.")
-
-        # TODO: this is specific to the external source builder, implement a way for builders
-        # to inject additional cli options if they are configured.
-        self.parser.add_option("--source", dest="sources",
-                action="append", metavar="SOURCE_FILE",
-                help="Manually specified source file to be replaced in spec during build.")
 
     def main(self, argv):
         BaseCliModule.main(self, argv)
@@ -401,7 +395,6 @@ class BuildModule(BaseCliModule):
                 'auto_install': self.options.auto_install,
                 'rpmbuild_options': self.options.rpmbuild_options,
                 'scl': self.options.scl,
-                'sources': self.options.sources,
         }
 
         builder = create_builder(package_name, build_tag,
@@ -423,9 +416,9 @@ class BuildModule(BaseCliModule):
 
         On the CLI this is specified with multiple uses of:
 
-            --builder-arg key=value
+            --arg key=value
 
-        This method parses any --builder-arg's given and splits the key/value
+        This method parses any --arg's given and splits the key/value
         pairs out into a dict.
         """
         args = {}
@@ -484,6 +477,10 @@ class ReleaseModule(BaseCliModule):
         self.parser.add_option("-s", "--scratch", dest="scratch",
                 action="store_true",
                 help="Perform a scratch build in Koji")
+        self.parser.add_option("--arg", dest="builder_args",
+                action="append",
+                help="Custom arguments to pass to the builder."
+                    " (key=value)")
 
 #        self.parser.add_option("--list-tags", dest="list_tags",
 #                action="store_true",

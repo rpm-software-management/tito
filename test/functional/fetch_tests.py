@@ -60,7 +60,8 @@ class FetchBuilderTests(TitoGitTestFixture):
         # We have not tagged here. Build --rpm should just work:
         self.assertFalse(os.path.exists(
             os.path.join(self.pkg_dir, 'rel-eng/packages/extsrc')))
-        tito('build --rpm --output=%s --no-cleanup --source=%s --debug' %
+
+        tito('build --rpm --output=%s --no-cleanup --debug --arg=source=%s ' %
                 (self.output_dir, self.source_filename))
         self.assertTrue(os.path.exists(
             os.path.join(self.output_dir, 'extsrc-0.0.2-1.fc20.src.rpm')))
@@ -69,7 +70,7 @@ class FetchBuilderTests(TitoGitTestFixture):
 
     def test_tag_rejected(self):
         self.assertRaises(SystemExit, tito,
-                'build --tag=extsrc-0.0.1-1 --rpm --output=%s --source=%s' %
+                'build --tag=extsrc-0.0.1-1 --rpm --output=%s --arg=source=%s ' %
                 (self.output_dir, self.source_filename))
 
 
