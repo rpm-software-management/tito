@@ -2,5 +2,8 @@ include AUTHORS
 include LICENSE
 include MANIFEST.in
 include COPYING
+include README.mkd
+include *.5
+include *.asciidoc
 recursive-include bin *.*
 recursive-include test *.*
