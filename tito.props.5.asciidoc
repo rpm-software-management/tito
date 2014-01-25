@@ -193,6 +193,14 @@ fetch_strategy = tito.builder.fetch.ArgSourceStrategy
 ArgSourceStrategy here could be replaced with a custom strategy if you were to
 have one in your lib_dir.
 
+tito.builder.GitAnnexBuilder::
+See doc/builders.mkd.
+
+Builder for packages with existing tarballs checked in using git-annex, e.g.
+referencing an external source (web remote).  This builder will "unlock" the
+source files to get the real contents, include them in the SRPM, then restore
+the automatic git-annex symlinks on completion.
+
 TAGGERS
 -------
 All taggers which inherit fom tito.tagger.VersionTagger (all to this date),

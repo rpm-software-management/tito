@@ -20,6 +20,7 @@ import os
 import sys
 import re
 import commands
+import shutil
 from pkg_resources import require
 from distutils.version import LooseVersion as loose_version
 from tempfile import mkdtemp
@@ -1297,5 +1298,38 @@ class ExternalSourceBuilder(ConfigObject, BuilderBase):
         return version
 
 
+class GitAnnexBuilder(NoTgzBuilder):
+    """
+    Builder for packages with existing tarballs checked in using git-annex,
+    e.g. referencing an external source (web remote).  This builder will
+    "unlock" the source files to get the real contents, include them in the
+    SRPM, then restore the automatic git-annex symlinks on completion.
+    """
 
+    def _setup_sources(self):
+        super(GitAnnexBuilder, self)._setup_sources()
 
+        old_cwd = os.getcwd()
+        os.chdir(os.path.join(old_cwd, self.relative_project_dir))
+
+        (status, output) = commands.getstatusoutput("which git-annex")
+        if status != 0:
+            msg = "Please run 'yum install git-annex' as root."
+            error_out('%s' % msg)
+
+        run_command("git-annex lock")
+        annexed_files = run_command("git-annex find --include='*'").splitlines()
+        run_command("git-annex get")
+        run_command("git-annex unlock")
+        debug("  Annex files: %s" % annexed_files)
+
+        for annex in annexed_files:
+            debug("Copying unlocked file %s" % annex)
+            os.remove(os.path.join(self.rpmbuild_gitcopy, annex))
+            shutil.copy(annex, self.rpmbuild_gitcopy)
+
+        os.chdir(old_cwd)
+
+    def cleanup(self):
+        run_command("git-annex lock --force")
+        super(GitAnnexBuilder, self).cleanup()
