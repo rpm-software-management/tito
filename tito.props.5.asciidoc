@@ -182,6 +182,12 @@ created from tag foo-1.2-1 and with
  Patch0: foo-1.2-1-to-foo-1.2-2.patch
  Patch1: foo-1.2-1-to-foo-1.2-3.patch
 
+tito.builder.GitAnnexBuilder::
+Builder for packages with existing tarballs checked in using git-annex, e.g.
+referencing an external source (web remote).  This builder will "unlock" the
+source files to get the real contents, include them in the SRPM, then restore
+the automatic git-annex symlinks on completion.
+
 TAGGERS
 -------
 All taggers which inherit fom tito.tagger.VersionTagger (all to this date),
