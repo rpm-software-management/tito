@@ -133,7 +133,6 @@ class TitoGitTestFixture(unittest.TestCase):
         pass
 
     def write_file(self, path, contents):
-        print path
         out_f = open(path, 'w')
         out_f.write(contents)
         out_f.close()

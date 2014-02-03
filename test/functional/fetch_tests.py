@@ -20,17 +20,26 @@ import os
 import shutil
 import tempfile
 
+from os.path import join
+
 from tito.common import run_command
 from fixture import TitoGitTestFixture, tito
 
 EXT_SRC_PKG = "extsrc"
 
+RELEASER_CONF = """
+[yum-test]
+releaser = tito.release.YumRepoReleaser
+builder = tito.builder.FetchBuilder
+rsync = %s
+"""
+
 class FetchBuilderTests(TitoGitTestFixture):
 
     def setUp(self):
         TitoGitTestFixture.setUp(self)
-        self.pkg_dir = os.path.join(self.repo_dir, EXT_SRC_PKG)
-        spec = os.path.join(os.path.dirname(__file__), "specs/extsrc.spec")
+        self.pkg_dir = join(self.repo_dir, EXT_SRC_PKG)
+        spec = join(os.path.dirname(__file__), "specs/extsrc.spec")
 
         # Setup test config:
         self.config = ConfigParser.RawConfigParser()
@@ -40,7 +49,7 @@ class FetchBuilderTests(TitoGitTestFixture):
 
         self.config.add_section('builder')
         self.config.set('builder', 'fetch_strategy',
-                'tito.builder.fetch.KeywordArgSourceStrategy')
+                'tito.builder.fetch.ArgSourceStrategy')
 
         self.create_project_from_spec(EXT_SRC_PKG, self.config,
                 pkg_dir=self.pkg_dir, spec=spec)
@@ -59,19 +68,28 @@ class FetchBuilderTests(TitoGitTestFixture):
     def test_simple_build_no_tag(self):
         # We have not tagged here. Build --rpm should just work:
         self.assertFalse(os.path.exists(
-            os.path.join(self.pkg_dir, 'rel-eng/packages/extsrc')))
+            join(self.pkg_dir, 'rel-eng/packages/extsrc')))
 
         tito('build --rpm --output=%s --no-cleanup --debug --arg=source=%s ' %
                 (self.output_dir, self.source_filename))
         self.assertTrue(os.path.exists(
-            os.path.join(self.output_dir, 'extsrc-0.0.2-1.fc20.src.rpm')))
+            join(self.output_dir, 'extsrc-0.0.2-1.fc20.src.rpm')))
         self.assertTrue(os.path.exists(
-            os.path.join(self.output_dir, 'noarch/extsrc-0.0.2-1.fc20.noarch.rpm')))
+            join(self.output_dir, 'noarch/extsrc-0.0.2-1.fc20.noarch.rpm')))
 
     def test_tag_rejected(self):
         self.assertRaises(SystemExit, tito,
                 'build --tag=extsrc-0.0.1-1 --rpm --output=%s --arg=source=%s ' %
                 (self.output_dir, self.source_filename))
+
+    def _setup_fetchbuilder_releaser(self):
+        self.write_file(join(self.repo_dir, 'rel-eng/releasers.conf'),
+                RELEASER_CONF)
+
+    def test_with_releaser(self):
+        self._setup_fetchbuilder_releaser()
+        tito('release --debug yum-test --arg source=%s' %
+                self.source_filename)
 
 
 

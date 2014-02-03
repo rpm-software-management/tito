@@ -110,7 +110,7 @@ class SourceStrategy(object):
         raise NotImplementedError()
 
 
-class KeywordArgSourceStrategy(SourceStrategy):
+class ArgSourceStrategy(SourceStrategy):
     """
     Assumes the builder was passed an explicit argument specifying which source
     file(s) to use.
@@ -120,6 +120,7 @@ class KeywordArgSourceStrategy(SourceStrategy):
         # Assuming we're still in the start directory, get the absolute path
         # to all sources specified:
         # TODO: support passing of multiple sources here.
+        # TODO: error out if not present
         manual_sources = [self.builder.args['source']]
         debug("Got sources: %s" % manual_sources)
 
@@ -205,6 +206,5 @@ class KeywordArgSourceStrategy(SourceStrategy):
         in_f.close()
         out_f.close()
         shutil.move(self.spec_file + ".new", self.spec_file)
-
 
 
