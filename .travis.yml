@@ -1,7 +1,11 @@
+# http://docs.travis-ci.com/user/languages/python/
 language: python
 python:
   - "2.6"
   - "2.7"
 
-install: pip install 'GitPython >= 0.2.0' --pre
+install:
+  - pip install 'GitPython >= 0.2.0' --pre
+  - pip install 'pep8' --use-mirrors
+
 script: nosetests test/unit

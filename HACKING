@@ -13,10 +13,18 @@ for tips on writing portable Python code.
 Tests
 -----
 
-To run all tests, install the python-nose and python3-nose
-packages, then from the root of the project:
+To run all tests, install these packages:
 
-    python  ./runtests.py
+* python-nose and python3-nose
+* python-pep8 and python3-pep8
+
+Then from the root of the project:
+
+    python  ./runtests.py -vv
+    python3 ./runtests.py -vv test/unit
+
+(Run only the unit tests on python3 since GitPython does not
+support python3 yet.)
 
 
 When developing code for tito there are a couple ways you can test:
