@@ -66,8 +66,8 @@ class CoprReleaser(KojiReleaser):
             self.print_dry_run_warning(cmd_submit)
             return
         if not self.srpm_submitted:
-            print "Uploading src.rpm."
-            print run_command(cmd_upload)
+            print("Uploading src.rpm.")
+            print(run_command(cmd_upload))
             self.srpm_submitted = srpm_location
-        print "Submiting build into %s." % self.NAME
-        print run_command(cmd_submit)
+        print("Submiting build into %s." % self.NAME)
+        print(run_command(cmd_submit))

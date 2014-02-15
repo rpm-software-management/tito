@@ -224,7 +224,7 @@ class BuilderBase(object):
         try:
             output = run_command(cmd)
         except (KeyboardInterrupt, SystemExit):
-            print ""
+            print("")
             exit(1)
         except RunCommandException:
             err = sys.exc_info()[1]

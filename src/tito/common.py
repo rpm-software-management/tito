@@ -351,13 +351,13 @@ def scl_to_rpm_option(scl, silent=None):
     output = run_command(cmd).rstrip()
     if scl:
         if (output != scl) and (output != "%scl") and not silent:
-            print "Warning: Meta package of software collection %s installed, but --scl defines %s" % (output, scl)
-            print "         Redefining scl macro to %s for this package." % scl
+            print("Warning: Meta package of software collection %s installed, but --scl defines %s" % (output, scl))
+            print("         Redefining scl macro to %s for this package." % scl)
         rpm_options += " --define 'scl %s'" % scl
     else:
         if (output != "%scl") and (not silent):
-            print "Warning: Meta package of software collection %s installed, but --scl is not present." % output
-            print "         Undefining scl macro for this package."
+            print("Warning: Meta package of software collection %s installed, but --scl is not present." % output)
+            print("         Undefining scl macro for this package.")
         # can be replaced by "--undefined scl" when el6 and fc17 is retired
         rpm_options += " --eval '%undefine scl'"
     return rpm_options

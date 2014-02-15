@@ -470,7 +470,7 @@ class YumRepoReleaser(RsyncReleaser):
                 hdr = self._read_rpm_header(rpm_ts, full_path)
             except rpm.error:
                 e = sys.exc_info()[1]
-                print "error reading rpm header in '%s': %s" % (full_path, e)
+                print("error reading rpm header in '%s': %s" % (full_path, e))
                 continue
             if hdr['name'] in self.new_rpm_dep_sets:
                 dep_set = hdr.dsOfHeader()
@@ -559,7 +559,7 @@ class FedoraGitReleaser(Releaser):
         os.lseek(fd, 0, 0)
         file = os.fdopen(fd)
         for line in file.readlines():
-            print line
+            print(line)
         file.close()
 
         print("")
@@ -692,7 +692,7 @@ class FedoraGitReleaser(Releaser):
 
         # Print the task ID and URL:
         for line in extract_task_info(output):
-            print line
+            print(line)
 
     def _git_upload_sources(self, project_checkout):
         """
@@ -942,7 +942,7 @@ class CvsReleaser(Releaser):
         os.lseek(fd, 0, 0)
         file = os.fdopen(fd)
         for line in file.readlines():
-            print line
+            print(line)
         file.close()
 
         print("")

@@ -83,7 +83,7 @@ class ObsReleaser(Releaser):
         os.lseek(fd, 0, 0)
         commit_file = os.fdopen(fd)
         for line in commit_file.readlines():
-            print line
+            print(line)
         commit_file.close()
 
         print("")
@@ -133,7 +133,7 @@ class ObsReleaser(Releaser):
             else:
                 print("Proceeding with commit.")
                 os.chdir(self.package_workdir)
-                print run_command(cmd)
+                print(run_command(cmd))
 
             os.unlink(commit_msg_file)
 
