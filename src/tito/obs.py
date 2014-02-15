@@ -12,12 +12,12 @@
 # in this software or its documentation.
 
 import os
-import commands
 import tempfile
 import subprocess
 import sys
 
 from tito.common import run_command, debug, extract_bzs
+from tito.compat import *
 from tito.release import Releaser
 
 
@@ -49,7 +49,7 @@ class ObsReleaser(Releaser):
         self.dry_run = dry_run
         self.no_build = no_build
 
-        commands.getoutput("mkdir -p %s" % self.working_dir)
+        getoutput("mkdir -p %s" % self.working_dir)
         os.chdir(self.working_dir)
         run_command("%s co %s %s" % (self.cli_tool, self.obs_project_name, self.obs_package_name))
 
@@ -109,7 +109,7 @@ class ObsReleaser(Releaser):
 
         os.chdir(project_checkout)
 
-        (status, diff_output) = commands.getstatusoutput("%s diff" % self.cli_tool)
+        (status, diff_output) = getstatusoutput("%s diff" % self.cli_tool)
 
         if diff_output.strip() == "":
             print("No changes in main branch, skipping commit.")
@@ -138,7 +138,7 @@ class ObsReleaser(Releaser):
             os.unlink(commit_msg_file)
 
         if self.no_build:
-            commands.getstatusoutput("%s abortbuild %s %s" % (
+            getstatusoutput("%s abortbuild %s %s" % (
                 self.cli_tool, self.obs_project_name, self.obs_package_name))
             print("Aborting automatic rebuild because --no-build has been specified.")
 

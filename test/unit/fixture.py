@@ -14,6 +14,8 @@
 import os
 import unittest
 
+from tito.compat import *
+
 UNIT_DIR = os.path.abspath(os.path.dirname(__file__))
 REPO_DIR = os.path.join(UNIT_DIR, '..', '..')
 

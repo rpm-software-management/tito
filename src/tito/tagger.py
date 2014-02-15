@@ -17,7 +17,6 @@ Code for tagging Spacewalk/Satellite packages.
 import os
 import re
 import rpm
-import commands
 import StringIO
 import shutil
 import subprocess
@@ -34,6 +33,7 @@ from tito.common import (debug, error_out, run_command,
         get_script_path, get_spec_version_and_release, replace_version,
         tag_exists_locally, tag_exists_remotely, head_points_to_tag, undo_tag,
         increase_version, reset_release, increase_zstream)
+from tito.compat import *
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
 
@@ -470,7 +470,7 @@ class VersionTagger(ConfigObject):
         print("   Push: git push && git push origin %s" % new_tag)
 
     def _check_tag_does_not_exist(self, new_tag):
-        status, output = commands.getstatusoutput(
+        status, output = getstatusoutput(
             'git tag -l %s|grep ""' % new_tag)
         if status == 0:
             raise Exception("Tag %s already exists!" % new_tag)

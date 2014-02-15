@@ -17,7 +17,6 @@ Code for submitting builds for release.
 import copy
 import os
 import sys
-import commands
 import tempfile
 import subprocess
 import rpm
@@ -26,6 +25,7 @@ from tempfile import mkdtemp
 import shutil
 
 from tito.common import *
+from tito.compat import *
 from tito.buildparser import BuildTargetParser
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
@@ -522,7 +522,7 @@ class FedoraGitReleaser(Releaser):
 
     def _git_release(self):
 
-        commands.getoutput("mkdir -p %s" % self.working_dir)
+        getoutput("mkdir -p %s" % self.working_dir)
         os.chdir(self.working_dir)
         run_command("%s clone %s" % (self.cli_tool, self.project_name))
 
@@ -588,10 +588,10 @@ class FedoraGitReleaser(Releaser):
         os.chdir(project_checkout)
 
         # Newer versions of git don't seem to want --cached here? Try both:
-        (status, diff_output) = commands.getstatusoutput("git diff --cached")
+        (status, diff_output) = getstatusoutput("git diff --cached")
         if diff_output.strip() == "":
             debug("git diff --cached returned nothing, falling back to git diff.")
-            (status, diff_output) = commands.getstatusoutput("git diff")
+            (status, diff_output) = getstatusoutput("git diff")
 
         if diff_output.strip() == "":
             print("No changes in main branch, skipping commit for: %s" % main_branch)
@@ -680,7 +680,7 @@ class FedoraGitReleaser(Releaser):
             return
 
         print("Submitting build: %s" % build_cmd)
-        (status, output) = commands.getstatusoutput(build_cmd)
+        (status, output) = getstatusoutput(build_cmd)
         if status > 0:
             if "already been built" in output:
                 print("Build has been submitted previously, continuing...")
@@ -797,7 +797,7 @@ class CvsReleaser(Releaser):
         self._verify_cvs_module_not_already_checked_out()
 
         print("Building release in CVS...")
-        commands.getoutput("mkdir -p %s" % self.working_dir)
+        getoutput("mkdir -p %s" % self.working_dir)
         debug("cvs_branches = %s" % self.cvs_branches)
 
         self.cvs_checkout_module()
@@ -873,7 +873,7 @@ class CvsReleaser(Releaser):
 
             # For entirely new files we need to cvs add:
             for add_file in new:
-                commands.getstatusoutput("cvs add %s" % add_file)
+                getstatusoutput("cvs add %s" % add_file)
 
             # Cleanup obsolete files:
             for cleanup_file in old:
@@ -913,7 +913,7 @@ class CvsReleaser(Releaser):
         print("")
 
         os.chdir(self.package_workdir)
-        (status, diff_output) = commands.getstatusoutput("cvs diff -u")
+        (status, diff_output) = getstatusoutput("cvs diff -u")
         print(diff_output)
 
         print("")
@@ -978,7 +978,7 @@ class CvsReleaser(Releaser):
             branch_dir = os.path.join(self.working_dir, self.project_name,
                     branch)
             os.chdir(branch_dir)
-            (status, output) = commands.getstatusoutput(cmd)
+            (status, output) = getstatusoutput(cmd)
             print(output)
             if status > 1:
                 self.cleanup()

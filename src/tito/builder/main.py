@@ -19,7 +19,6 @@ and rpms.
 import os
 import sys
 import re
-import commands
 from pkg_resources import require
 from distutils.version import LooseVersion as loose_version
 from tempfile import mkdtemp
@@ -685,7 +684,7 @@ class CvsBuilder(NoTgzBuilder):
         if not reuse_cvs_checkout:
             self._verify_cvs_module_not_already_checked_out()
 
-        commands.getoutput("mkdir -p %s" % self.cvs_workdir)
+        getoutput("mkdir -p %s" % self.cvs_workdir)
         cvs_releaser = CvsReleaser(self)
         cvs_releaser.cvs_checkout_module()
         cvs_releaser.cvs_verify_branches_exist()
@@ -879,7 +878,7 @@ class UpstreamBuilder(NoTgzBuilder):
         debug("Generating patch with: %s" % patch_command)
         output = run_command(patch_command)
         print(output)
-        (status, output) = commands.getstatusoutput(
+        (status, output) = getstatusoutput(
             "grep 'Binary files .* differ' %s " % patch_file)
         if status == 0 and output != "":
             error_out("You are doomed. Diff contains binary files. You can not use this builder")
@@ -915,7 +914,7 @@ class UpstreamBuilder(NoTgzBuilder):
         with just the package release being incremented on rebuilds.
         """
         # Use upstreamversion if defined in the spec file:
-        (status, output) = commands.getstatusoutput(
+        (status, output) = getstatusoutput(
             "cat %s | grep 'define upstreamversion' | "
             "awk '{ print $3 ; exit }'" % self.spec_file)
         if status == 0 and output != "":

@@ -2,7 +2,7 @@ import os
 
 from tito.builder import UpstreamBuilder
 from tito.common import debug, run_command, error_out
-import commands
+from tito.compat import *
 
 
 class DistributionBuilder(UpstreamBuilder):
@@ -32,7 +32,7 @@ class DistributionBuilder(UpstreamBuilder):
                % (self.rpmbuild_gitcopy, self.project_name, self.upstream_version, self.build_version, self.git_commit_id))
         self.patch_files = output.split("\n")
         for p_file in self.patch_files:
-            (status, output) = commands.getstatusoutput(
+            (status, output) = getstatusoutput(
                 "grep 'Binary files .* differ' %s/%s " % (self.rpmbuild_gitcopy, p_file))
             if status == 0 and output != "":
                 error_out("You are doomed. Diff contains binary files. You can not use this builder")

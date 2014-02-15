@@ -15,7 +15,6 @@
 Functional Tests for the FetchBuilder.
 """
 
-import ConfigParser
 import glob
 import os
 import shutil
@@ -24,6 +23,8 @@ import tempfile
 from os.path import join
 
 from fixture import TitoGitTestFixture, tito
+
+from tito.compat import *
 
 PKG_NAME = "releaseme"
 
@@ -42,7 +43,7 @@ class YumReleaserTests(TitoGitTestFixture):
         self.create_project(PKG_NAME)
 
         # Setup test config:
-        self.config = ConfigParser.RawConfigParser()
+        self.config = RawConfigParser()
         self.config.add_section("buildconfig")
         self.config.set("buildconfig", "builder",
                 "tito.builder.Builder")

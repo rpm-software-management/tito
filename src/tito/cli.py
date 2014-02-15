@@ -17,12 +17,11 @@ Tito's Command Line Interface
 import sys
 import os
 import random
-import commands
-import ConfigParser
 
 from optparse import OptionParser
 
 from tito.common import *
+from tito.compat import *
 from tito.exception import *
 
 # Hack for Python 2.4, seems to require we import these so they get compiled
@@ -195,7 +194,7 @@ class BaseCliModule(object):
         # Load the global config. Later, when we know what tag/package we're
         # building, we may also load that and potentially override some global
         # settings.
-        config = ConfigParser.ConfigParser()
+        config = ConfigParser()
         config.read(filename)
 
         # Verify the config contains what we need from it:
@@ -262,13 +261,13 @@ class BaseCliModule(object):
             cmd = "git show %s:%s%s" % (tag, relative_dir,
                     BUILD_PROPS_FILENAME)
             debug(cmd)
-            (status, output) = commands.getstatusoutput(cmd)
+            (status, output) = getstatusoutput(cmd)
             if status > 0:
                 # Give it another try looking for legacy props filename:
                 cmd = "git show %s:%s%s" % (tag, relative_dir,
                         "build.py.props")
                 debug(cmd)
-                (status, output) = commands.getstatusoutput(cmd)
+                (status, output) = getstatusoutput(cmd)
 
             temp_filename = "%s-%s" % (random.randint(1, 10000),
                     BUILD_PROPS_FILENAME)
@@ -287,7 +286,7 @@ class BaseCliModule(object):
                 cmd = "git show %s:%s%s | grep NO_TAR_GZ" % \
                     (tag, relative_dir, "Makefile")
                 debug(cmd)
-                (status, output) = commands.getstatusoutput(cmd)
+                (status, output) = getstatusoutput(cmd)
                 if status == 0 and output != "":
                     properties_file = temp_props_file
                     debug("Found Makefile with NO_TAR_GZ")
@@ -507,7 +506,7 @@ class ReleaseModule(BaseCliModule):
         """
         rel_eng_dir = os.path.join(find_git_root(), "rel-eng")
         filename = os.path.join(rel_eng_dir, RELEASERS_CONF_FILENAME)
-        config = ConfigParser.ConfigParser()
+        config = ConfigParser()
         config.read(filename)
         return config
 
@@ -736,7 +735,7 @@ class InitModule(BaseCliModule):
         propsfile = os.path.join(rel_eng_dir, GLOBAL_BUILD_PROPS_FILENAME)
         if not os.path.exists(propsfile):
             if not os.path.exists(rel_eng_dir):
-                commands.getoutput("mkdir -p %s" % rel_eng_dir)
+                getoutput("mkdir -p %s" % rel_eng_dir)
                 print("   - created %s" % rel_eng_dir)
 
             # write out tito.props
@@ -750,7 +749,7 @@ class InitModule(BaseCliModule):
             out_f.close()
             print("   - wrote %s" % GLOBAL_BUILD_PROPS_FILENAME)
 
-            commands.getoutput('git add %s' % propsfile)
+            getoutput('git add %s' % propsfile)
             should_commit = True
 
         # prep the packages metadata directory
@@ -759,7 +758,7 @@ class InitModule(BaseCliModule):
 
         if not os.path.exists(readme):
             if not os.path.exists(pkg_dir):
-                commands.getoutput("mkdir -p %s" % pkg_dir)
+                getoutput("mkdir -p %s" % pkg_dir)
                 print("   - created %s" % pkg_dir)
 
             # write out readme file explaining what pkg_dir is for
@@ -771,11 +770,11 @@ class InitModule(BaseCliModule):
             out_f.close()
             print("   - wrote %s" % readme)
 
-            commands.getoutput('git add %s' % readme)
+            getoutput('git add %s' % readme)
             should_commit = True
 
         if should_commit:
-            commands.getoutput('git commit -m "Initialized to use tito. "')
+            getoutput('git commit -m "Initialized to use tito. "')
             print("   - committed to git")
 
         print("Done!")

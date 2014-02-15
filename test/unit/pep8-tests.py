@@ -84,3 +84,8 @@ class UglyHackishTest(TitoUnitTestFixture):
         cmd = "find . -type f -regex '.*\.py$' -exec egrep %s {} + | wc -l" % regex
         result = int(getoutput(cmd))
         self.assertEqual(result, 0, "Found except clause not supported in Python 3")
+
+    def test_import_commands(self):
+        cmd = "find . -type f -regex '.*\.py$' -exec egrep '^(import|from) commands\.' {} + | grep -v 'compat\.py' | wc -l"
+        result = int(getoutput(cmd))
+        self.assertEqual(result, 0, "Found commands module (not supported in Python 3)")

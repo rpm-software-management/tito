@@ -15,7 +15,6 @@
 Functional Tests for the FetchBuilder.
 """
 
-import ConfigParser
 import glob
 import os
 import shutil
@@ -24,6 +23,7 @@ import tempfile
 from os.path import join
 
 from tito.common import run_command
+from tito.compat import *
 from fixture import TitoGitTestFixture, tito
 
 EXT_SRC_PKG = "extsrc"
@@ -44,7 +44,7 @@ class FetchBuilderTests(TitoGitTestFixture):
         spec = join(os.path.dirname(__file__), "specs/extsrc.spec")
 
         # Setup test config:
-        self.config = ConfigParser.RawConfigParser()
+        self.config = RawConfigParser()
         self.config.add_section("buildconfig")
         self.config.set("buildconfig", "builder",
                 "tito.builder.FetchBuilder")

@@ -1,7 +1,7 @@
 
 import unittest
 from tito.buildparser import BuildTargetParser
-from ConfigParser import ConfigParser
+from tito.compat import *
 from tito.exception import TitoException
 
 

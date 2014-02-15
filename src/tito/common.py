@@ -17,9 +17,9 @@ Common operations.
 import os
 import re
 import sys
-import commands
 import traceback
 
+from tito.compat import *
 from tito.exception import RunCommandException
 
 DEFAULT_BUILD_DIR = "/tmp/tito"
@@ -194,7 +194,7 @@ def find_git_root():
 
     Returned as a full path.
     """
-    (status, cdup) = commands.getstatusoutput("git rev-parse --show-cdup")
+    (status, cdup) = getstatusoutput("git rev-parse --show-cdup")
     if status > 0:
         error_out(["%s does not appear to be within a git checkout." %
                 os.getcwd()])
@@ -219,12 +219,12 @@ def run_command(command, print_on_success=False):
     If print_on_success is True, print status and output even
     when command succeeds.
     """
-    (status, output) = commands.getstatusoutput(command)
+    (status, output) = getstatusoutput(command)
     return output
 
 
 def tag_exists_locally(tag):
-    (status, output) = commands.getstatusoutput("git tag | grep %s" % tag)
+    (status, output) = getstatusoutput("git tag | grep %s" % tag)
     if status > 0:
         return False
     else:
