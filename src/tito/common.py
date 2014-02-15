@@ -154,7 +154,7 @@ def create_builder(package_name, build_tag,
 
 def find_file_with_extension(in_dir=None, suffix=None):
     """ Find the file with given extension in the current directory. """
-    if in_dir == None:
+    if in_dir is None:
         in_dir = os.getcwd()
     file_name = None
     debug("Looking for %s in %s" % (suffix, in_dir))
@@ -368,7 +368,7 @@ def get_project_name(tag=None, scl=None):
     Extract the project name from the specified tag or a spec file in the
     current working directory. Error out if neither is present.
     """
-    if tag != None:
+    if tag is not None:
         p = re.compile('(.*?)-(\d.*)')
         m = p.match(tag)
         if not m:
@@ -543,7 +543,7 @@ def get_latest_tagged_version(package_name):
         return None
 
     output = run_command("awk '{ print $1 ; exit }' %s" % file_path)
-    if output == None or output.strip() == "":
+    if output is None or output.strip() == "":
         error_out("Error looking up latest tagged version in: %s" % file_path)
 
     return output

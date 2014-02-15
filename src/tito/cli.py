@@ -297,7 +297,7 @@ class BaseCliModule(object):
                     wrote_temp_file = True
 
         # TODO: can we parse config from a string and stop writing temp files?
-        if properties_file != None:
+        if properties_file is not None:
             debug("Using package specific properties: %s" % properties_file)
             self.config.read(properties_file)
         else:

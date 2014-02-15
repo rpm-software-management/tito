@@ -382,7 +382,7 @@ class Builder(ConfigObject, BuilderBase):
             build_version = self.build_tag[len(self.project_name + "-"):]
         else:
             build_version = get_latest_tagged_version(self.project_name)
-            if build_version == None:
+            if build_version is None:
                 error_out(["Unable to lookup latest package info.",
                         "Perhaps you need to tag first?"])
             self.build_tag = "%s-%s" % (self.project_name, build_version)
@@ -1273,7 +1273,7 @@ class ExternalSourceBuilder(ConfigObject, BuilderBase):
             build_version = self.build_tag[len(self.project_name + "-"):]
         else:
             build_version = get_latest_tagged_version(self.project_name)
-            if build_version == None:
+            if build_version is None:
                 pass
             self.build_tag = "%s-%s" % (self.project_name, build_version)
 

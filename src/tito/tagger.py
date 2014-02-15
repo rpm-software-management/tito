@@ -219,7 +219,7 @@ class VersionTagger(ConfigObject):
                 old_version = get_latest_tagged_version(self.project_name)
 
                 # don't die if this is a new package with no history
-                if old_version != None:
+                if old_version is not None:
                     last_tag = "%s-%s" % (self.project_name, old_version)
                     output = self._generate_default_changelog(last_tag)
                 else:
@@ -350,7 +350,7 @@ class VersionTagger(ConfigObject):
         bump the version or release.
         """
         old_version = get_latest_tagged_version(self.project_name)
-        if old_version == None:
+        if old_version is None:
             old_version = "untagged"
         if not self.keep_version:
             version_regex = re.compile("^(version:\s*)(.+)$", re.IGNORECASE)
