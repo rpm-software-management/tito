@@ -399,7 +399,7 @@ class Builder(ConfigObject, BuilderBase):
         """
         self._setup_sources()
 
-        run_command("cp %s/%s %s/" %  \
+        run_command("cp %s/%s %s/" %
                 (self.rpmbuild_sourcedir, self.tgz_filename,
                     self.rpmbuild_basedir))
 

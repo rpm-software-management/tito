@@ -329,7 +329,7 @@ class BuildModule(BaseCliModule):
                 help="Build rpm")
         self.parser.add_option("-i", "--install", dest="auto_install",
                 action="store_true", default=False,
-                help="Install any binary rpms being built. (WARNING: " + \
+                help="Install any binary rpms being built. (WARNING: " +
                     "uses sudo rpm -Uvh --force)")
         self.parser.add_option("--dist", dest="dist", metavar="DISTTAG",
                 help="Dist tag to apply to srpm and/or rpm. (i.e. .el5)")

@@ -196,7 +196,7 @@ def find_git_root():
     """
     (status, cdup) = commands.getstatusoutput("git rev-parse --show-cdup")
     if status > 0:
-        error_out(["%s does not appear to be within a git checkout." % \
+        error_out(["%s does not appear to be within a git checkout." %
                 os.getcwd()])
 
     if cdup.strip() == "":

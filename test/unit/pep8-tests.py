@@ -35,6 +35,7 @@ class TestPep8(TitoUnitTestFixture):
             'E2',    # whitespace errors
             'E3',    # blank line errors
             'E4',    # import errors
+            'E502',  # the backslash is redundant between brackets
             'E7',    # statement errors
             'E9',    # runtime errors (SyntaxError, IndentationError, IOError)
             'W2',    # whitespace warnings
