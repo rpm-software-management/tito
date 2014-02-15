@@ -227,13 +227,15 @@ class BuilderBase(object):
         except (KeyboardInterrupt, SystemExit):
             print ""
             exit(1)
-        except RunCommandException, err:
+        except RunCommandException:
+            err = sys.exc_info()[1]
             msg = str(err)
             if (re.search('Failed build dependencies', err.output)):
                 msg = "Please run 'yum-builddep %s' as root." % \
                     find_spec_file(self.relative_project_dir)
             error_out('%s' % msg)
-        except Exception, err:
+        except Exception:
+            err = sys.exc_info()[1]
             error_out('%s' % str(err))
         print(output)
         files_written = find_wrote_in_rpmbuild_output(output)

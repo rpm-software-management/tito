@@ -16,6 +16,7 @@ Code for submitting builds for release.
 
 import copy
 import os
+import sys
 import commands
 import tempfile
 import subprocess
@@ -454,7 +455,7 @@ class YumRepoReleaser(RsyncReleaser):
             if artifact.endswith(".rpm") and not artifact.endswith(".src.rpm"):
                 try:
                     header = self._read_rpm_header(rpm_ts, artifact)
-                except rpm.error, e:
+                except rpm.error:
                     continue
                 self.new_rpm_dep_sets[header['name']] = header.dsOfHeader()
 
@@ -467,7 +468,8 @@ class YumRepoReleaser(RsyncReleaser):
             full_path = os.path.join(temp_dir, filename)
             try:
                 hdr = self._read_rpm_header(rpm_ts, full_path)
-            except rpm.error, e:
+            except rpm.error:
+                e = sys.exc_info()[1]
                 print "error reading rpm header in '%s': %s" % (full_path, e)
                 continue
             if hdr['name'] in self.new_rpm_dep_sets:

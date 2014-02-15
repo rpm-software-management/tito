@@ -709,7 +709,8 @@ class TagModule(BaseCliModule):
 
         try:
             return tagger.run(self.options)
-        except TitoException, e:
+        except TitoException:
+            e = sys.exc_info()[1]
             error_out(e.message)
 
     def _validate_options(self):

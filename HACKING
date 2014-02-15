@@ -9,6 +9,17 @@ See http://docs.python.org/dev/howto/pyporting.html
 and http://python3porting.com/differences.html
 for tips on writing portable Python code.
 
+In particular, you must capture exceptions in a way that's
+compatible with both python 2.4 and 3.x. For example:
+
+    try:
+        raise Exception()
+    except Exception:
+        import sys
+        exc = sys.exc_info()[1]
+        # Current exception is 'exc'.
+        pass
+
 
 Tests
 -----

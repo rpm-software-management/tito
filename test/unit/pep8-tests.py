@@ -64,3 +64,23 @@ class TestPep8(TitoUnitTestFixture):
 
         self.assertEqual(result, 0,
             "Found PEP8 errors that may break your code in Python 3.")
+
+
+class UglyHackishTest(TitoUnitTestFixture):
+    def setUp(self):
+        TitoUnitTestFixture.setUp(self)
+        os.chdir(REPO_DIR)
+
+    def test_exceptions_2_dot_4(self):
+        # detect 'except rpm.error as e:'
+        regex = "'^[[:space:]]*except .* as .*:'"
+        cmd = "find . -type f -regex '.*\.py$' -exec egrep %s {} + | wc -l" % regex
+        result = int(getoutput(cmd))
+        self.assertEqual(result, 0, "Found except clause not supported in Python 2.4")
+
+    def test_exceptions_3(self):
+        # detect 'except rpm.error, e:'
+        regex = "'^[[:space:]]*except [^,]+,[[:space:]]*[[:alpha:]]+:'"
+        cmd = "find . -type f -regex '.*\.py$' -exec egrep %s {} + | wc -l" % regex
+        result = int(getoutput(cmd))
+        self.assertEqual(result, 0, "Found except clause not supported in Python 3")
