@@ -33,6 +33,7 @@ class TestPep8(TitoUnitTestFixture):
         tests = [
             # http://pep8.readthedocs.org/en/latest/intro.html#error-codes
             'E9',    # runtime errors (SyntaxError, IndentationError, IOError)
+            'W6',    # deprecated features
         ]
 
         try:
