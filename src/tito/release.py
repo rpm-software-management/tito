@@ -122,13 +122,13 @@ class Releaser(ConfigObject):
         for opt in self.GLOBAL_REQUIRED_CONFIG:
             if not self.releaser_config.has_option(self.target, opt):
                 raise TitoException(
-                        "Release target '%s' missing required option '%s'" %
-                        (self.target, opt))
+                    "Release target '%s' missing required option '%s'" %
+                    (self.target, opt))
         for opt in self.REQUIRED_CONFIG:
             if not self.releaser_config.has_option(self.target, opt):
                 raise TitoException(
-                        "Release target '%s' missing required option '%s'" %
-                        (self.target, opt))
+                    "Release target '%s' missing required option '%s'" %
+                    (self.target, opt))
 
         # TODO: accomodate 'builder.*' for yum releaser and we can use this:
         #for opt in self.releaser_config.options(self.target):

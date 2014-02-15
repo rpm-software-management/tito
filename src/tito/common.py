@@ -142,13 +142,13 @@ def create_builder(package_name, build_tag,
 
     # Instantiate the builder:
     builder = builder_class(
-            name=package_name,
-            tag=build_tag,
-            build_dir=build_dir,
-            config=config,
-            user_config=user_config,
-            args=args,
-            **kwargs)
+        name=package_name,
+        tag=build_tag,
+        build_dir=build_dir,
+        config=config,
+        user_config=user_config,
+        args=args,
+        **kwargs)
     return builder
 
 
@@ -247,8 +247,8 @@ def tag_exists_remotely(tag):
 
 def get_local_tag_sha1(tag):
     tag_sha1 = run_command(
-            "git ls-remote ./. --tag %s | awk '{ print $1 ; exit }'"
-            % tag)
+        "git ls-remote ./. --tag %s | awk '{ print $1 ; exit }'"
+        % tag)
     tag_sha1 = extract_sha1(tag_sha1)
     return tag_sha1
 
@@ -434,8 +434,8 @@ def get_build_commit(tag, test=False):
         return get_latest_commit(".")
     else:
         tag_sha1 = run_command(
-                "git ls-remote ./. --tag %s | awk '{ print $1 ; exit }'"
-                % tag)
+            "git ls-remote ./. --tag %s | awk '{ print $1 ; exit }'"
+            % tag)
         tag_sha1 = extract_sha1(tag_sha1)
         commit_id = run_command('git rev-list --max-count=1 %s' % tag_sha1)
         return commit_id
@@ -478,8 +478,8 @@ def get_commit_timestamp(sha1_or_tag):
     version regardless of when they are generated.
     """
     output = run_command(
-            "git rev-list --timestamp --max-count=1 %s | awk '{print $1}'"
-            % sha1_or_tag)
+        "git rev-list --timestamp --max-count=1 %s | awk '{print $1}'"
+        % sha1_or_tag)
     return output
 
 

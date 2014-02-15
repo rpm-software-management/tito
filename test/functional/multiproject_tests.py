@@ -21,7 +21,7 @@ import os
 from os.path import join
 
 from tito.common import run_command, \
-        get_latest_tagged_version, tag_exists_locally
+    get_latest_tagged_version, tag_exists_locally
 from fixture import *
 
 # A location where we can safely create a test git repository.

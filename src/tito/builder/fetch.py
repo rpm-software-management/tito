@@ -74,9 +74,9 @@ class FetchBuilder(ConfigObject, BuilderBase):
     def _get_rpmbuild_dir_options(self):
         return ('--define "_topdir %s" --define "_sourcedir %s" --define "_builddir %s" '
             '--define "_srcrpmdir %s" --define "_rpmdir %s" ' % (
-            self.rpmbuild_dir,
-            self.rpmbuild_sourcedir, self.rpmbuild_builddir,
-            self.rpmbuild_basedir, self.rpmbuild_basedir))
+                self.rpmbuild_dir,
+                self.rpmbuild_sourcedir, self.rpmbuild_builddir,
+                self.rpmbuild_basedir, self.rpmbuild_basedir))
 
 
 class SourceStrategy(object):
@@ -136,9 +136,9 @@ class ArgSourceStrategy(SourceStrategy):
         self.spec_file = os.path.join(self.builder.rpmbuild_sourcedir,
                     '%s.spec' % self.builder.project_name)
         shutil.copyfile(
-                os.path.join(self.builder.start_dir, '%s.spec' %
-                    self.builder.project_name),
-                self.spec_file)
+            os.path.join(self.builder.start_dir, '%s.spec' %
+                self.builder.project_name),
+            self.spec_file)
         print("  %s.spec" % self.builder.project_name)
 
         # TODO: Make this a configurable strategy:

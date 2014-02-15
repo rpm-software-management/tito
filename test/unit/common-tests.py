@@ -191,7 +191,7 @@ class ExtractBugzillasTest(unittest.TestCase):
 
     def test_multi_line(self):
         commit_log = "- 123456: Did something interesting.\n- Another commit.\n" \
-                "- 456789: A third commit."
+            "- 456789: A third commit."
         results = extract_bzs(commit_log)
         self.assertEquals(2, len(results))
         self.assertEquals("Resolves: #123456 - Did something interesting.",

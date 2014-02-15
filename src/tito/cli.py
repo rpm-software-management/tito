@@ -170,7 +170,7 @@ class BaseCliModule(object):
                 debug("Added lib dir to PYTHONPATH: %s" % lib_dir)
             else:
                 print("WARNING: lib_dir specified but does not exist: %s" %
-                        lib_dir)
+                    lib_dir)
 
     def _read_config(self):
         """
@@ -200,8 +200,8 @@ class BaseCliModule(object):
 
         # Verify the config contains what we need from it:
         required_global_config = [
-                (GLOBALCONFIG_SECTION, DEFAULT_BUILDER),
-                (GLOBALCONFIG_SECTION, DEFAULT_TAGGER),
+            (GLOBALCONFIG_SECTION, DEFAULT_BUILDER),
+            (GLOBALCONFIG_SECTION, DEFAULT_TAGGER),
         ]
         for section, option in required_global_config:
             if not config.has_section(section) or not \
@@ -285,7 +285,7 @@ class BaseCliModule(object):
                 # tagged before they existed, check for a Makefile with
                 # NO_TAR_GZ defined and make some assumptions based on that.
                 cmd = "git show %s:%s%s | grep NO_TAR_GZ" % \
-                        (tag, relative_dir, "Makefile")
+                    (tag, relative_dir, "Makefile")
                 debug(cmd)
                 (status, output) = commands.getstatusoutput(cmd)
                 if status == 0 and output != "":
@@ -388,12 +388,12 @@ class BuildModule(BaseCliModule):
 
         args = self._parse_builder_args()
         kwargs = {
-                'dist': self.options.dist,
-                'test': self.options.test,
-                'offline': self.options.offline,
-                'auto_install': self.options.auto_install,
-                'rpmbuild_options': self.options.rpmbuild_options,
-                'scl': self.options.scl,
+            'dist': self.options.dist,
+            'test': self.options.test,
+            'offline': self.options.offline,
+            'auto_install': self.options.auto_install,
+            'rpmbuild_options': self.options.rpmbuild_options,
+            'scl': self.options.scl,
         }
 
         builder = create_builder(package_name, build_tag,
@@ -616,22 +616,22 @@ class ReleaseModule(BaseCliModule):
                     # TODO: support list values
                     builder_args[key] = val
             kwargs = {
-                    'builder_args': builder_args,
-                    'offline': self.options.offline
+                'builder_args': builder_args,
+                'offline': self.options.offline
             }
 
             releaser = releaser_class(
-                    name=package_name,
-                    tag=build_tag,
-                    build_dir=build_dir,
-                    config=self.config,
-                    user_config=self.user_config,
-                    target=target,
-                    releaser_config=releaser_config,
-                    no_cleanup=self.options.no_cleanup,
-                    test=self.options.test,
-                    auto_accept=self.options.auto_accept,
-                    **kwargs)
+                name=package_name,
+                tag=build_tag,
+                build_dir=build_dir,
+                config=self.config,
+                user_config=self.user_config,
+                target=target,
+                releaser_config=releaser_config,
+                no_cleanup=self.options.no_cleanup,
+                test=self.options.test,
+                auto_accept=self.options.auto_accept,
+                **kwargs)
 
             releaser.release(dry_run=self.options.dry_run,
                     no_build=self.options.no_build,

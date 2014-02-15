@@ -56,7 +56,7 @@ class VersionTagger(ConfigObject):
         self.project_name = get_project_name(tag=None)
 
         self.relative_project_dir = self._get_relative_project_dir(
-                self.git_root)  # i.e. java/
+            self.git_root)  # i.e. java/
 
         self.spec_file = os.path.join(self.full_project_dir,
                 self.spec_file_name)
@@ -139,7 +139,7 @@ class VersionTagger(ConfigObject):
         print("Undoing tag: %s" % tag)
         if not tag_exists_locally(tag):
             raise TitoException(
-                    "Cannot undo tag that does not exist locally.")
+                "Cannot undo tag that does not exist locally.")
         if not self.offline and tag_exists_remotely(tag):
             raise TitoException("Cannot undo tag that has been pushed.")
 

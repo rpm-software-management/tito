@@ -26,7 +26,8 @@ from tempfile import mkdtemp
 
 from tito.common import *
 from tito.common import scl_to_rpm_option, get_latest_tagged_version, \
-        find_wrote_in_rpmbuild_output
+    find_wrote_in_rpmbuild_output
+from tito.compat import *
 from tito.exception import RunCommandException
 from tito.release import *
 from tito.exception import TitoException
@@ -80,7 +81,7 @@ class BuilderBase(object):
         self.rpmbuild_basedir = build_dir
         # Location where we do actual rpmbuilds
         self.rpmbuild_dir = mkdtemp(dir=self.rpmbuild_basedir,
-                prefix="rpmbuild-%s" % self.project_name)
+            prefix="rpmbuild-%s" % self.project_name)
         debug("Building in temp dir: %s" % self.rpmbuild_dir)
         self.rpmbuild_sourcedir = os.path.join(self.rpmbuild_dir, "SOURCES")
         self.rpmbuild_builddir = os.path.join(self.rpmbuild_dir, "BUILD")
@@ -197,8 +198,8 @@ class BuilderBase(object):
 
         cmd = ('LC_ALL=C rpmbuild --define "_source_filedigest_algorithm md5"  --define'
             ' "_binary_filedigest_algorithm md5" %s %s %s --nodeps -bs %s' % (
-            rpmbuild_options, self._get_rpmbuild_dir_options(),
-            define_dist, self.spec_file))
+                rpmbuild_options, self._get_rpmbuild_dir_options(),
+                define_dist, self.spec_file))
         output = run_command(cmd)
         print(output)
         self.srpm_location = find_wrote_in_rpmbuild_output(output)[0]
@@ -343,10 +344,10 @@ class Builder(ConfigObject, BuilderBase):
         self.display_version = self._get_display_version()
 
         self.git_commit_id = get_build_commit(tag=self.build_tag,
-                test=self.test)
+            test=self.test)
 
         self.relative_project_dir = get_relative_project_dir(
-                project_name=self.project_name, commit=self.git_commit_id)
+            project_name=self.project_name, commit=self.git_commit_id)
 
         tgz_base = self._get_tgz_name_and_ver()
         self.tgz_filename = tgz_base + ".tar.gz"
@@ -474,9 +475,9 @@ class Builder(ConfigObject, BuilderBase):
     def _get_rpmbuild_dir_options(self):
         return ('--define "_topdir %s" --define "_sourcedir %s" --define "_builddir %s" --define '
             '"_srcrpmdir %s" --define "_rpmdir %s" ' % (
-            self.rpmbuild_dir,
-            self.rpmbuild_sourcedir, self.rpmbuild_builddir,
-            self.rpmbuild_basedir, self.rpmbuild_basedir))
+                self.rpmbuild_dir,
+                self.rpmbuild_sourcedir, self.rpmbuild_builddir,
+                self.rpmbuild_basedir, self.rpmbuild_basedir))
 
     def _get_tgz_name_and_ver(self):
         """
@@ -545,9 +546,9 @@ class NoTgzBuilder(Builder):
         """
         return ('--define "_topdir %s" --define "_sourcedir %s" --define "_builddir %s" '
             '--define "_srcrpmdir %s" --define "_rpmdir %s" ' % (
-            self.rpmbuild_dir,
-            self.rpmbuild_gitcopy, self.rpmbuild_builddir,
-            self.rpmbuild_basedir, self.rpmbuild_basedir))
+                self.rpmbuild_dir,
+                self.rpmbuild_gitcopy, self.rpmbuild_builddir,
+                self.rpmbuild_basedir, self.rpmbuild_basedir))
 
     def _setup_test_specfile(self):
         """ Override parent behavior. """
@@ -797,7 +798,7 @@ class UpstreamBuilder(NoTgzBuilder):
         tgz_filename = "%s.tar.gz" % prefix
         commit = get_build_commit(tag=self.upstream_tag)
         relative_dir = get_relative_project_dir(
-                project_name=self.upstream_name, commit=commit)
+            project_name=self.upstream_name, commit=commit)
         tgz_fullpath = os.path.join(self.rpmbuild_sourcedir, tgz_filename)
         print("Creating %s from git tag: %s..." % (tgz_filename, commit))
         create_tgz(self.git_root, prefix, commit, relative_dir,
@@ -934,9 +935,9 @@ class UpstreamBuilder(NoTgzBuilder):
         """
         return ('--define "_topdir %s" --define "_sourcedir %s" --define "_builddir %s" '
             '--define "_srcrpmdir %s" --define "_rpmdir %s" ' % (
-            self.rpmbuild_dir,
-            self.rpmbuild_sourcedir, self.rpmbuild_builddir,
-            self.rpmbuild_basedir, self.rpmbuild_basedir))
+                self.rpmbuild_dir,
+                self.rpmbuild_sourcedir, self.rpmbuild_builddir,
+                self.rpmbuild_basedir, self.rpmbuild_basedir))
 
 
 # Legacy class name for backward compatability:
@@ -1172,8 +1173,8 @@ class ExternalSourceBuilder(ConfigObject, BuilderBase):
         self.spec_file = os.path.join(self.rpmbuild_sourcedir,
                     '%s.spec' % self.project_name)
         shutil.copyfile(
-                os.path.join(self.start_dir, '%s.spec' % self.project_name),
-                self.spec_file)
+            os.path.join(self.start_dir, '%s.spec' % self.project_name),
+            self.spec_file)
         print("  %s.spec" % self.project_name)
 
         # TODO: Make this a configurable strategy:
@@ -1242,8 +1243,8 @@ class ExternalSourceBuilder(ConfigObject, BuilderBase):
     def _get_rpmbuild_dir_options(self):
         return ('--define "_sourcedir %s" --define "_builddir %s" '
             '--define "_srcrpmdir %s" --define "_rpmdir %s" ' % (
-            self.rpmbuild_sourcedir, self.rpmbuild_builddir,
-            self.rpmbuild_basedir, self.rpmbuild_basedir))
+                self.rpmbuild_sourcedir, self.rpmbuild_builddir,
+                self.rpmbuild_basedir, self.rpmbuild_basedir))
 
     def _setup_test_specfile(self):
         """ Override parent behavior. """

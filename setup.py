@@ -50,7 +50,7 @@ setup(
         'Intended Audience :: Information Technology',
         'Programming Language :: Python'
     ],
-#    test_suite = 'nose.collector',
+    #test_suite = 'nose.collector',
 )
 
 
