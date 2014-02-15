@@ -1,8 +1,7 @@
 language: python
 python:
-  - "2.5"
   - "2.6"
   - "2.7"
 
-install: pip install 'GitPython >= 0.2.0' --use-mirrors
+install: pip install 'GitPython >= 0.2.0' --pre
 script: nosetests test/unit
