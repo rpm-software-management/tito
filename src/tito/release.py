@@ -67,17 +67,17 @@ class Releaser(ConfigObject):
         ConfigObject.__init__(self, config=config)
         config_builder_args = self._parse_builder_args(releaser_config, target)
         if test:
-            config_builder_args['test'] = True # builder must know to build from HEAD
+            config_builder_args['test'] = True  # builder must know to build from HEAD
 
         # Override with builder args from command line if any were given:
         self.builder_args = dict(config_builder_args.items() +
-                kwargs['builder_args'].items())
+            kwargs['builder_args'].items())
 
         # While we create a builder here, we don't actually call run on it
         # unless the releaser needs to:
         self.offline = False
         if 'offline' in kwargs:
-            self.offline=kwargs['offline']
+            self.offline = kwargs['offline']
         self.builder = create_builder(name, tag,
                 config,
                 build_dir, user_config, self.builder_args, offline=self.offline)
@@ -102,8 +102,8 @@ class Releaser(ConfigObject):
         self.target = target
 
         self.dry_run = False
-        self.test = test # releaser must know to use builder designation rather than tag
-        self.auto_accept = auto_accept # don't ask for input, just go ahead
+        self.test = test  # releaser must know to use builder designation rather than tag
+        self.auto_accept = auto_accept  # don't ask for input, just go ahead
         self.no_cleanup = no_cleanup
 
         self._check_releaser_config()

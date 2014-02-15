@@ -32,7 +32,9 @@ class TestPep8(TitoUnitTestFixture):
     def test_conformance(self):
         tests = [
             # http://pep8.readthedocs.org/en/latest/intro.html#error-codes
+            'E2',    # whitespace errors
             'E9',    # runtime errors (SyntaxError, IndentationError, IOError)
+            'W2',    # whitespace warnings
             'W6',    # deprecated features
         ]
 

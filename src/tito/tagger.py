@@ -530,7 +530,7 @@ class VersionTagger(ConfigObject):
             suffix = self.config.get("globalconfig", "tag_suffix")
         return "%s-%s%s" % (self.project_name, new_version, suffix)
 
-    def _update_version_file (self, new_version):
+    def _update_version_file(self, new_version):
         """
         land this new_version in the designated file
         and stages that file for a git commit
@@ -549,14 +549,13 @@ class VersionTagger(ConfigObject):
         f = open(version_file, 'w')
         (new_ver, new_rel) = new_version.split('-')
         f.write(t.safe_substitute(
-            version = new_ver,
-            release = new_rel))
+            version=new_ver,
+            release=new_rel))
         f.close()
 
         run_command("git add %s" % version_file)
 
-
-    def _version_file_template (self):
+    def _version_file_template(self):
         """
         "$version_name = $version"
         or provide a configuration in tito.props to a file that is a
@@ -574,8 +573,7 @@ class VersionTagger(ConfigObject):
             return buf
         return None
 
-
-    def _version_file_path (self):
+    def _version_file_path(self):
         """
         standard ${project_name}-version.conf
         or provide a configuration in tito.props, like
