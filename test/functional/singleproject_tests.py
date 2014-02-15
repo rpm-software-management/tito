@@ -79,4 +79,3 @@ class SingleProjectTests(TitoGitTestFixture):
     def test_build_rpm_tag(self):
         tito("build --rpm --tag=%s-0.0.1-1 -o %s" % (PKG_NAME,
             self.repo_dir))
-

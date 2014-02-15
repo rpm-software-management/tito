@@ -21,6 +21,7 @@ from tito.config_object import ConfigObject
 from tito.common import error_out, debug, get_spec_version_and_release, \
     get_class_by_name
 
+
 class FetchBuilder(ConfigObject, BuilderBase):
     """
     A separate Builder class for projects whose source is not in git. Source
@@ -212,5 +213,3 @@ class ArgSourceStrategy(SourceStrategy):
         in_f.close()
         out_f.close()
         shutil.move(self.spec_file + ".new", self.spec_file)
-
-

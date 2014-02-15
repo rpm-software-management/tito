@@ -35,6 +35,7 @@ builder = tito.builder.FetchBuilder
 rsync = %s
 """
 
+
 class FetchBuilderTests(TitoGitTestFixture):
 
     def setUp(self):
@@ -97,4 +98,3 @@ class FetchBuilderTests(TitoGitTestFixture):
             "extsrc-0.0.2-1.*.noarch.rpm"))))
         self.assertEquals(1, len(glob.glob(join(yum_repo_dir,
             "repodata/repomd.xml"))))
-

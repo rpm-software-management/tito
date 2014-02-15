@@ -142,7 +142,6 @@ class ObsReleaser(Releaser):
                 self.cli_tool, self.obs_project_name, self.obs_package_name))
             print("Aborting automatic rebuild because --no-build has been specified.")
 
-
     def _obs_sync_files(self, project_checkout):
         """
         Copy files from our obs checkout into each obs checkout and add them.
@@ -164,4 +163,3 @@ class ObsReleaser(Releaser):
 
         # Add/remove everything:
         run_command("%s addremove" % (self.cli_tool))
-

@@ -308,7 +308,6 @@ class BaseCliModule(object):
             # Delete the temp properties file we created.
             run_command("rm %s" % properties_file)
 
-
     def _validate_options(self):
         """
         Subclasses can implement if they need to check for any

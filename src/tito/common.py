@@ -169,6 +169,7 @@ def find_file_with_extension(in_dir=None, suffix=None):
     else:
         return file_name
 
+
 def find_spec_file(in_dir=None):
     """
     Find the first spec file in the current directory.
@@ -209,6 +210,7 @@ def extract_sha1(output):
         return match.group(0)
     else:
         return ""
+
 
 def run_command(command, print_on_success=False):
     """
@@ -359,6 +361,7 @@ def scl_to_rpm_option(scl, silent=None):
         # can be replaced by "--undefined scl" when el6 and fc17 is retired
         rpm_options += " --eval '%undefine scl'"
     return rpm_options
+
 
 def get_project_name(tag=None, scl=None):
     """
@@ -632,4 +635,3 @@ def find_wrote_in_rpmbuild_output(output):
     if not paths:
         error_out("Unable to locate 'Wrote: ' lines in rpmbuild output")
     return paths
-

@@ -37,6 +37,7 @@ from tito.common import (debug, error_out, run_command,
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
 
+
 class VersionTagger(ConfigObject):
     """
     Standard Tagger class, used for tagging packages built from source in
@@ -626,5 +627,3 @@ class ForceVersionTagger(VersionTagger):
         self._update_changelog(new_version)
         self._update_setup_py(new_version)
         self._update_package_metadata(new_version)
-
-

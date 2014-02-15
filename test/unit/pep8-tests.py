@@ -33,8 +33,10 @@ class TestPep8(TitoUnitTestFixture):
         tests = [
             # http://pep8.readthedocs.org/en/latest/intro.html#error-codes
             'E2',    # whitespace errors
+            'E3',    # blank line errors
             'E9',    # runtime errors (SyntaxError, IndentationError, IOError)
             'W2',    # whitespace warnings
+            'W3',    # blank line warnings
             'W6',    # deprecated features
         ]
 

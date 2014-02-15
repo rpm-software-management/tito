@@ -81,6 +81,7 @@ class CommonTests(unittest.TestCase):
         self.assertEquals("fe87e2b75ed1850718d99c797cc171b88bfad5ca",
                           extract_sha1(ls_remote_output))
 
+
 class VersionMathTest(unittest.TestCase):
     def test_increase_version_minor(self):
         line = "1.0.0"

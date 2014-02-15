@@ -34,6 +34,7 @@ builder = tito.builder.Builder
 rsync = %s
 """
 
+
 class YumReleaserTests(TitoGitTestFixture):
 
     def setUp(self):
@@ -68,5 +69,3 @@ class YumReleaserTests(TitoGitTestFixture):
             "releaseme-0.0.1-1.*.noarch.rpm"))))
         self.assertEquals(1, len(glob.glob(join(yum_repo_dir,
             "repodata/repomd.xml"))))
-
-

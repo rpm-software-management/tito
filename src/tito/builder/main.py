@@ -287,7 +287,6 @@ class BuilderBase(object):
                 pass
 
 
-
 class Builder(ConfigObject, BuilderBase):
     """
     Parent builder class.
@@ -372,7 +371,6 @@ class Builder(ConfigObject, BuilderBase):
 
         # Set to path to srpm once we build one.
         self.srpm_location = None
-
 
     def _get_build_version(self):
         """
@@ -1295,7 +1293,3 @@ class ExternalSourceBuilder(ConfigObject, BuilderBase):
         else:
             version = self.build_version.split("-")[0]
         return version
-
-
-
-

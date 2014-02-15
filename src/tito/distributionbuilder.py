@@ -4,6 +4,7 @@ from tito.builder import UpstreamBuilder
 from tito.common import debug, run_command, error_out
 import commands
 
+
 class DistributionBuilder(UpstreamBuilder):
     """ This class is used for building packages for distributions.
     Parent class UpstreamBuilder build one big patch from upstream and create e.g.:
