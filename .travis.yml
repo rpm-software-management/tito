@@ -3,9 +3,10 @@ language: python
 python:
   - "2.6"
   - "2.7"
+  - "3.3"
 
 install:
-  - pip install 'GitPython >= 0.2.0' --pre
+  - ./.travis-install-kludge.sh
   - pip install 'pep8' --use-mirrors
 
 script: nosetests test/unit
