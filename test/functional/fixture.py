@@ -117,6 +117,13 @@ class TitoGitTestFixture(unittest.TestCase):
         print("Testing in: %s" % self.repo_dir)
         print
 
+        # GitPython calls os.login(), which throws OSError if there is no tty,
+        # but GitPython allows to avoid the call if env var USER exists.
+        try:
+            os.getlogin()
+        except OSError:
+            os.environ['USER'] = 'nobody'
+
         # Initialize the repo:
         self.repo = git.Repo.init(path=self.repo_dir, mkdir=True, bare=False)
 
