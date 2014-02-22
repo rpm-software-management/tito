@@ -24,7 +24,7 @@ from os.path import join
 
 from tito.common import run_command
 from tito.compat import *
-from fixture import TitoGitTestFixture, tito
+from functional.fixture import TitoGitTestFixture, tito
 
 EXT_SRC_PKG = "extsrc"
 

@@ -22,7 +22,7 @@ import tempfile
 
 from os.path import join
 
-from fixture import TitoGitTestFixture, tito
+from functional.fixture import TitoGitTestFixture, tito
 
 from tito.compat import *
 

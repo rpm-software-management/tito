@@ -22,7 +22,7 @@ http://docs.python.org/3.3/reference/lexical_analysis.html
 """
 
 import pep8
-from fixture import *
+from unit.fixture import *
 
 
 class TestPep8(TitoUnitTestFixture):

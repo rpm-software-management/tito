@@ -14,7 +14,7 @@
 
 import os
 from tito.common import *
-from fixture import TitoGitTestFixture, tito
+from functional.fixture import TitoGitTestFixture, tito
 
 #TITO_REPO = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 PKG_NAME = "titotestpkg"
