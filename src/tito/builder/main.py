@@ -170,6 +170,40 @@ class BuilderBase(object):
             self.rpmbuild_sourcedir, self.rpmbuild_builddir))
         self._check_build_dirs_access()
 
+    # TODO: reuse_cvs_checkout isn't needed here, should be cleaned up:
+    def srpm(self, dist=None, reuse_cvs_checkout=False):
+        """
+        Build a source RPM.
+        """
+        self._create_build_dirs()
+        if not self.ran_tgz:
+            self.tgz()
+
+        if self.test:
+            self._setup_test_specfile()
+
+        debug("Creating srpm from spec file: %s" % self.spec_file)
+        define_dist = ""
+        if self.dist:
+            debug("using self.dist: %s" % self.dist)
+            define_dist = "--define 'dist %s'" % self.dist
+        elif dist:
+            debug("using dist: %s" % dist)
+            define_dist = "--define 'dist %s'" % dist
+        else:
+            debug("*NOT* using dist at all")
+
+        rpmbuild_options = self.rpmbuild_options + self._scl_to_rpmbuild_option()
+
+        cmd = ('LC_ALL=C rpmbuild --define "_source_filedigest_algorithm md5"  --define'
+            ' "_binary_filedigest_algorithm md5" %s %s %s --nodeps -bs %s' % (
+            rpmbuild_options, self._get_rpmbuild_dir_options(),
+            define_dist, self.spec_file))
+        output = run_command(cmd)
+        print(output)
+        self.srpm_location = find_wrote_in_rpmbuild_output(output)[0]
+        self.artifacts.append(self.srpm_location)
+
     def rpm(self):
         """ Build an RPM. """
         self._create_build_dirs()
@@ -377,40 +411,6 @@ class Builder(ConfigObject, BuilderBase):
         self.sources.append(full_path)
         self.artifacts.append(full_path)
         return full_path
-
-    # TODO: reuse_cvs_checkout isn't needed here, should be cleaned up:
-    def srpm(self, dist=None, reuse_cvs_checkout=False):
-        """
-        Build a source RPM.
-        """
-        self._create_build_dirs()
-        if not self.ran_tgz:
-            self.tgz()
-
-        if self.test:
-            self._setup_test_specfile()
-
-        debug("Creating srpm from spec file: %s" % self.spec_file)
-        define_dist = ""
-        if self.dist:
-            debug("using self.dist: %s" % self.dist)
-            define_dist = "--define 'dist %s'" % self.dist
-        elif dist:
-            debug("using dist: %s" % dist)
-            define_dist = "--define 'dist %s'" % dist
-        else:
-            debug("*NOT* using dist at all")
-
-        rpmbuild_options = self.rpmbuild_options + self._scl_to_rpmbuild_option()
-
-        cmd = ('LC_ALL=C rpmbuild --define "_source_filedigest_algorithm md5"  --define'
-            ' "_binary_filedigest_algorithm md5" %s %s %s --nodeps -bs %s' % (
-            rpmbuild_options, self._get_rpmbuild_dir_options(),
-            define_dist, self.spec_file))
-        output = run_command(cmd)
-        print(output)
-        self.srpm_location = find_wrote_in_rpmbuild_output(output)[0]
-        self.artifacts.append(self.srpm_location)
 
     def rpm(self):
         """ Build an RPM. """

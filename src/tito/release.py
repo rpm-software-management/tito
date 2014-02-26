@@ -318,7 +318,7 @@ class RsyncReleaser(Releaser):
         self.builder.no_cleanup = self.no_cleanup
         self.builder.tgz()
         self.builder.srpm()
-        self.builder._rpm()
+        self.builder.rpm()
         self.builder.cleanup()
 
         if self.releaser_config.has_option(self.target, 'rsync_args'):

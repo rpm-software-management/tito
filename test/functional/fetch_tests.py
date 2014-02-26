@@ -16,6 +16,7 @@ Functional Tests for the FetchBuilder.
 """
 
 import ConfigParser
+import glob
 import os
 import shutil
 import tempfile
@@ -65,10 +66,6 @@ class FetchBuilderTests(TitoGitTestFixture):
         TitoGitTestFixture.tearDown(self)
         shutil.rmtree(self.output_dir)
 
-    def _setup_fetchbuilder_releaser(self):
-        self.write_file(join(self.repo_dir, 'rel-eng/releasers.conf'),
-                RELEASER_CONF)
-
     def test_simple_build_no_tag(self):
         # We have not tagged here. Build --rpm should just work:
         self.assertFalse(os.path.exists(
@@ -76,20 +73,28 @@ class FetchBuilderTests(TitoGitTestFixture):
 
         tito('build --rpm --output=%s --no-cleanup --debug --arg=source=%s ' %
                 (self.output_dir, self.source_filename))
-        self.assertTrue(os.path.exists(
-            join(self.output_dir, 'extsrc-0.0.2-1.fc20.src.rpm')))
-        self.assertTrue(os.path.exists(
-            join(self.output_dir, 'noarch/extsrc-0.0.2-1.fc20.noarch.rpm')))
+        self.assertEquals(1, len(glob.glob(join(self.output_dir,
+            "extsrc-0.0.2-1.*.src.rpm"))))
+        self.assertEquals(1, len(glob.glob(join(self.output_dir,
+            "noarch/extsrc-0.0.2-1.*.noarch.rpm"))))
 
     def test_tag_rejected(self):
         self.assertRaises(SystemExit, tito,
                 'build --tag=extsrc-0.0.1-1 --rpm --output=%s --arg=source=%s ' %
                 (self.output_dir, self.source_filename))
 
+    def _setup_fetchbuilder_releaser(self, yum_repo_dir):
+        self.write_file(join(self.repo_dir, 'rel-eng/releasers.conf'),
+                RELEASER_CONF % yum_repo_dir)
+
     def test_with_releaser(self):
-        self._setup_fetchbuilder_releaser()
+        yum_repo_dir = os.path.join(self.output_dir, 'yum')
+        self._setup_fetchbuilder_releaser(yum_repo_dir)
         tito('release --debug yum-test --arg source=%s' %
                 self.source_filename)
 
-
+        self.assertEquals(1, len(glob.glob(join(yum_repo_dir,
+            "extsrc-0.0.2-1.*.noarch.rpm"))))
+        self.assertEquals(1, len(glob.glob(join(yum_repo_dir,
+            "repodata/repomd.xml"))))
 
