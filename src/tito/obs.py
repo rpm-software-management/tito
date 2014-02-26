@@ -29,7 +29,8 @@ class ObsReleaser(Releaser):
 
     def __init__(self, name=None, tag=None, build_dir=None,
             config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False, test=False, auto_accept=False):
+            target=None, releaser_config=None, no_cleanup=False,
+            test=False, auto_accept=False, **kwargs):
         Releaser.__init__(self, name, tag, build_dir,
                 user_config, target, releaser_config, no_cleanup, test, auto_accept)
 

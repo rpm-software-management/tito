@@ -61,12 +61,18 @@ class Releaser(ConfigObject):
 
     def __init__(self, name=None, tag=None, build_dir=None,
             config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False, test=False, auto_accept=False):
+            target=None, releaser_config=None, no_cleanup=False,
+            test=False, auto_accept=False, **kwargs):
 
         ConfigObject.__init__(self, config=config)
-        self.builder_args = self._parse_builder_args(releaser_config, target)
+        config_builder_args = self._parse_builder_args(releaser_config, target)
         if test:
-            self.builder_args['test'] = True # builder must know to build from HEAD
+            config_builder_args['test'] = True # builder must know to build from HEAD
+
+        # Override with builder args from command line if any were given:
+        self.builder_args = dict(config_builder_args.items() +
+                kwargs['builder_args'].items())
+
 
         # While we create a builder here, we don't actually call run on it
         # unless the releaser needs to:
@@ -286,10 +292,12 @@ class RsyncReleaser(Releaser):
 
     def __init__(self, name=None, tag=None, build_dir=None,
             config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False, test=False, auto_accept=False,
-            prefix="temp_dir="):
+            target=None, releaser_config=None, no_cleanup=False,
+            test=False, auto_accept=False,
+            prefix="temp_dir=", **kwargs):
         Releaser.__init__(self, name, tag, build_dir, config,
-                user_config, target, releaser_config, no_cleanup, test, auto_accept)
+                user_config, target, releaser_config, no_cleanup, test,
+                auto_accept, **kwargs)
 
         self.build_dir = build_dir
         self.prefix = prefix
@@ -404,10 +412,11 @@ class YumRepoReleaser(RsyncReleaser):
 
     def __init__(self, name=None, tag=None, build_dir=None,
             config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False, test=False, auto_accept=False):
+            target=None, releaser_config=None, no_cleanup=False,
+            test=False, auto_accept=False, **kwargs):
         RsyncReleaser.__init__(self, name, tag, build_dir, config,
                 user_config, target, releaser_config, no_cleanup, test, auto_accept,
-                prefix="yumrepo-")
+                prefix="yumrepo-", **kwargs)
 
     def _read_rpm_header(self, ts, new_rpm_path):
         """
@@ -472,9 +481,11 @@ class FedoraGitReleaser(Releaser):
 
     def __init__(self, name=None, tag=None, build_dir=None,
             config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False, test=False, auto_accept=False):
+            target=None, releaser_config=None, no_cleanup=False,
+            test=False, auto_accept=False, **kwargs):
         Releaser.__init__(self, name, tag, build_dir, config,
-                user_config, target, releaser_config, no_cleanup, test, auto_accept)
+                user_config, target, releaser_config, no_cleanup, test,
+                auto_accept, **kwargs)
 
         self.git_branches = \
             self.releaser_config.get(self.target, "branches").split(" ")
@@ -749,9 +760,11 @@ class CvsReleaser(Releaser):
 
     def __init__(self, name=None, tag=None, build_dir=None,
             config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False, test=False, auto_accept=False):
+            target=None, releaser_config=None, no_cleanup=False,
+            test=False, auto_accept=False, **kwargs):
         Releaser.__init__(self, name, tag, build_dir, config,
-                user_config, target, releaser_config, no_cleanup, test, auto_accept)
+                user_config, target, releaser_config, no_cleanup, test,
+                auto_accept, **kwargs)
 
         self.package_workdir = os.path.join(self.working_dir,
                 self.project_name)
@@ -994,7 +1007,8 @@ class KojiReleaser(Releaser):
 
     def __init__(self, name=None, tag=None, build_dir=None,
             config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False, test=False, auto_accept=False):
+            target=None, releaser_config=None, no_cleanup=False,
+            test=False, auto_accept=False, **kwargs):
         Releaser.__init__(self, name, tag, build_dir, config,
                 user_config, target, releaser_config, no_cleanup, test, auto_accept)
 

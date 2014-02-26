@@ -65,6 +65,10 @@ class FetchBuilderTests(TitoGitTestFixture):
         TitoGitTestFixture.tearDown(self)
         shutil.rmtree(self.output_dir)
 
+    def _setup_fetchbuilder_releaser(self):
+        self.write_file(join(self.repo_dir, 'rel-eng/releasers.conf'),
+                RELEASER_CONF)
+
     def test_simple_build_no_tag(self):
         # We have not tagged here. Build --rpm should just work:
         self.assertFalse(os.path.exists(
@@ -81,10 +85,6 @@ class FetchBuilderTests(TitoGitTestFixture):
         self.assertRaises(SystemExit, tito,
                 'build --tag=extsrc-0.0.1-1 --rpm --output=%s --arg=source=%s ' %
                 (self.output_dir, self.source_filename))
-
-    def _setup_fetchbuilder_releaser(self):
-        self.write_file(join(self.repo_dir, 'rel-eng/releasers.conf'),
-                RELEASER_CONF)
 
     def test_with_releaser(self):
         self._setup_fetchbuilder_releaser()

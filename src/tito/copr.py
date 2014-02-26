@@ -27,9 +27,11 @@ class CoprReleaser(KojiReleaser):
 
     def __init__(self, name=None, version=None, tag=None, build_dir=None,
             config=None, user_config=None,
-            target=None, releaser_config=None, no_cleanup=False, test=False, auto_accept=False):
+            target=None, releaser_config=None, no_cleanup=False,
+            test=False, auto_accept=False, **kwargs):
         KojiReleaser.__init__(self, name, version, tag, build_dir, config,
-                user_config, target, releaser_config, no_cleanup, test, auto_accept)
+                user_config, target, releaser_config, no_cleanup, test,
+                auto_accept, **kwargs)
 
         self.copr_project_name = \
             self.releaser_config.get(self.target, "project_name")

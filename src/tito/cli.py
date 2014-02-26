@@ -609,6 +609,16 @@ class ReleaseModule(BaseCliModule):
                 error_out("No such releaser configured: %s" % target)
             releaser_class = get_class_by_name(releaser_config.get(target, "releaser"))
             debug("Using releaser class: %s" % releaser_class)
+            builder_args = {}
+            if len(self.options.builder_args) > 0:
+                for arg in self.options.builder_args:
+                    key, val = arg.split('=')
+                    debug("Passing builder arg: %s = %s" % (key, val))
+                    # TODO: support list values
+                    builder_args[key] = val
+            kwargs = {
+                    'builder_args': builder_args
+            }
 
             releaser = releaser_class(
                     name=package_name,
@@ -620,7 +630,8 @@ class ReleaseModule(BaseCliModule):
                     releaser_config=releaser_config,
                     no_cleanup=self.options.no_cleanup,
                     test=self.options.test,
-                    auto_accept=self.options.auto_accept)
+                    auto_accept=self.options.auto_accept,
+                    **kwargs)
 
             releaser.release(dry_run=self.options.dry_run,
                     no_build=self.options.no_build,
