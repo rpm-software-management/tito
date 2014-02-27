@@ -182,6 +182,23 @@ created from tag foo-1.2-1 and with
  Patch0: foo-1.2-1-to-foo-1.2-2.patch
  Patch1: foo-1.2-1-to-foo-1.2-3.patch
 
+tito.builder.FetchBuilder::
+A more unorthodox builder which does not require a git footprint, and can be
+configured to use a strategy to pull sources rather than generate them from
+git. The default strategy provided simply parses a
+--arg=source=/path/to/tar.gz command line parameter to the build command.
+
+Example configuration for FetchBuilder would include the following in
+rel-eng/tito.props.
+
+----
+[builder]
+fetch_strategy = tito.builder.fetch.ArgSourceStrategy
+----
+
+ArgSourceStrategy here could be replaced with a custom strategy if you were to
+have one in your lib_dir.
+
 TAGGERS
 -------
 All taggers which inherit fom tito.tagger.VersionTagger (all to this date),
