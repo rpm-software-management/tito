@@ -47,7 +47,12 @@ class FetchBuilder(ConfigObject, BuilderBase):
 
         if not config.has_option("builder",
                 "fetch_strategy"):
-            error_out("FetchBuilder requires [builder] fetch_strategy in tito.props.")
+            print("WARNING: no fetch_strategy specified in tito.props"
+                    ", assuming ArgSourceStrategy.")
+            if not config.has_section("builder"):
+                config.add_section("builder")
+            config.set('builder', 'fetch_strategy',
+                    'tito.builder.fetch.ArgSourceStrategy')
 
         self.build_tag = '%s-%s' % (self.project_name,
                 get_spec_version_and_release(self.start_dir,
