@@ -610,14 +610,15 @@ class ReleaseModule(BaseCliModule):
             releaser_class = get_class_by_name(releaser_config.get(target, "releaser"))
             debug("Using releaser class: %s" % releaser_class)
             builder_args = {}
-            if len(self.options.builder_args) > 0:
+            if self.options.builder_args and len(self.options.builder_args) > 0:
                 for arg in self.options.builder_args:
                     key, val = arg.split('=')
                     debug("Passing builder arg: %s = %s" % (key, val))
                     # TODO: support list values
                     builder_args[key] = val
             kwargs = {
-                    'builder_args': builder_args
+                    'builder_args': builder_args,
+                    'offline': self.options.offline
             }
 
             releaser = releaser_class(

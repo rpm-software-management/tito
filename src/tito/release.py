@@ -73,12 +73,14 @@ class Releaser(ConfigObject):
         self.builder_args = dict(config_builder_args.items() +
                 kwargs['builder_args'].items())
 
-
         # While we create a builder here, we don't actually call run on it
         # unless the releaser needs to:
+        self.offline = False
+        if 'offline' in kwargs:
+            self.offline=kwargs['offline']
         self.builder = create_builder(name, tag,
                 config,
-                build_dir, user_config, self.builder_args)
+                build_dir, user_config, self.builder_args, offline=self.offline)
         self.project_name = self.builder.project_name
 
         # TODO: if it looks like we need custom CVSROOT's for different users,
@@ -304,10 +306,12 @@ class RsyncReleaser(Releaser):
 
         # Use the builder from the release target, rather than the default
         # one defined for this git repo or sub-package:
+        # TODO: this is a little sketchy, creating two builders?
         self.builder = create_builder(name, tag,
                 config,
                 build_dir, user_config, self.builder_args,
-                builder_class=self.releaser_config.get(self.target, 'builder'))
+                builder_class=self.releaser_config.get(self.target, 'builder'),
+                offline=self.offline)
         if self.releaser_config.has_option(self.target, "scl"):
                 self.builder.scl = self.releaser_config.get(self.target, "scl")
 
