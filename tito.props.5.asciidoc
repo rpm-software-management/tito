@@ -183,13 +183,7 @@ created from tag foo-1.2-1 and with
  Patch1: foo-1.2-1-to-foo-1.2-3.patch
 
 tito.builder.FetchBuilder::
-A more unorthodox builder which does not require a git footprint, and can be
-configured to use a strategy to pull sources rather than generate them from
-git. The default strategy provided simply parses a
---arg=source=/path/to/tar.gz command line parameter to the build command.
-
-Example configuration for FetchBuilder would include the following in
-rel-eng/tito.props.
+See doc/builders.mkd.
 
 ----
 [builder]
