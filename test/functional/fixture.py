@@ -156,9 +156,9 @@ class TitoGitTestFixture(unittest.TestCase):
         shutil.copyfile(spec, os.path.join(full_pkg_dir, os.path.basename(spec)))
 
         # Write the config object we were given out to the project repo:
-        with open(os.path.join(full_pkg_dir, 'tito.props'), 'w') \
-                as configfile:
-            config.write(configfile)
+        configfile = open(os.path.join(full_pkg_dir, 'tito.props'), 'w')
+        config.write(configfile)
+        configfile.close()
 
     def create_project(self, pkg_name, pkg_dir=''):
         """
