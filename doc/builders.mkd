@@ -1,6 +1,6 @@
-= Tito Builders =
+# Tito Builders
 
-== tito.builder.FetchBuilder ==
+## tito.builder.FetchBuilder
 
 An unorthodox builder which can build packages for a git repo which does not actually have any tito footprint. The location of sources, and the version/release to assume we're building, come from a configurable strategy.
 
@@ -8,11 +8,11 @@ One strategy is currently included which parses a CLI argument to the build comm
 
 Configuration for FetchBuilder in rel-eng/tito.props would look like:
 
-  [buildconfig]
-  builder = tito.builder.FetchBuilder
+    [buildconfig]
+    builder = tito.builder.FetchBuilder
 
-  [builder]
-  fetch_strategy = tito.builder.fetch.ArgSourceStrategy
+    [builder]
+    fetch_strategy = tito.builder.fetch.ArgSourceStrategy
 
 Once configured a build can be run with:
 
