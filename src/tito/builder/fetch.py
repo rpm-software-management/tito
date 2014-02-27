@@ -71,8 +71,9 @@ class FetchBuilder(ConfigObject, BuilderBase):
         self.spec_file = source_strat.spec_file
 
     def _get_rpmbuild_dir_options(self):
-        return ('--define "_sourcedir %s" --define "_builddir %s" '
+        return ('--define "_topdir %s" --define "_sourcedir %s" --define "_builddir %s" '
             '--define "_srcrpmdir %s" --define "_rpmdir %s" ' % (
+            self.rpmbuild_dir,
             self.rpmbuild_sourcedir, self.rpmbuild_builddir,
             self.rpmbuild_basedir, self.rpmbuild_basedir))
 
