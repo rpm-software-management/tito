@@ -152,7 +152,7 @@ class ArgSourceStrategy(SourceStrategy):
 
             # Add a line to replace in the spec for each source:
             source_regex = re.compile("^(source%s:\s*)(.+)$" % i, re.IGNORECASE)
-            new_line = "Source%s: %s" % (i, base_name)
+            new_line = "Source%s: %s\n" % (i, base_name)
             replacements.append((source_regex, new_line))
 
         # Replace version and release in spec:

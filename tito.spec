@@ -9,7 +9,6 @@ Group: Development/Tools
 License: GPLv2
 URL: http://rm-rf.ca/tito
 Source0: http://rm-rf.ca/files/tito/tito-%{version}.tar.gz
-
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildArch: noarch

@@ -7,9 +7,9 @@ Summary:        tito test package for the external source builder
 URL:            https://example.com
 Group:          Applications/Internet
 License:        GPLv2
+Source0:        %{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-root-%(%{__id_u} -n)
 BuildArch:      noarch
-Source0:        %{name}-%{version}.tar.gz
 
 %description
 Nobody cares.
