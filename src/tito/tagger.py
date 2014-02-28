@@ -558,13 +558,14 @@ class VersionTagger(ConfigObject):
 
     def _version_file_template (self):
         """
-        "$version_name = $version"
-        or provide a configuration in tito.props to a file that is a
+        provide a configuration in tito.props to a file that is a
         python string.Template conforming blob, like
             [version]
             template_file = ./rel-eng/templates/my_java_properties
 
-        see also, http://docs.python.org/2/library/string.html#template-strings
+        variables defined inside the template are $version and $release
+
+        see also http://docs.python.org/2/library/string.html#template-strings
         """
         if self.config.has_option("version_template", "template_file"):
             f = open(os.path.join(self.git_root,
@@ -577,8 +578,7 @@ class VersionTagger(ConfigObject):
 
     def _version_file_path (self):
         """
-        standard ${project_name}-version.conf
-        or provide a configuration in tito.props, like
+        provide a version file to write in tito.props, like
             [version]
             file = ./foo.rb
         """
@@ -628,5 +628,3 @@ class ForceVersionTagger(VersionTagger):
         self._update_changelog(new_version)
         self._update_setup_py(new_version)
         self._update_package_metadata(new_version)
-
-
