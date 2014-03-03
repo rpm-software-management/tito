@@ -2,7 +2,8 @@ import os
 
 from tito.builder import UpstreamBuilder
 from tito.common import debug, run_command, error_out
-import commands
+from tito.compat import *
+
 
 class DistributionBuilder(UpstreamBuilder):
     """ This class is used for building packages for distributions.
@@ -25,13 +26,13 @@ class DistributionBuilder(UpstreamBuilder):
             ch_dir = os.path.join(self.git_root,
                     self.relative_project_dir)
         os.chdir(ch_dir)
-        debug("Running /usr/bin/generate-patches.pl -d %s %s %s-1 %s %s" \
+        debug("Running /usr/bin/generate-patches.pl -d %s %s %s-1 %s %s"
                % (self.rpmbuild_gitcopy, self.project_name, self.upstream_version, self.build_version, self.git_commit_id))
-        output = run_command("/usr/bin/generate-patches.pl -d %s %s %s-1 %s %s" \
+        output = run_command("/usr/bin/generate-patches.pl -d %s %s %s-1 %s %s"
                % (self.rpmbuild_gitcopy, self.project_name, self.upstream_version, self.build_version, self.git_commit_id))
         self.patch_files = output.split("\n")
         for p_file in self.patch_files:
-            (status, output) = commands.getstatusoutput(
+            (status, output) = getstatusoutput(
                 "grep 'Binary files .* differ' %s/%s " % (self.rpmbuild_gitcopy, p_file))
             if status == 0 and output != "":
                 error_out("You are doomed. Diff contains binary files. You can not use this builder")

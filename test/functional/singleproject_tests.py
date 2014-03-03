@@ -14,7 +14,7 @@
 
 import os
 from tito.common import *
-from fixture import TitoGitTestFixture, tito
+from functional.fixture import TitoGitTestFixture, tito
 
 #TITO_REPO = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 PKG_NAME = "titotestpkg"
@@ -79,4 +79,3 @@ class SingleProjectTests(TitoGitTestFixture):
     def test_build_rpm_tag(self):
         tito("build --rpm --tag=%s-0.0.1-1 -o %s" % (PKG_NAME,
             self.repo_dir))
-

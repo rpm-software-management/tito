@@ -17,6 +17,7 @@ Shared code for builder and tagger class
 import os
 from tito.common import find_git_root
 
+
 class ConfigObject(object):
     """
     Perent class for Builder and Tagger with shared code
@@ -38,4 +39,3 @@ class ConfigObject(object):
 
         self.git_root = find_git_root()
         self.rel_eng_dir = os.path.join(self.git_root, "rel-eng")
-

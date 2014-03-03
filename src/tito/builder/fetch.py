@@ -21,6 +21,7 @@ from tito.config_object import ConfigObject
 from tito.common import error_out, debug, get_spec_version_and_release, \
     get_class_by_name
 
+
 class FetchBuilder(ConfigObject, BuilderBase):
     """
     A separate Builder class for projects whose source is not in git. Source
@@ -73,9 +74,9 @@ class FetchBuilder(ConfigObject, BuilderBase):
     def _get_rpmbuild_dir_options(self):
         return ('--define "_topdir %s" --define "_sourcedir %s" --define "_builddir %s" '
             '--define "_srcrpmdir %s" --define "_rpmdir %s" ' % (
-            self.rpmbuild_dir,
-            self.rpmbuild_sourcedir, self.rpmbuild_builddir,
-            self.rpmbuild_basedir, self.rpmbuild_basedir))
+                self.rpmbuild_dir,
+                self.rpmbuild_sourcedir, self.rpmbuild_builddir,
+                self.rpmbuild_basedir, self.rpmbuild_basedir))
 
 
 class SourceStrategy(object):
@@ -135,9 +136,9 @@ class ArgSourceStrategy(SourceStrategy):
         self.spec_file = os.path.join(self.builder.rpmbuild_sourcedir,
                     '%s.spec' % self.builder.project_name)
         shutil.copyfile(
-                os.path.join(self.builder.start_dir, '%s.spec' %
-                    self.builder.project_name),
-                self.spec_file)
+            os.path.join(self.builder.start_dir, '%s.spec' %
+                self.builder.project_name),
+            self.spec_file)
         print("  %s.spec" % self.builder.project_name)
 
         # TODO: Make this a configurable strategy:
@@ -212,5 +213,3 @@ class ArgSourceStrategy(SourceStrategy):
         in_f.close()
         out_f.close()
         shutil.move(self.spec_file + ".new", self.spec_file)
-
-

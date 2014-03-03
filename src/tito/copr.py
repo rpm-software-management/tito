@@ -50,15 +50,15 @@ class CoprReleaser(KojiReleaser):
 
     def _submit_build(self, executable, koji_opts, tag, srpm_location):
         """ Copy srpm to remote destination and submit it to Copr """
-        cmd = self.releaser_config.get(self.target, "upload_command", raw = True)
+        cmd = self.releaser_config.get(self.target, "upload_command", raw=True)
         url = self.releaser_config.get(self.target, "remote_location")
         if self.srpm_submitted:
             srpm_location = self.srpm_submitted
         srpm_base_name = os.path.basename(srpm_location)
 
         # e.g. "scp %(srpm)s my.web.com:public_html/my_srpm/"
-        cmd_upload = cmd % { 'srpm' : srpm_location }
-        cmd_submit = "/usr/bin/copr-cli build %s %s%s" % ( self.releaser_config.get(self.target, "project_name"),
+        cmd_upload = cmd % {'srpm': srpm_location}
+        cmd_submit = "/usr/bin/copr-cli build %s %s%s" % (self.releaser_config.get(self.target, "project_name"),
             url, srpm_base_name)
 
         if self.dry_run:
@@ -66,8 +66,8 @@ class CoprReleaser(KojiReleaser):
             self.print_dry_run_warning(cmd_submit)
             return
         if not self.srpm_submitted:
-            print "Uploading src.rpm."
-            print run_command(cmd_upload)
+            print("Uploading src.rpm.")
+            print(run_command(cmd_upload))
             self.srpm_submitted = srpm_location
-        print "Submiting build into %s." % self.NAME
-        print run_command(cmd_submit)
+        print("Submiting build into %s." % self.NAME)
+        print(run_command(cmd_submit))

@@ -1,0 +1,23 @@
+; Unify the coding style for different editors and IDEs.
+; Plugins are available for emacs, vim, gedit, textmate, and more
+; at http://editorconfig.org/#download
+;
+; See http://editorconfig.org or https://github.com/editorconfig/
+;
+; If you change a setting in this file,
+; you should also change .gitattributes
+
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.py]
+indent_size = 4
+
+[*.yml]
+indent_size = 2

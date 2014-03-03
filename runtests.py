@@ -33,7 +33,10 @@ SRC_BIN_DIR = os.path.abspath(os.path.join(TEST_SCRIPT_DIR, "bin/"))
 os.environ['TITO_SRC_BIN_DIR'] = SRC_BIN_DIR
 
 if __name__ == '__main__':
+    import nose
+
+    print("Using Python %s" % sys.version[0:3])
+    print("Using nose %s" % nose.__version__[0:3])
     print("Running tito tests against: %s" % SRC_DIR)
 
-    import nose
     nose.main()

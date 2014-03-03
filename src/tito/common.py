@@ -17,9 +17,9 @@ Common operations.
 import os
 import re
 import sys
-import commands
 import traceback
 
+from tito.compat import *
 from tito.exception import RunCommandException
 
 DEFAULT_BUILD_DIR = "/tmp/tito"
@@ -142,19 +142,19 @@ def create_builder(package_name, build_tag,
 
     # Instantiate the builder:
     builder = builder_class(
-            name=package_name,
-            tag=build_tag,
-            build_dir=build_dir,
-            config=config,
-            user_config=user_config,
-            args=args,
-            **kwargs)
+        name=package_name,
+        tag=build_tag,
+        build_dir=build_dir,
+        config=config,
+        user_config=user_config,
+        args=args,
+        **kwargs)
     return builder
 
 
 def find_file_with_extension(in_dir=None, suffix=None):
     """ Find the file with given extension in the current directory. """
-    if in_dir == None:
+    if in_dir is None:
         in_dir = os.getcwd()
     file_name = None
     debug("Looking for %s in %s" % (suffix, in_dir))
@@ -168,6 +168,7 @@ def find_file_with_extension(in_dir=None, suffix=None):
         error_out("Unable to locate a %s file in %s" % (suffix, in_dir))
     else:
         return file_name
+
 
 def find_spec_file(in_dir=None):
     """
@@ -193,9 +194,9 @@ def find_git_root():
 
     Returned as a full path.
     """
-    (status, cdup) = commands.getstatusoutput("git rev-parse --show-cdup")
+    (status, cdup) = getstatusoutput("git rev-parse --show-cdup")
     if status > 0:
-        error_out(["%s does not appear to be within a git checkout." % \
+        error_out(["%s does not appear to be within a git checkout." %
                 os.getcwd()])
 
     if cdup.strip() == "":
@@ -210,6 +211,7 @@ def extract_sha1(output):
     else:
         return ""
 
+
 def run_command(command, print_on_success=False):
     """
     Run command.
@@ -217,12 +219,12 @@ def run_command(command, print_on_success=False):
     If print_on_success is True, print status and output even
     when command succeeds.
     """
-    (status, output) = commands.getstatusoutput(command)
+    (status, output) = getstatusoutput(command)
     return output
 
 
 def tag_exists_locally(tag):
-    (status, output) = commands.getstatusoutput("git tag | grep %s" % tag)
+    (status, output) = getstatusoutput("git tag | grep %s" % tag)
     if status > 0:
         return False
     else:
@@ -245,8 +247,8 @@ def tag_exists_remotely(tag):
 
 def get_local_tag_sha1(tag):
     tag_sha1 = run_command(
-            "git ls-remote ./. --tag %s | awk '{ print $1 ; exit }'"
-            % tag)
+        "git ls-remote ./. --tag %s | awk '{ print $1 ; exit }'"
+        % tag)
     tag_sha1 = extract_sha1(tag_sha1)
     return tag_sha1
 
@@ -349,23 +351,24 @@ def scl_to_rpm_option(scl, silent=None):
     output = run_command(cmd).rstrip()
     if scl:
         if (output != scl) and (output != "%scl") and not silent:
-            print "Warning: Meta package of software collection %s installed, but --scl defines %s" % (output, scl)
-            print "         Redefining scl macro to %s for this package." % scl
+            print("Warning: Meta package of software collection %s installed, but --scl defines %s" % (output, scl))
+            print("         Redefining scl macro to %s for this package." % scl)
         rpm_options += " --define 'scl %s'" % scl
     else:
         if (output != "%scl") and (not silent):
-            print "Warning: Meta package of software collection %s installed, but --scl is not present." % output
-            print "         Undefining scl macro for this package."
+            print("Warning: Meta package of software collection %s installed, but --scl is not present." % output)
+            print("         Undefining scl macro for this package.")
         # can be replaced by "--undefined scl" when el6 and fc17 is retired
         rpm_options += " --eval '%undefine scl'"
     return rpm_options
+
 
 def get_project_name(tag=None, scl=None):
     """
     Extract the project name from the specified tag or a spec file in the
     current working directory. Error out if neither is present.
     """
-    if tag != None:
+    if tag is not None:
         p = re.compile('(.*?)-(\d.*)')
         m = p.match(tag)
         if not m:
@@ -431,8 +434,8 @@ def get_build_commit(tag, test=False):
         return get_latest_commit(".")
     else:
         tag_sha1 = run_command(
-                "git ls-remote ./. --tag %s | awk '{ print $1 ; exit }'"
-                % tag)
+            "git ls-remote ./. --tag %s | awk '{ print $1 ; exit }'"
+            % tag)
         tag_sha1 = extract_sha1(tag_sha1)
         commit_id = run_command('git rev-list --max-count=1 %s' % tag_sha1)
         return commit_id
@@ -475,8 +478,8 @@ def get_commit_timestamp(sha1_or_tag):
     version regardless of when they are generated.
     """
     output = run_command(
-            "git rev-list --timestamp --max-count=1 %s | awk '{print $1}'"
-            % sha1_or_tag)
+        "git rev-list --timestamp --max-count=1 %s | awk '{print $1}'"
+        % sha1_or_tag)
     return output
 
 
@@ -540,7 +543,7 @@ def get_latest_tagged_version(package_name):
         return None
 
     output = run_command("awk '{ print $1 ; exit }' %s" % file_path)
-    if output == None or output.strip() == "":
+    if output is None or output.strip() == "":
         error_out("Error looking up latest tagged version in: %s" % file_path)
 
     return output
@@ -632,4 +635,3 @@ def find_wrote_in_rpmbuild_output(output):
     if not paths:
         error_out("Unable to locate 'Wrote: ' lines in rpmbuild output")
     return paths
-

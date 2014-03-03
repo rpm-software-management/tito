@@ -17,12 +17,11 @@ Tito's Command Line Interface
 import sys
 import os
 import random
-import commands
-import ConfigParser
 
 from optparse import OptionParser
 
 from tito.common import *
+from tito.compat import *
 from tito.exception import *
 
 # Hack for Python 2.4, seems to require we import these so they get compiled
@@ -170,7 +169,7 @@ class BaseCliModule(object):
                 debug("Added lib dir to PYTHONPATH: %s" % lib_dir)
             else:
                 print("WARNING: lib_dir specified but does not exist: %s" %
-                        lib_dir)
+                    lib_dir)
 
     def _read_config(self):
         """
@@ -195,13 +194,13 @@ class BaseCliModule(object):
         # Load the global config. Later, when we know what tag/package we're
         # building, we may also load that and potentially override some global
         # settings.
-        config = ConfigParser.ConfigParser()
+        config = ConfigParser()
         config.read(filename)
 
         # Verify the config contains what we need from it:
         required_global_config = [
-                (GLOBALCONFIG_SECTION, DEFAULT_BUILDER),
-                (GLOBALCONFIG_SECTION, DEFAULT_TAGGER),
+            (GLOBALCONFIG_SECTION, DEFAULT_BUILDER),
+            (GLOBALCONFIG_SECTION, DEFAULT_TAGGER),
         ]
         for section, option in required_global_config:
             if not config.has_section(section) or not \
@@ -262,13 +261,13 @@ class BaseCliModule(object):
             cmd = "git show %s:%s%s" % (tag, relative_dir,
                     BUILD_PROPS_FILENAME)
             debug(cmd)
-            (status, output) = commands.getstatusoutput(cmd)
+            (status, output) = getstatusoutput(cmd)
             if status > 0:
                 # Give it another try looking for legacy props filename:
                 cmd = "git show %s:%s%s" % (tag, relative_dir,
                         "build.py.props")
                 debug(cmd)
-                (status, output) = commands.getstatusoutput(cmd)
+                (status, output) = getstatusoutput(cmd)
 
             temp_filename = "%s-%s" % (random.randint(1, 10000),
                     BUILD_PROPS_FILENAME)
@@ -285,9 +284,9 @@ class BaseCliModule(object):
                 # tagged before they existed, check for a Makefile with
                 # NO_TAR_GZ defined and make some assumptions based on that.
                 cmd = "git show %s:%s%s | grep NO_TAR_GZ" % \
-                        (tag, relative_dir, "Makefile")
+                    (tag, relative_dir, "Makefile")
                 debug(cmd)
-                (status, output) = commands.getstatusoutput(cmd)
+                (status, output) = getstatusoutput(cmd)
                 if status == 0 and output != "":
                     properties_file = temp_props_file
                     debug("Found Makefile with NO_TAR_GZ")
@@ -297,7 +296,7 @@ class BaseCliModule(object):
                     wrote_temp_file = True
 
         # TODO: can we parse config from a string and stop writing temp files?
-        if properties_file != None:
+        if properties_file is not None:
             debug("Using package specific properties: %s" % properties_file)
             self.config.read(properties_file)
         else:
@@ -307,7 +306,6 @@ class BaseCliModule(object):
         if wrote_temp_file and not no_cleanup:
             # Delete the temp properties file we created.
             run_command("rm %s" % properties_file)
-
 
     def _validate_options(self):
         """
@@ -330,7 +328,7 @@ class BuildModule(BaseCliModule):
                 help="Build rpm")
         self.parser.add_option("-i", "--install", dest="auto_install",
                 action="store_true", default=False,
-                help="Install any binary rpms being built. (WARNING: " + \
+                help="Install any binary rpms being built. (WARNING: " +
                     "uses sudo rpm -Uvh --force)")
         self.parser.add_option("--dist", dest="dist", metavar="DISTTAG",
                 help="Dist tag to apply to srpm and/or rpm. (i.e. .el5)")
@@ -389,12 +387,12 @@ class BuildModule(BaseCliModule):
 
         args = self._parse_builder_args()
         kwargs = {
-                'dist': self.options.dist,
-                'test': self.options.test,
-                'offline': self.options.offline,
-                'auto_install': self.options.auto_install,
-                'rpmbuild_options': self.options.rpmbuild_options,
-                'scl': self.options.scl,
+            'dist': self.options.dist,
+            'test': self.options.test,
+            'offline': self.options.offline,
+            'auto_install': self.options.auto_install,
+            'rpmbuild_options': self.options.rpmbuild_options,
+            'scl': self.options.scl,
         }
 
         builder = create_builder(package_name, build_tag,
@@ -508,7 +506,7 @@ class ReleaseModule(BaseCliModule):
         """
         rel_eng_dir = os.path.join(find_git_root(), "rel-eng")
         filename = os.path.join(rel_eng_dir, RELEASERS_CONF_FILENAME)
-        config = ConfigParser.ConfigParser()
+        config = ConfigParser()
         config.read(filename)
         return config
 
@@ -617,22 +615,22 @@ class ReleaseModule(BaseCliModule):
                     # TODO: support list values
                     builder_args[key] = val
             kwargs = {
-                    'builder_args': builder_args,
-                    'offline': self.options.offline
+                'builder_args': builder_args,
+                'offline': self.options.offline
             }
 
             releaser = releaser_class(
-                    name=package_name,
-                    tag=build_tag,
-                    build_dir=build_dir,
-                    config=self.config,
-                    user_config=self.user_config,
-                    target=target,
-                    releaser_config=releaser_config,
-                    no_cleanup=self.options.no_cleanup,
-                    test=self.options.test,
-                    auto_accept=self.options.auto_accept,
-                    **kwargs)
+                name=package_name,
+                tag=build_tag,
+                build_dir=build_dir,
+                config=self.config,
+                user_config=self.user_config,
+                target=target,
+                releaser_config=releaser_config,
+                no_cleanup=self.options.no_cleanup,
+                test=self.options.test,
+                auto_accept=self.options.auto_accept,
+                **kwargs)
 
             releaser.release(dry_run=self.options.dry_run,
                     no_build=self.options.no_build,
@@ -710,7 +708,8 @@ class TagModule(BaseCliModule):
 
         try:
             return tagger.run(self.options)
-        except TitoException, e:
+        except TitoException:
+            e = sys.exc_info()[1]
             error_out(e.message)
 
     def _validate_options(self):
@@ -736,7 +735,7 @@ class InitModule(BaseCliModule):
         propsfile = os.path.join(rel_eng_dir, GLOBAL_BUILD_PROPS_FILENAME)
         if not os.path.exists(propsfile):
             if not os.path.exists(rel_eng_dir):
-                commands.getoutput("mkdir -p %s" % rel_eng_dir)
+                getoutput("mkdir -p %s" % rel_eng_dir)
                 print("   - created %s" % rel_eng_dir)
 
             # write out tito.props
@@ -750,7 +749,7 @@ class InitModule(BaseCliModule):
             out_f.close()
             print("   - wrote %s" % GLOBAL_BUILD_PROPS_FILENAME)
 
-            commands.getoutput('git add %s' % propsfile)
+            getoutput('git add %s' % propsfile)
             should_commit = True
 
         # prep the packages metadata directory
@@ -759,7 +758,7 @@ class InitModule(BaseCliModule):
 
         if not os.path.exists(readme):
             if not os.path.exists(pkg_dir):
-                commands.getoutput("mkdir -p %s" % pkg_dir)
+                getoutput("mkdir -p %s" % pkg_dir)
                 print("   - created %s" % pkg_dir)
 
             # write out readme file explaining what pkg_dir is for
@@ -771,11 +770,11 @@ class InitModule(BaseCliModule):
             out_f.close()
             print("   - wrote %s" % readme)
 
-            commands.getoutput('git add %s' % readme)
+            getoutput('git add %s' % readme)
             should_commit = True
 
         if should_commit:
-            commands.getoutput('git commit -m "Initialized to use tito. "')
+            getoutput('git commit -m "Initialized to use tito. "')
             print("   - committed to git")
 
         print("Done!")

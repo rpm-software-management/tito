@@ -15,7 +15,6 @@
 Functional Tests for the FetchBuilder.
 """
 
-import ConfigParser
 import glob
 import os
 import shutil
@@ -24,7 +23,8 @@ import tempfile
 from os.path import join
 
 from tito.common import run_command
-from fixture import TitoGitTestFixture, tito
+from tito.compat import *
+from functional.fixture import TitoGitTestFixture, tito
 
 EXT_SRC_PKG = "extsrc"
 
@@ -35,6 +35,7 @@ builder = tito.builder.FetchBuilder
 rsync = %s
 """
 
+
 class FetchBuilderTests(TitoGitTestFixture):
 
     def setUp(self):
@@ -43,7 +44,7 @@ class FetchBuilderTests(TitoGitTestFixture):
         spec = join(os.path.dirname(__file__), "specs/extsrc.spec")
 
         # Setup test config:
-        self.config = ConfigParser.RawConfigParser()
+        self.config = RawConfigParser()
         self.config.add_section("buildconfig")
         self.config.set("buildconfig", "builder",
                 "tito.builder.FetchBuilder")
@@ -74,9 +75,9 @@ class FetchBuilderTests(TitoGitTestFixture):
         tito('build --rpm --output=%s --no-cleanup --debug --arg=source=%s ' %
                 (self.output_dir, self.source_filename))
         self.assertEquals(1, len(glob.glob(join(self.output_dir,
-            "extsrc-0.0.2-1.*.src.rpm"))))
+            "extsrc-0.0.2-1.*src.rpm"))))
         self.assertEquals(1, len(glob.glob(join(self.output_dir,
-            "noarch/extsrc-0.0.2-1.*.noarch.rpm"))))
+            "noarch/extsrc-0.0.2-1.*noarch.rpm"))))
 
     def test_tag_rejected(self):
         self.assertRaises(SystemExit, tito,
@@ -94,7 +95,6 @@ class FetchBuilderTests(TitoGitTestFixture):
                 self.source_filename)
 
         self.assertEquals(1, len(glob.glob(join(yum_repo_dir,
-            "extsrc-0.0.2-1.*.noarch.rpm"))))
+            "extsrc-0.0.2-1.*noarch.rpm"))))
         self.assertEquals(1, len(glob.glob(join(yum_repo_dir,
             "repodata/repomd.xml"))))
-

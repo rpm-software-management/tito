@@ -17,7 +17,6 @@ Code for tagging Spacewalk/Satellite packages.
 import os
 import re
 import rpm
-import commands
 import StringIO
 import shutil
 import subprocess
@@ -34,8 +33,10 @@ from tito.common import (debug, error_out, run_command,
         get_script_path, get_spec_version_and_release, replace_version,
         tag_exists_locally, tag_exists_remotely, head_points_to_tag, undo_tag,
         increase_version, reset_release, increase_zstream)
+from tito.compat import *
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
+
 
 class VersionTagger(ConfigObject):
     """
@@ -55,7 +56,7 @@ class VersionTagger(ConfigObject):
         self.project_name = get_project_name(tag=None)
 
         self.relative_project_dir = self._get_relative_project_dir(
-                self.git_root)  # i.e. java/
+            self.git_root)  # i.e. java/
 
         self.spec_file = os.path.join(self.full_project_dir,
                 self.spec_file_name)
@@ -138,7 +139,7 @@ class VersionTagger(ConfigObject):
         print("Undoing tag: %s" % tag)
         if not tag_exists_locally(tag):
             raise TitoException(
-                    "Cannot undo tag that does not exist locally.")
+                "Cannot undo tag that does not exist locally.")
         if not self.offline and tag_exists_remotely(tag):
             raise TitoException("Cannot undo tag that has been pushed.")
 
@@ -218,7 +219,7 @@ class VersionTagger(ConfigObject):
                 old_version = get_latest_tagged_version(self.project_name)
 
                 # don't die if this is a new package with no history
-                if old_version != None:
+                if old_version is not None:
                     last_tag = "%s-%s" % (self.project_name, old_version)
                     output = self._generate_default_changelog(last_tag)
                 else:
@@ -226,7 +227,7 @@ class VersionTagger(ConfigObject):
 
                 fd, name = tempfile.mkstemp()
                 os.write(fd, "# Create your changelog entry below:\n")
-                if self.git_email is None or (('HIDE_EMAIL' in self.user_config) and \
+                if self.git_email is None or (('HIDE_EMAIL' in self.user_config) and
                         (self.user_config['HIDE_EMAIL'] not in ['0', ''])):
                     header = "* %s %s\n" % (self.today, self.git_user)
                 else:
@@ -349,7 +350,7 @@ class VersionTagger(ConfigObject):
         bump the version or release.
         """
         old_version = get_latest_tagged_version(self.project_name)
-        if old_version == None:
+        if old_version is None:
             old_version = "untagged"
         if not self.keep_version:
             version_regex = re.compile("^(version:\s*)(.+)$", re.IGNORECASE)
@@ -469,7 +470,7 @@ class VersionTagger(ConfigObject):
         print("   Push: git push && git push origin %s" % new_tag)
 
     def _check_tag_does_not_exist(self, new_tag):
-        status, output = commands.getstatusoutput(
+        status, output = getstatusoutput(
             'git tag -l %s|grep ""' % new_tag)
         if status == 0:
             raise Exception("Tag %s already exists!" % new_tag)
@@ -530,7 +531,7 @@ class VersionTagger(ConfigObject):
             suffix = self.config.get("globalconfig", "tag_suffix")
         return "%s-%s%s" % (self.project_name, new_version, suffix)
 
-    def _update_version_file (self, new_version):
+    def _update_version_file(self, new_version):
         """
         land this new_version in the designated file
         and stages that file for a git commit
@@ -549,14 +550,13 @@ class VersionTagger(ConfigObject):
         f = open(version_file, 'w')
         (new_ver, new_rel) = new_version.split('-')
         f.write(t.safe_substitute(
-            version = new_ver,
-            release = new_rel))
+            version=new_ver,
+            release=new_rel))
         f.close()
 
         run_command("git add %s" % version_file)
 
-
-    def _version_file_template (self):
+    def _version_file_template(self):
         """
         provide a configuration in tito.props to a file that is a
         python string.Template conforming blob, like
@@ -575,8 +575,7 @@ class VersionTagger(ConfigObject):
             return buf
         return None
 
-
-    def _version_file_path (self):
+    def _version_file_path(self):
         """
         provide a version file to write in tito.props, like
             [version]

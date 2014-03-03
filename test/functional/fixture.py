@@ -117,6 +117,13 @@ class TitoGitTestFixture(unittest.TestCase):
         print("Testing in: %s" % self.repo_dir)
         print
 
+        # GitPython calls os.login(), which throws OSError if there is no tty,
+        # but GitPython allows to avoid the call if env var USER exists.
+        try:
+            os.getlogin()
+        except OSError:
+            os.environ['USER'] = 'nobody'
+
         # Initialize the repo:
         self.repo = git.Repo.init(path=self.repo_dir, mkdir=True, bare=False)
 
@@ -149,9 +156,9 @@ class TitoGitTestFixture(unittest.TestCase):
         shutil.copyfile(spec, os.path.join(full_pkg_dir, os.path.basename(spec)))
 
         # Write the config object we were given out to the project repo:
-        with open(os.path.join(full_pkg_dir, 'tito.props'), 'w') \
-                as configfile:
-            config.write(configfile)
+        configfile = open(os.path.join(full_pkg_dir, 'tito.props'), 'w')
+        config.write(configfile)
+        configfile.close()
 
     def create_project(self, pkg_name, pkg_dir=''):
         """

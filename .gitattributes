@@ -1,0 +1,14 @@
+######################################################################
+# gitattributes(5) describes the format and usage of this file.
+#
+# https://www.kernel.org/pub/software/scm/git/docs/gitattributes.html
+# http://git-scm.com/book/ch7-2.html
+# http://urbanautomaton.com/blog/2011/07/28/git-grep-and-language-specific-diffs/
+# https://help.github.com/articles/dealing-with-line-endings
+######################################################################
+#
+# If you change a setting here,
+# you should also change .editorconfig
+#
+*.py diff=python text eol=lf whitespace="trailing-space,space-before-tab,tab-in-indent,blank-at-eof,tabwidth=4"
+*.yml text eol=lf whitespace="trailing-space,space-before-tab,tab-in-indent,blank-at-eof,tabwidth=2"

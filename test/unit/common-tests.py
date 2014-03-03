@@ -81,6 +81,7 @@ class CommonTests(unittest.TestCase):
         self.assertEquals("fe87e2b75ed1850718d99c797cc171b88bfad5ca",
                           extract_sha1(ls_remote_output))
 
+
 class VersionMathTest(unittest.TestCase):
     def test_increase_version_minor(self):
         line = "1.0.0"
@@ -190,7 +191,7 @@ class ExtractBugzillasTest(unittest.TestCase):
 
     def test_multi_line(self):
         commit_log = "- 123456: Did something interesting.\n- Another commit.\n" \
-                "- 456789: A third commit."
+            "- 456789: A third commit."
         results = extract_bzs(commit_log)
         self.assertEquals(2, len(results))
         self.assertEquals("Resolves: #123456 - Did something interesting.",

@@ -16,7 +16,7 @@ Code for submitting builds for release.
 
 import copy
 import os
-import commands
+import sys
 import tempfile
 import subprocess
 import rpm
@@ -25,6 +25,7 @@ from tempfile import mkdtemp
 import shutil
 
 from tito.common import *
+from tito.compat import *
 from tito.buildparser import BuildTargetParser
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
@@ -67,17 +68,17 @@ class Releaser(ConfigObject):
         ConfigObject.__init__(self, config=config)
         config_builder_args = self._parse_builder_args(releaser_config, target)
         if test:
-            config_builder_args['test'] = True # builder must know to build from HEAD
+            config_builder_args['test'] = True  # builder must know to build from HEAD
 
         # Override with builder args from command line if any were given:
         self.builder_args = dict(config_builder_args.items() +
-                kwargs['builder_args'].items())
+            kwargs['builder_args'].items())
 
         # While we create a builder here, we don't actually call run on it
         # unless the releaser needs to:
         self.offline = False
         if 'offline' in kwargs:
-            self.offline=kwargs['offline']
+            self.offline = kwargs['offline']
         self.builder = create_builder(name, tag,
                 config,
                 build_dir, user_config, self.builder_args, offline=self.offline)
@@ -102,8 +103,8 @@ class Releaser(ConfigObject):
         self.target = target
 
         self.dry_run = False
-        self.test = test # releaser must know to use builder designation rather than tag
-        self.auto_accept = auto_accept # don't ask for input, just go ahead
+        self.test = test  # releaser must know to use builder designation rather than tag
+        self.auto_accept = auto_accept  # don't ask for input, just go ahead
         self.no_cleanup = no_cleanup
 
         self._check_releaser_config()
@@ -122,13 +123,13 @@ class Releaser(ConfigObject):
         for opt in self.GLOBAL_REQUIRED_CONFIG:
             if not self.releaser_config.has_option(self.target, opt):
                 raise TitoException(
-                        "Release target '%s' missing required option '%s'" %
-                        (self.target, opt))
+                    "Release target '%s' missing required option '%s'" %
+                    (self.target, opt))
         for opt in self.REQUIRED_CONFIG:
             if not self.releaser_config.has_option(self.target, opt):
                 raise TitoException(
-                        "Release target '%s' missing required option '%s'" %
-                        (self.target, opt))
+                    "Release target '%s' missing required option '%s'" %
+                    (self.target, opt))
 
         # TODO: accomodate 'builder.*' for yum releaser and we can use this:
         #for opt in self.releaser_config.options(self.target):
@@ -454,7 +455,7 @@ class YumRepoReleaser(RsyncReleaser):
             if artifact.endswith(".rpm") and not artifact.endswith(".src.rpm"):
                 try:
                     header = self._read_rpm_header(rpm_ts, artifact)
-                except rpm.error, e:
+                except rpm.error:
                     continue
                 self.new_rpm_dep_sets[header['name']] = header.dsOfHeader()
 
@@ -467,8 +468,9 @@ class YumRepoReleaser(RsyncReleaser):
             full_path = os.path.join(temp_dir, filename)
             try:
                 hdr = self._read_rpm_header(rpm_ts, full_path)
-            except rpm.error, e:
-                print "error reading rpm header in '%s': %s" % (full_path, e)
+            except rpm.error:
+                e = sys.exc_info()[1]
+                print("error reading rpm header in '%s': %s" % (full_path, e))
                 continue
             if hdr['name'] in self.new_rpm_dep_sets:
                 dep_set = hdr.dsOfHeader()
@@ -520,7 +522,7 @@ class FedoraGitReleaser(Releaser):
 
     def _git_release(self):
 
-        commands.getoutput("mkdir -p %s" % self.working_dir)
+        getoutput("mkdir -p %s" % self.working_dir)
         os.chdir(self.working_dir)
         run_command("%s clone %s" % (self.cli_tool, self.project_name))
 
@@ -557,7 +559,7 @@ class FedoraGitReleaser(Releaser):
         os.lseek(fd, 0, 0)
         file = os.fdopen(fd)
         for line in file.readlines():
-            print line
+            print(line)
         file.close()
 
         print("")
@@ -586,10 +588,10 @@ class FedoraGitReleaser(Releaser):
         os.chdir(project_checkout)
 
         # Newer versions of git don't seem to want --cached here? Try both:
-        (status, diff_output) = commands.getstatusoutput("git diff --cached")
+        (status, diff_output) = getstatusoutput("git diff --cached")
         if diff_output.strip() == "":
             debug("git diff --cached returned nothing, falling back to git diff.")
-            (status, diff_output) = commands.getstatusoutput("git diff")
+            (status, diff_output) = getstatusoutput("git diff")
 
         if diff_output.strip() == "":
             print("No changes in main branch, skipping commit for: %s" % main_branch)
@@ -678,7 +680,7 @@ class FedoraGitReleaser(Releaser):
             return
 
         print("Submitting build: %s" % build_cmd)
-        (status, output) = commands.getstatusoutput(build_cmd)
+        (status, output) = getstatusoutput(build_cmd)
         if status > 0:
             if "already been built" in output:
                 print("Build has been submitted previously, continuing...")
@@ -690,7 +692,7 @@ class FedoraGitReleaser(Releaser):
 
         # Print the task ID and URL:
         for line in extract_task_info(output):
-            print line
+            print(line)
 
     def _git_upload_sources(self, project_checkout):
         """
@@ -795,7 +797,7 @@ class CvsReleaser(Releaser):
         self._verify_cvs_module_not_already_checked_out()
 
         print("Building release in CVS...")
-        commands.getoutput("mkdir -p %s" % self.working_dir)
+        getoutput("mkdir -p %s" % self.working_dir)
         debug("cvs_branches = %s" % self.cvs_branches)
 
         self.cvs_checkout_module()
@@ -871,7 +873,7 @@ class CvsReleaser(Releaser):
 
             # For entirely new files we need to cvs add:
             for add_file in new:
-                commands.getstatusoutput("cvs add %s" % add_file)
+                getstatusoutput("cvs add %s" % add_file)
 
             # Cleanup obsolete files:
             for cleanup_file in old:
@@ -911,7 +913,7 @@ class CvsReleaser(Releaser):
         print("")
 
         os.chdir(self.package_workdir)
-        (status, diff_output) = commands.getstatusoutput("cvs diff -u")
+        (status, diff_output) = getstatusoutput("cvs diff -u")
         print(diff_output)
 
         print("")
@@ -940,7 +942,7 @@ class CvsReleaser(Releaser):
         os.lseek(fd, 0, 0)
         file = os.fdopen(fd)
         for line in file.readlines():
-            print line
+            print(line)
         file.close()
 
         print("")
@@ -976,7 +978,7 @@ class CvsReleaser(Releaser):
             branch_dir = os.path.join(self.working_dir, self.project_name,
                     branch)
             os.chdir(branch_dir)
-            (status, output) = commands.getstatusoutput(cmd)
+            (status, output) = getstatusoutput(cmd)
             print(output)
             if status > 1:
                 self.cleanup()
