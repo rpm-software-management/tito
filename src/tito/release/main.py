@@ -1145,8 +1145,3 @@ class KojiGitReleaser(KojiReleaser):
 
         output = run_command(cmd)
         print(output)
-
-# create alias tito.release.ObsReleaser
-# pylint: disable=W0611
-from tito.obs import ObsReleaser
-from tito.copr import CoprReleaser
