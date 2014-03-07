@@ -128,19 +128,6 @@ class MultiProjectTests(TitoGitTestFixture):
         new_ver = get_latest_tagged_version(TEST_PKG_2)
         self.assertTrue(release_bumped(start_ver, new_ver))
 
-    def test_release_tagger_legacy_props_file(self):
-        # Test that build.py.props filename is still picked up:
-        os.chdir(os.path.join(self.repo_dir, 'pkg2'))
-        start_ver = get_latest_tagged_version(TEST_PKG_2)
-        run_command("git mv tito.props build.py.props")
-        index = self.repo.index
-        index.add(['pkg2/build.py.props'])
-        index.commit("Rename to build.py.props.")
-
-        tito('tag --debug --accept-auto-changelog')
-        new_ver = get_latest_tagged_version(TEST_PKG_2)
-        self.assertTrue(release_bumped(start_ver, new_ver))
-
     def test_build_tgz(self):
         os.chdir(os.path.join(self.repo_dir, 'pkg1'))
         artifacts = tito('build --tgz')

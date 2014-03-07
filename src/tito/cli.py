@@ -68,13 +68,8 @@ class ConfigLoader(object):
         rel_eng_dir = os.path.join(find_git_root(), "rel-eng")
         filename = os.path.join(rel_eng_dir, TITO_PROPS)
         if not os.path.exists(filename):
-            # HACK: Try the old filename location, pre-tito rename:
-            oldfilename = os.path.join(rel_eng_dir, "global.build.py.props")
-            if os.path.exists(oldfilename):
-                filename = oldfilename
-            else:
-                error_out("Unable to locate branch configuration: %s"
-                    "\nPlease run 'tito init'" % filename)
+            error_out("Unable to locate branch configuration: %s"
+                "\nPlease run 'tito init'" % filename)
 
         # Load the global config. Later, when we know what tag/package we're
         # building, we may also load that and potentially override some global
@@ -120,21 +115,11 @@ class ConfigLoader(object):
 
     def _read_project_config(self):
         """
-        Read and return project build properties if they exist.
+        Read project specific tito config if it exists.
 
-        How to describe this process... we're looking for a tito.props or
-        build.py.props (legacy name) file in the project directory.
-
-        If we're operating on a specific tag, we're looking for these same
-        file's contents back at the time the tag was created. (which we write
-        out to a temp file and use instead of the current file contents)
-
-        If we can find project specific config, we return the path to that
-        config file, and a boolean indicating if that file needs to be cleaned
-        up after reading.
-
-        If no project specific config can be found, settings come from the
-        global tito.props in rel-eng/, and we return None as the filepath.
+        If no tag is specified we use tito.props from the current HEAD.
+        If a tag is specified, we try to load a tito.props from that
+        tag.
         """
         debug("Determined package name to be: %s" % self.package_name)
 
@@ -146,16 +131,8 @@ class ConfigLoader(object):
         current_props_file = os.path.join(os.getcwd(), TITO_PROPS)
         if (os.path.exists(current_props_file)):
             properties_file = current_props_file
-        else:
-            # HACK: Check for legacy build.py.props naming, needed to support
-            # older tags:
-            current_props_file = os.path.join(os.getcwd(),
-                    "build.py.props")
-            if (os.path.exists(current_props_file)):
-                sys.stderr.write("Warning: build.py.props file is obsolete. Please rename it to 'tito.props'.\n")
-                properties_file = current_props_file
 
-        # Check for a build.py.props back when this tag was created and use it
+        # Check for a tito.props back when this tag was created and use it
         # instead. (if it exists)
         if self.tag:
             relative_dir = get_relative_project_dir(self.package_name, self.tag)
@@ -165,12 +142,6 @@ class ConfigLoader(object):
                     TITO_PROPS)
             debug(cmd)
             (status, output) = getstatusoutput(cmd)
-            if status > 0:
-                # Give it another try looking for legacy props filename:
-                cmd = "git show %s:%s%s" % (self.tag, relative_dir,
-                        "build.py.props")
-                debug(cmd)
-                (status, output) = getstatusoutput(cmd)
 
             temp_filename = "%s-%s" % (random.randint(1, 10000),
                     TITO_PROPS)

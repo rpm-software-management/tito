@@ -55,7 +55,6 @@ rm -f $RPM_BUILD_ROOT%{python_sitelib}/*egg-info/requires.txt
 %{__gzip} -c tito.8 > %{buildroot}/%{_mandir}/man8/tito.8.gz
 %{__gzip} -c tito.props.5 > %{buildroot}/%{_mandir}/man5/tito.props.5.gz
 %{__gzip} -c releasers.conf.5 > %{buildroot}/%{_mandir}/man5/releasers.conf.5.gz
-%{__gzip} -c build.py.props.5 > %{buildroot}/%{_mandir}/man5/build.py.props.5.gz
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -68,7 +67,6 @@ rm -rf $RPM_BUILD_ROOT
 %doc %{_mandir}/man5/titorc.5.gz
 %doc %{_mandir}/man5/tito.props.5.gz
 %doc %{_mandir}/man5/releasers.conf.5.gz
-%doc %{_mandir}/man5/build.py.props.5.gz
 %doc %{_mandir}/man8/tito.8.gz
 %{_bindir}/tito
 %{_bindir}/tar-fixup-stamp-comment.pl
