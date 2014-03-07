@@ -28,14 +28,191 @@ from tito.exception import *
 # before we try to dynamically import them based on a string name.
 import tito.tagger
 
-BUILD_PROPS_FILENAME = "tito.props"
-GLOBAL_BUILD_PROPS_FILENAME = "tito.props"
+TITO_PROPS = "tito.props"
 RELEASERS_CONF_FILENAME = "releasers.conf"
 ASSUMED_NO_TAR_GZ_PROPS = """
 [buildconfig]
 builder = tito.builder.NoTgzBuilder
 tagger = tito.tagger.ReleaseTagger
 """
+
+
+class ConfigLoader(object):
+    """
+    Responsible for the sometimes complicated process of loading the repo's
+    tito.props, and overriding it with package specific tito.props, sometimes
+    from a past tag to ensure build consistency.
+    """
+
+    def __init__(self, package_name, output_dir, tag, no_cleanup):
+        self.package_name = package_name
+        self.output_dir = output_dir
+        self.tag = tag
+        self.no_cleanup = no_cleanup
+
+    def load(self):
+        self.config = self._read_config()
+        self._read_project_config()
+        self._check_required_config(self.config)
+        return self.config
+
+    def _read_config(self):
+        """
+        Read global build.py configuration from the rel-eng dir of the git
+        repository we're being run from.
+
+        NOTE: We always load the latest config file, not tito.props as it
+        was for the tag being operated on.
+        """
+        # List of filepaths to config files we'll be loading:
+        rel_eng_dir = os.path.join(find_git_root(), "rel-eng")
+        filename = os.path.join(rel_eng_dir, TITO_PROPS)
+        if not os.path.exists(filename):
+            # HACK: Try the old filename location, pre-tito rename:
+            oldfilename = os.path.join(rel_eng_dir, "global.build.py.props")
+            if os.path.exists(oldfilename):
+                filename = oldfilename
+            else:
+                error_out("Unable to locate branch configuration: %s"
+                    "\nPlease run 'tito init'" % filename)
+
+        # Load the global config. Later, when we know what tag/package we're
+        # building, we may also load that and potentially override some global
+        # settings.
+        config = ConfigParser()
+        config.read(filename)
+
+        self._check_legacy_globalconfig(config)
+        return config
+
+    def _check_legacy_globalconfig(self, config):
+        # globalconfig renamed to buildconfig for better overriding in per-package
+        # tito.props. If we see globalconfig, automatically rename it after
+        # loading and warn the user.
+        if config.has_section('globalconfig'):
+            config.add_section('buildconfig')
+            print("WARNING: Please rename [globalconfig] to [buildconfig] in "
+                "tito.props")
+            for k, v in config.items('globalconfig'):
+                if k == 'default_builder':
+                    print("WARNING: please rename 'default_builder' to "
+                        "'builder' in tito.props")
+                    config.set('buildconfig', 'builder', v)
+                elif k == 'default_tagger':
+                    print("WARNING: please rename 'default_tagger' to "
+                        "'builder' in tito.props")
+                    config.set('buildconfig', 'tagger', v)
+                else:
+                    config.set('buildconfig', k, v)
+            config.remove_section('globalconfig')
+
+    def _check_required_config(self, config):
+        # Verify the config contains what we need from it:
+        required_global_config = [
+            (BUILDCONFIG_SECTION, DEFAULT_BUILDER),
+            (BUILDCONFIG_SECTION, DEFAULT_TAGGER),
+        ]
+        for section, option in required_global_config:
+            if not config.has_section(section) or not \
+                config.has_option(section, option):
+                    error_out("tito.props missing required config: %s %s" % (
+                        section, option))
+
+    def _read_project_config(self):
+        """
+        Read and return project build properties if they exist.
+
+        How to describe this process... we're looking for a tito.props or
+        build.py.props (legacy name) file in the project directory.
+
+        If we're operating on a specific tag, we're looking for these same
+        file's contents back at the time the tag was created. (which we write
+        out to a temp file and use instead of the current file contents)
+
+        To accomodate older tags prior to build.py, we also check for
+        the presence of a Makefile with NO_TAR_GZ, and include a hack to
+        assume build properties in this scenario.
+
+        If we can find project specific config, we return the path to that
+        config file, and a boolean indicating if that file needs to be cleaned
+        up after reading.
+
+        If no project specific config can be found, settings come from the
+        global tito.props in rel-eng/, and we return None as the filepath.
+        """
+        debug("Determined package name to be: %s" % self.package_name)
+
+        properties_file = None
+        wrote_temp_file = False
+
+        # Use the properties file in the current project directory, if it
+        # exists:
+        current_props_file = os.path.join(os.getcwd(), TITO_PROPS)
+        if (os.path.exists(current_props_file)):
+            properties_file = current_props_file
+        else:
+            # HACK: Check for legacy build.py.props naming, needed to support
+            # older tags:
+            current_props_file = os.path.join(os.getcwd(),
+                    "build.py.props")
+            if (os.path.exists(current_props_file)):
+                sys.stderr.write("Warning: build.py.props file is obsolete. Please rename it to 'tito.props'.\n")
+                properties_file = current_props_file
+
+        # Check for a build.py.props back when this tag was created and use it
+        # instead. (if it exists)
+        if self.tag:
+            relative_dir = get_relative_project_dir(self.package_name, self.tag)
+            debug("Relative project dir: %s" % relative_dir)
+
+            cmd = "git show %s:%s%s" % (self.tag, relative_dir,
+                    TITO_PROPS)
+            debug(cmd)
+            (status, output) = getstatusoutput(cmd)
+            if status > 0:
+                # Give it another try looking for legacy props filename:
+                cmd = "git show %s:%s%s" % (self.tag, relative_dir,
+                        "build.py.props")
+                debug(cmd)
+                (status, output) = getstatusoutput(cmd)
+
+            temp_filename = "%s-%s" % (random.randint(1, 10000),
+                    TITO_PROPS)
+            temp_props_file = os.path.join(self.output_dir, temp_filename)
+
+            if status == 0:
+                properties_file = temp_props_file
+                f = open(properties_file, 'w')
+                f.write(output)
+                f.close()
+                wrote_temp_file = True
+            else:
+                # HACK: No build.py.props found, but to accomodate packages
+                # tagged before they existed, check for a Makefile with
+                # NO_TAR_GZ defined and make some assumptions based on that.
+                cmd = "git show %s:%s%s | grep NO_TAR_GZ" % \
+                    (self.tag, relative_dir, "Makefile")
+                debug(cmd)
+                (status, output) = getstatusoutput(cmd)
+                if status == 0 and output != "":
+                    properties_file = temp_props_file
+                    debug("Found Makefile with NO_TAR_GZ")
+                    f = open(properties_file, 'w')
+                    f.write(ASSUMED_NO_TAR_GZ_PROPS)
+                    f.close()
+                    wrote_temp_file = True
+
+        # TODO: can we parse config from a string and stop writing temp files?
+        if properties_file is not None:
+            debug("Using package specific properties: %s" % properties_file)
+            self.config.read(properties_file)
+        else:
+            debug("Unable to locate custom build properties for this package.")
+
+        # TODO: Not thrilled with this:
+        if wrote_temp_file and not self.no_cleanup:
+            # Delete the temp properties file we created.
+            run_command("rm %s" % properties_file)
 
 
 def read_user_config():
@@ -146,8 +323,11 @@ class BaseCliModule(object):
             print(self.parser.error("Must supply an argument. "
                 "Try -h for help."))
 
-        self.config = self._read_config()
-        if self.config.has_option(GLOBALCONFIG_SECTION,
+    def load_config(self, package_name, build_dir, tag, no_cleanup):
+        self.config = ConfigLoader(package_name, build_dir, tag,
+            no_cleanup).load()
+
+        if self.config.has_option(BUILDCONFIG_SECTION,
                 "offline"):
             self.options.offline = True
 
@@ -155,10 +335,12 @@ class BaseCliModule(object):
         if self.options.debug:
             os.environ['DEBUG'] = "true"
 
-        # Check if global config defines a custom lib dir:
-        if self.config.has_option(GLOBALCONFIG_SECTION,
+        # Check if config defines a custom lib dir, if so we add it
+        # to the python path allowing users to specify custom builders/taggers
+        # in their config:
+        if self.config.has_option(BUILDCONFIG_SECTION,
                 "lib_dir"):
-            lib_dir = self.config.get(GLOBALCONFIG_SECTION,
+            lib_dir = self.config.get(BUILDCONFIG_SECTION,
                     "lib_dir")
             if lib_dir[0] != '/':
                 # Looks like a relative path, assume from the git root:
@@ -170,142 +352,6 @@ class BaseCliModule(object):
             else:
                 print("WARNING: lib_dir specified but does not exist: %s" %
                     lib_dir)
-
-    def _read_config(self):
-        """
-        Read global build.py configuration from the rel-eng dir of the git
-        repository we're being run from.
-
-        NOTE: We always load the latest config file, not tito.props as it
-        was for the tag being operated on.
-        """
-        # List of filepaths to config files we'll be loading:
-        rel_eng_dir = os.path.join(find_git_root(), "rel-eng")
-        filename = os.path.join(rel_eng_dir, GLOBAL_BUILD_PROPS_FILENAME)
-        if not os.path.exists(filename):
-            # HACK: Try the old filename location, pre-tito rename:
-            oldfilename = os.path.join(rel_eng_dir, "global.build.py.props")
-            if os.path.exists(oldfilename):
-                filename = oldfilename
-            else:
-                error_out("Unable to locate branch configuration: %s"
-                    "\nPlease run 'tito init'" % filename)
-
-        # Load the global config. Later, when we know what tag/package we're
-        # building, we may also load that and potentially override some global
-        # settings.
-        config = ConfigParser()
-        config.read(filename)
-
-        # Verify the config contains what we need from it:
-        required_global_config = [
-            (GLOBALCONFIG_SECTION, DEFAULT_BUILDER),
-            (GLOBALCONFIG_SECTION, DEFAULT_TAGGER),
-        ]
-        for section, option in required_global_config:
-            if not config.has_section(section) or not \
-                config.has_option(section, option):
-                    error_out("%s missing required config: %s %s" % (
-                        filename, section, option))
-
-        return config
-
-    def _read_project_config(self, project_name, build_dir, tag, no_cleanup):
-        """
-        Read and return project build properties if they exist.
-
-        How to describe this process... we're looking for a tito.props or
-        build.py.props (legacy name) file in the project directory.
-
-        If we're operating on a specific tag, we're looking for these same
-        file's contents back at the time the tag was created. (which we write
-        out to a temp file and use instead of the current file contents)
-
-        To accomodate older tags prior to build.py, we also check for
-        the presence of a Makefile with NO_TAR_GZ, and include a hack to
-        assume build properties in this scenario.
-
-        If we can find project specific config, we return the path to that
-        config file, and a boolean indicating if that file needs to be cleaned
-        up after reading.
-
-        If no project specific config can be found, settings come from the
-        global tito.props in rel-eng/, and we return None as the filepath.
-        """
-        debug("Determined package name to be: %s" % project_name)
-        debug("build_dir = %s" % build_dir)
-
-        properties_file = None
-        wrote_temp_file = False
-
-        # Use the properties file in the current project directory, if it
-        # exists:
-        current_props_file = os.path.join(os.getcwd(), BUILD_PROPS_FILENAME)
-        if (os.path.exists(current_props_file)):
-            properties_file = current_props_file
-        else:
-            # HACK: Check for legacy build.py.props naming, needed to support
-            # older tags:
-            current_props_file = os.path.join(os.getcwd(),
-                    "build.py.props")
-            if (os.path.exists(current_props_file)):
-                sys.stderr.write("Warning: build.py.props file is obsolete. Please rename it to 'tito.props'.\n")
-                properties_file = current_props_file
-
-        # Check for a build.py.props back when this tag was created and use it
-        # instead. (if it exists)
-        if tag:
-            relative_dir = get_relative_project_dir(project_name, tag)
-            debug("Relative project dir: %s" % relative_dir)
-
-            cmd = "git show %s:%s%s" % (tag, relative_dir,
-                    BUILD_PROPS_FILENAME)
-            debug(cmd)
-            (status, output) = getstatusoutput(cmd)
-            if status > 0:
-                # Give it another try looking for legacy props filename:
-                cmd = "git show %s:%s%s" % (tag, relative_dir,
-                        "build.py.props")
-                debug(cmd)
-                (status, output) = getstatusoutput(cmd)
-
-            temp_filename = "%s-%s" % (random.randint(1, 10000),
-                    BUILD_PROPS_FILENAME)
-            temp_props_file = os.path.join(build_dir, temp_filename)
-
-            if status == 0:
-                properties_file = temp_props_file
-                f = open(properties_file, 'w')
-                f.write(output)
-                f.close()
-                wrote_temp_file = True
-            else:
-                # HACK: No build.py.props found, but to accomodate packages
-                # tagged before they existed, check for a Makefile with
-                # NO_TAR_GZ defined and make some assumptions based on that.
-                cmd = "git show %s:%s%s | grep NO_TAR_GZ" % \
-                    (tag, relative_dir, "Makefile")
-                debug(cmd)
-                (status, output) = getstatusoutput(cmd)
-                if status == 0 and output != "":
-                    properties_file = temp_props_file
-                    debug("Found Makefile with NO_TAR_GZ")
-                    f = open(properties_file, 'w')
-                    f.write(ASSUMED_NO_TAR_GZ_PROPS)
-                    f.close()
-                    wrote_temp_file = True
-
-        # TODO: can we parse config from a string and stop writing temp files?
-        if properties_file is not None:
-            debug("Using package specific properties: %s" % properties_file)
-            self.config.read(properties_file)
-        else:
-            debug("Unable to locate custom build properties for this package.")
-
-        # TODO: Not thrilled with this:
-        if wrote_temp_file and not no_cleanup:
-            # Delete the temp properties file we created.
-            run_command("rm %s" % properties_file)
 
     def _validate_options(self):
         """
@@ -381,9 +427,8 @@ class BuildModule(BaseCliModule):
 
         if self.options.release:
             error_out("'tito build --release' is now deprecated. Please see 'tito release'.")
-
-        self._read_project_config(package_name, build_dir,
-                self.options.tag, self.options.no_cleanup)
+        self.load_config(package_name, build_dir, self.options.tag,
+            self.options.no_cleanup)
 
         args = self._parse_builder_args()
         kwargs = {
@@ -585,18 +630,15 @@ class ReleaseModule(BaseCliModule):
                 (self.options.all is None):
             error_out("You must supply at least one release target.")
 
+        build_dir = os.path.normpath(os.path.abspath(self.options.output_dir))
+        package_name = get_project_name(tag=self.options.tag)
+
+        self.load_config(package_name, build_dir, self.options.tag,
+            self.options.no_cleanup)
         self._legacy_builder_hack(releaser_config)
 
         targets = self._calc_release_targets(releaser_config)
         print("Will release to the following targets: %s" % ", ".join(targets))
-
-        build_dir = os.path.normpath(os.path.abspath(self.options.output_dir))
-        package_name = get_project_name(tag=self.options.tag)
-
-        build_tag = self.options.tag
-
-        self._read_project_config(package_name, build_dir,
-                self.options.tag, self.options.no_cleanup)
 
         orig_cwd = os.getcwd()
 
@@ -621,7 +663,7 @@ class ReleaseModule(BaseCliModule):
 
             releaser = releaser_class(
                 name=package_name,
-                tag=build_tag,
+                tag=self.options.tag,
                 build_dir=build_dir,
                 config=self.config,
                 user_config=self.user_config,
@@ -679,16 +721,14 @@ class TagModule(BaseCliModule):
     def main(self, argv):
         BaseCliModule.main(self, argv)
 
-        if self.config.has_option(GLOBALCONFIG_SECTION,
-                "block_tagging"):
-            debug("block_tagging defined in tito.props")
-            error_out("Tagging has been disabled in this git branch.")
-
         build_dir = os.path.normpath(os.path.abspath(self.options.output_dir))
         package_name = get_project_name(tag=None)
 
-        self._read_project_config(package_name, build_dir,
-                None, None)
+        self.load_config(package_name, build_dir, None, None)
+        if self.config.has_option(BUILDCONFIG_SECTION,
+                "block_tagging"):
+            debug("block_tagging defined in tito.props")
+            error_out("Tagging has been disabled in this git branch.")
 
         tagger_class = None
         if self.options.use_version:
@@ -698,7 +738,7 @@ class TagModule(BaseCliModule):
                 "tagger"))
         else:
             tagger_class = get_class_by_name(self.config.get(
-                GLOBALCONFIG_SECTION, DEFAULT_TAGGER))
+                BUILDCONFIG_SECTION, DEFAULT_TAGGER))
         debug("Using tagger class: %s" % tagger_class)
 
         tagger = tagger_class(config=self.config,
@@ -732,7 +772,7 @@ class InitModule(BaseCliModule):
         rel_eng_dir = os.path.join(find_git_root(), "rel-eng")
         print("Creating tito metadata in: %s" % rel_eng_dir)
 
-        propsfile = os.path.join(rel_eng_dir, GLOBAL_BUILD_PROPS_FILENAME)
+        propsfile = os.path.join(rel_eng_dir, TITO_PROPS)
         if not os.path.exists(propsfile):
             if not os.path.exists(rel_eng_dir):
                 getoutput("mkdir -p %s" % rel_eng_dir)
@@ -747,7 +787,7 @@ class InitModule(BaseCliModule):
             out_f.write("changelog_do_not_remove_cherrypick = 0\n")
             out_f.write("changelog_format = %s (%ae)\n")
             out_f.close()
-            print("   - wrote %s" % GLOBAL_BUILD_PROPS_FILENAME)
+            print("   - wrote %s" % TITO_PROPS)
 
             getoutput('git add %s' % propsfile)
             should_commit = True

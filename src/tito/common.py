@@ -20,12 +20,11 @@ import sys
 import traceback
 
 from tito.compat import *
-from tito.exception import RunCommandException
 
 DEFAULT_BUILD_DIR = "/tmp/tito"
-DEFAULT_BUILDER = "default_builder"
-DEFAULT_TAGGER = "default_tagger"
-GLOBALCONFIG_SECTION = "globalconfig"
+DEFAULT_BUILDER = "builder"
+DEFAULT_TAGGER = "tagger"
+BUILDCONFIG_SECTION = "buildconfig"
 SHA_RE = re.compile(r'\b[0-9a-f]{30,}\b')
 
 # Define some shortcuts to fully qualified Builder classes to make things
@@ -133,7 +132,7 @@ def create_builder(package_name, build_tag,
         else:
             debug("---- Global config")
             builder_class = get_class_by_name(config.get(
-                GLOBALCONFIG_SECTION, DEFAULT_BUILDER))
+                BUILDCONFIG_SECTION, DEFAULT_BUILDER))
     else:
         # We were given an explicit builder class as a str, get the actual
         # class reference:
