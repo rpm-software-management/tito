@@ -615,6 +615,7 @@ class ForceVersionTagger(VersionTagger):
     """
     Tagger which forcibly updates the spec file to a version provided on the
     command line by the --use-version option.
+    TODO: could this be merged into main taggers?
     """
 
     def _tag_release(self):
