@@ -32,7 +32,8 @@ from tito.common import (debug, error_out, run_command,
         find_spec_file, get_project_name, get_latest_tagged_version,
         get_script_path, get_spec_version_and_release, replace_version,
         tag_exists_locally, tag_exists_remotely, head_points_to_tag, undo_tag,
-        increase_version, reset_release, increase_zstream)
+        increase_version, reset_release, increase_zstream,
+        BUILDCONFIG_SECTION)
 from tito.compat import *
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
@@ -154,11 +155,11 @@ class VersionTagger(ConfigObject):
     def _changelog_remove_cherrypick(self, line):
         """
         remove text "(cherry picked from commit ..." from line unless
-        changelog_do_not_remove_cherrypick is specified in [globalconfig]
+        changelog_do_not_remove_cherrypick is specified in [BUILDCONFIG_SECTION]
         """
-        if not (self.config.has_option("globalconfig", "changelog_do_not_remove_cherrypick")
-            and self.config.get("globalconfig", "changelog_do_not_remove_cherrypick")
-            and self.config.get("globalconfig", "changelog_do_not_remove_cherrypick").strip() != '0'):
+        if not (self.config.has_option("BUILDCONFIG_SECTION", "changelog_do_not_remove_cherrypick")
+            and self.config.get("BUILDCONFIG_SECTION", "changelog_do_not_remove_cherrypick")
+            and self.config.get("BUILDCONFIG_SECTION", "changelog_do_not_remove_cherrypick").strip() != '0'):
             m = re.match("(.+)(\(cherry picked from .*\))", line)
             if m:
                 line = m.group(1)
@@ -166,20 +167,20 @@ class VersionTagger(ConfigObject):
 
     def _changelog_format(self):
         """
-        If you have set changelog_format in [globalconfig], it will return
+        If you have set changelog_format in [BUILDCONFIG_SECTION], it will return
         that string.  Otherwise, return one of two defaults:
 
         - '%s (%ae)', if changelog_with_email is unset or evaluates to True
         - '%s', if changelog_with_email is set and evaluates to False
         """
         result = ''
-        if self.config.has_option("globalconfig", "changelog_format"):
-            result = self.config.get("globalconfig", "changelog_format")
+        if self.config.has_option("BUILDCONFIG_SECTION", "changelog_format"):
+            result = self.config.get("BUILDCONFIG_SECTION", "changelog_format")
         else:
             with_email = ''
-            if (self.config.has_option("globalconfig", "changelog_with_email")
-                and (self.config.get("globalconfig", "changelog_with_email")) not in ['0', '']) or \
-                not self.config.has_option("globalconfig", "changelog_with_email"):
+            if (self.config.has_option("BUILDCONFIG_SECTION", "changelog_with_email")
+                and (self.config.get("BUILDCONFIG_SECTION", "changelog_with_email")) not in ['0', '']) or \
+                not self.config.has_option("BUILDCONFIG_SECTION", "changelog_with_email"):
                 with_email = ' (%ae)'
             result = "%%s%s" % with_email
         return result
@@ -437,8 +438,8 @@ class VersionTagger(ConfigObject):
 
         suffix = ""
         # If global config specifies a tag suffix, use it:
-        if self.config.has_option("globalconfig", "tag_suffix"):
-            suffix = self.config.get("globalconfig", "tag_suffix")
+        if self.config.has_option("BUILDCONFIG_SECTION", "tag_suffix"):
+            suffix = self.config.get("BUILDCONFIG_SECTION", "tag_suffix")
 
         new_version_w_suffix = "%s%s" % (new_version, suffix)
         # Write out our package metadata:
@@ -527,8 +528,8 @@ class VersionTagger(ConfigObject):
         """ Returns the actual tag we'll be creating. """
         suffix = ""
         # If global config specifies a tag suffix, use it:
-        if self.config.has_option("globalconfig", "tag_suffix"):
-            suffix = self.config.get("globalconfig", "tag_suffix")
+        if self.config.has_option("BUILDCONFIG_SECTION", "tag_suffix"):
+            suffix = self.config.get("BUILDCONFIG_SECTION", "tag_suffix")
         return "%s-%s%s" % (self.project_name, new_version, suffix)
 
     def _update_version_file(self, new_version):

@@ -32,22 +32,22 @@ SECTIONS
 tito.props can contain several sections:
 
 
-GLOBALCONFIG
+BUILDCONFIG
 ------------
-This section is mandatory. At least in tito.props as you need to specify
-default builder and tagger for you project. You can use following variables:
+This section and a couple of it's properties are required.
+You can use following variables:
 
-default_builder::
+builder::
 The fully qualified Builder class implementation to use.
 You can either specify builders shipped with tito(5) (see BUILDERS section
 below), or a custom builder located within the directory your `lib_dir` option
-points to.
+points to. This property is required.
 
-default_tagger::
+tagger::
 The fully qualified Tagger class implementation to use.
 You can either specify builders shipped with tito(5) (see TAGGERS section
 below), or a custom builder located within the directory your `lib_dir` option
-points to.
+points to. This property is required.
 
 lib_dir::
 Optional property defining a directory to be added to the Python path when
@@ -116,16 +116,6 @@ REQUIREMENTS
 ------------
 tito::
 If tito is older then specified version, it will refuse to continue.
-
-BUILDCONFIG
------------
-builder::
-This option is used in package specific tito.props only, and allows that
-project to override the default_builder defined in rel-eng/tito.props.
-
-tagger::
-This option is used in package specific tito.props only, and allows that
-project to override the default_tagger defined in rel-eng/tito.props.
 
 
 TAGCONFIG
@@ -224,9 +214,9 @@ from spec file) is rubygem-simple-navigation.
 
 EXAMPLE
 -------
- [globalconfig]
- default_builder = tito.builder.Builder
- default_tagger = tito.tagger.VersionTagger
+ [buildconfig]
+ builder = tito.builder.Builder
+ tagger = tito.tagger.VersionTagger
 
  [koji]
  autobuild_tags = dist-5E-sw-1.2-candidate dist-f12-sw-1.2-candidate dist-f13-sw-1.2-candidate

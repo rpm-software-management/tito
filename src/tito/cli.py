@@ -340,9 +340,6 @@ class BuildModule(BaseCliModule):
                 help="build a specific tag instead of the latest version " +
                     "(i.e. spacewalk-java-0.4.0-1)")
 
-        self.parser.add_option("--release", dest="release",
-                action="store_true", help="DEPRECATED: please use 'tito release' instead.")
-
         self.parser.add_option("--builder", dest="builder",
                 help="Override the normal builder by specifying a full class "
                     "path or one of the pre-configured shortcuts.")
@@ -372,8 +369,6 @@ class BuildModule(BaseCliModule):
 
         build_tag = self.options.tag
 
-        if self.options.release:
-            error_out("'tito build --release' is now deprecated. Please see 'tito release'.")
         self.load_config(package_name, build_dir, self.options.tag)
 
         args = self._parse_builder_args()
@@ -709,10 +704,10 @@ class InitModule(BaseCliModule):
 
             # write out tito.props
             out_f = open(propsfile, 'w')
-            out_f.write("[globalconfig]\n")
-            out_f.write("default_builder = %s\n" % 'tito.builder.Builder')
+            out_f.write("[buildconfig]\n")
+            out_f.write("builder = %s\n" % 'tito.builder.Builder')
             out_f.write(
-                "default_tagger = %s\n" % 'tito.tagger.VersionTagger')
+                "tagger = %s\n" % 'tito.tagger.VersionTagger')
             out_f.write("changelog_do_not_remove_cherrypick = 0\n")
             out_f.write("changelog_format = %s (%ae)\n")
             out_f.close()

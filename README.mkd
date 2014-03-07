@@ -112,7 +112,7 @@ This will:
 By default if you omit --keep-version, tito will tag by bumping the rpm
 version. (i.e. we bump the Z in X.Y.Z. If you'd prefer to bump the package
 release instead (normally should just be used for changes to the spec file or
-patches applied within it), you can change the default_tagger class in
+patches applied within it), you can change the 'tagger' class in
 rel-eng/tito.props to ReleaseTagger. This will affect all packages in this git
 branch, if you'd prefer to do this on a per-package basis you can do so in a
 package specific tito.props. (see section below)
