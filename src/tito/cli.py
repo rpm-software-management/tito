@@ -37,6 +37,23 @@ tagger = tito.tagger.ReleaseTagger
 """
 
 
+class FauxConfigFile(object):
+    """ Allows us to read config from a string. """
+    def __init__(config_str):
+        # We'll re-add the newline when returned:
+        self.lines = config_str.split("\n")
+
+    def readline(self):
+        if len(self.lines) > 0:
+            # Pop a line off the front of the list:
+            line = self.lines[0]
+            self.lines = self.lines[1:]
+            return line + "\n"
+        else:
+            # Indicates end of file:
+            return ''
+
+
 class ConfigLoader(object):
     """
     Responsible for the sometimes complicated process of loading the repo's
@@ -44,11 +61,10 @@ class ConfigLoader(object):
     from a past tag to ensure build consistency.
     """
 
-    def __init__(self, package_name, output_dir, tag, no_cleanup):
+    def __init__(self, package_name, output_dir, tag):
         self.package_name = package_name
         self.output_dir = output_dir
         self.tag = tag
-        self.no_cleanup = no_cleanup
 
     def load(self):
         self.config = self._read_config()
@@ -85,7 +101,8 @@ class ConfigLoader(object):
         # tito.props. If we see globalconfig, automatically rename it after
         # loading and warn the user.
         if config.has_section('globalconfig'):
-            config.add_section('buildconfig')
+            if not config.has_section('buildconfig'):
+                config.add_section('buildconfig')
             print("WARNING: Please rename [globalconfig] to [buildconfig] in "
                 "tito.props")
             for k, v in config.items('globalconfig'):
@@ -123,14 +140,12 @@ class ConfigLoader(object):
         """
         debug("Determined package name to be: %s" % self.package_name)
 
-        properties_file = None
-        wrote_temp_file = False
-
         # Use the properties file in the current project directory, if it
         # exists:
         current_props_file = os.path.join(os.getcwd(), TITO_PROPS)
         if (os.path.exists(current_props_file)):
-            properties_file = current_props_file
+            self.config.read(current_props_file)
+            print("Loaded package specific tito.props overrides")
 
         # Check for a tito.props back when this tag was created and use it
         # instead. (if it exists)
@@ -143,28 +158,14 @@ class ConfigLoader(object):
             debug(cmd)
             (status, output) = getstatusoutput(cmd)
 
-            temp_filename = "%s-%s" % (random.randint(1, 10000),
-                    TITO_PROPS)
-            temp_props_file = os.path.join(self.output_dir, temp_filename)
-
             if status == 0:
-                properties_file = temp_props_file
-                f = open(properties_file, 'w')
-                f.write(output)
-                f.close()
-                wrote_temp_file = True
+                faux_config_file = FauxConfigFile(output)
+                config.read_fp(faux_config_file)
+                print("Loaded package specific tito.props overrides from %s" %
+                    self.tag)
+                return
 
-        # TODO: can we parse config from a string and stop writing temp files?
-        if properties_file is not None:
-            debug("Using package specific properties: %s" % properties_file)
-            self.config.read(properties_file)
-        else:
-            debug("Unable to locate custom build properties for this package.")
-
-        # TODO: Not thrilled with this:
-        if wrote_temp_file and not self.no_cleanup:
-            # Delete the temp properties file we created.
-            run_command("rm %s" % properties_file)
+        print("Unable to locate package specific config for this package.")
 
 
 def read_user_config():
@@ -275,9 +276,8 @@ class BaseCliModule(object):
             print(self.parser.error("Must supply an argument. "
                 "Try -h for help."))
 
-    def load_config(self, package_name, build_dir, tag, no_cleanup):
-        self.config = ConfigLoader(package_name, build_dir, tag,
-            no_cleanup).load()
+    def load_config(self, package_name, build_dir, tag):
+        self.config = ConfigLoader(package_name, build_dir, tag).load()
 
         if self.config.has_option(BUILDCONFIG_SECTION,
                 "offline"):
@@ -379,8 +379,7 @@ class BuildModule(BaseCliModule):
 
         if self.options.release:
             error_out("'tito build --release' is now deprecated. Please see 'tito release'.")
-        self.load_config(package_name, build_dir, self.options.tag,
-            self.options.no_cleanup)
+        self.load_config(package_name, build_dir, self.options.tag)
 
         args = self._parse_builder_args()
         kwargs = {
@@ -585,8 +584,7 @@ class ReleaseModule(BaseCliModule):
         build_dir = os.path.normpath(os.path.abspath(self.options.output_dir))
         package_name = get_project_name(tag=self.options.tag)
 
-        self.load_config(package_name, build_dir, self.options.tag,
-            self.options.no_cleanup)
+        self.load_config(package_name, build_dir, self.options.tag)
         self._legacy_builder_hack(releaser_config)
 
         targets = self._calc_release_targets(releaser_config)
@@ -676,7 +674,7 @@ class TagModule(BaseCliModule):
         build_dir = os.path.normpath(os.path.abspath(self.options.output_dir))
         package_name = get_project_name(tag=None)
 
-        self.load_config(package_name, build_dir, None, None)
+        self.load_config(package_name, build_dir, None)
         if self.config.has_option(BUILDCONFIG_SECTION,
                 "block_tagging"):
             debug("block_tagging defined in tito.props")
