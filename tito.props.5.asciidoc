@@ -92,20 +92,6 @@ This also override blacklist.
 scl::
 Specify name of Software Collection into which package should be build.
 
-CVS
----
-cvsroot::
-Root of your CVS repository. (i.e. cvsroot = :ext:myuser@cvs.fedoraproject.org:/cvs/extra)
-
-branches::
-CVS branches to sync sources to, and build from.
-If you use zStreamTagger for EUS builds, use the format
- branches = BASE/EUS-VARIANT
-for example:
- branches = RHEL-6/RHEL-6_1-Z
-This will run "make zstreams" in BASE directory and will then use EUS-VARIANT
-branch.
-
 VERSION_TEMPLATE
 ----------------
 Allows the user to write out a template file containing version and/or release and add it to git during the tagging process.
@@ -158,9 +144,6 @@ and build rpm using some supported method.
 tito.builder.NoTgzBuilder::
 Builder for packages that do not require the creation of tarball.
 Usually these package have source files checked directly into git.
-
-tito.builder.CvsBuilder::
-Builder for packages whose sources are managed in dist-cvs/Fedora-cvs.
 
 tito.builder.UpstreamBuilder::
 Builder for packages that are based off an upstream git tag.
@@ -258,10 +241,6 @@ EXAMPLE
  [dist-f13-sw-1.2-candidate]
  disttag = .fc13
  blacklist=jabberd-selinux
-
- [cvs]
- cvsroot = :gserver:your.dist-cvs.server.com:/cvs/dist
- branches = SATELLITE-5_4-RHEL-5
 
  [requirements]
  tito=0.3.0

@@ -170,8 +170,7 @@ class BuilderBase(object):
             self.rpmbuild_sourcedir, self.rpmbuild_builddir))
         self._check_build_dirs_access()
 
-    # TODO: reuse_cvs_checkout isn't needed here, should be cleaned up:
-    def srpm(self, dist=None, reuse_cvs_checkout=False):
+    def srpm(self, dist=None):
         """
         Build a source RPM.
         """
@@ -521,9 +520,6 @@ class NoTgzBuilder(Builder):
                 user_config=user_config,
                 args=args, **kwargs)
 
-        # When syncing files with CVS, copy everything from git:
-        self.cvs_copy_extensions = ("", )
-
     def tgz(self):
         """ Override parent behavior, we already have a tgz. """
         # TODO: Does it make sense to allow user to create a tgz for this type
@@ -628,109 +624,6 @@ class GemBuilder(NoTgzBuilder):
             self.rpmbuild_gitcopy, self.spec_file_name)
 
 
-class CvsBuilder(NoTgzBuilder):
-    """
-    CVS Builder
-
-    Builder for packages whose sources are managed in dist-cvs/Fedora CVS.
-    """
-
-    def __init__(self, name=None, tag=None, build_dir=None,
-            config=None, user_config=None,
-            args=None, **kwargs):
-
-        NoTgzBuilder.__init__(self, name=name, tag=tag,
-                build_dir=build_dir, config=config,
-                user_config=user_config,
-                args=args, **kwargs)
-
-        # TODO: Hack to override here, patches are in a weird place with this
-        # builder.
-        self.patch_dir = self.rpmbuild_gitcopy
-
-    def run(self, options):
-        """ Override parent to validate any new sources that. """
-        # Convert new sources to full paths right now, before we chdir:
-        if options.cvs_new_sources is not None:
-            for new_source in options.cvs_new_sources:
-                self.sources.append(
-                    os.path.abspath(os.path.expanduser(new_source)))
-        debug("CvsBuilder sources: %s" % self.sources)
-        NoTgzBuilder.run(self, options)
-
-    def srpm(self, dist=None, reuse_cvs_checkout=False):
-        """ Build an srpm from CVS. """
-        rpms = self._cvs_rpm_common(target="test-srpm", dist=dist,
-                reuse_cvs_checkout=reuse_cvs_checkout)
-        # Should only be one rpm returned for srpm:
-        self.srpm_location = rpms[0]
-
-    def rpm(self):
-        # Lookup the architecture of the system for the correct make target:
-        arch = run_command("uname -i")
-        self._cvs_rpm_common(target=arch, all_branches=True)
-
-    def _cvs_rpm_common(self, target, all_branches=False, dist=None,
-            reuse_cvs_checkout=False):
-        """ Code common to building both rpms and srpms with CVS tools. """
-        self._create_build_dirs()
-        if not self.ran_tgz:
-            self.tgz()
-
-        if not self._can_build_in_cvs():
-            error_out("Repo not properly configured to build in CVS. "
-                "(--debug for more info)")
-
-        if not reuse_cvs_checkout:
-            self._verify_cvs_module_not_already_checked_out()
-
-        getoutput("mkdir -p %s" % self.cvs_workdir)
-        cvs_releaser = CvsReleaser(self)
-        cvs_releaser.cvs_checkout_module()
-        cvs_releaser.cvs_verify_branches_exist()
-
-        if self.test:
-            self._setup_test_specfile()
-
-        # Copy latest spec so we build that version, even if it isn't the
-        # latest actually committed to CVS:
-        cvs_releaser.cvs_sync_files()
-
-        cvs_releaser.cvs_upload_sources()
-
-        # Use "make srpm" target to create our source RPM:
-        os.chdir(self.cvs_package_workdir)
-        print("Building with CVS make %s..." % target)
-
-        # Only running on the last branch, good enough?
-        branch = self.cvs_branches[-1]
-        branch_dir = os.path.join(self.cvs_workdir, self.project_name,
-                branch)
-        os.chdir(branch_dir)
-
-        disttag = ""
-        if self.dist is not None:
-            disttag = "DIST=%s" % self.dist
-        elif dist is not None:
-            disttag = "DIST=%s" % dist
-
-        output = run_command("make %s %s" % (disttag, target))
-        debug(output)
-        rpms = []
-        for line in output.split("\n"):
-            if line.startswith("Wrote: "):
-                srpm_path = line.strip().split(" ")[1]
-                filename = os.path.basename(srpm_path)
-                run_command("mv %s %s" % (srpm_path, self.rpmbuild_basedir))
-                final_rpm_path = os.path.join(self.rpmbuild_basedir, filename)
-                print("Wrote: %s" % final_rpm_path)
-                rpms.append(final_rpm_path)
-        if not self.test:
-            print("Please be sure to run --release to "
-                "commit/tag/build this package in CVS.")
-        return rpms
-
-
 class UpstreamBuilder(NoTgzBuilder):
     """
     Builder for packages that are based off an upstream git tag.
@@ -761,9 +654,6 @@ class UpstreamBuilder(NoTgzBuilder):
         # Need to assign these after we've exported a copy of the spec file:
         self.upstream_version = None
         self.upstream_tag = None
-
-        # When syncing files with CVS, only copy files with these extensions:
-        self.cvs_copy_extensions = (".spec", ".patch")
 
     def tgz(self):
         """
@@ -993,7 +883,7 @@ class MockBuilder(Builder):
 
         # TODO: error out if user does not have mock group
 
-    def srpm(self, dist=None, reuse_cvs_checkout=False):
+    def srpm(self, dist=None):
         """
         Build a source RPM.
 
@@ -1001,7 +891,7 @@ class MockBuilder(Builder):
         internally just so we can generate a SRPM correctly before we pass it
         into mock.
         """
-        self.normal_builder.srpm(dist, reuse_cvs_checkout)
+        self.normal_builder.srpm(dist)
         self.srpm_location = self.normal_builder.srpm_location
         self.artifacts.append(self.srpm_location)
 

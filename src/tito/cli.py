@@ -356,11 +356,6 @@ class BuildModule(BaseCliModule):
                 action="store_true",
                 help="List tags for which we build this package",
                 )
-        self.parser.add_option("--upload-new-source", dest="cvs_new_sources",
-                action="append",
-                help=("Upload a new source tarball to CVS lookaside. "
-                    "(i.e. runs 'make new-sources') Must be "
-                    "used until 'sources' file is committed to CVS."))
 
         self.parser.add_option("--rpmbuild-options", dest='rpmbuild_options',
                 default='',
@@ -508,25 +503,9 @@ class ReleaseModule(BaseCliModule):
 
     def _legacy_builder_hack(self, releaser_config):
         """
-        Support the old style CVS/koji builds when config is still in global
+        Support the old style koji builds when config is still in global
         tito.props, as opposed to the new releasers.conf.
-
-        If the releasers.conf has a
         """
-
-        # Handle cvs:
-        if self.config.has_section('cvs') and not \
-                releaser_config.has_section("cvs"):
-            print("WARNING: legacy 'cvs' section in tito.props, please "
-                    "consider creating a target in releasers.conf.")
-            print("Simulating 'cvs' release target for now.")
-            releaser_config.add_section('cvs')
-            releaser_config.set('cvs', 'releaser', 'tito.release.CvsReleaser')
-            for opt in ["cvsroot", "branches"]:
-                if self.config.has_option("cvs", opt):
-                    releaser_config.set('cvs', opt, self.config.get(
-                        "cvs", opt))
-
         # Handle koji:
         if self.config.has_section("koji") and not \
                 releaser_config.has_section("koji"):

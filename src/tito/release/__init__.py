@@ -4,7 +4,6 @@ from tito.release.main import \
     YumRepoReleaser, \
     FedoraGitReleaser, \
     DistGitReleaser, \
-    CvsReleaser, \
     KojiReleaser, \
     KojiGitReleaser
 

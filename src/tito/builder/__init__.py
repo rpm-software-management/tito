@@ -4,7 +4,6 @@ from tito.builder.main import \
     Builder, \
     NoTgzBuilder, \
     GemBuilder, \
-    CvsBuilder, \
     UpstreamBuilder, \
     SatelliteBuilder, \
     MockBuilder, \

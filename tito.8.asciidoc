@@ -155,11 +155,6 @@ or blacklisted.
 Build in koji only for specified tags. Can be specified multiple times.
 Can be specified using environment variable ONLY_TAGS as well.
 
---upload-new-source='CVS_NEW_SOURCES'::
-Upload a new source tarball to CVS lookaside. (i.e.
-runs 'make new-sources') Must be used until 'sources'
-file is committed to CVS.
-
 --rpmbuild-options='OPTIONS'::
 Pass 'OPTIONS' to rpmbuild.
 
