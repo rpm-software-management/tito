@@ -129,10 +129,6 @@ class ConfigLoader(object):
         file's contents back at the time the tag was created. (which we write
         out to a temp file and use instead of the current file contents)
 
-        To accomodate older tags prior to build.py, we also check for
-        the presence of a Makefile with NO_TAR_GZ, and include a hack to
-        assume build properties in this scenario.
-
         If we can find project specific config, we return the path to that
         config file, and a boolean indicating if that file needs to be cleaned
         up after reading.
@@ -186,21 +182,6 @@ class ConfigLoader(object):
                 f.write(output)
                 f.close()
                 wrote_temp_file = True
-            else:
-                # HACK: No build.py.props found, but to accomodate packages
-                # tagged before they existed, check for a Makefile with
-                # NO_TAR_GZ defined and make some assumptions based on that.
-                cmd = "git show %s:%s%s | grep NO_TAR_GZ" % \
-                    (self.tag, relative_dir, "Makefile")
-                debug(cmd)
-                (status, output) = getstatusoutput(cmd)
-                if status == 0 and output != "":
-                    properties_file = temp_props_file
-                    debug("Found Makefile with NO_TAR_GZ")
-                    f = open(properties_file, 'w')
-                    f.write(ASSUMED_NO_TAR_GZ_PROPS)
-                    f.close()
-                    wrote_temp_file = True
 
         # TODO: can we parse config from a string and stop writing temp files?
         if properties_file is not None:
