@@ -12,7 +12,6 @@
 # granted to use or replicate Red Hat trademarks that are incorporated
 # in this software or its documentation.
 
-import git
 import os
 import shutil
 import tempfile
@@ -117,23 +116,15 @@ class TitoGitTestFixture(unittest.TestCase):
         print("Testing in: %s" % self.repo_dir)
         print
 
-        # GitPython calls os.login(), which throws OSError if there is no tty,
-        # but GitPython allows to avoid the call if env var USER exists.
-        try:
-            os.getlogin()
-        except OSError:
-            os.environ['USER'] = 'nobody'
-
         # Initialize the repo:
-        self.repo = git.Repo.init(path=self.repo_dir, mkdir=True, bare=False)
+        os.chdir(self.repo_dir)
+        run_command('git init')
 
         # Next we tito init:
-        os.chdir(self.repo_dir)
         tito("init")
         run_command('echo "offline = true" >> rel-eng/tito.props')
-        index = self.repo.index
-        index.add(['rel-eng/tito.props'])
-        index.commit('Setting offline.')
+        run_command('git add rel-eng/tito.props')
+        run_command("git commit -m 'set offline in tito.props'")
 
     def tearDown(self):
         shutil.rmtree(self.repo_dir)
@@ -196,13 +187,12 @@ class TitoGitTestFixture(unittest.TestCase):
         out_f.write(TEST_PYTHON_SRC)
         out_f.close()
 
-        index = self.repo.index
         files = [os.path.join(pkg_dir, 'a.txt'),
                 os.path.join(pkg_dir, 'setup.py'),
                 os.path.join(pkg_dir, '%s.spec' % pkg_name),
                 os.path.join(pkg_dir, 'src/module.py')
         ]
-        index.add(files)
-        index.commit('Initial commit.')
+        run_command('git add %s' % ' '.join(files))
+        run_command("git commit -m 'initial commit'")
 
         tito('tag --keep-version --debug --accept-auto-changelog')

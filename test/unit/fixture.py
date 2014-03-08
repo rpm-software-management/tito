@@ -25,9 +25,7 @@ class TitoUnitTestFixture(unittest.TestCase):
     Fixture providing setup/teardown and utilities for unit tests.
     """
     def setUp(self):
-        # GitPython calls os.login(), which throws OSError if there is no tty,
-        # but GitPython allows to avoid the call if env var USER exists.
-        try:
-            os.getlogin()
-        except OSError:
-            os.environ['USER'] = 'nobody'
+        print
+        print
+        print("Testing in: %s" % REPO_DIR)
+        print
