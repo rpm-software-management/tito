@@ -19,13 +19,11 @@ ENCODING = sys.getdefaultencoding()
 PY2 = sys.version_info[0] == 2
 if PY2:
     import commands
-    from ConfigParser import ConfigParser
     from ConfigParser import NoOptionError
     from ConfigParser import RawConfigParser
     from StringIO import StringIO
 else:
     import subprocess
-    from configparser import ConfigParser
     from configparser import NoOptionError
     from configparser import RawConfigParser
     from io import StringIO

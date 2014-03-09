@@ -90,7 +90,7 @@ class ConfigLoader(object):
         # Load the global config. Later, when we know what tag/package we're
         # building, we may also load that and potentially override some global
         # settings.
-        config = ConfigParser()
+        config = RawConfigParser()
         config.read(filename)
 
         self._check_legacy_globalconfig(config)
@@ -492,7 +492,7 @@ class ReleaseModule(BaseCliModule):
         """
         rel_eng_dir = os.path.join(find_git_root(), "rel-eng")
         filename = os.path.join(rel_eng_dir, RELEASERS_CONF_FILENAME)
-        config = ConfigParser()
+        config = RawConfigParser()
         config.read(filename)
         return config
 
