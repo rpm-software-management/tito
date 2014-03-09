@@ -48,6 +48,18 @@ def getoutput(cmd):
     return getstatusoutput(cmd)[1]
 
 
+def dictionary_override(d1, d2):
+    """
+    Return a new dictionary object where
+    d2 elements override d1 elements.
+    """
+    if PY2:
+        overrides = d1.items() + d2.items()
+    else:
+        overrides = d1.items() | d2.items()
+    return dict(overrides)
+
+
 def write(fd, str):
     """
     A version of os.write that

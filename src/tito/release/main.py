@@ -71,8 +71,11 @@ class Releaser(ConfigObject):
 
         # Override with builder args from command line if any were given:
         if 'builder_args' in kwargs:
-            self.builder_args = dict(config_builder_args.items() +
-                kwargs['builder_args'].items())
+            # (in case of dupes, last one wins)
+            self.builder_args = dictionary_override(
+                config_builder_args,
+                kwargs['builder_args']
+            )
         else:
             self.builder_args = config_builder_args
 
