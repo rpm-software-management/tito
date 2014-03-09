@@ -487,11 +487,11 @@ class FedoraGitReleaser(Releaser):
 
         fd, name = tempfile.mkstemp()
         debug("Storing commit message in temp file: %s" % name)
-        os.write(fd, "Update %s to %s\n" % (self.project_name,
+        write(fd, "Update %s to %s\n" % (self.project_name,
             self.builder.build_version))
         # Write out Resolves line for all bugzillas we see in commit diff:
         for line in extract_bzs(diff_output):
-            os.write(fd, line + "\n")
+            write(fd, line + "\n")
 
         print("")
         print("##### Commit message: #####")
