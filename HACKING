@@ -26,8 +26,8 @@ Tests
 
 To run all tests, install these packages:
 
-* python-nose and python3-nose
-* python-pep8 and python3-pep8
+* python-nose,  python-pep8,  and rpm-python
+* python3-nose, python3-pep8, and rpm-python3
 * createrepo
 
 Then from the root of the project:

@@ -144,7 +144,7 @@ class BuilderBase(object):
         """
         if not self.no_cleanup:
             debug("Cleaning up [%s]" % self.rpmbuild_dir)
-            commands.getoutput("rm -rf %s" % self.rpmbuild_dir)
+            getoutput("rm -rf %s" % self.rpmbuild_dir)
         else:
             print("WARNING: Leaving rpmbuild files in: %s" % self.rpmbuild_dir)
 
@@ -165,7 +165,7 @@ class BuilderBase(object):
         """
         Create the build directories. Can safely be called multiple times.
         """
-        commands.getoutput("mkdir -p %s %s %s %s" % (
+        getoutput("mkdir -p %s %s %s %s" % (
             self.rpmbuild_basedir, self.rpmbuild_dir,
             self.rpmbuild_sourcedir, self.rpmbuild_builddir))
         self._check_build_dirs_access()

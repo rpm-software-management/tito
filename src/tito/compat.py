@@ -43,7 +43,4 @@ def getoutput(cmd):
     Returns output of executing cmd in a shell.
     Supports Python 2.4 and 3.x.
     """
-    if PY2:
-        return commands.getoutput(cmd)
-    else:
-        return subprocess.getoutput(cmd)
+    return getstatusoutput(cmd)[1]

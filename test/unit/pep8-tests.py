@@ -90,6 +90,11 @@ class UglyHackishTest(TitoUnitTestFixture):
         result = int(getoutput(cmd))
         self.assertEqual(result, 0, "Found commands module (not supported in Python 3)")
 
+    def test_use_commands(self):
+        cmd = "find . -type f -regex '.*\.py$' -exec egrep 'commands\.' {} + | grep -v 'compat\.py' | wc -l"
+        result = int(getoutput(cmd))
+        self.assertEqual(result, 0, "Found commands module (not supported in Python 3)")
+
     def test_print_function(self):
         cmd = "find . -type f -regex '.*\.py$' -exec grep '^[[:space:]]*print .*' {} + | wc -l"
         result = int(getoutput(cmd))

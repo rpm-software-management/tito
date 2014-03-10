@@ -68,20 +68,19 @@ class MultiProjectTests(TitoGitTestFixture):
         self.create_project(TEST_PKG_1, os.path.join(self.repo_dir, 'pkg1'))
         self.create_project(TEST_PKG_2, os.path.join(self.repo_dir, 'pkg2'))
         self.create_project(TEST_PKG_3, os.path.join(self.repo_dir, 'pkg3'))
-        os.chdir(self.repo_dir)
 
         # For second test package, use a tito.props to override and use the
         # ReleaseTagger:
-        os.chdir(os.path.join(self.repo_dir, 'pkg2'))
         filename = os.path.join(self.repo_dir, 'pkg2', "tito.props")
         out_f = open(filename, 'w')
         out_f.write("[buildconfig]\n")
         out_f.write("tagger = tito.tagger.ReleaseTagger\n")
         out_f.write("builder = tito.builder.Builder\n")
         out_f.close()
-        index = self.repo.index
-        index.add(['pkg2/tito.props'])
-        index.commit("Adding tito.props for pkg2.")
+
+        os.chdir(self.repo_dir)
+        run_command('git add pkg2/tito.props')
+        run_command("git commit -m 'add tito.props for pkg2'")
 
     def test_template_version_tagger(self):
         """
@@ -94,9 +93,10 @@ class MultiProjectTests(TitoGitTestFixture):
         run_command('mkdir -p %s' % join(self.repo_dir, 'rel-eng/templates'))
         self.write_file(join(self.repo_dir,
             'rel-eng/templates/version.rb'), VERSION_TEMPLATE_FILE)
-        index = self.repo.index
-        index.add(['pkg3/tito.props'])
-        index.commit("Adding tito.props for pkg3.")
+
+        os.chdir(self.repo_dir)
+        run_command('git add pkg3/tito.props')
+        run_command("git commit -m 'add tito.props for pkg3'")
 
         # Create another pkg3 tag and make sure we got a generated
         # template file.

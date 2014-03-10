@@ -49,14 +49,21 @@ class SingleProjectTests(TitoGitTestFixture):
         check_tag_exists("%s-9.0.0-1" % PKG_NAME, offline=True)
 
     def test_undo_tag(self):
-        commit = self.repo.heads.master.commit
+        os.chdir(self.repo_dir)
+        original_head = getoutput('git show-ref -s refs/heads/master')
+
+        # Create tito tag, which adds a new commit and moves head.
         tito("tag --accept-auto-changelog --debug")
         tag = "%s-0.0.2-1" % PKG_NAME
         check_tag_exists(tag, offline=True)
-        self.assertNotEqual(commit, self.repo.heads.master.commit)
+        new_head = getoutput('git show-ref -s refs/heads/master')
+        self.assertNotEqual(original_head, new_head)
+
+        # Undo tito tag, which rewinds one commit to original head.
         tito("tag -u")
         self.assertFalse(tag_exists_locally(tag))
-        self.assertEqual(commit, self.repo.heads.master.commit)
+        new_head = getoutput('git show-ref -s refs/heads/master')
+        self.assertEqual(original_head, new_head)
 
     def test_latest_tgz(self):
         tito("build --tgz -o %s" % self.repo_dir)
