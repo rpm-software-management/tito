@@ -849,7 +849,7 @@ class MockBuilder(Builder):
 
         # Mock builders need to use the packages normally configured builder
         # to get at a proper SRPM:
-        self.normal_builder = create_builder(name, tag, version, config,
+        self.normal_builder = create_builder(name, tag, config,
                 build_dir, user_config, args, **kwargs)
 
         Builder.__init__(self, name=name, tag=tag,
