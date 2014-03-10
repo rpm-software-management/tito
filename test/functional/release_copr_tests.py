@@ -12,31 +12,24 @@
 # granted to use or replicate Red Hat trademarks that are incorporated
 # in this software or its documentation.
 """
-Functional Tests for the YumReleaser.
+Functional Tests for the CoprReleaser.
 """
 
-import glob
-import os
-import shutil
-import tempfile
-
-from os.path import join
-
-from functional.fixture import TitoGitTestFixture, tito
+from functional.fixture import TitoGitTestFixture
 
 from tito.compat import *
+from tito.release import CoprReleaser
 
 PKG_NAME = "releaseme"
 
 RELEASER_CONF = """
-[yum-test]
-releaser = tito.release.YumRepoReleaser
+[test]
+releaser = tito.release.CoprReleaser
 builder = tito.builder.Builder
-rsync = %s
 """
 
 
-class YumReleaserTests(TitoGitTestFixture):
+class CoprReleaserTests(TitoGitTestFixture):
 
     def setUp(self):
         TitoGitTestFixture.setUp(self)
@@ -50,23 +43,21 @@ class YumReleaserTests(TitoGitTestFixture):
         self.config.set("buildconfig", "offline",
                 "true")
 
-        self.output_dir = tempfile.mkdtemp("-titotestoutput")
-
-    def tearDown(self):
-        TitoGitTestFixture.tearDown(self)
-        shutil.rmtree(self.output_dir)
-        pass
-
-    def _setup_fetchbuilder_releaser(self, yum_repo_dir):
-        self.write_file(join(self.repo_dir, 'rel-eng/releasers.conf'),
-                RELEASER_CONF % yum_repo_dir)
+        self.releaser_config = RawConfigParser()
+        self.releaser_config.add_section('test')
+        self.releaser_config.set('test', 'releaser',
+            'tito.release.CoprReleaser')
+        self.releaser_config.set('test', 'builder',
+            'tito.builder.Builder')
+        self.releaser_config.set('test', 'project_name', PKG_NAME)
+        self.releaser_config.set('test', 'upload_command',
+            'scp %(srpm)s example.com/public_html/my_srpm/')
+        self.releaser_config.set('test', 'remote_location',
+            'http://example.com/~someuser/my_srpm/')
 
     def test_with_releaser(self):
-        yum_repo_dir = os.path.join(self.output_dir, 'yum')
-        self._setup_fetchbuilder_releaser(yum_repo_dir)
-        tito('release --debug yum-test')
-
-        self.assertEquals(1, len(glob.glob(join(yum_repo_dir,
-            "releaseme-0.0.1-1.*noarch.rpm"))))
-        self.assertEquals(1, len(glob.glob(join(yum_repo_dir,
-            "repodata/repomd.xml"))))
+        releaser = CoprReleaser(PKG_NAME, None, '/tmp/tito/',
+            self.config, {}, 'test', self.releaser_config, False,
+            False, False, **{'offline': True})
+        releaser.release(dry_run=True)
+        self.assertTrue(releaser.srpm_submitted is not None)

@@ -1,3 +1,8 @@
+[globalconfig]
+default_builder = tito.builder.Builder
+default_tagger = tito.tagger.VersionTagger
+lib_dir = rel-eng/custom/
+
 [buildconfig]
 builder = tito.builder.Builder
 tagger = tito.tagger.VersionTagger

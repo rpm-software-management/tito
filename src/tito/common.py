@@ -222,6 +222,16 @@ def run_command(command, print_on_success=False):
     return output
 
 
+def runProcess(cmd):
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    while(True):
+        retcode = p.poll() #returns None while subprocess is running
+        line = p.stdout.readline()
+        yield line
+        if(retcode is not None):
+            break
+
+
 def tag_exists_locally(tag):
     (status, output) = getstatusoutput("git tag | grep %s" % tag)
     if status > 0:
@@ -233,7 +243,7 @@ def tag_exists_locally(tag):
 def tag_exists_remotely(tag):
     """ Returns True if the tag exists in the remote git repo. """
     try:
-        repo_url = get_git_repo_url()
+         get_git_repo_url()
     except:
         sys.stderr.write('Warning: remote.origin do not exist. Assuming --offline, for remote tag checking.\n')
         return False

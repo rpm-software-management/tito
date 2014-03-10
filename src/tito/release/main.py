@@ -70,8 +70,11 @@ class Releaser(ConfigObject):
             config_builder_args['test'] = True  # builder must know to build from HEAD
 
         # Override with builder args from command line if any were given:
-        self.builder_args = dict(config_builder_args.items() +
-            kwargs['builder_args'].items())
+        if 'builder_args' in kwargs:
+            self.builder_args = dict(config_builder_args.items() +
+                kwargs['builder_args'].items())
+        else:
+            self.builder_args = config_builder_args
 
         # While we create a builder here, we don't actually call run on it
         # unless the releaser needs to:
@@ -761,7 +764,8 @@ class KojiReleaser(Releaser):
             target=None, releaser_config=None, no_cleanup=False,
             test=False, auto_accept=False, **kwargs):
         Releaser.__init__(self, name, tag, build_dir, config,
-                user_config, target, releaser_config, no_cleanup, test, auto_accept)
+                user_config, target, releaser_config, no_cleanup, test, auto_accept,
+                **kwargs)
 
         self.only_tags = []
         if 'ONLY_TAGS' in os.environ:

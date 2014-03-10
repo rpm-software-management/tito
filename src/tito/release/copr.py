@@ -25,11 +25,11 @@ class CoprReleaser(KojiReleaser):
     cli_tool = "copr-cli"
     NAME = "Copr"
 
-    def __init__(self, name=None, version=None, tag=None, build_dir=None,
+    def __init__(self, name=None, tag=None, build_dir=None,
             config=None, user_config=None,
             target=None, releaser_config=None, no_cleanup=False,
             test=False, auto_accept=False, **kwargs):
-        KojiReleaser.__init__(self, name, version, tag, build_dir, config,
+        KojiReleaser.__init__(self, name, tag, build_dir, config,
                 user_config, target, releaser_config, no_cleanup, test,
                 auto_accept, **kwargs)
 
@@ -50,7 +50,7 @@ class CoprReleaser(KojiReleaser):
 
     def _submit_build(self, executable, koji_opts, tag, srpm_location):
         """ Copy srpm to remote destination and submit it to Copr """
-        cmd = self.releaser_config.get(self.target, "upload_command", raw=True)
+        cmd = self.releaser_config.get(self.target, "upload_command")
         url = self.releaser_config.get(self.target, "remote_location")
         if self.srpm_submitted:
             srpm_location = self.srpm_submitted
@@ -65,6 +65,7 @@ class CoprReleaser(KojiReleaser):
             self.print_dry_run_warning(cmd_upload)
             self.print_dry_run_warning(cmd_submit)
             return
+        # TODO: no error handling when run_command fails:
         if not self.srpm_submitted:
             print("Uploading src.rpm.")
             print(run_command(cmd_upload))
