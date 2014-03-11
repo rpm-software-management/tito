@@ -21,3 +21,48 @@ Once configured a build can be run with:
 Note that this does not require a tito tag to have been run, and technically the rel-eng/tito.props does not have to be committed to the git repo. This builder can be used on a repository you do not control or do not wish to push tito configuration into.
 
 The ArgSourceStrategy has a simple mechanism where it will try to parse the version and release to build from the filename with a regular expression. If you need something more advanced, you can override any or all of this behaviour by implementing a custom strategy for the fetch builder. (see lib_dir in **man 5 tito.props**)
+
+## tito.builder.GitAnnexBuilder
+
+A builder for packages with existing tarballs checked in using git-annex, e.g. referencing an external source (web remote) or special remotes used in the same way as a lookaside cache.
+
+This builder will "unlock" the source files to get the real contents, include them in the SRPM, then restore the automatic git-annex symlinks on completion.
+
+To create a new git repository using git-annex and tito init, run:
+
+    git init
+    git annex init
+    tito init
+
+Add the spec file as normal, but add the tarball/source via git-annex instead:
+
+    cp ~/tito.spec ~/tito-0.4.18.tar.gz .
+    git add tito.spec
+    git annex add tito-0.4.18.tar.gz
+    git commit -m "add tito 0.4.18"
+
+Edit rel-eng/tito.props to change the builder to the GitAnnexBuilder:
+
+    [globalconfig]
+    default_builder = tito.builder.GitAnnexBuilder
+
+Then finally tag and build as normal:
+
+    tito tag --keep-version
+    tito build --rpm
+
+Remotes and special remotes can be used now with git-annex to transfer file content elsewhere.  Special remotes can be used to sync bulky files to things other than git repositories, e.g. shared directories, S3, WebDAV etc.
+
+    git annex initremote usbdrive type=directory directory=/media/usb encryption=none
+    git annex copy --to=usbdrive
+
+Then files can be dropped or fetched again into the local repository, which acts as a local cache.  tito's GitAnnexBuilder will automatically "get" files during the build process.
+
+    git annex drop
+    git annex get
+
+Files can be added with the "web" remote, useful for RPM sources.  The downside is that like with other remotes, this configuration needs to be added to each git checkout but is also on a file-by-file basis, so a script may be required.
+
+    git annex addurl --file tito-0.4.18.tar.gz http://pkgs.fedoraproject.org/repo/pkgs/tito/tito-0.4.18.tar.gz/318e6f546c9b331317c94ea5d178876a/tito-0.4.18.tar.gz
+
+More information in the [git-annex walkthrough](http://git-annex.branchable.com/walkthrough/) and [special remotes](http://git-annex.branchable.com/special_remotes/) documentation.

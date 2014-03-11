@@ -7,6 +7,7 @@ from tito.builder.main import \
     UpstreamBuilder, \
     SatelliteBuilder, \
     MockBuilder, \
-    BrewDownloadBuilder
+    BrewDownloadBuilder, \
+    GitAnnexBuilder
 
 from tito.builder.fetch import FetchBuilder
