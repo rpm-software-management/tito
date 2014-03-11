@@ -194,11 +194,11 @@ class BuilderBase(object):
 
         rpmbuild_options = self.rpmbuild_options + self._scl_to_rpmbuild_option()
 
-        cmd = ('LC_ALL=C rpmbuild --define "_source_filedigest_algorithm md5"  --define'
+        cmd = ('rpmbuild --define "_source_filedigest_algorithm md5"  --define'
             ' "_binary_filedigest_algorithm md5" %s %s %s --nodeps -bs %s' % (
                 rpmbuild_options, self._get_rpmbuild_dir_options(),
                 define_dist, self.spec_file))
-        output = run_command(cmd)
+        output = run_command_print(cmd)
         print(output)
         self.srpm_location = find_wrote_in_rpmbuild_output(output)[0]
         self.artifacts.append(self.srpm_location)
@@ -215,13 +215,13 @@ class BuilderBase(object):
 
         rpmbuild_options = self.rpmbuild_options + self._scl_to_rpmbuild_option()
 
-        cmd = ('LC_ALL=C rpmbuild --define "_source_filedigest_algorithm md5"  '
+        cmd = ('rpmbuild --define "_source_filedigest_algorithm md5"  '
             '--define "_binary_filedigest_algorithm md5" %s %s %s --clean '
             '-ba %s' % (rpmbuild_options,
                 self._get_rpmbuild_dir_options(), define_dist, self.spec_file))
         debug(cmd)
         try:
-            output = run_command(cmd)
+            output = run_command_print(cmd)
         except (KeyboardInterrupt, SystemExit):
             print("")
             exit(1)
@@ -235,7 +235,6 @@ class BuilderBase(object):
         except Exception:
             err = sys.exc_info()[1]
             error_out('%s' % str(err))
-        print(output)
         files_written = find_wrote_in_rpmbuild_output(output)
         if len(files_written) < 2:
             error_out("Error parsing rpmbuild output")

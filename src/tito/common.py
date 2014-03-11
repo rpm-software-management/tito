@@ -18,8 +18,11 @@ import os
 import re
 import sys
 import traceback
+import subprocess
+import shlex
 
 from tito.compat import *
+from tito.exception import RunCommandException
 
 DEFAULT_BUILD_DIR = "/tmp/tito"
 DEFAULT_BUILDER = "builder"
@@ -222,10 +225,27 @@ def run_command(command, print_on_success=False):
     return output
 
 
-def runProcess(cmd):
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+def run_command_print(command):
+    """
+    Simliar to run_command but prints each line of output on the fly.
+    """
+    output = []
+    env = os.environ.copy()
+    env['LC_ALL'] = 'C'
+    p = subprocess.Popen(shlex.split(command),
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env)
+    for line in run_subprocess(p):
+        print(line),
+        output.append(line.rstrip('\n'))
+    print("\n"),
+    if p.poll() > 0:
+        raise RunCommandException(command, p.poll(), "\n".join(output))
+    return '\n'.join(output)
+
+
+def run_subprocess(p):
     while(True):
-        retcode = p.poll() #returns None while subprocess is running
+        retcode = p.poll()
         line = p.stdout.readline()
         yield line
         if(retcode is not None):
@@ -243,7 +263,7 @@ def tag_exists_locally(tag):
 def tag_exists_remotely(tag):
     """ Returns True if the tag exists in the remote git repo. """
     try:
-         get_git_repo_url()
+        get_git_repo_url()
     except:
         sys.stderr.write('Warning: remote.origin do not exist. Assuming --offline, for remote tag checking.\n')
         return False
@@ -505,7 +525,7 @@ def create_tgz(git_root, prefix, commit, relative_dir, rel_eng_dir,
     #if not os.path.exists(timestamp_script):
     #    error_out("Unable to locate required script: %s" % timestamp_script)
 
-    # Accomodate standalone projects with specfile in root of git repo:
+    # Accomodate standalone projects with specfile i root of git repo:
     relative_git_dir = "%s" % relative_dir
     if relative_git_dir in ['/', './']:
         relative_git_dir = ""
@@ -637,7 +657,8 @@ def find_wrote_in_rpmbuild_output(output):
     """
     paths = []
     look_for = "Wrote: "
-    for line in output.split("\n"):
+    for line in output.split('\n'):
+        print("Checking: %s" % line)
         if line.startswith(look_for):
             paths.append(line[len(look_for):])
             debug("Found wrote line: %s" % paths[-1])

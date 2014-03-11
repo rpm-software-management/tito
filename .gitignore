@@ -3,6 +3,8 @@
 *.pyo
 *$py.class
 *.swp
+*.swo
+.noseids
 *.patch
 *#
 *~

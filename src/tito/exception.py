@@ -32,8 +32,8 @@ class TitoException(Exception):
 
 class RunCommandException(Exception):
     """ Raised by run_command() """
-    def __init__(self, msg, command, status, output):
-        Exception.__init__(self, msg)
+    def __init__(self, command, status, output):
+        Exception.__init__(self, "Error running command: %s" % command)
         self.command = command
         self.status = status
         self.output = output
