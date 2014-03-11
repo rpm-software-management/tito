@@ -71,8 +71,11 @@ class Releaser(ConfigObject):
 
         # Override with builder args from command line if any were given:
         if 'builder_args' in kwargs:
-            self.builder_args = dict(config_builder_args.items() +
-                kwargs['builder_args'].items())
+            # (in case of dupes, last one wins)
+            self.builder_args = dictionary_override(
+                config_builder_args,
+                kwargs['builder_args']
+            )
         else:
             self.builder_args = config_builder_args
 
@@ -487,11 +490,11 @@ class FedoraGitReleaser(Releaser):
 
         fd, name = tempfile.mkstemp()
         debug("Storing commit message in temp file: %s" % name)
-        os.write(fd, "Update %s to %s\n" % (self.project_name,
+        write(fd, "Update %s to %s\n" % (self.project_name,
             self.builder.build_version))
         # Write out Resolves line for all bugzillas we see in commit diff:
         for line in extract_bzs(diff_output):
-            os.write(fd, line + "\n")
+            write(fd, line + "\n")
 
         print("")
         print("##### Commit message: #####")

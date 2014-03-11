@@ -13,18 +13,20 @@
 """
 Compatibility library for Python 2.4 up through Python 3.
 """
+import os
 import sys
+ENCODING = sys.getdefaultencoding()
 PY2 = sys.version_info[0] == 2
 if PY2:
     import commands
-    from ConfigParser import ConfigParser
     from ConfigParser import NoOptionError
     from ConfigParser import RawConfigParser
+    from StringIO import StringIO
 else:
     import subprocess
-    from configparser import ConfigParser
     from configparser import NoOptionError
     from configparser import RawConfigParser
+    from io import StringIO
 
 
 def getstatusoutput(cmd):
@@ -44,3 +46,26 @@ def getoutput(cmd):
     Supports Python 2.4 and 3.x.
     """
     return getstatusoutput(cmd)[1]
+
+
+def dictionary_override(d1, d2):
+    """
+    Return a new dictionary object where
+    d2 elements override d1 elements.
+    """
+    if PY2:
+        overrides = d1.items() + d2.items()
+    else:
+        overrides = d1.items() | d2.items()
+    return dict(overrides)
+
+
+def write(fd, str):
+    """
+    A version of os.write that
+    supports Python 2.4 and 3.x.
+    """
+    if PY2:
+        os.write(fd, str)
+    else:
+        os.write(fd, bytes(str, ENCODING))

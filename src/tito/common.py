@@ -541,7 +541,7 @@ def create_tgz(git_root, prefix, commit, relative_dir,
         '%s > /dev/null' % git_archive_cmd)
 
     # If we're still alive, the previous command worked
-    archive_cmd = ('%s | %s %s %s | gzip -n -c - | tee %s' % (
+    archive_cmd = ('%s | %s %s %s | gzip -n -c - > %s' % (
         git_archive_cmd, timestamp_script,
         timestamp, commit, dest_tgz))
     debug(archive_cmd)

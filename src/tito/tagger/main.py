@@ -17,7 +17,6 @@ Code for tagging Spacewalk/Satellite packages.
 import os
 import re
 import rpm
-import StringIO
 import shutil
 import subprocess
 import tempfile
@@ -227,7 +226,7 @@ class VersionTagger(ConfigObject):
                     output = self._new_changelog_msg
 
                 fd, name = tempfile.mkstemp()
-                os.write(fd, "# Create your changelog entry below:\n")
+                write(fd, "# Create your changelog entry below:\n")
                 if self.git_email is None or (('HIDE_EMAIL' in self.user_config) and
                         (self.user_config['HIDE_EMAIL'] not in ['0', ''])):
                     header = "* %s %s\n" % (self.today, self.git_user)
@@ -235,14 +234,14 @@ class VersionTagger(ConfigObject):
                     header = "* %s %s <%s>\n" % (self.today, self.git_user,
                        self.git_email)
 
-                os.write(fd, header)
+                write(fd, header)
 
                 for cmd_out in output.split("\n"):
-                    os.write(fd, "- ")
-                    os.write(fd, "\n  ".join(textwrap.wrap(cmd_out, 77)))
-                    os.write(fd, "\n")
+                    write(fd, "- ")
+                    write(fd, "\n  ".join(textwrap.wrap(cmd_out, 77)))
+                    write(fd, "\n")
 
-                os.write(fd, "\n")
+                write(fd, "\n")
 
                 if not self._accept_auto_changelog:
                     # Give the user a chance to edit the generated changelog:
@@ -279,7 +278,7 @@ class VersionTagger(ConfigObject):
         # check for the changelog entry before making any modifications, then
         # bump the version, then update the changelog.
         f = open(self.spec_file, 'r')
-        buf = StringIO.StringIO()
+        buf = StringIO()
         found_match = False
         for line in f.readlines():
             match = self.changelog_regex.match(line)
@@ -313,7 +312,7 @@ class VersionTagger(ConfigObject):
         py_new_version = new_version.split('-')[0]
 
         f = open(setup_file, 'r')
-        buf = StringIO.StringIO()
+        buf = StringIO()
         for line in f.readlines():
             buf.write(replace_version(line, py_new_version))
         f.close()

@@ -12,7 +12,7 @@ class BuildTargetParserTests(unittest.TestCase):
         self.valid_branches = ["branch1", "branch2"]
 
         self.release_target = "project-x.y.z"
-        self.releasers_config = ConfigParser()
+        self.releasers_config = RawConfigParser()
         self.releasers_config.add_section(self.release_target)
         self.releasers_config.set(self.release_target, "build_targets",
                                   "branch1:project-x.y.z-candidate")
