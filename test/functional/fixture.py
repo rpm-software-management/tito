@@ -162,30 +162,20 @@ class TitoGitTestFixture(unittest.TestCase):
 
         # TODO: Test project needs work, doesn't work in some scenarios
         # like UpstreamBuilder:
-        filename = os.path.join(full_pkg_dir, "a.txt")
-        out_f = open(filename, 'w')
-        out_f.write("BLERG\n")
-        out_f.close()
+        self.write_file(os.path.join(full_pkg_dir, 'a.txt'), "BLERG\n")
 
         # Write the test spec file:
-        filename = os.path.join(full_pkg_dir, "%s.spec" % pkg_name)
-        out_f = open(filename, 'w')
-        out_f.write("Name: %s" % pkg_name)
-        out_f.write(TEST_SPEC)
-        out_f.close()
+        self.write_file(os.path.join(full_pkg_dir, "%s.spec" % pkg_name),
+            "Name: %s\n%s" % (pkg_name, TEST_SPEC))
 
         # Write test setup.py:
-        filename = os.path.join(full_pkg_dir, "setup.py")
-        out_f = open(filename, 'w')
-        out_f.write(TEST_SETUP_PY % (pkg_name, pkg_name))
-        out_f.close()
+        self.write_file(os.path.join(full_pkg_dir, "setup.py"),
+            TEST_SETUP_PY % (pkg_name, pkg_name))
 
         # Write test source:
         run_command('mkdir -p %s' % os.path.join(full_pkg_dir, "src"))
-        filename = os.path.join(full_pkg_dir, "src", "module.py")
-        out_f = open(filename, 'w')
-        out_f.write(TEST_PYTHON_SRC)
-        out_f.close()
+        self.write_file(os.path.join(full_pkg_dir, "src", "module.py"),
+            TEST_PYTHON_SRC)
 
         files = [os.path.join(pkg_dir, 'a.txt'),
                 os.path.join(pkg_dir, 'setup.py'),
