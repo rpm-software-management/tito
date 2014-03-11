@@ -1202,7 +1202,7 @@ class GitAnnexBuilder(NoTgzBuilder):
         old_cwd = os.getcwd()
         os.chdir(os.path.join(old_cwd, self.relative_project_dir))
 
-        (status, output) = commands.getstatusoutput("which git-annex")
+        (status, output) = run_command("which git-annex")
         if status != 0:
             msg = "Please run 'yum install git-annex' as root."
             error_out('%s' % msg)
@@ -1223,4 +1223,3 @@ class GitAnnexBuilder(NoTgzBuilder):
     def cleanup(self):
         run_command("git-annex lock --force")
         super(GitAnnexBuilder, self).cleanup()
->>>>>>> 491eb0094f2374ffa0d6a695d8368f40cabe2c5e
