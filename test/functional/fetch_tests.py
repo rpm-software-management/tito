@@ -65,6 +65,7 @@ class FetchBuilderTests(TitoGitTestFixture):
 
     def tearDown(self):
         TitoGitTestFixture.tearDown(self)
+        # Git annex restricts permissions, change them before we remove:
         shutil.rmtree(self.output_dir)
 
     def test_simple_build_no_tag(self):

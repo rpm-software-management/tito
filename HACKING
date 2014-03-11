@@ -29,6 +29,7 @@ To run all tests, install these packages:
 * python-nose,  python-pep8,  and rpm-python
 * python3-nose, python3-pep8, and rpm-python3
 * createrepo
+* git-annex
 
 Then from the root of the project:
 

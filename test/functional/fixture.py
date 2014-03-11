@@ -127,6 +127,7 @@ class TitoGitTestFixture(unittest.TestCase):
         run_command("git commit -m 'set offline in tito.props'")
 
     def tearDown(self):
+        run_command('chmod -R u+rw %s' % self.repo_dir)
         shutil.rmtree(self.repo_dir)
         pass
 

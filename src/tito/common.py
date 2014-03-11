@@ -512,7 +512,7 @@ def get_commit_timestamp(sha1_or_tag):
     return output
 
 
-def create_tgz(git_root, prefix, commit, relative_dir, rel_eng_dir,
+def create_tgz(git_root, prefix, commit, relative_dir,
     dest_tgz):
     """
     Create a .tar.gz from a projects source in git.
@@ -545,7 +545,7 @@ def create_tgz(git_root, prefix, commit, relative_dir, rel_eng_dir,
         git_archive_cmd, timestamp_script,
         timestamp, commit, dest_tgz))
     debug(archive_cmd)
-    run_command(archive_cmd)
+    return run_command(archive_cmd)
 
 
 def get_git_repo_url():
@@ -658,7 +658,6 @@ def find_wrote_in_rpmbuild_output(output):
     paths = []
     look_for = "Wrote: "
     for line in output.split('\n'):
-        print("Checking: %s" % line)
         if line.startswith(look_for):
             paths.append(line[len(look_for):])
             debug("Found wrote line: %s" % paths[-1])

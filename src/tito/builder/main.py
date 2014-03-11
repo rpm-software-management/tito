@@ -433,7 +433,7 @@ class Builder(ConfigObject, BuilderBase):
         debug("Creating %s from git tag: %s..." % (self.tgz_filename,
             self.git_commit_id))
         create_tgz(self.git_root, self.tgz_dir, self.git_commit_id,
-                self.relative_project_dir, self.rel_eng_dir,
+                self.relative_project_dir,
                 os.path.join(self.rpmbuild_sourcedir, self.tgz_filename))
 
         # Extract the source so we can get at the spec file, etc.
@@ -596,7 +596,7 @@ class GemBuilder(NoTgzBuilder):
         debug("Creating %s from git tag: %s..." % (self.tgz_filename,
             self.git_commit_id))
         create_tgz(self.git_root, self.tgz_dir, self.git_commit_id,
-                self.relative_project_dir, self.rel_eng_dir,
+                self.relative_project_dir,
                 os.path.join(self.rpmbuild_sourcedir, self.tgz_filename))
 
         # Extract the source so we can get at the spec file, etc.
@@ -694,7 +694,7 @@ class UpstreamBuilder(NoTgzBuilder):
         tgz_fullpath = os.path.join(self.rpmbuild_sourcedir, tgz_filename)
         print("Creating %s from git tag: %s..." % (tgz_filename, commit))
         create_tgz(self.git_root, prefix, commit, relative_dir,
-                self.rel_eng_dir, tgz_fullpath)
+                tgz_fullpath)
         self.ran_tgz = True
         self.sources.append(tgz_fullpath)
 
@@ -1202,7 +1202,7 @@ class GitAnnexBuilder(NoTgzBuilder):
         old_cwd = os.getcwd()
         os.chdir(os.path.join(old_cwd, self.relative_project_dir))
 
-        (status, output) = run_command("which git-annex")
+        (status, output) = getstatusoutput("which git-annex")
         if status != 0:
             msg = "Please run 'yum install git-annex' as root."
             error_out('%s' % msg)
