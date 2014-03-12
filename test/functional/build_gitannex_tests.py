@@ -84,7 +84,7 @@ class GitAnnexBuilderTests(TitoGitTestFixture):
         builder = GitAnnexBuilder(PKG_NAME, None, self.output_dir,
             self.config, {}, {}, **{'offline': True})
         builder.rpm()
-        self.assertEquals(1, len(builder.sources))
+        self.assertEquals(1, len(list(builder.sources)))
 
         self.assertEquals(2, len(builder.artifacts))
         self.assertEquals(1, len(glob.glob(join(self.output_dir,
