@@ -19,7 +19,6 @@ and rpms.
 import os
 import sys
 import re
-import commands
 import shutil
 from pkg_resources import require
 from distutils.version import LooseVersion as loose_version
@@ -200,7 +199,7 @@ class BuilderBase(object):
             ' "_binary_filedigest_algorithm md5" %s %s %s --nodeps -bs %s' % (
                 rpmbuild_options, self._get_rpmbuild_dir_options(),
                 define_dist, self.spec_file))
-        output = run_command_print(cmd)
+        output = getoutput(cmd)
         print(output)
         self.srpm_location = find_wrote_in_rpmbuild_output(output)[0]
         self.artifacts.append(self.srpm_location)
@@ -223,7 +222,7 @@ class BuilderBase(object):
                 self._get_rpmbuild_dir_options(), define_dist, self.spec_file))
         debug(cmd)
         try:
-            output = run_command_print(cmd)
+            output = getoutput(cmd)
         except (KeyboardInterrupt, SystemExit):
             print("")
             exit(1)
