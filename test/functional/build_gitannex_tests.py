@@ -19,6 +19,7 @@ import os
 import glob
 import tempfile
 import shutil
+from nose.plugins.skip import SkipTest
 from os.path import join
 
 from functional.fixture import TitoGitTestFixture, tito
@@ -28,12 +29,27 @@ from tito.common import run_command
 from tito.builder import GitAnnexBuilder
 
 PKG_NAME = "extsrc"
+GIT_ANNEX_MINIMUM_VERSION = '3.20130207'
 
 
 class GitAnnexBuilderTests(TitoGitTestFixture):
 
     def setUp(self):
         TitoGitTestFixture.setUp(self)
+
+        # Guess based on python version.
+        # Do not use anything based on uname in case we are in container.
+        # Do not use `lsb_release` to avoid dependencies.
+        if sys.version[0:3] == '2.4':
+            raise SkipTest('git-annex is not available in epel-5')
+
+        # git-annex needs to support --force when locking files.
+        # rpm query is sub-optimal, but older versions do not support `git-annex version'.
+        status, ga_version = getstatusoutput('rpm -q --qf=%{version} git-annex')
+        if status != 0:
+            raise SkipTest("git-annex is missing")
+        if ga_version < GIT_ANNEX_MINIMUM_VERSION:
+            raise SkipTest("git-annex '%s' is too old" % ga_version)
 
         # Setup test config:
         self.config = RawConfigParser()
@@ -68,7 +84,7 @@ class GitAnnexBuilderTests(TitoGitTestFixture):
         builder = GitAnnexBuilder(PKG_NAME, None, self.output_dir,
             self.config, {}, {}, **{'offline': True})
         builder.rpm()
-        self.assertEquals(1, len(builder.sources))
+        self.assertEquals(1, len(list(builder.sources)))
 
         self.assertEquals(2, len(builder.artifacts))
         self.assertEquals(1, len(glob.glob(join(self.output_dir,

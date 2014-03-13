@@ -24,6 +24,66 @@ compatible with both python 2.4 and 3.x. For example:
 Tests
 -----
 
+### Docker test harness
+
+To run all tests on all supported platforms:
+
+    yum -y install docker-io
+    systemctl start docker.service
+    systemctl enable docker.service
+    usermod -aG docker <your-username>
+
+Log out and log in to refresh your secondary group.
+Then run from the root of the project:
+
+    hacking/runtests.sh
+
+If any test fails, the script exits non-zero.
+To get a zero exit status, all tests must pass
+or be skipped.
+
+The above script runs a test harness based on
+docker containers and takes several minutes to run
+on the first build (or if you remove the images).
+
+Expected output resembles:
+
+    -snip copious output-
+    =====================
+    Summary
+    /tmp/titotest-centos-5.9-python.out     : OK (SKIP=1)
+    /tmp/titotest-centos-6.4-python.out     : OK (SKIP=1)
+    /tmp/titotest-fedora-20-python.out      : OK
+    /tmp/titotest-fedora-20-python3.out     : OK
+
+You can then review the output, such as:
+
+    $ grep SKIP: /tmp/titotest-*.out
+    /tmp/titotest-centos-5.9-python.out:... SKIP: git-annex is not available in epel-5
+    /tmp/titotest-centos-6.4-python.out:... SKIP: git-annex '3.20120522 ' is too old
+
+After you run the test harness the first time,
+you can optionally create and enter a container like so:
+
+                 .--- remove container when done (not image)
+                 |
+                 |   .--- interactive
+                 |   |  .--- tty
+                 |   |  |  .---- mount current workdir into container
+                 |   |  |  |                    .---- name of image
+                 |   |  |  |                    |                   .-- get a shell
+                 |   |  |  |                    |                   |
+    docker run --rm -i -t -v $PWD:/home/sandbox titotest-centos-5.9 /bin/bash
+
+
+Note about the sandbox: By default, the docker container is a
+read-only execution environment to protect your source from changes.
+If you are comfortable with LXC, you can override it to provide
+an authoring environment, too.
+
+
+### Workstation tests
+
 To run all tests, install these packages:
 
 * python-nose,  python-pep8,  and rpm-python
@@ -34,11 +94,10 @@ To run all tests, install these packages:
 Then from the root of the project:
 
     python  ./runtests.py -vv
-    python3 ./runtests.py -vv test/unit
+    python3 ./runtests.py -vv
 
-(Run only the unit tests on python3 since GitPython does not
-support python3 yet.)
 
+### Advanced
 
 When developing code for tito there are a couple ways you can test:
 
