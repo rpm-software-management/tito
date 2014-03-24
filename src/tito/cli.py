@@ -165,7 +165,7 @@ class ConfigLoader(object):
                     self.tag)
                 return
 
-        print("Unable to locate package specific config for this package.")
+        debug("Unable to locate package specific config for this package.")
 
 
 def read_user_config():
