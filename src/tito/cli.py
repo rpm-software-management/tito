@@ -112,7 +112,7 @@ class ConfigLoader(object):
                     config.set('buildconfig', 'builder', v)
                 elif k == 'default_tagger':
                     print("WARNING: please rename 'default_tagger' to "
-                        "'builder' in tito.props")
+                        "'tagger' in tito.props")
                     config.set('buildconfig', 'tagger', v)
                 else:
                     config.set('buildconfig', k, v)
