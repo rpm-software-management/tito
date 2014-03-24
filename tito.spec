@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.4.18
+Version: 0.5.0
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -78,6 +78,46 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Mon Mar 24 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.5.0-1
+- Prep for python3. (jumanjiman@gmail.com)
+- Print output live for longer running rpmbuild commands. (dgoodwin@redhat.com)
+- Add GitAnnexBuilder, using git-annex to store blobs (dcleal@redhat.com)
+- Remove legacy CvsBuilder and CvsReleaser. (dgoodwin@redhat.com)
+- Stop writing temp file to load tito.props from past tag.
+  (dgoodwin@redhat.com)
+- Remove deprecated support for build.py.props config filename.
+  (dgoodwin@redhat.com)
+- Remove a very old hack for assuming config from Makefiles.
+  (dgoodwin@redhat.com)
+- Refactor config overriding. (dgoodwin@redhat.com)
+- Move taggers to sub-directory. (dgoodwin@redhat.com)
+- Move releasers to sub-directory. (dgoodwin@redhat.com)
+- Improved docs for [version_template] section of tito.props
+  (chris.a.st.pierre@gmail.com)
+- allow empty dist tag in functional tests (jumanjiman@gmail.com)
+- docs: createrepo is needed for functional tests (jumanjiman@gmail.com)
+- provide config for editorconfig plugins (jumanjiman@gmail.com)
+- Add more missing documentation to MANIFEST.in. (dgoodwin@redhat.com)
+- Assume a default fetch strategy. (dgoodwin@redhat.com)
+- Add markdown docs for FetchBuilder instead of manpage. (dgoodwin@redhat.com)
+- Fix releasers and respect offline flag. (dgoodwin@redhat.com)
+- Support release with fetch builder. (dgoodwin@redhat.com)
+- Add support for passing builder args through a releaser.
+  (dgoodwin@redhat.com)
+- MANIFEST.in: include README.mkd and asciidoc files (code@alan.grosskurth.ca)
+- Rename --builder-arg to just --arg in build command. (dgoodwin@redhat.com)
+- Fix issue with releaser temp dir. (dgoodwin@redhat.com)
+- Refactor to just one config object. (dgoodwin@redhat.com)
+- Make external source builder fetch strategy configurable.
+  (dgoodwin@redhat.com)
+- Fix buildroot using ~/rpmbuild/BUILDROOT. (dgoodwin@redhat.com)
+- Refactor builders to allow separate modules. (dgoodwin@redhat.com)
+- Restore building of specific tags. (dgoodwin@redhat.com)
+- Start building with external sources and no tag. (dgoodwin@redhat.com)
+- Allow possibility of building without a pre-existing tag.
+  (dgoodwin@redhat.com)
+- Print koji/brew task ID and URL during release. (dgoodwin@redhat.com)
+
 * Thu Nov 14 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.18-1
 - Merge the FiledVersionTagger into the base VersionTagger.
   (dgoodwin@redhat.com)
