@@ -228,7 +228,6 @@ def run_command(command, print_on_success=False):
 def run_command_print(command):
     """
     Simliar to run_command but prints each line of output on the fly.
-    TODO: make this work in both python2 and python3.
     """
     output = []
     env = os.environ.copy()
