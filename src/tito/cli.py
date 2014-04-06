@@ -598,10 +598,15 @@ class ReleaseModule(BaseCliModule):
                 auto_accept=self.options.auto_accept,
                 **kwargs)
 
-            releaser.release(dry_run=self.options.dry_run,
-                    no_build=self.options.no_build,
-                    scratch=self.options.scratch)
-            releaser.cleanup()
+            try:
+                try:
+                    releaser.release(dry_run=self.options.dry_run,
+                            no_build=self.options.no_build,
+                            scratch=self.options.scratch)
+                except KeyboardInterrupt:
+                    print("Interrupted, cleaning up...")
+            finally:
+                releaser.cleanup()
 
             # Make sure we go back to where we started, otherwise multiple
             # builders gets very confused:

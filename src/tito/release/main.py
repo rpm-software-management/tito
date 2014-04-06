@@ -163,6 +163,9 @@ class Releaser(ConfigObject):
         if not self.no_cleanup:
             debug("Cleaning up [%s]" % self.working_dir)
             run_command("rm -rf %s" % self.working_dir)
+
+            if self.builder:
+                self.builder.cleanup()
         else:
             print("WARNING: leaving %s (--no-cleanup)" % self.working_dir)
 
