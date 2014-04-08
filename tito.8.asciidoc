@@ -163,7 +163,7 @@ Override the normal builder by specifying a full class
 path or one of the pre-configured shortcuts. Only useful if you need to
 override the default builder for some purpose, such as testing a build via mock.
 
---builder-arg='BUILDER_ARGS'::
+--arg='BUILDER_ARGS'::
 Custom arguments specific to a particular builder. (key=value)
 
 --scl='COLLECTION'::
@@ -258,7 +258,7 @@ Build and install a test package from the latest code in current git HEAD::
 tito build --rpm --test -i
 
 Overriding the default builder to build via mock instead::
-tito build --builder mock --builder-arg mock=fedora-15-x86_64 --rpm
+tito build --builder mock --arg mock=fedora-15-x86_64 --rpm
 
 
 SEE ALSO
