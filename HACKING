@@ -86,10 +86,15 @@ an authoring environment, too.
 
 To run all tests, install these packages:
 
-* python-nose,  python-pep8,  and rpm-python
-* python3-nose, python3-pep8, and rpm-python3
+* python-nose,  python-pep8,  python-mock (for epl-6 and fedora) and rpm-python
+* python3-nose, python3-pep8,  python3-mock (for epl-6 and fedora) , and rpm-python3
 * createrepo
 * git-annex
+
+For epel-5:
+There is also a need to install additional library via pip (pip install mock)
+for python 2.4 - 2.7 (in case you don't have pip, install via yum python-pip package)
+* mock
 
 Then from the root of the project:
 
