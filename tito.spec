@@ -20,7 +20,6 @@ BuildRequires: libxslt
 Requires: python-setuptools
 Requires: rpm-build
 Requires: rpmlint
-Requires: GitPython >= 0.2.0
 Requires: fedpkg
 Requires: fedora-cert
 Requires: fedora-packager
