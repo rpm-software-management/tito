@@ -1,0 +1,9 @@
+box: wercker-labs/docker
+build:
+  steps:
+    - script:
+        name: print the docker version
+        code: docker version
+    - script:
+        name: run the docker test suite
+        code: hacking/runtests.sh
