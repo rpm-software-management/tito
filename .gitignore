@@ -18,3 +18,9 @@ titorc.5
 titorc.5.xml
 tito.8
 tito.8.xml
+.idea
+**/*.iml
+bin
+include
+lib
+local
