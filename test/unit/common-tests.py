@@ -15,8 +15,11 @@
 """ Pure unit tests for tito's common module. """
 
 from tito.common import *
+from tito import common
 
 import unittest
+
+from mock import Mock
 
 
 class CommonTests(unittest.TestCase):
@@ -198,3 +201,21 @@ class ExtractBugzillasTest(unittest.TestCase):
                 results[0])
         self.assertEquals("Resolves: #456789 - A third commit.",
                 results[1])
+
+    def test_rpmbuild_cailms_to_be_successul(self):
+        succeeded_result = "success"
+        output = "Wrote: %s" % succeeded_result
+
+        success_line = find_wrote_in_rpmbuild_output(output)
+
+        self.assertEquals(succeeded_result, success_line[0])
+
+    def test_rpmbuild_which_ended_with_error_is_described_with_the_analyzed_line(self):
+        output = "some error output from rpmbuild\n" \
+            "next error line"
+
+        common.error_out = Mock()
+
+        find_wrote_in_rpmbuild_output(output)
+
+        common.error_out.assert_called_once_with("Unable to locate 'Wrote: ' lines in rpmbuild output: '%s'" % output)

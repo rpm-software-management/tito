@@ -663,5 +663,5 @@ def find_wrote_in_rpmbuild_output(output):
             paths.append(line[len(look_for):])
             debug("Found wrote line: %s" % paths[-1])
     if not paths:
-        error_out("Unable to locate 'Wrote: ' lines in rpmbuild output")
+        error_out("Unable to locate 'Wrote: ' lines in rpmbuild output: '%s'" % output)
     return paths

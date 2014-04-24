@@ -8,7 +8,7 @@ MAINTAINER Paul Morgan <jumanjiman@gmail.com>
 RUN yum -y install git rpm-build python-devel python-nose \
     libxslt asciidoc python-setuptools tar createrepo which
 RUN rpm -Uvh http://ftp.linux.ncsu.edu/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
-RUN yum -y install python-pep8 git-annex
+RUN yum -y install python-pep8 git-annex python-mock
 
 # Remove yum metadata.
 RUN yum clean all
