@@ -13,7 +13,7 @@
 """
 Common operations.
 """
-
+from __future__ import print_function
 import os
 import re
 import sys
@@ -228,15 +228,15 @@ def run_command(command, print_on_success=False):
 def run_command_print(command):
     """
     Simliar to run_command but prints each line of output on the fly.
-    TODO: make this work in both python2 and python3.
     """
     output = []
     env = os.environ.copy()
     env['LC_ALL'] = 'C'
     p = subprocess.Popen(shlex.split(command),
-        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env)
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env,
+        universal_newlines=True)
     for line in run_subprocess(p):
-        print(line),
+        print(line, end='')
         output.append(line.rstrip('\n'))
     print("\n"),
     if p.poll() > 0:
