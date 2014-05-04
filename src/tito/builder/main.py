@@ -348,6 +348,11 @@ class Builder(ConfigObject, BuilderBase):
 
         self.relative_project_dir = get_relative_project_dir(
             project_name=self.project_name, commit=self.git_commit_id)
+        if self.relative_project_dir is None and self.test:
+            sys.stderr.write("WARNING: rel-eng/packages/%s doesn't exist "
+                "in git, using current directory\n" % self.project_name)
+            self.relative_project_dir = get_relative_project_dir_cwd(
+                self.git_root)
 
         tgz_base = self._get_tgz_name_and_ver()
         self.tgz_filename = tgz_base + ".tar.gz"
@@ -384,8 +389,13 @@ class Builder(ConfigObject, BuilderBase):
         else:
             build_version = get_latest_tagged_version(self.project_name)
             if build_version is None:
-                error_out(["Unable to lookup latest package info.",
-                        "Perhaps you need to tag first?"])
+                if not self.test:
+                    error_out(["Unable to lookup latest package info.",
+                            "Perhaps you need to tag first?"])
+                sys.stderr.write("WARNING: unable to lookup latest package "
+                    "tag, building untagged test project\n")
+                build_version = get_spec_version_and_release(self.start_dir,
+                    find_spec_file(in_dir=self.start_dir))
             self.build_tag = "%s-%s" % (self.project_name, build_version)
 
         if not self.test:

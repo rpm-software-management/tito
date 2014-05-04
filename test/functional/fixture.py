@@ -152,7 +152,7 @@ class TitoGitTestFixture(unittest.TestCase):
         config.write(configfile)
         configfile.close()
 
-    def create_project(self, pkg_name, pkg_dir=''):
+    def create_project(self, pkg_name, pkg_dir='', tag=True):
         """
         Create a test project at the given location, assumed to be within
         our test repo, but possibly within a sub-directory.
@@ -186,4 +186,5 @@ class TitoGitTestFixture(unittest.TestCase):
         run_command('git add %s' % ' '.join(files))
         run_command("git commit -m 'initial commit'")
 
-        tito('tag --keep-version --debug --accept-auto-changelog')
+        if tag:
+            tito('tag --keep-version --debug --accept-auto-changelog')

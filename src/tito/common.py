@@ -452,10 +452,28 @@ def get_relative_project_dir(project_name, commit):
     """
     cmd = "git show %s:rel-eng/packages/%s" % (commit,
             project_name)
-    pkg_metadata = run_command(cmd).strip()
-    tokens = pkg_metadata.split(" ")
+    (status, pkg_metadata) = getstatusoutput(cmd)
+    tokens = pkg_metadata.strip().split(" ")
     debug("Got package metadata: %s" % tokens)
+    if status != 0:
+        return None
     return tokens[1]
+
+
+def get_relative_project_dir_cwd(git_root):
+    """
+    Returns the patch to the project we're working with relative to the
+    git root using the cwd.
+
+    *MUST* be called before doing any os.cwd().
+
+    i.e. java/, satellite/install/Spacewalk-setup/, etc.
+    """
+    current_dir = os.getcwd()
+    relative = current_dir[len(git_root) + 1:] + "/"
+    if relative == "/":
+        relative = "./"
+    return relative
 
 
 def get_build_commit(tag, test=False):
@@ -482,10 +500,15 @@ def get_commit_count(tag, commit_id):
     #     return 0
     # else:
     #     parse the count from the output
-    output = run_command("git describe --match=%s %s" % (tag, commit_id))
+    (status, output) = getstatusoutput(
+        "git describe --match=%s %s" % (tag, commit_id))
 
     debug("tag - %s" % tag)
     debug("output - %s" % output)
+
+    if status != 0:
+        debug("git describe of tag %s failed (%d)" % (tag, status))
+        return 0
 
     if tag != output:
         # tag-commitcount-gSHA1, we want the penultimate value

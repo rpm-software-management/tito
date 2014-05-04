@@ -32,7 +32,7 @@ from tito.common import (debug, error_out, run_command,
         get_spec_version_and_release, replace_version,
         tag_exists_locally, tag_exists_remotely, head_points_to_tag, undo_tag,
         increase_version, reset_release, increase_zstream,
-        BUILDCONFIG_SECTION)
+        BUILDCONFIG_SECTION, get_relative_project_dir_cwd)
 from tito.compat import *
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
@@ -55,7 +55,7 @@ class VersionTagger(ConfigObject):
         self.spec_file_name = find_spec_file()
         self.project_name = get_project_name(tag=None)
 
-        self.relative_project_dir = self._get_relative_project_dir(
+        self.relative_project_dir = get_relative_project_dir_cwd(
             self.git_root)  # i.e. java/
 
         self.spec_file = os.path.join(self.full_project_dir,
@@ -324,21 +324,6 @@ class VersionTagger(ConfigObject):
         buf.close()
 
         run_command("git add %s" % setup_file)
-
-    def _get_relative_project_dir(self, git_root):
-        """
-        Returns the patch to the project we're working with relative to the
-        git root.
-
-        *MUST* be called before doing any os.cwd().
-
-        i.e. java/, satellite/install/Spacewalk-setup/, etc.
-        """
-        current_dir = os.getcwd()
-        relative = current_dir[len(git_root) + 1:] + "/"
-        if relative == "/":
-            relative = "./"
-        return relative
 
     def _bump_version(self, release=False, zstream=False, force=False):
         """
