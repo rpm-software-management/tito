@@ -258,7 +258,9 @@ class RsyncReleaser(Releaser):
                 builder_class=self.releaser_config.get(self.target, 'builder'),
                 offline=self.offline)
         if self.releaser_config.has_option(self.target, "scl"):
-                self.builder.scl = self.releaser_config.get(self.target, "scl")
+            sys.stderr.write("WARNING: please rename 'scl' to "
+                "'builder.scl' in releasers.conf\n")
+            self.builder.scl = self.releaser_config.get(self.target, "scl")
 
     def release(self, dry_run=False, no_build=False, scratch=False):
         self.dry_run = dry_run
