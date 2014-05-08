@@ -35,16 +35,16 @@
 #     -snip copious output-
 #     =====================
 #     Summary
-#     /tmp/titotest-centos-5.9-python.out     : OK (SKIP=1)
-#     /tmp/titotest-centos-6.4-python.out     : OK (SKIP=1)
+#     /tmp/titotest-centos-5-9-python.out     : OK (SKIP=1)
+#     /tmp/titotest-centos-6-4-python.out     : OK (SKIP=1)
 #     /tmp/titotest-fedora-20-python.out      : OK
 #     /tmp/titotest-fedora-20-python3.out     : OK
 #
 # You can then review the output, such as:
 #
 #     $ grep SKIP: /tmp/titotest-*.out
-#     /tmp/titotest-centos-5.9-python.out:... SKIP: git-annex is not available in epel-5
-#     /tmp/titotest-centos-6.4-python.out:... SKIP: git-annex '3.20120522 ' is too old
+#     /tmp/titotest-centos-5-9-python.out:... SKIP: git-annex is not available in epel-5
+#     /tmp/titotest-centos-6-4-python.out:... SKIP: git-annex '3.20120522 ' is too old
 #
 # After you run the test harness the first time,
 # you can optionally enter a container like so:
@@ -57,11 +57,11 @@
 #                  |   |  |  |                    .---- name of image
 #                  |   |  |  |                    |                   .-- get a shell
 #                  |   |  |  |                    |                   |
-#     docker run --rm -i -t -v $PWD:/home/sandbox titotest-centos-5.9 /bin/bash
+#     docker run --rm -i -t -v $PWD:/home/sandbox titotest-centos-5-9 /bin/bash
 
 distros='
-titotest-centos-5.9
-titotest-centos-6.4
+titotest-centos-5-9
+titotest-centos-6-4
 titotest-fedora-20
 '
 
