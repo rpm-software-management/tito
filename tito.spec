@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.5.1
+Version: 0.5.2
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -77,6 +77,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Fri May 09 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.5.2-1
+- Fix releaser getcwd error. (dgoodwin@redhat.com)
+
 * Fri May 09 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.5.1-1
 - Raise error on failed run_command. (dgoodwin@redhat.com)
 - Allow builder to run in test mode on untagged project (dcleal@redhat.com)
