@@ -236,8 +236,9 @@ def run_command_print(command):
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env,
         universal_newlines=True)
     for line in run_subprocess(p):
-        print(line, end='')
-        output.append(line.rstrip('\n'))
+        line = line.rstrip('\n')
+        print(line)
+        output.append(line)
     print("\n"),
     if p.poll() > 0:
         raise RunCommandException(command, p.poll(), "\n".join(output))
