@@ -54,7 +54,8 @@ uploaded.
 +
 You can use environment variable RSYNC_USERNAME to override rsync username.
 +
-Specify "scl = COLLECTION" to build into Software Collection.
+Specify "scl = COLLECTION" to build into Software Collection.  Deprecated,
+prefer "builder.scl = COLLECTION" instead.
 +
 Variable "rsync_args" can specify addiontal argument passed to rsync. Default
 is "-rlvz".

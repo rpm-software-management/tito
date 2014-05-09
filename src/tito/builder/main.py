@@ -63,8 +63,8 @@ class BuilderBase(object):
         self.offline = self._get_optional_arg(kwargs, 'offline', False)
         self.auto_install = self._get_optional_arg(kwargs, 'auto_install',
                 False)
-        self.scl = self._get_optional_arg(kwargs,
-                'scl', '')
+        self.scl = self._get_optional_arg(args, 'scl', None) or \
+                self._get_optional_arg(kwargs, 'scl', '')
 
         self.rpmbuild_options = self._get_optional_arg(kwargs,
                 'rpmbuild_options', None)
