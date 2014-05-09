@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.5.0
+Version: 0.5.1
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -77,6 +77,20 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Fri May 09 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.5.1-1
+- Raise error on failed run_command. (dgoodwin@redhat.com)
+- Allow builder to run in test mode on untagged project (dcleal@redhat.com)
+- Add 'scl' builder option for software collection name (dcleal@redhat.com)
+- added rpmbuild output to an error raised by tito to easier the error's cause
+  analysis (artur.krysiak.warszawa@gmail.com)
+- propagate docs to docker public registry (jumanjiman@gmail.com)
+- spec: remove dependency on GitPython (jumanjiman@gmail.com)
+- Update tito.8.asciidoc (james.slagle@gmail.com)
+- Cleanup releasers + builders when interrupted (dcleal@redhat.com)
+- make run_command_print() compatible with python3 (msuchy@redhat.com)
+- remove unused import "commands" (msuchy@redhat.com)
+- Change package-specific config message to debug (dcleal@redhat.com)
+
 * Mon Mar 24 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.5.0-1
 - Prep for python3. (jumanjiman@gmail.com)
 - Print output live for longer running rpmbuild commands. (dgoodwin@redhat.com)
