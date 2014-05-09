@@ -144,6 +144,7 @@ class BuilderBase(object):
         Remove all temporary files and directories.
         """
         if not self.no_cleanup:
+            os.chdir('/')
             debug("Cleaning up [%s]" % self.rpmbuild_dir)
             getoutput("rm -rf %s" % self.rpmbuild_dir)
         else:
