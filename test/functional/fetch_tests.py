@@ -91,6 +91,7 @@ class FetchBuilderTests(TitoGitTestFixture):
 
     def test_with_releaser(self):
         yum_repo_dir = os.path.join(self.output_dir, 'yum')
+        run_command('mkdir -p %s' % yum_repo_dir)
         self._setup_fetchbuilder_releaser(yum_repo_dir)
         tito('release --debug yum-test --arg source=%s' %
                 self.source_filename)

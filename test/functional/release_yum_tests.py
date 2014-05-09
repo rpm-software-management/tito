@@ -25,6 +25,7 @@ from os.path import join
 from functional.fixture import TitoGitTestFixture, tito
 
 from tito.compat import *
+from tito.common import run_command
 
 PKG_NAME = "releaseme"
 
@@ -63,6 +64,7 @@ class YumReleaserTests(TitoGitTestFixture):
 
     def test_with_releaser(self):
         yum_repo_dir = os.path.join(self.output_dir, 'yum')
+        run_command('mkdir -p %s' % yum_repo_dir)
         self._setup_fetchbuilder_releaser(yum_repo_dir)
         tito('release --debug yum-test')
 

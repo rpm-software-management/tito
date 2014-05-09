@@ -202,10 +202,18 @@ def run_command(command, print_on_success=False):
     """
     Run command.
     If command fails, print status code and command output.
-    If print_on_success is True, print status and output even
-    when command succeeds.
     """
     (status, output) = getstatusoutput(command)
+    if status > 0:
+        sys.stderr.write("\n########## ERROR ############\n")
+        sys.stderr.write("Error running command: %s\n" % command)
+        sys.stderr.write("Status code: %s\n" % status)
+        sys.stderr.write("Command output: %s\n" % output)
+        raise RunCommandException(command, status, output)
+    elif print_on_success:
+        print("Command: %s\n" % command)
+        print("Status code: %s\n" % status)
+        print("Command output: %s\n" % output)
     return output
 
 
