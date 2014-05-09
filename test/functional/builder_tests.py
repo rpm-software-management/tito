@@ -14,6 +14,7 @@
 
 import os
 import tempfile
+from os.path import join
 from tito.builder import Builder
 from tito.common import *
 from functional.fixture import TitoGitTestFixture, tito
@@ -41,3 +42,16 @@ class BuilderTests(TitoGitTestFixture):
         builder = Builder(PKG_NAME, None, self.output_dir,
             self.config, {}, {}, **{'offline': True, 'scl': 'ruby193'})
         self.assertEqual('ruby193', builder.scl)
+
+    def test_untagged_test_version(self):
+        self.create_project(PKG_NAME, tag=False)
+        self.assertEqual("", run_command("git tag -l").strip())
+
+        builder = Builder(PKG_NAME, None, self.output_dir,
+            self.config, {}, {}, **{'offline': True, 'test': True})
+        self.assertEqual('0.0.1-1', builder.build_version)
+
+    def test_untagged_test_build(self):
+        self.create_project(PKG_NAME, tag=False)
+        self.assertEqual("", run_command("git tag -l").strip())
+        tito('build --srpm --test')
