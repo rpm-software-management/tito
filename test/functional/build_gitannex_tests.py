@@ -43,13 +43,9 @@ class GitAnnexBuilderTests(TitoGitTestFixture):
         if sys.version[0:3] == '2.4':
             raise SkipTest('git-annex is not available in epel-5')
 
-        # git-annex needs to support --force when locking files.
-        # rpm query is sub-optimal, but older versions do not support `git-annex version'.
-        status, ga_version = getstatusoutput('rpm -q --qf=%{version} git-annex')
+        status, ga_version = getstatusoutput('rpm -q git-annex')
         if status != 0:
             raise SkipTest("git-annex is missing")
-        if ga_version < GIT_ANNEX_MINIMUM_VERSION:
-            raise SkipTest("git-annex '%s' is too old" % ga_version)
 
         # Setup test config:
         self.config = RawConfigParser()
@@ -91,3 +87,13 @@ class GitAnnexBuilderTests(TitoGitTestFixture):
             "extsrc-0.0.2-1.*src.rpm"))))
         self.assertEquals(1, len(glob.glob(join(self.output_dir, 'noarch',
             "extsrc-0.0.2-1.*.noarch.rpm"))))
+
+    def test_lock_force_supported(self):
+        tito('tag --debug --accept-auto-changelog')
+        builder = GitAnnexBuilder(PKG_NAME, None, self.output_dir,
+            self.config, {}, {}, **{'offline': True})
+
+        self.assertTrue(builder._lock_force_supported('5.20140107'))
+        self.assertTrue(builder._lock_force_supported('5.20131213'))
+        self.assertFalse(builder._lock_force_supported('5.20131127.1'))
+        self.assertFalse(builder._lock_force_supported('3.20120522'))
