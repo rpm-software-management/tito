@@ -83,22 +83,6 @@ def extract_bzs(output):
     return output
 
 
-    #BZ = {}
-    #result = None
-    #for line in reversed(output.split('\n')):
-    #    m = re.match("(\d+)\s+-\s+(.*)", line)
-    #    if m:
-    #        bz_number = m.group(1)
-    #        if bz_number in BZ:
-    #            line = "Related: #%s - %s" % (bz_number, m.group(2))
-    #        else:
-    #            line = "Resolves: #%s - %s" % (bz_number, m.group(2))
-    #            BZ[bz_number] = 1
-    #    if result:
-    #        result = line + "\n" + result
-    #    else:
-    #        result = line
-
 def error_out(error_msgs):
     """
     Print the given error message (or list of messages) and exit.
@@ -523,9 +507,6 @@ def create_tgz(git_root, prefix, commit, relative_dir,
     timestamp = get_commit_timestamp(commit)
 
     timestamp_script = get_script_path("tar-fixup-stamp-comment.pl")
-
-    #if not os.path.exists(timestamp_script):
-    #    error_out("Unable to locate required script: %s" % timestamp_script)
 
     # Accomodate standalone projects with specfile i root of git repo:
     relative_git_dir = "%s" % relative_dir

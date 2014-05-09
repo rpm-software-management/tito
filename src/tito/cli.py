@@ -517,10 +517,10 @@ class ReleaseModule(BaseCliModule):
             # section in tito.props. They should probably all get their own
             # target.
 
-            #for opt in ["autobuild_tags", "disttag", "whitelist", "blacklist"]:
-            #    if self.config.has_option("koji", opt):
-            #        releaser_config.set('koji', opt, self.config.get(
-            #            "koji", opt))
+            # for opt in ["autobuild_tags", "disttag", "whitelist", "blacklist"]:
+            #     if self.config.has_option("koji", opt):
+            #         releaser_config.set('koji', opt, self.config.get(
+            #             "koji", opt))
 
     def _print_releasers(self, releaser_config):
         print("Available release targets:")

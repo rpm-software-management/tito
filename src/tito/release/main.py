@@ -129,7 +129,7 @@ class Releaser(ConfigObject):
                     (self.target, opt))
 
         # TODO: accomodate 'builder.*' for yum releaser and we can use this:
-        #for opt in self.releaser_config.options(self.target):
+        # for opt in self.releaser_config.options(self.target):
         #    if opt not in self.GLOBAL_REQUIRED_CONFIG and \
         #            opt not in self.REQUIRED_CONFIG and \
         #            opt not in self.OPTIONAL_CONFIG:

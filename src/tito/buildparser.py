@@ -55,7 +55,7 @@ class BuildTargetParser(object):
             raise TitoException("Invalid build_target: %s. Format: <branch>:<target>"
                                 % build_target)
         branch = parts[0]
-        if not branch in self.valid_branches:
+        if branch not in self.valid_branches:
             raise TitoException("Invalid build_target: %s. Unknown branch reference."
                                 % build_target)
         target = parts[1]
