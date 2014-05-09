@@ -13,7 +13,7 @@
 """
 Common operations.
 """
-
+from __future__ import print_function
 import os
 import re
 import sys
@@ -82,22 +82,6 @@ def extract_bzs(output):
         output.append("Resolves: #%s - %s" % (bz[0], bz[1]))
     return output
 
-
-    #BZ = {}
-    #result = None
-    #for line in reversed(output.split('\n')):
-    #    m = re.match("(\d+)\s+-\s+(.*)", line)
-    #    if m:
-    #        bz_number = m.group(1)
-    #        if bz_number in BZ:
-    #            line = "Related: #%s - %s" % (bz_number, m.group(2))
-    #        else:
-    #            line = "Resolves: #%s - %s" % (bz_number, m.group(2))
-    #            BZ[bz_number] = 1
-    #    if result:
-    #        result = line + "\n" + result
-    #    else:
-    #        result = line
 
 def error_out(error_msgs):
     """
@@ -228,16 +212,17 @@ def run_command(command, print_on_success=False):
 def run_command_print(command):
     """
     Simliar to run_command but prints each line of output on the fly.
-    TODO: make this work in both python2 and python3.
     """
     output = []
     env = os.environ.copy()
     env['LC_ALL'] = 'C'
     p = subprocess.Popen(shlex.split(command),
-        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env)
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env,
+        universal_newlines=True)
     for line in run_subprocess(p):
-        print(line),
-        output.append(line.rstrip('\n'))
+        line = line.rstrip('\n')
+        print(line)
+        output.append(line)
     print("\n"),
     if p.poll() > 0:
         raise RunCommandException(command, p.poll(), "\n".join(output))
@@ -522,9 +507,6 @@ def create_tgz(git_root, prefix, commit, relative_dir,
     timestamp = get_commit_timestamp(commit)
 
     timestamp_script = get_script_path("tar-fixup-stamp-comment.pl")
-
-    #if not os.path.exists(timestamp_script):
-    #    error_out("Unable to locate required script: %s" % timestamp_script)
 
     # Accomodate standalone projects with specfile i root of git repo:
     relative_git_dir = "%s" % relative_dir
