@@ -10,6 +10,7 @@ Python versions
 Tito supports Python versions 2.4 (RHEL 5) and up.
 See http://docs.python.org/dev/howto/pyporting.html
 and http://python3porting.com/differences.html
+and https://docs.python.org/3.0/whatsnew/3.0.html
 for tips on writing portable Python code.
 
 In particular, you must capture exceptions in a way that's
