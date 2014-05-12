@@ -84,6 +84,24 @@ class CommonTests(unittest.TestCase):
         self.assertEquals("fe87e2b75ed1850718d99c797cc171b88bfad5ca",
                           extract_sha1(ls_remote_output))
 
+    def test_compare_version(self):
+        self.assertEquals(0, compare_version("1", "1"))
+        self.assertTrue(compare_version("2.1", "2.2") < 0)
+        self.assertTrue(compare_version("3.0.4.10", "3.0.4.2") > 0)
+        self.assertTrue(compare_version("4.08", "4.08.01") < 0)
+        self.assertTrue(compare_version("3.2.1.9.8144", "3.2") > 0)
+        self.assertTrue(compare_version("3.2", "3.2.1.9.8144") < 0)
+        self.assertTrue(compare_version("1.2", "2.1") < 0)
+        self.assertTrue(compare_version("2.1", "1.2") > 0)
+        self.assertTrue(compare_version("1.0", "1.0.1") < 0)
+        self.assertTrue(compare_version("1.0.1", "1.0") > 0)
+        self.assertEquals(0, compare_version("5.6.7", "5.6.7"))
+        self.assertEquals(0, compare_version("1.01.1", "1.1.1"))
+        self.assertEquals(0, compare_version("1.1.1", "1.01.1"))
+        self.assertEquals(0, compare_version("1", "1.0"))
+        self.assertEquals(0, compare_version("1.0", "1"))
+        self.assertEquals(0, compare_version("1.0.2.0", "1.0.2"))
+
 
 class VersionMathTest(unittest.TestCase):
     def test_increase_version_minor(self):
@@ -219,21 +237,3 @@ class ExtractBugzillasTest(unittest.TestCase):
         find_wrote_in_rpmbuild_output(output)
 
         common.error_out.assert_called_once_with("Unable to locate 'Wrote: ' lines in rpmbuild output: '%s'" % output)
-
-    def test_compare_version(self):
-        self.assertEquals(0, compare_version("1", "1"))
-        self.assertTrue(compare_version("2.1", "2.2") < 0)
-        self.assertTrue(compare_version("3.0.4.10", "3.0.4.2") > 0)
-        self.assertTrue(compare_version("4.08", "4.08.01") < 0)
-        self.assertTrue(compare_version("3.2.1.9.8144", "3.2") > 0)
-        self.assertTrue(compare_version("3.2", "3.2.1.9.8144") < 0)
-        self.assertTrue(compare_version("1.2", "2.1") < 0)
-        self.assertTrue(compare_version("2.1", "1.2") > 0)
-        self.assertTrue(compare_version("1.0", "1.0.1") < 0)
-        self.assertTrue(compare_version("1.0.1", "1.0") > 0)
-        self.assertEquals(0, compare_version("5.6.7", "5.6.7"))
-        self.assertEquals(0, compare_version("1.01.1", "1.1.1"))
-        self.assertEquals(0, compare_version("1.1.1", "1.01.1"))
-        self.assertEquals(0, compare_version("1", "1.0"))
-        self.assertEquals(0, compare_version("1.0", "1"))
-        self.assertEquals(0, compare_version("1.0.2.0", "1.0.2"))
