@@ -1,5 +1,5 @@
 # https://index.docker.io/_/centos/
-FROM tianon/centos:6.4
+FROM centos:6.4
 
 # http://jumanjiman.github.io/
 MAINTAINER Paul Morgan <jumanjiman@gmail.com>

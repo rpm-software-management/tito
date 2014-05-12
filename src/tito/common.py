@@ -677,3 +677,13 @@ def find_wrote_in_rpmbuild_output(output):
     if not paths:
         error_out("Unable to locate 'Wrote: ' lines in rpmbuild output: '%s'" % output)
     return paths
+
+
+def compare_version(version1, version2):
+    """
+    Compare two version strings, returning negative if version1 is < version2,
+    zero when equal and positive when version1 > version2.
+    """
+    def normalize(v):
+        return [int(x) for x in re.sub(r'(\.0+)*$', '', v).split(".")]
+    return cmp(normalize(version1), normalize(version2))
