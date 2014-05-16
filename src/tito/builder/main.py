@@ -201,7 +201,6 @@ class BuilderBase(object):
                 rpmbuild_options, self._get_rpmbuild_dir_options(),
                 define_dist, self.spec_file))
         output = run_command_print(cmd)
-        print(output)
         self.srpm_location = find_wrote_in_rpmbuild_output(output)[0]
         self.artifacts.append(self.srpm_location)
 
