@@ -103,7 +103,7 @@ class CommonTests(unittest.TestCase):
         self.assertEquals(0, compare_version("1.0.2.0", "1.0.2"))
 
     def test_run_command_print(self):
-        self.assertEquals('\n', run_command_print("sleep 0.1"))
+        self.assertEquals('', run_command_print("sleep 0.1"))
 
 
 class VersionMathTest(unittest.TestCase):
