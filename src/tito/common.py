@@ -240,7 +240,8 @@ def run_subprocess(p):
     while(True):
         retcode = p.poll()
         line = p.stdout.readline()
-        yield line
+        if len(line) > 0:
+            yield line
         if(retcode is not None):
             break
 
