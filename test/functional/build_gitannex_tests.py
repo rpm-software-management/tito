@@ -87,6 +87,7 @@ class GitAnnexBuilderTests(TitoGitTestFixture):
             "extsrc-0.0.2-1.*src.rpm"))))
         self.assertEquals(1, len(glob.glob(join(self.output_dir, 'noarch',
             "extsrc-0.0.2-1.*.noarch.rpm"))))
+        builder.cleanup()
 
     def test_lock_force_supported(self):
         tito('tag --debug --accept-auto-changelog')
