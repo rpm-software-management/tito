@@ -1017,7 +1017,7 @@ class GitAnnexBuilder(NoTgzBuilder):
         os.chdir(old_cwd)
 
     def cleanup(self):
-        if _lock_force_supported(_get_annex_version()):
+        if self._lock_force_supported(self._get_annex_version()):
             run_command("git-annex lock --force")
         else:
             run_command("git-annex lock")
@@ -1027,7 +1027,7 @@ class GitAnnexBuilder(NoTgzBuilder):
         # git-annex needs to support --force when locking files.
         ga_version = run_command('git-annex version').split('\n')
         if ga_version[0].startswith('git-annex version'):
-            ga_version[0].split()[-1]
+            return ga_version[0].split()[-1]
         else:
             return 0
 
