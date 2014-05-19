@@ -127,16 +127,21 @@ class BuilderBase(object):
         # Reset list of artifacts on each call to run().
         self.artifacts = []
 
-        if options.tgz:
-            self.tgz()
-        if options.srpm:
-            self.srpm()
-        if options.rpm:
-            # TODO: not protected anymore
-            self.rpm()
-            self._auto_install()
+        try:
+            try:
+                if options.tgz:
+                    self.tgz()
+                if options.srpm:
+                    self.srpm()
+                if options.rpm:
+                    # TODO: not protected anymore
+                    self.rpm()
+                    self._auto_install()
+            except KeyboardInterrupt:
+                print("Interrupted, cleaning up...")
+        finally:
+            self.cleanup()
 
-        self.cleanup()
         return self.artifacts
 
     def cleanup(self):
