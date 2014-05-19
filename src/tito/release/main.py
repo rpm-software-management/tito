@@ -84,20 +84,28 @@ class Releaser(ConfigObject):
         self.offline = False
         if 'offline' in kwargs:
             self.offline = kwargs['offline']
-        self.builder = create_builder(name, tag,
-                config,
-                build_dir, user_config, self.builder_args, offline=self.offline)
-        self.project_name = self.builder.project_name
-
-        self.working_dir = mkdtemp(dir=self.builder.rpmbuild_basedir,
-                prefix="release-%s" % self.builder.project_name)
-        print("Working in: %s" % self.working_dir)
 
         # Config for all releasers:
         self.releaser_config = releaser_config
 
         # The actual release target we're building:
         self.target = target
+
+        # Use the builder from the release target, rather than the default
+        # one defined for this git repo or sub-package:
+        builder_class = None
+        if self.releaser_config.has_option(self.target, 'builder'):
+            builder_class = self.releaser_config.get(self.target, 'builder')
+        self.builder = create_builder(name, tag,
+                config,
+                build_dir, user_config, self.builder_args,
+                builder_class=builder_class, offline=self.offline)
+
+        self.project_name = self.builder.project_name
+
+        self.working_dir = mkdtemp(dir=self.builder.rpmbuild_basedir,
+                prefix="release-%s" % self.builder.project_name)
+        print("Working in: %s" % self.working_dir)
 
         self.dry_run = False
         self.test = test  # releaser must know to use builder designation rather than tag
@@ -249,14 +257,6 @@ class RsyncReleaser(Releaser):
         self.build_dir = build_dir
         self.prefix = prefix
 
-        # Use the builder from the release target, rather than the default
-        # one defined for this git repo or sub-package:
-        # TODO: this is a little sketchy, creating two builders?
-        self.builder = create_builder(name, tag,
-                config,
-                build_dir, user_config, self.builder_args,
-                builder_class=self.releaser_config.get(self.target, 'builder'),
-                offline=self.offline)
         if self.releaser_config.has_option(self.target, "scl"):
             sys.stderr.write("WARNING: please rename 'scl' to "
                 "'builder.scl' in releasers.conf\n")
