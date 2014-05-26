@@ -15,6 +15,7 @@ BuildArch: noarch
 BuildRequires: python-devel
 BuildRequires: python-setuptools
 BuildRequires: asciidoc
+BuildRequires: docbook-style-xsl
 BuildRequires: libxslt
 
 Requires: python-setuptools
