@@ -1,1 +1,1 @@
-../../HACKING.mkd
+../../HACKING
