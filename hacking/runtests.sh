@@ -86,8 +86,15 @@ header() {
 build_image() {
     name=$1
     header $name
+    # Use hard link + gitignore as workaround for
+    # https://github.com/dotcloud/docker/issues/1676
+    # Do not use...
+    #   symlink: not available when building image
+    #   cp: invalidates docker build cache
+    ln -f tito.spec hacking/$name/
     pushd hacking/$name && echo $PWD && docker build --rm -t $name .
     popd
+    rm -f hacking/$name/tito.spec
 }
 
 run_inside_image() {
