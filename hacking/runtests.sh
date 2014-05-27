@@ -86,7 +86,7 @@ header() {
 build_image() {
     name=$1
     header $name
-    pushd hacking/$name && echo $PWD && docker build -t $name .
+    pushd hacking/$name && echo $PWD && docker build --rm -t $name .
     popd
 }
 
