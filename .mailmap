@@ -1,0 +1,21 @@
+# -------------------------------------------------------------------
+# Format of each line allows mailmap to replace both the name
+# and the email of a commit matching the specified commit email:
+#
+# Proper Name <proper@email.xx> Commit Name <commit@email.xx>
+#
+# See git-shortlog(1) for more explanation.
+# -------------------------------------------------------------------
+Devan Goodwin <dgoodwin@redhat.com> Devan Goodwin <dgoodwin@redhat.com>
+Devan Goodwin <dgoodwin@redhat.com> Devan Goodwin <dgoodwin@rm-rf.ca>
+Ivan Necas <inecas@redhat.com> Ivan Necas <inecas@redhat.com>
+Ivan Necas <inecas@redhat.com> Ivan Necas <necasik@gmail.com>
+James Bowes <jbowes@redhat.com> James Bowes <jbowes@redhat.com>
+James Bowes <jbowes@redhat.com> James Bowes <jbowes@repl.ca>
+Mike McCune <mmccune@redhat.com> Mike McCune <mmccune@redhat.com>
+Mike McCune <mmccune@redhat.com> Mike McCune <mmccune@gibson.pdx.redhat.com>
+Miroslav Suchý <msuchy@redhat.com> Miroslav Suchý <msuchy@redhat.com>
+Miroslav Suchý <msuchy@redhat.com> Miroslav Suchy <miroslav@suchy.cz>
+jesus m. rodriguez <jesusr@redhat.com> jesus m. rodriguez <jesusr@redhat.com>
+jesus m. rodriguez <jesusr@redhat.com> jesus m. rodriguez <jmrodri@gmail.com>
+jesus m. rodriguez <jesusr@redhat.com> jesus m. rodriguez <jmrodri@nc.rr.com>
