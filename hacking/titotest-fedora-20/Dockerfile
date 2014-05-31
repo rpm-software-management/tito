@@ -1,5 +1,5 @@
-# https://index.docker.io/_/centos/
-FROM mattdm/fedora:f20
+# https://index.docker.io/_/fedora/
+FROM fedora:20
 
 # http://jumanjiman.github.io/
 MAINTAINER Paul Morgan <jumanjiman@gmail.com>
