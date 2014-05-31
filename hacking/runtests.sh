@@ -62,7 +62,6 @@
 distros='
 titotest-centos-5.9
 titotest-centos-6.4
-titotest-fedora-19
 titotest-fedora-20
 titotest-fedora-rawhide
 '
