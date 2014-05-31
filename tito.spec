@@ -17,6 +17,7 @@ BuildRequires: python-setuptools
 BuildRequires: asciidoc
 BuildRequires: docbook-style-xsl
 BuildRequires: libxslt
+BuildRequires: rpmdevtools
 
 Requires: python-setuptools
 Requires: python-bugzilla

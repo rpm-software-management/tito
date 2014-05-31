@@ -10,6 +10,7 @@ RUN yum -y install git rpm-build \
     python-devel python-nose python-setuptools python-pep8 \
     python-pip \
     docbook-style-xsl \
+    rpmdevtools \
     libxslt asciidoc tar createrepo which python-bugzilla
 
 RUN pip-python install mock --upgrade
