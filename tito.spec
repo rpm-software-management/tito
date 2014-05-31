@@ -23,7 +23,7 @@ BuildRequires: createrepo
 BuildRequires: tar
 BuildRequires: which
 
-%if 0%{?fedora} >= 20
+%if 0%{?fedora} >= 19
 # todo: add %check to spec file in accordance with
 # https://fedoraproject.org/wiki/QA/Testing_in_check
 BuildRequires: git
