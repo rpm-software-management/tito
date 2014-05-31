@@ -64,10 +64,12 @@ titotest-centos-5.9
 titotest-centos-6.4
 titotest-fedora-19
 titotest-fedora-20
+titotest-fedora-rawhide
 '
 
 python3_distros='
 titotest-fedora-20
+titotest-fedora-rawhide
 '
 
 rm -f /tmp/titotest*.out &> /dev/null
