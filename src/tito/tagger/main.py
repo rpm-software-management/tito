@@ -545,7 +545,7 @@ class VersionTagger(ConfigObject):
         """
         provide a configuration in tito.props to a file that is a
         python string.Template conforming blob, like
-            [version]
+            [version_template]
             template_file = ./rel-eng/templates/my_java_properties
 
         variables defined inside the template are $version and $release
@@ -563,8 +563,8 @@ class VersionTagger(ConfigObject):
     def _version_file_path(self):
         """
         provide a version file to write in tito.props, like
-            [version]
-            file = ./foo.rb
+            [version_template]
+            destination_file = ./foo.rb
         """
         if self.config.has_option("version_template", "destination_file"):
             return self.config.get("version_template", "destination_file")
