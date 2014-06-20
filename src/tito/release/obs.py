@@ -16,7 +16,7 @@ import tempfile
 import subprocess
 import sys
 
-from tito.common import run_command, debug, extract_bzs
+from tito.common import run_command, debug, BugzillaExtractor
 from tito.compat import *
 from tito.release import Releaser
 
@@ -73,7 +73,8 @@ class ObsReleaser(Releaser):
         write(fd, "Update %s to %s\n" % (self.obs_package_name,
             self.builder.build_version))
         # Write out Resolves line for all bugzillas we see in commit diff:
-        for line in extract_bzs(diff_output):
+        extractor = BugzillaExtractor(diff_output)
+        for line in extractor.extract():
             write(fd, line + "\n")
 
         print("")

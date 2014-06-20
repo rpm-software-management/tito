@@ -18,6 +18,7 @@ BuildRequires: asciidoc
 BuildRequires: libxslt
 
 Requires: python-setuptools
+Requires: python-bugzilla
 Requires: rpm-build
 Requires: rpmlint
 Requires: fedpkg

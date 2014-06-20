@@ -17,7 +17,7 @@ import subprocess
 import sys
 import tempfile
 
-from tito.common import run_command, extract_bzs, debug, extract_sources
+from tito.common import run_command, BugzillaExtractor, debug, extract_sources
 from tito.compat import getoutput, getstatusoutput, write
 from tito.release import Releaser
 from tito.release.main import PROTECTED_BUILD_SYS_FILES
@@ -96,7 +96,9 @@ class FedoraGitReleaser(Releaser):
         write(fd, "Update %s to %s\n" % (self.project_name,
             self.builder.build_version))
         # Write out Resolves line for all bugzillas we see in commit diff:
-        for line in extract_bzs(diff_output):
+        # TODO: move to DistGitBuilder only?
+        extractor = BugzillaExtractor(diff_output)
+        for line in extractor.extract():
             write(fd, line + "\n")
 
         print("")
