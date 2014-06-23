@@ -66,13 +66,15 @@ are then synced to the first branch your releaser lists. After this tito will
 git merge the first branch into all other listed branches, triggering builds
 in each.
 +
-WARNING: Highly experimental, very prone to failure if merging master into
-your branches is likely to cause a conflict. You will need to cleanup manually
-if this occurs.
+The 'required_bz_flags' property can be specified to have tito check Red Hat Bugzilla to see if each bug number extracted from the changelog has appropriate flags. If it does not, it will be skipped in the commit message. If no bugs are found with the required tags, a 'placeholder_bz' can be specified (see below), otherwise the release will abort.
++
+The 'placeholder_bz' property can be specified to use if no bugs were found in the changelog with the required flags.
 +
  [fedora-git]
  releaser = tito.release.FedoraGitReleaser
  branches = master el5 el6 f14 f15 f16
+ required_bz_flags = myos-1.1.0+ pm_ack+
+ placeholder_bz = 100000
 +
 If you would like to build (ie - koji) against a different target than what is
 default for the FedoraGit/DistGit branch currently being worked on it can be
