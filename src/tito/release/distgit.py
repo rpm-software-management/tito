@@ -132,7 +132,6 @@ class FedoraGitReleaser(Releaser):
                 "user = dgoodwin@redhat.com",
                 "password = mypassword"])
 
-
         print("")
         print("##### Commit message: #####")
         print("")

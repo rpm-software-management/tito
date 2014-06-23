@@ -93,7 +93,6 @@ class BugzillaExtractor(object):
         else:
             debug("Found bugzilla credentials in ~/.bugzillarc")
 
-
     def _extract_bzs(self):
         """
         Parses the output of CVS diff or a series of git commit log entries,
