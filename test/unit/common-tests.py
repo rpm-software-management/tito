@@ -105,6 +105,24 @@ class CommonTests(unittest.TestCase):
     def test_run_command_print(self):
         self.assertEquals('', run_command_print("sleep 0.1"))
 
+    def test_rpmbuild_claims_to_be_successful(self):
+        succeeded_result = "success"
+        output = "Wrote: %s" % succeeded_result
+
+        success_line = find_wrote_in_rpmbuild_output(output)
+
+        self.assertEquals(succeeded_result, success_line[0])
+
+    def test_rpmbuild_which_ended_with_error_is_described_with_the_analyzed_line(self):
+        output = "some error output from rpmbuild\n" \
+            "next error line"
+
+        common.error_out = Mock()
+
+        find_wrote_in_rpmbuild_output(output)
+
+        common.error_out.assert_called_once_with("Unable to locate 'Wrote: ' lines in rpmbuild output: '%s'" % output)
+
 
 class VersionMathTest(unittest.TestCase):
     def test_increase_version_minor(self):
@@ -182,61 +200,202 @@ class ExtractBugzillasTest(unittest.TestCase):
 
     def test_single_line(self):
         commit_log = "- 123456: Did something interesting."
-        results = extract_bzs(commit_log)
+        extractor = BugzillaExtractor(commit_log)
+        results = extractor.extract()
         self.assertEquals(1, len(results))
         self.assertEquals("Resolves: #123456 - Did something interesting.",
                 results[0])
 
     def test_single_with_dash(self):
         commit_log = "- 123456 - Did something interesting."
-        results = extract_bzs(commit_log)
+        extractor = BugzillaExtractor(commit_log)
+        results = extractor.extract()
         self.assertEquals(1, len(results))
         self.assertEquals("Resolves: #123456 - Did something interesting.",
                 results[0])
 
     def test_single_with_no_spaces(self):
         commit_log = "- 123456-Did something interesting."
-        results = extract_bzs(commit_log)
+        extractor = BugzillaExtractor(commit_log)
+        results = extractor.extract()
         self.assertEquals(1, len(results))
         self.assertEquals("Resolves: #123456 - Did something interesting.",
                 results[0])
 
     def test_diff_format(self):
         commit_log = "+- 123456: Did something interesting."
-        results = extract_bzs(commit_log)
+        extractor = BugzillaExtractor(commit_log)
+        results = extractor.extract()
         self.assertEquals(1, len(results))
         self.assertEquals("Resolves: #123456 - Did something interesting.",
                 results[0])
 
     def test_single_line_no_bz(self):
         commit_log = "- Did something interesting."
-        results = extract_bzs(commit_log)
+        extractor = BugzillaExtractor(commit_log)
+        results = extractor.extract()
         self.assertEquals(0, len(results))
 
     def test_multi_line(self):
         commit_log = "- 123456: Did something interesting.\n- Another commit.\n" \
             "- 456789: A third commit."
-        results = extract_bzs(commit_log)
+        extractor = BugzillaExtractor(commit_log)
+        results = extractor.extract()
         self.assertEquals(2, len(results))
         self.assertEquals("Resolves: #123456 - Did something interesting.",
                 results[0])
         self.assertEquals("Resolves: #456789 - A third commit.",
                 results[1])
 
-    def test_rpmbuild_cailms_to_be_successul(self):
-        succeeded_result = "success"
-        output = "Wrote: %s" % succeeded_result
+    def test_single_required_flag_found(self):
 
-        success_line = find_wrote_in_rpmbuild_output(output)
+        extractor = BugzillaExtractor("", required_flags=[
+            'myos-1.0+', 'pm_ack+'])
+        bug1 = ('123456', 'Did something interesting.')
+        extractor._extract_bzs = Mock(return_value=[
+            bug1])
 
-        self.assertEquals(succeeded_result, success_line[0])
+        extractor._load_bug = Mock(
+            return_value=MockBug(bug1[0], ['myos-1.0+', 'pm_ack+']))
 
-    def test_rpmbuild_which_ended_with_error_is_described_with_the_analyzed_line(self):
-        output = "some error output from rpmbuild\n" \
-            "next error line"
+        results = extractor.extract()
 
-        common.error_out = Mock()
+        self.assertEquals(1, len(extractor.bzs))
+        self.assertEquals(bug1[0], extractor.bzs[0][0])
+        self.assertEquals(bug1[1], extractor.bzs[0][1])
 
-        find_wrote_in_rpmbuild_output(output)
+        self.assertEquals(1, len(results))
+        self.assertEquals("Resolves: #123456 - Did something interesting.",
+                results[0])
 
-        common.error_out.assert_called_once_with("Unable to locate 'Wrote: ' lines in rpmbuild output: '%s'" % output)
+    def test_required_flags_found(self):
+
+        extractor = BugzillaExtractor("", required_flags=[
+            'myos-1.0+', 'pm_ack+'])
+        bug1 = ('123456', 'Did something interesting.')
+        bug2 = ('444555', 'Something else.')
+        bug3 = ('987654', 'Such amaze!')
+        extractor._extract_bzs = Mock(return_value=[
+            bug1, bug2, bug3])
+
+        bug_mocks = [
+            MockBug(bug1[0], ['myos-1.0+', 'pm_ack+']),
+            MockBug(bug2[0], ['myos-2.0?', 'pm_ack?']),
+            MockBug(bug3[0], ['myos-1.0+', 'pm_ack+'])]
+
+        def next_bug(*args):
+            return bug_mocks.pop(0)
+
+        extractor._load_bug = Mock(side_effect=next_bug)
+
+        results = extractor.extract()
+
+        self.assertEquals(2, len(extractor.bzs))
+        self.assertEquals(bug1[0], extractor.bzs[0][0])
+        self.assertEquals(bug1[1], extractor.bzs[0][1])
+        self.assertEquals(bug3[0], extractor.bzs[1][0])
+        self.assertEquals(bug3[1], extractor.bzs[1][1])
+
+        self.assertEquals(2, len(results))
+        self.assertEquals("Resolves: #123456 - Did something interesting.",
+                results[0])
+        self.assertEquals("Resolves: #987654 - Such amaze!",
+                results[1])
+
+    def test_required_flags_missing(self):
+
+        extractor = BugzillaExtractor("", required_flags=[
+            'myos-2.0+'])
+        bug1 = ('123456', 'Did something interesting.')
+        bug2 = ('444555', 'Something else.')
+        bug3 = ('987654', 'Such amaze!')
+        extractor._extract_bzs = Mock(return_value=[
+            bug1, bug2, bug3])
+
+        bug_mocks = [
+            MockBug(bug1[0], ['myos-1.0+', 'pm_ack+']),
+            MockBug(bug2[0], ['myos-2.0?', 'pm_ack?']),
+            MockBug(bug3[0], ['myos-1.0+', 'pm_ack+'])]
+
+        def next_bug(*args):
+            return bug_mocks.pop(0)
+
+        extractor._load_bug = Mock(side_effect=next_bug)
+
+        results = extractor.extract()
+
+        self.assertEquals(0, len(extractor.bzs))
+        self.assertEquals(0, len(results))
+
+    def test_required_flags_missing_with_placeholder(self):
+
+        extractor = BugzillaExtractor("", required_flags=[
+            'myos-2.0+'], placeholder_bz="54321")
+        bug1 = ('123456', 'Did something interesting.')
+        extractor._extract_bzs = Mock(return_value=[
+            bug1])
+
+        extractor._load_bug = Mock(
+            return_value=MockBug(bug1[0], ['myos-1.0+', 'pm_ack+']))
+
+        results = extractor.extract()
+
+        self.assertEquals(0, len(extractor.bzs))
+
+        self.assertEquals(1, len(results))
+        self.assertEquals("Related: #54321", results[0])
+
+    def test_same_id_multiple_times(self):
+
+        extractor = BugzillaExtractor("", required_flags=[
+            'myos-1.0+', 'pm_ack+'])
+        bug1 = ('123456', 'Did something interesting.')
+        bug3 = ('123456', 'Oops, lets try again.')
+        extractor._extract_bzs = Mock(return_value=[
+            bug1, bug3])
+
+        extractor._load_bug = Mock(
+            return_value=MockBug(bug1[0], ['myos-1.0+', 'pm_ack+']))
+
+        results = extractor.extract()
+
+        self.assertEquals(2, len(extractor.bzs))
+        self.assertEquals(bug1[0], extractor.bzs[0][0])
+        self.assertEquals(bug1[1], extractor.bzs[0][1])
+        self.assertEquals(bug3[0], extractor.bzs[1][0])
+        self.assertEquals(bug3[1], extractor.bzs[1][1])
+
+        self.assertEquals(2, len(results))
+        self.assertEquals("Resolves: #123456 - Did something interesting.",
+                results[0])
+        self.assertEquals("Resolves: #123456 - Oops, lets try again.",
+                results[1])
+
+    def test_bug_doesnt_exist(self):
+
+        extractor = BugzillaExtractor("", required_flags=[
+            'myos-1.0+', 'pm_ack+'])
+        bug1 = ('123456', 'Did something interesting.')
+        extractor._extract_bzs = Mock(return_value=[
+            bug1])
+
+        from tito.compat import xmlrpclib
+        extractor._load_bug = Mock(side_effect=xmlrpclib.Fault("", ""))
+
+        results = extractor.extract()
+
+        self.assertEquals(0, len(extractor.bzs))
+        self.assertEquals(0, len(results))
+
+
+class MockBug(object):
+    def __init__(self, bug_id, flags):
+        self.flags = {}
+        for flag in flags:
+            self.flags[flag[0:-1]] = flag[-1]
+
+    def get_flag_status(self, flag):
+        if flag in self.flags:
+            return self.flags[flag]
+        else:
+            return None
