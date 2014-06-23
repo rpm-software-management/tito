@@ -82,9 +82,17 @@ class BugzillaExtractor(object):
         self.bzs = self._extract_bzs()
 
         if self.required_flags:
+            self._check_for_bugzilla_creds()
             self.bzs = self._filter_bzs_with_flags()
 
         return self._format_lines()
+
+    def _check_for_bugzilla_creds(self):
+        if not os.path.exists(os.path.expanduser("~/.bugzillarc")):
+            raise MissingBugzillaCredsException("Missing ~/.bugzillarc")
+        else:
+            debug("Found bugzilla credentials in ~/.bugzillarc")
+
 
     def _extract_bzs(self):
         """
@@ -126,6 +134,7 @@ class BugzillaExtractor(object):
             # No bugzillas had required flags, use a placeholder if
             # we have one, otherwise we have to error out.
             if self.placeholder_bz:
+                print("No bugs with required flags were found, using placeholder: %s" % self.placeholder_bz)
                 output.append("Related: #%s" % self.placeholder_bz)
             else:
                 error_out("No bugzillas found with required flags: %s" %
@@ -150,9 +159,10 @@ class BugzillaExtractor(object):
             flags_missing = False
             for flag in self.required_flags:
                 if bug.get_flag_status(flag[0:-1]) != flag[-1]:
-                    print("Bug %s missing required flag, skipping: %s" %
+                    print("WARNING: Bug %s missing required flag: %s" %
                         (bug_id, flag))
                     flags_missing = True
+                    break
                 else:
                     debug("Bug %s has required flag: %s" %
                         (bug_id, flag))

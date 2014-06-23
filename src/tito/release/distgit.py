@@ -17,7 +17,8 @@ import subprocess
 import sys
 import tempfile
 
-from tito.common import run_command, BugzillaExtractor, debug, extract_sources
+from tito.common import run_command, BugzillaExtractor, debug, extract_sources, \
+    MissingBugzillaCredsException, error_out
 from tito.compat import getoutput, getstatusoutput, write
 from tito.release import Releaser
 from tito.release.main import PROTECTED_BUILD_SYS_FILES
@@ -85,6 +86,23 @@ class FedoraGitReleaser(Releaser):
         self._git_upload_sources(project_checkout)
         self._git_user_confirm_commit(project_checkout)
 
+    def _get_bz_flags(self):
+        required_bz_flags = None
+        if self.releaser_config.has_option(self.target,
+            'required_bz_flags'):
+            required_bz_flags = self.releaser_config.get(self.target,
+                'required_bz_flags').split(" ")
+            debug("Found required flags: %s" % required_bz_flags)
+
+        placeholder_bz = None
+        if self.releaser_config.has_option(self.target,
+            'placeholder_bz'):
+            placeholder_bz = self.releaser_config.get(self.target,
+                'placeholder_bz')
+            debug("Found placeholder bugzilla: %s" % placeholder_bz)
+
+        return (required_bz_flags, placeholder_bz)
+
     def _confirm_commit_msg(self, diff_output):
         """
         Generates a commit message in a temporary file, gives the user a
@@ -97,9 +115,23 @@ class FedoraGitReleaser(Releaser):
             self.builder.build_version))
         # Write out Resolves line for all bugzillas we see in commit diff:
         # TODO: move to DistGitBuilder only?
-        extractor = BugzillaExtractor(diff_output)
-        for line in extractor.extract():
-            write(fd, line + "\n")
+        try:
+            (required_bz_flags, placeholder_bz) = self._get_bz_flags()
+            extractor = BugzillaExtractor(diff_output,
+                required_flags=required_bz_flags,
+                placeholder_bz=placeholder_bz)
+            for line in extractor.extract():
+                write(fd, line + "\n")
+        except MissingBugzillaCredsException:
+            error_out([
+                "Releaser specifies required flags but you have not configured",
+                "a ~/.bugzillarc with your bugzilla credentials.",
+                "Example:",
+                "",
+                "[bugzilla.redhat.com]",
+                "user = dgoodwin@redhat.com",
+                "password = mypassword"])
+
 
         print("")
         print("##### Commit message: #####")
