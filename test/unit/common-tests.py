@@ -254,6 +254,7 @@ class ExtractBugzillasTest(unittest.TestCase):
         bug1 = ('123456', 'Did something interesting.')
         extractor._extract_bzs = Mock(return_value=[
             bug1])
+        extractor._check_for_bugzilla_creds = Mock()
 
         extractor._load_bug = Mock(
             return_value=MockBug(bug1[0], ['myos-1.0+', 'pm_ack+']))
@@ -277,6 +278,7 @@ class ExtractBugzillasTest(unittest.TestCase):
         bug3 = ('987654', 'Such amaze!')
         extractor._extract_bzs = Mock(return_value=[
             bug1, bug2, bug3])
+        extractor._check_for_bugzilla_creds = Mock()
 
         bug_mocks = [
             MockBug(bug1[0], ['myos-1.0+', 'pm_ack+']),
@@ -311,6 +313,7 @@ class ExtractBugzillasTest(unittest.TestCase):
         bug3 = ('987654', 'Such amaze!')
         extractor._extract_bzs = Mock(return_value=[
             bug1, bug2, bug3])
+        extractor._check_for_bugzilla_creds = Mock()
 
         bug_mocks = [
             MockBug(bug1[0], ['myos-1.0+', 'pm_ack+']),
@@ -334,6 +337,7 @@ class ExtractBugzillasTest(unittest.TestCase):
         bug1 = ('123456', 'Did something interesting.')
         extractor._extract_bzs = Mock(return_value=[
             bug1])
+        extractor._check_for_bugzilla_creds = Mock()
 
         extractor._load_bug = Mock(
             return_value=MockBug(bug1[0], ['myos-1.0+', 'pm_ack+']))
@@ -353,6 +357,7 @@ class ExtractBugzillasTest(unittest.TestCase):
         bug3 = ('123456', 'Oops, lets try again.')
         extractor._extract_bzs = Mock(return_value=[
             bug1, bug3])
+        extractor._check_for_bugzilla_creds = Mock()
 
         extractor._load_bug = Mock(
             return_value=MockBug(bug1[0], ['myos-1.0+', 'pm_ack+']))
@@ -378,6 +383,7 @@ class ExtractBugzillasTest(unittest.TestCase):
         bug1 = ('123456', 'Did something interesting.')
         extractor._extract_bzs = Mock(return_value=[
             bug1])
+        extractor._check_for_bugzilla_creds = Mock()
 
         from tito.compat import xmlrpclib
         extractor._load_bug = Mock(side_effect=xmlrpclib.Fault("", ""))
