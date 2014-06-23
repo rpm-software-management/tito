@@ -22,11 +22,13 @@ if PY2:
     from ConfigParser import NoOptionError
     from ConfigParser import RawConfigParser
     from StringIO import StringIO
+    import xmlrpclib
 else:
     import subprocess
     from configparser import NoOptionError
     from configparser import RawConfigParser
     from io import StringIO
+    import xmlrpc.client as xmlrpclib
 
 
 def getstatusoutput(cmd):

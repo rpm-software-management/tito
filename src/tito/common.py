@@ -20,9 +20,9 @@ import subprocess
 import shlex
 
 from bugzilla.rhbugzilla import RHBugzilla
-from xmlrpclib import Fault
 
 from tito.compat import *
+from tito.exception import TitoException
 from tito.exception import RunCommandException
 
 DEFAULT_BUILD_DIR = "/tmp/tito"
@@ -54,6 +54,10 @@ def extract_sources(spec_file_lines):
         if match:
             filenames.append(match.group(1))
     return filenames
+
+
+class MissingBugzillaCredsException(TitoException):
+    pass
 
 
 class BugzillaExtractor(object):
@@ -139,7 +143,7 @@ class BugzillaExtractor(object):
             bug_id = bz_tuple[0]
             try:
                 bug = self._load_bug(bug_id)
-            except Fault:
+            except xmlrpclib.Fault:
                 print("WARNING: Bug %s does not seem to exist." % bug_id)
                 continue
             debug("Bug %s has flags: %s" % (bug_id, bug.flags))

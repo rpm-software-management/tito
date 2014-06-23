@@ -379,8 +379,8 @@ class ExtractBugzillasTest(unittest.TestCase):
         extractor._extract_bzs = Mock(return_value=[
             bug1])
 
-        from xmlrpclib import Fault
-        extractor._load_bug = Mock(side_effect=Fault("", ""))
+        from tito.compat import xmlrpclib
+        extractor._load_bug = Mock(side_effect=xmlrpclib.Fault("", ""))
 
         results = extractor.extract()
 
