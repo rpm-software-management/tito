@@ -188,6 +188,8 @@ class BuilderBase(object):
         if self.test:
             self._setup_test_specfile()
 
+        self._get_additional_sources()
+
         debug("Creating srpm from spec file: %s" % self.spec_file)
         define_dist = ""
         if self.dist:
@@ -433,6 +435,7 @@ class Builder(ConfigObject, BuilderBase):
             self.tgz()
         if self.test:
             self._setup_test_specfile()
+        self._get_additional_sources()
         BuilderBase.rpm(self)
 
     def _setup_sources(self):
@@ -465,6 +468,17 @@ class Builder(ConfigObject, BuilderBase):
         self.spec_file_name = find_spec_file(in_dir=self.rpmbuild_gitcopy)
         self.spec_file = os.path.join(
             self.rpmbuild_gitcopy, self.spec_file_name)
+
+    def _get_additional_sources(self):
+        debug("Scanning for sources.")
+        cmd = "/usr/bin/spectool --list-files '%s' | awk '{print $2}' |xargs -l1 --no-run-if-empty basename " % self.spec_file
+        result = run_command(cmd)
+        for source_basename in result.split("\n"):
+            source = os.path.join(self.rpmbuild_sourcedir, source_basename)
+            if not os.path.exists(source):
+                source_location = os.path.join(os.curdir, source_basename)
+                debug("Getting additional source %s from %s" % (source_basename, source_location))
+                shutil.copy(source_location, source)
 
     def _setup_test_specfile(self):
         if self.test and not self.ran_setup_test_specfile:
