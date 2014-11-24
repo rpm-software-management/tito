@@ -17,6 +17,7 @@ import tempfile
 from os.path import join
 from tito.builder import Builder
 from tito.common import *
+from tito.compat import RawConfigParser
 from functional.fixture import TitoGitTestFixture, tito
 
 PKG_NAME = "titotestpkg"
