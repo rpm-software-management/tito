@@ -1,4 +1,15 @@
-%{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
+%if 0%{?fedora} > 21
+%global use_python3 1
+%global use_python2 0
+%global pythonbin %{__python3}
+%global python_sitelib %{python3_sitelib}
+%else
+%global use_python3 0
+%global use_python2 1
+%global pythonbin %{__python2}
+%global python_sitelib %{python2_sitelib}
+%endif
+%{!?python2_sitelib: %define python_sitelib %(%{pythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
 Version: 0.5.5
@@ -12,21 +23,29 @@ Source0: http://rm-rf.ca/files/tito/tito-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildArch: noarch
+%if %{use_python3}
+BuildRequires: python3-devel
+BuildRequires: python3-setuptools
+Requires: python3-setuptools
+Requires: python3-bugzilla
+Requires: rpm-python3
+%else
 BuildRequires: python-devel
 BuildRequires: python-setuptools
+Requires: python-setuptools
+Requires: python-bugzilla
+Requires: rpm-python
+%endif
 BuildRequires: asciidoc
 BuildRequires: docbook-style-xsl
 BuildRequires: libxslt
 
-Requires: python-setuptools
-Requires: python-bugzilla
 Requires: rpm-build
 Requires: rpmlint
 Requires: fedpkg
 Requires: fedora-cert
 Requires: fedora-packager
 Requires: rpmdevtools
-Requires: rpm-python
 Requires: yum-utils
 
 %description
@@ -35,10 +54,10 @@ git.
 
 %prep
 %setup -q -n tito-%{version}
-
+sed -i 1"s|#!/usr/bin/python|#!/usr/bin/python3|" bin/tito
 
 %build
-%{__python} setup.py build
+%{pythonbin} setup.py build
 # convert manages
 a2x -d manpage -f manpage titorc.5.asciidoc
 a2x -d manpage -f manpage tito.8.asciidoc
@@ -47,7 +66,7 @@ a2x -d manpage -f manpage releasers.conf.5.asciidoc
 
 %install
 rm -rf $RPM_BUILD_ROOT
-%{__python} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT
+%{pythonbin} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT
 rm -f $RPM_BUILD_ROOT%{python_sitelib}/*egg-info/requires.txt
 # manpages
 %{__mkdir_p} %{buildroot}%{_mandir}/man5
