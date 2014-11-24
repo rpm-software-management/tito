@@ -22,9 +22,9 @@ import rpm
 from tempfile import mkdtemp
 import shutil
 
-from tito.common import dictionary_override, create_builder, debug, \
+from tito.common import create_builder, debug, \
     run_command, get_project_name
-from tito.compat import PY2
+from tito.compat import PY2, dictionary_override
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
 

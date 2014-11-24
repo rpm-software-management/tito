@@ -23,7 +23,7 @@ from optparse import OptionParser
 from tito.common import find_git_root, error_out, debug, get_class_by_name, \
     BUILDCONFIG_SECTION, DEFAULT_BUILDER, BUILDCONFIG_SECTION, DEFAULT_TAGGER, \
     create_builder, find_git_root, get_project_name, get_relative_project_dir, \
-    config, DEFAULT_BUILD_DIR, run_command
+    DEFAULT_BUILD_DIR, run_command
 from tito.compat import RawConfigParser, getstatusoutput, getoutput
 from tito.exception import TitoException
 

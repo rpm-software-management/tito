@@ -46,6 +46,7 @@ class BuilderBase(object):
     This class should *not* assume we're even using git.
     """
     REQUIRED_ARGS = []
+
     # TODO: merge config into an object and kill the ConfigObject parent class
     def __init__(self, name=None, build_dir=None,
             config=None, user_config=None,
