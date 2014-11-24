@@ -39,7 +39,7 @@ tagger = tito.tagger.ReleaseTagger
 
 class FauxConfigFile(object):
     """ Allows us to read config from a string. """
-    def __init__(config_str):
+    def __init__(self, config_str):
         # We'll re-add the newline when returned:
         self.lines = config_str.split("\n")
 
