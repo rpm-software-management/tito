@@ -62,7 +62,6 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %files
-%defattr(-,root,root,-)
 %doc README.mkd AUTHORS COPYING
 %doc doc/*
 %doc %{_mandir}/man5/titorc.5.gz
