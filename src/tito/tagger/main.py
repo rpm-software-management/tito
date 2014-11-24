@@ -33,7 +33,7 @@ from tito.common import (debug, error_out, run_command,
         tag_exists_locally, tag_exists_remotely, head_points_to_tag, undo_tag,
         increase_version, reset_release, increase_zstream,
         BUILDCONFIG_SECTION, get_relative_project_dir_cwd)
-from tito.compat import *
+from tito.compat import write, StringIO, getstatusoutput
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
 

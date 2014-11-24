@@ -17,7 +17,7 @@ import subprocess
 import sys
 
 from tito.common import run_command, debug, BugzillaExtractor
-from tito.compat import *
+from tito.compat import getoutput, write, getstatusoutput
 from tito.release.distgit import FedoraGitReleaser
 
 
@@ -31,7 +31,7 @@ class ObsReleaser(FedoraGitReleaser):
             config=None, user_config=None,
             target=None, releaser_config=None, no_cleanup=False,
             test=False, auto_accept=False, **kwargs):
-        Releaser.__init__(self, name, tag, build_dir,
+        FedoraGitReleaser.__init__(self, name, tag, build_dir,
                 user_config, target, releaser_config, no_cleanup, test, auto_accept)
 
         self.obs_project_name = \

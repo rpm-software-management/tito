@@ -21,7 +21,7 @@ import shlex
 
 from bugzilla.rhbugzilla import RHBugzilla
 
-from tito.compat import *
+from tito.compat import xmlrpclib, getstatusoutput
 from tito.exception import TitoException
 from tito.exception import RunCommandException
 

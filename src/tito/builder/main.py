@@ -24,12 +24,14 @@ from pkg_resources import require
 from distutils.version import LooseVersion as loose_version
 from tempfile import mkdtemp
 
-from tito.common import *
 from tito.common import scl_to_rpm_option, get_latest_tagged_version, \
-    find_wrote_in_rpmbuild_output
-from tito.compat import *
+    find_wrote_in_rpmbuild_output, debug, error_out, run_command_print, \
+    find_spec_file, run_command, get_build_commit, get_relative_project_dir, \
+    get_relative_project_dir_cwd, get_spec_version_and_release, \
+    check_tag_exists, create_tgz, get_script_path, get_latest_commit, \
+    get_commit_count, find_gemspec_file, create_builder, compare_version
+from tito.compat import getoutput, getstatusoutput
 from tito.exception import RunCommandException
-from tito.release import *
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
 

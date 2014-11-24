@@ -2,7 +2,7 @@ import os
 
 from tito.builder import UpstreamBuilder
 from tito.common import debug, run_command, error_out
-from tito.compat import *
+from tito.compat import getstatusoutput
 
 
 class DistributionBuilder(UpstreamBuilder):
