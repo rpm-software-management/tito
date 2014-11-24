@@ -163,7 +163,7 @@ class ConfigLoader(object):
 
             if status == 0:
                 faux_config_file = FauxConfigFile(output)
-                config.read_fp(faux_config_file)
+                self.config.read_fp(faux_config_file)
                 print("Loaded package specific tito.props overrides from %s" %
                     self.tag)
                 return
