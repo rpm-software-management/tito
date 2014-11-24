@@ -18,10 +18,10 @@ import sys
 
 from tito.common import run_command, debug, BugzillaExtractor
 from tito.compat import *
-from tito.release import Releaser
+from tito.release.distgit import FedoraGitReleaser
 
 
-class ObsReleaser(Releaser):
+class ObsReleaser(FedoraGitReleaser):
     """ Releaser for Open Build System using osc command """
 
     REQUIRED_CONFIG = ['project_name']
