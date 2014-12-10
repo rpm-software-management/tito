@@ -4,14 +4,28 @@ FROM centos:6.4
 # http://jumanjiman.github.io/
 MAINTAINER Paul Morgan <jumanjiman@gmail.com>
 
-# Install dependencies.
-RUN yum -y install git rpm-build python-devel python-nose \
-    libxslt asciidoc python-setuptools tar createrepo which
-RUN rpm -Uvh http://ftp.linux.ncsu.edu/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
-RUN yum -y install python-pep8 git-annex python-mock python-bugzilla
+# NOTE: runtests.sh hard-links tito.spec into this directory on-the-fly
+#       to work around https://github.com/dotcloud/docker/issues/1676
+ADD tito.spec /tmp/tito.spec
 
-# Remove yum metadata.
-RUN yum clean all
+# Install build dependencies.
+RUN yum -y install yum-utils \
+    ; yum-builddep -y /tmp/tito.spec \
+    ; yum clean all
+
+# Install test dependencies. It would be nice to add these as
+# build deps and add %check to tito.spec in accordance with
+# https://fedoraproject.org/wiki/QA/Testing_in_check
+# but some of the packages come from EPEL.
+RUN rpm -Uvh http://ftp.linux.ncsu.edu/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+RUN yum -y install \
+    git \
+    git-annex \
+    python-bugzilla \
+    python-mock \
+    python-nose \
+    python-pep8 \
+    ; yum clean all
 
 RUN useradd sandbox
 RUN git config --global user.email "sandbox@example.com"

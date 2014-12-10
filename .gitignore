@@ -24,3 +24,4 @@ bin
 include
 lib
 local
+hacking/*/tito.spec
