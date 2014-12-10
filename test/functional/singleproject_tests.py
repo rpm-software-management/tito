@@ -14,6 +14,8 @@
 
 import os
 from tito.common import *
+from tito.builder import *
+from tito.release import Releaser
 from functional.fixture import TitoGitTestFixture, tito
 
 PKG_NAME = "titotestpkg"
@@ -26,6 +28,16 @@ class SingleProjectTests(TitoGitTestFixture):
 
         self.create_project(PKG_NAME)
         os.chdir(self.repo_dir)
+
+        self.config = RawConfigParser()
+        self.config.add_section("buildconfig")
+        self.config.set("buildconfig", "builder", "tito.builder.Builder")
+        self.config.set("buildconfig", "offline", "true")
+
+        self.releaser_config = RawConfigParser()
+        self.releaser_config.add_section('test')
+        self.releaser_config.set('test', 'releaser',
+            'tito.release.Releaser')
 
     def test_init_worked(self):
         # Not actually running init here, just making sure it worked when
@@ -85,3 +97,20 @@ class SingleProjectTests(TitoGitTestFixture):
     def test_build_rpm_tag(self):
         tito("build --rpm --tag=%s-0.0.1-1 -o %s" % (PKG_NAME,
             self.repo_dir))
+
+    def test_release(self):
+        releaser = Releaser(PKG_NAME, None, '/tmp/tito/',
+            self.config, {}, 'test', self.releaser_config, False,
+            False, False, **{'offline': True})
+        self.assertTrue(isinstance(releaser.builder, Builder))
+        releaser.release(dry_run=True)
+
+    def test_release_override_builder(self):
+        self.releaser_config.set('test', 'builder',
+            'tito.builder.UpstreamBuilder')
+        releaser = Releaser(PKG_NAME, None, '/tmp/tito/',
+            self.config, {}, 'test', self.releaser_config, False,
+            False, False, **{'offline': True})
+        self.assertTrue(isinstance(releaser.builder,
+            UpstreamBuilder))
+        releaser.release(dry_run=True)

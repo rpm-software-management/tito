@@ -905,6 +905,10 @@ class MockBuilder(Builder):
         print("Using srpm: %s" % self.srpm_location)
         self._build_in_mock()
 
+    def cleanup(self):
+        if self.normal_builder:
+            self.normal_builder.cleanup()
+
     def _build_in_mock(self):
         if not self.speedup:
             print("Initializing mock...")
