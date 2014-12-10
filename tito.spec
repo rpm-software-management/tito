@@ -27,7 +27,6 @@ BuildRequires: which
 # todo: add %check to spec file in accordance with
 # https://fedoraproject.org/wiki/QA/Testing_in_check
 BuildRequires: git
-BuildRequires: git-annex
 BuildRequires: python-bugzilla
 BuildRequires: python-mock
 BuildRequires: python-nose
