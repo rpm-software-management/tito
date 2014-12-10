@@ -22,8 +22,9 @@ import rpm
 from tempfile import mkdtemp
 import shutil
 
-from tito.common import *
-from tito.compat import *
+from tito.common import create_builder, debug, \
+    run_command, get_project_name
+from tito.compat import PY2, dictionary_override
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
 
@@ -104,7 +105,10 @@ class Releaser(ConfigObject):
         if self.auto_accept:
             return default_auto_answer
         else:
-            answer = raw_input(prompt)
+            if PY2:
+                answer = raw_input(prompt)
+            else:
+                answer = input(prompt)
             return answer.lower() in ['y', 'yes', 'ok', 'sure']
 
     def _check_releaser_config(self):
