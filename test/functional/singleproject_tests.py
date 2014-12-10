@@ -16,7 +16,9 @@ import os
 from tito.common import *
 from tito.builder import *
 from tito.release import Releaser
+from tito.compat import getoutput
 from functional.fixture import TitoGitTestFixture, tito
+from ConfigParser import RawConfigParser
 
 PKG_NAME = "titotestpkg"
 
