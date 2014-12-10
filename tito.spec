@@ -28,15 +28,9 @@ BuildRequires: which
 # https://fedoraproject.org/wiki/QA/Testing_in_check
 BuildRequires: git
 BuildRequires: python-bugzilla
-BuildRequires: python-mock
-BuildRequires: python-nose
-BuildRequires: python-pep8
 %endif
 
 %if 0%{?fedora} >= 20
-BuildRequires: python3-mock
-BuildRequires: python3-nose
-BuildRequires: python3-pep8
 BuildRequires: python3-devel
 BuildRequires: python3-setuptools
 BuildRequires: python3-bugzilla
