@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.5.5
+Version: 0.5.6
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -97,6 +97,37 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Tue Dec 23 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.5.6-1
+- Require new srpm_disttag for rsync/yum releasers. (dgoodwin@rm-rf.ca)
+- Drop more test only requirements from spec. (dgoodwin@redhat.com)
+- NameError: global name 'RawConfigParser' is not defined (miroslav@suchy.cz)
+- NameError: global name 'getoutput' is not defined (miroslav@suchy.cz)
+- E:166,16: Undefined variable 'config' (undefined-variable)
+  (miroslav@suchy.cz)
+- defattr is not needed (miroslav@suchy.cz)
+- get rid of wildcards imports (miroslav@suchy.cz)
+- E:112,24: Instance of BuilderBase has no REQUIRED_ARGS member (no-member)
+  (miroslav@suchy.cz)
+- change inheritance for ObsReleaser (miroslav@suchy.cz)
+- raw_input was renamed under python3 (miroslav@suchy.cz)
+- TypeError: __init__() takes exactly 1 argument (2 given) (miroslav@suchy.cz)
+- MockBuilder: cleanup underlying builder on completion (dcleal@redhat.com)
+- Fix bugs building old tag with custom tito.props. (at that time)
+  (dgoodwin@redhat.com)
+- add links to upstream announcements and how-to articles
+  (jumanjiman@gmail.com)
+- add rpmdevtools as build dep for el5 (jumanjiman@gmail.com)
+- Fix failing tests with no ~/.bugzillarc. (dgoodwin@redhat.com)
+- Add documentation for bugzilla flag checking. (dgoodwin@redhat.com)
+- Hookup bugzilla flag checking with dist git releasers. (dgoodwin@redhat.com)
+- Fixes for Python 3. (dgoodwin@redhat.com)
+- Add support for checking bz flags. (dgoodwin@redhat.com)
+- Refactor dist-git releasers to separate module. (dgoodwin@redhat.com)
+- fix the configuration examples to match the code (tlestach@redhat.com)
+- add mailmap for cleaner shortlog output (jumanjiman@gmail.com)
+- Allow overriding of builder on all releasers (dcleal@redhat.com)
+- Cleanup builders on interruption when called directly (dcleal@redhat.com)
+
 * Fri May 16 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.5.5-1
 - Merge pull request #130 from domcleal/git-annex-cleanup (dgoodwin@rm-rf.ca)
 - Fix a test issue. (dgoodwin@redhat.com)
