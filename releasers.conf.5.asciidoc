@@ -38,6 +38,10 @@ Releaser which will build your packages, rsync down an existing yum repository,
 place your packages in it, regenerate the yum repodata, and rsync the yum
 repository back up.
 +
+Requires the "srpm_disttag = .fc21" to specify the disttag on the resulting
+source RPM. This allows for a correct srpm to upload, and prevents problems
+with it getting clobbered when building for "newer" disttags.
++
 Specify "filetypes = srpm" if you want to build a source rpm instead of a
 regular rpm.
 +
@@ -164,6 +168,7 @@ EXAMPLE
  ; Release into fedora-15-x86_64 yum repo
  [yum-f15-x86_64]
  releaser = tito.release.YumRepoReleaser
+ srpm_disttag = .fc15
  builder = tito.builder.MockBuilder
  builder.mock = fedora-15-x86_64
  rsync = fedorapeople.org:/srv/repos/dgoodwin/tito/fedora-15/x86_64/ fedorapeople.org:/srv/repos/dgoodwin/tito/fedora-15/x86_64/
@@ -172,6 +177,7 @@ EXAMPLE
  ; we build on latest commit (instead of latest tito tag)
  [yum-el6-x86_64]
  releaser = tito.release.YumRepoReleaser
+ srpm_disttag = .el6
  builder = tito.builder.MockBuilder
  builder.mock = epel-6-x86_64
  builder.test = 1
@@ -181,6 +187,7 @@ EXAMPLE
  ; Upload into source repository
  [yum-fc15-sources]
  releaser = tito.release.YumRepoReleaser
+ srpm_disttag = .fc15
  builder = tito.builder.MockBuilder
  builder.mock = fedora-15-x86_64
  filetypes = srpm
@@ -190,6 +197,7 @@ EXAMPLE
  ; el5 compatible repo.
  [yum-el5-i386]
  releaser = tito.release.YumRepoReleaser
+ srpm_disttag = .el5
  builder = tito.builder.MockBuilder
  builder.mock = epel-5-i386
  createrepo_command = createrepo -s sha1
@@ -198,6 +206,7 @@ EXAMPLE
  ; rsync tgz file to remote site with custom rsync arguments
  [rsync]
  releaser = tito.release.RsyncReleaser
+ srpm_disttag = .fc15
  builder = tito.builder.MockBuilder
  builder.mock = fedora-15-x86_64
  filetypes = tgz

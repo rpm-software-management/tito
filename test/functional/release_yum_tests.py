@@ -33,6 +33,7 @@ RELEASER_CONF = """
 [yum-test]
 releaser = tito.release.YumRepoReleaser
 builder = tito.builder.Builder
+srpm_disttag = .fc20
 rsync = %s
 """
 
