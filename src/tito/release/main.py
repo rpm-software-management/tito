@@ -227,7 +227,7 @@ class RsyncReleaser(Releaser):
     situations, depending on the current OS, and the mock target you
     are attempting to use.
     """
-    REQUIRED_CONFIG = ['rsync', 'builder']
+    REQUIRED_CONFIG = ['rsync', 'builder', 'srpm_disttag']
 
     # Default list of packages to copy
     filetypes = ['rpm', 'srpm', 'tgz']
@@ -258,7 +258,13 @@ class RsyncReleaser(Releaser):
         # Should this run?
         self.builder.no_cleanup = self.no_cleanup
         self.builder.tgz()
-        self.builder.srpm()
+
+        # Check if the releaser specifies a srpm disttag:
+        srpm_disttag = None
+        if self.releaser_config.has_option(self.target, "srpm_disttag"):
+            srpm_disttag = self.releaser_config.get(self.target, "srpm_disttag")
+        self.builder.srpm(dist=srpm_disttag)
+
         self.builder.rpm()
         self.builder.cleanup()
 
