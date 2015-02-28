@@ -116,3 +116,6 @@ class SingleProjectTests(TitoGitTestFixture):
         self.assertTrue(isinstance(releaser.builder,
             UpstreamBuilder))
         releaser.release(dry_run=True)
+
+    def test_find_file_with_extension(self):
+        self.assertTrue(find_file_with_extension(self.repo_dir, '.spec') == '{}.spec'.format(PKG_NAME))

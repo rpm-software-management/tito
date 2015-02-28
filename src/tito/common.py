@@ -229,20 +229,31 @@ def create_builder(package_name, build_tag,
     return builder
 
 
-def find_file_with_extension(in_dir=None, suffix=None):
+def find_file_with_extension(in_dir=None, suffix=None, top=True):
     """ Find the file with given extension in the current directory. """
     if in_dir is None:
         in_dir = os.getcwd()
     file_name = None
     debug("Looking for %s in %s" % (suffix, in_dir))
+    if not os.path.isdir(in_dir):
+        return None
     for f in os.listdir(in_dir):
         if f.endswith(suffix):
             if file_name is not None:
                 error_out("At least two %s files in directory: %s and %s" % (suffix, file_name, f))
             file_name = f
-            debug("Using file: %s" % f)
+            debug("Using file: %s" % os.path.join(in_dir, f))
     if file_name is None:
-        error_out("Unable to locate a %s file in %s" % (suffix, in_dir))
+        if top:
+            sub_dir_list = ["distribution", "dist", "packaging", "spec", "contrib"]
+            for sub_dir in sub_dir_list:
+                file_name = find_file_with_extension(os.path.join(in_dir, sub_dir), suffix, top=False)
+                if file_name:
+                    return os.path.join(sub_dir, file_name)
+            error_out("Unable to locate a {0} file in {1} (and in {2} sub directories)".format(suffix,
+                in_dir, ', '.join(sub_dir_list)))
+        else:
+            return None
     else:
         return file_name
 

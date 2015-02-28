@@ -188,3 +188,16 @@ class TitoGitTestFixture(unittest.TestCase):
 
         if tag:
             tito('tag --keep-version --debug --accept-auto-changelog')
+
+    def create_project_with_spec_moved(self, pkg_name, pkg_dir='', tag=True):
+        """
+        Create a test project at the given location, assumed to be within
+        our test repo, but possibly within a sub-directory.
+        Spec file is moved to directory 'packaging'.
+        """
+        self.create_project(pkg_name, pkg_dir, tag)
+        full_pkg_dir1 = os.path.join(self.repo_dir, pkg_dir)
+        full_pkg_dir2 = os.path.join(self.repo_dir, pkg_dir, 'packaging')
+        os.mkdir(full_pkg_dir2)
+        os.rename(os.path.join(full_pkg_dir1, "%s.spec" % pkg_name),
+            os.path.join(full_pkg_dir2, "%s.spec" % pkg_name))
