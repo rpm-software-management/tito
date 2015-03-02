@@ -1,4 +1,15 @@
-%{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
+%if 0%{?fedora} > 21
+%global use_python3 1
+%global use_python2 0
+%global pythonbin %{__python3}
+%global python_sitelib %{python3_sitelib}
+%else
+%global use_python3 0
+%global use_python2 1
+%global pythonbin %{__python2}
+%global python_sitelib %{python2_sitelib}
+%endif
+%{!?python2_sitelib: %define python_sitelib %(%{pythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
 Version: 0.5.6
@@ -12,8 +23,19 @@ Source0: http://rm-rf.ca/files/tito/tito-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildArch: noarch
+%if %{use_python3}
+BuildRequires: python3-devel
+BuildRequires: python3-setuptools
+Requires: python3-setuptools
+Requires: python3-bugzilla
+Requires: rpm-python3
+%else
 BuildRequires: python-devel
 BuildRequires: python-setuptools
+Requires: python-setuptools
+Requires: python-bugzilla
+Requires: rpm-python
+%endif
 BuildRequires: asciidoc
 BuildRequires: docbook-style-xsl
 BuildRequires: libxslt
@@ -37,15 +59,12 @@ BuildRequires: python3-bugzilla
 BuildRequires: rpm-python3
 %endif
 
-Requires: python-setuptools
-Requires: python-bugzilla
 Requires: rpm-build
 Requires: rpmlint
 Requires: fedpkg
 Requires: fedora-cert
 Requires: fedora-packager
 Requires: rpmdevtools
-Requires: rpm-python
 Requires: yum-utils
 
 %description
@@ -54,10 +73,10 @@ git.
 
 %prep
 %setup -q -n tito-%{version}
-
+sed -i 1"s|#!/usr/bin/python|#!/usr/bin/python3|" bin/tito
 
 %build
-%{__python} setup.py build
+%{pythonbin} setup.py build
 # convert manages
 a2x -d manpage -f manpage titorc.5.asciidoc
 a2x -d manpage -f manpage tito.8.asciidoc
@@ -66,15 +85,13 @@ a2x -d manpage -f manpage releasers.conf.5.asciidoc
 
 %install
 rm -rf $RPM_BUILD_ROOT
-%{__python} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT
+%{pythonbin} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT
 rm -f $RPM_BUILD_ROOT%{python_sitelib}/*egg-info/requires.txt
 # manpages
 %{__mkdir_p} %{buildroot}%{_mandir}/man5
 %{__mkdir_p} %{buildroot}%{_mandir}/man8
-%{__gzip} -c titorc.5 > %{buildroot}/%{_mandir}/man5/titorc.5.gz
-%{__gzip} -c tito.8 > %{buildroot}/%{_mandir}/man8/tito.8.gz
-%{__gzip} -c tito.props.5 > %{buildroot}/%{_mandir}/man5/tito.props.5.gz
-%{__gzip} -c releasers.conf.5 > %{buildroot}/%{_mandir}/man5/releasers.conf.5.gz
+cp -a titorc.5 tito.props.5 releasers.conf.5 %{buildroot}/%{_mandir}/man5/
+cp -a tito.8 %{buildroot}/%{_mandir}/man8/
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -83,10 +100,10 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %doc README.mkd AUTHORS COPYING
 %doc doc/*
-%doc %{_mandir}/man5/titorc.5.gz
-%doc %{_mandir}/man5/tito.props.5.gz
-%doc %{_mandir}/man5/releasers.conf.5.gz
-%doc %{_mandir}/man8/tito.8.gz
+%doc %{_mandir}/man5/titorc.5*
+%doc %{_mandir}/man5/tito.props.5*
+%doc %{_mandir}/man5/releasers.conf.5*
+%doc %{_mandir}/man8/tito.8*
 %{_bindir}/tito
 %{_bindir}/tar-fixup-stamp-comment.pl
 %{_bindir}/test-setup-specfile.pl
