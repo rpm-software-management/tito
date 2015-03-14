@@ -664,6 +664,10 @@ class TagModule(BaseCliModule):
 
         tagger_class = None
         if self.options.use_version:
+          if self.config.has_option("buildconfig", "forceversiontagger"):
+            tagger_class = get_class_by_name(self.config.get("buildconfig",
+              "forceversiontagger"))
+          else:
             tagger_class = get_class_by_name("tito.tagger.ForceVersionTagger")
         elif self.config.has_option("buildconfig", "tagger"):
             tagger_class = get_class_by_name(self.config.get("buildconfig",
