@@ -105,7 +105,6 @@ rm -rf $RPM_BUILD_ROOT
 %doc %{_mandir}/man5/releasers.conf.5*
 %doc %{_mandir}/man8/tito.8*
 %{_bindir}/tito
-%{_bindir}/tar-fixup-stamp-comment.pl
 %{_bindir}/test-setup-specfile.pl
 %{_bindir}/generate-patches.pl
 %dir %{python_sitelib}/tito
