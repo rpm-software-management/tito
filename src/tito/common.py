@@ -13,11 +13,16 @@
 """
 Common operations.
 """
+import fileinput
+import glob
 import os
+import pickle
 import re
 import sys
 import subprocess
 import shlex
+import shutil
+import tempfile
 
 from bugzilla.rhbugzilla import RHBugzilla
 
@@ -36,7 +41,8 @@ SHA_RE = re.compile(r'\b[0-9a-f]{30,}\b')
 # a little more concise for CLI users. Mock is probably the only one this
 # is relevant for at this time.
 BUILDER_SHORTCUTS = {
-    'mock': 'tito.builder.MockBuilder'
+    'mock': 'tito.builder.MockBuilder',
+    'mead': 'tito.builder.MeadBuilder',
 }
 
 
@@ -266,6 +272,10 @@ def find_gemspec_file(in_dir=None):
     return find_file_with_extension(in_dir, '.gemspec')
 
 
+def find_cheetah_template_file(in_dir=None):
+    return find_file_with_extension(in_dir, '.spec.tmpl')
+
+
 def find_git_root():
     """
     Find the top-level directory for this git repository.
@@ -348,6 +358,27 @@ def run_subprocess(p):
             yield line
         if(retcode is not None):
             break
+
+
+def render_cheetah(template_file, destination_directory, cheetah_input):
+    """Cheetah doesn't exist for Python 3, but it's the templating engine
+    that Mead uses.  Instead of importing the potentially incompatible code,
+    we use a command-line utility that Cheetah provides.  Yes, this is a total
+    hack."""
+    pickle_file = tempfile.NamedTemporaryFile(prefix="tito-cheetah-pickle", delete=False)
+    try:
+        pickle.dump(cheetah_input, pickle_file)
+        pickle_file.close()
+
+        run_command("cheetah fill --pickle=%s --odir=%s --oext=cheetah .spec %s" %
+            (pickle_file.name, destination_directory, template_file))
+
+        # Annoyingly Cheetah won't let you specify an empty string for a file extension
+        # and most Mead templates end with ".spec.tmpl"
+        for rendered in glob.glob(os.path.join(destination_directory, "*.cheetah")):
+            shutil.move(rendered, os.path.splitext(rendered)[0])
+    finally:
+        os.unlink(pickle_file.name)
 
 
 def tag_exists_locally(tag):
@@ -471,6 +502,49 @@ def get_spec_version_and_release(sourcedir, spec_file_name):
     return run_command(command)
 
 
+def search_for(file_name, *args):
+    """Send in a file and regular expressions as arguments.  Returns the value of the
+    matching groups for each regular expression in the same order that the expressions were
+    provided in."""
+    results = [None] * len(args)
+    with open(file_name, 'r') as fh:
+        for line in fh:
+            for index, regex in enumerate(args):
+                m = re.match(regex, line)
+                if m:
+                    results[index] = m.groups()
+
+        missing_results = filter(lambda x: x is None, results)
+
+        if missing_results:
+            error_out("Could not find match to %s in %s" % (missing_results, file_name))
+    return results
+
+
+def replace_spec_release(file_name, release):
+    for line in fileinput.input(file_name, inplace=True):
+        m = re.match(r"(\s*Release:\s*)(.*?)\s*$", line)
+        # The fileinput module redirects stdout to the file handle
+        # for the file being output.
+        #  See https://docs.python.org/2/library/fileinput.html#fileinput.FileInput
+        if m:
+            print("%s%s" % (m.group(1), release))
+        else:
+            print line
+
+
+def scrape_version_and_release(template_file_name):
+    """Ideally, we'd let RPM report the version and release of a spec file as
+    in get_spec_version_and_release.  However, when we are dealing with Cheetah
+    templates for Mead, RPM won't be able to parse the template file.  We have to
+    fall back to using regular expressions."""
+    version, release = search_for(template_file_name, r"\s*Version:\s*(.*?)\s*$", r"\s*Release:\s*(.*?)\s*$")
+    version = version[0]
+    release = release[0]
+    release = release.replace("%{?dist}", "")
+    return "%s-%s" % (version, release)
+
+
 def scl_to_rpm_option(scl, silent=None):
     """ Returns rpm option which disable or enable SC and print warning if needed """
     rpm_options = ""
@@ -490,7 +564,7 @@ def scl_to_rpm_option(scl, silent=None):
     return rpm_options
 
 
-def get_project_name(tag=None, scl=None):
+def get_project_name(tag=None, scl=None, is_mead=False):
     """
     Extract the project name from the specified tag or a spec file in the
     current working directory. Error out if neither is present.
@@ -502,18 +576,23 @@ def get_project_name(tag=None, scl=None):
             error_out("Unable to determine project name in tag: %s" % tag)
         return m.group(1)
     else:
-        spec_file_path = os.path.join(os.getcwd(), find_spec_file())
-        if not os.path.exists(spec_file_path):
-            error_out("spec file: %s does not exist" % spec_file_path)
+        if is_mead:
+            template_file_path = os.path.join(os.getcwd(), find_cheetah_template_file())
+            name = search_for(template_file_path, r"\s*Name:\s*(.*?)\s*$")[0][0]
+            return name
+        else:
+            spec_file_path = os.path.join(os.getcwd(), find_spec_file())
+            if not os.path.exists(spec_file_path):
+                error_out("spec file: %s does not exist" % spec_file_path)
 
-        output = run_command(
-            "rpm -q --qf '%%{name}\n' %s --specfile %s 2> /dev/null | grep -e '^$' -v | head -1" %
-            (scl_to_rpm_option(scl, silent=True), spec_file_path))
-        if not output:
-            error_out(["Unable to determine project name from spec file: %s" % spec_file_path,
-                "Try rpm -q --specfile %s" % spec_file_path,
-                "Try rpmlint -i %s" % spec_file_path])
-        return output
+            output = run_command(
+                "rpm -q --qf '%%{name}\n' %s --specfile %s 2> /dev/null | grep -e '^$' -v | head -1" %
+                (scl_to_rpm_option(scl, silent=True), spec_file_path))
+            if not output:
+                error_out(["Unable to determine project name from spec file: %s" % spec_file_path,
+                    "Try rpm -q --specfile %s" % spec_file_path,
+                    "Try rpmlint -i %s" % spec_file_path])
+            return output
 
 
 def replace_version(line, new_version):

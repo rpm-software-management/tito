@@ -8,6 +8,7 @@ from tito.builder.main import \
     SatelliteBuilder, \
     MockBuilder, \
     BrewDownloadBuilder, \
-    GitAnnexBuilder
+    GitAnnexBuilder, \
+    MeadBuilder
 
 from tito.builder.fetch import FetchBuilder

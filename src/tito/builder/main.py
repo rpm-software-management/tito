@@ -29,7 +29,9 @@ from tito.common import scl_to_rpm_option, get_latest_tagged_version, \
     find_spec_file, run_command, get_build_commit, get_relative_project_dir, \
     get_relative_project_dir_cwd, get_spec_version_and_release, \
     check_tag_exists, create_tgz, get_script_path, get_latest_commit, \
-    get_commit_count, find_gemspec_file, create_builder, compare_version
+    get_commit_count, find_gemspec_file, create_builder, compare_version,\
+    find_cheetah_template_file, scrape_version_and_release, render_cheetah,\
+    replace_spec_release
 from tito.compat import getoutput, getstatusoutput
 from tito.exception import RunCommandException
 from tito.exception import TitoException
@@ -833,6 +835,111 @@ class UpstreamBuilder(NoTgzBuilder):
 # Legacy class name for backward compatability:
 class SatelliteBuilder(UpstreamBuilder):
     pass
+
+
+class MeadBuilder(Builder):
+    def __init__(self, name=None, tag=None, build_dir=None,
+        config=None, user_config=None, args=None, **kwargs):
+
+        Builder.__init__(self, name=name, tag=tag, build_dir=build_dir,
+            config=config, user_config=user_config, args=args, **kwargs)
+
+        self.deploy_dir = mkdtemp(dir=self.rpmbuild_basedir, prefix="maven-%s" % self.project_name)
+
+        # We always want to deploy to a tito controlled location
+        self.maven_args = ["-DaltDeploymentRepository=local-output::default::file://%s" % self.deploy_dir]
+        if 'mvn_args' in args:
+            self.maven_args.append(args['maven_args'])
+        else:
+            # Generally people aren't going to want to run their tests during
+            # a build.  If they do, they can set maven_args=''
+            self.maven_args.append("-Dmaven.test.skip")
+
+    def _maven_deploy(self):
+        print("Running Maven build...")
+        run_command("mvn -B -q %s deploy" % (" ".join(self.maven_args)))
+
+    def _get_build_version(self):
+        """
+        Figure out the git tag and version-release we're building.
+        """
+        # Determine which package version we should build:
+        build_version = None
+        if self.build_tag:
+            build_version = self.build_tag[len(self.project_name + "-"):]
+        else:
+            build_version = get_latest_tagged_version(self.project_name)
+            if build_version is None:
+                if not self.test:
+                    error_out(["Unable to lookup latest package info.",
+                            "Perhaps you need to tag first?"])
+                sys.stderr.write("WARNING: unable to lookup latest package "
+                    "tag, building untagged test project\n")
+                build_version = scrape_version_and_release(self.start_dir,
+                    find_cheetah_template_file(in_dir=self.start_dir))
+            self.build_tag = "%s-%s" % (self.project_name, build_version)
+
+        if not self.test:
+            check_tag_exists(self.build_tag, offline=self.offline)
+
+        self.spec_version = self.build_tag.split('-')[-2]
+        self.spec_release = self.build_tag.split('-')[-1]
+        return build_version
+
+    def tgz(self):
+        self._create_build_dirs()
+        self._setup_sources()
+
+        # We are not building a tarball here.  Mead doesn't operate that way.  If you
+        # have files external to the JAR or WAR, you need to setup the maven assembly plugin to
+        # generate the equivalent of a source tarball
+        self.spec_file_name = find_spec_file(in_dir=self.rpmbuild_gitcopy)
+        self.spec_file = os.path.join(self.rpmbuild_gitcopy, self.spec_file_name)
+        self.ran_tgz = True
+
+    def _setup_sources(self):
+        self._maven_deploy()
+
+        artifacts = {}
+        all_artifacts = []
+        all_artifacts_with_path = []
+
+        # XXX: From what I can tell, Mead actually builds from the top project and packs in
+        # *every* artifact to the data available to the template.  I am electing to only
+        # run the build for the subproject although that may need to change.
+        for directory, unused, filenames in os.walk(self.deploy_dir):
+            for f in filenames:
+                artifacts.setdefault(os.path.splitext(f)[1], []).append(f)
+            dir_artifacts_with_path = [os.path.join(directory, f) for f in filenames]
+
+            # Place the Maven artifacts in the SOURCES directory for rpmbuild to use
+            for artifact in dir_artifacts_with_path:
+                shutil.copy(artifact, self.rpmbuild_sourcedir)
+
+            dir_artifacts_with_path = map(lambda x: os.path.relpath(x, self.deploy_dir), dir_artifacts_with_path)
+            all_artifacts_with_path.extend(dir_artifacts_with_path)
+            all_artifacts.extend([os.path.basename(f) for f in filenames])
+
+        cheetah_input = {
+            'name': self.project_name,
+            'version': self.spec_version,
+            'release': self.spec_release,
+            'epoch': None,  # TODO: May need to support this at some point
+            'artifacts': artifacts,
+            'all_artifacts': all_artifacts,
+            'all_artifacts_with_path': all_artifacts_with_path,
+        }
+        render_cheetah(find_cheetah_template_file(self.start_dir), self.rpmbuild_gitcopy, cheetah_input)
+
+    def _setup_test_specfile(self):
+        if self.test and not self.ran_setup_test_specfile:
+            # If making a test rpm we need to get a little crazy with the spec
+            # file we're building off. (note that this is a temp copy of the
+            # spec) Swap out the actual release for one that includes the git
+            # SHA1 we're building for our test package:
+            self.build_version += ".git." + str(self.commit_count) + "." + str(self.git_commit_id[:7])
+            replace_spec_release(self.spec_file, self.spec_release)
+            self.ran_setup_test_specfile = True
 
 
 class MockBuilder(Builder):

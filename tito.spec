@@ -71,6 +71,10 @@ Requires: fedora-cert
 Requires: fedora-packager
 Requires: rpmdevtools
 Requires: yum-utils
+# Cheetah doesn't exist for Python 3, but it's what Mead uses.  We
+# install it and call via the command line instead of importing the
+# potentially incompatible code
+Requires: python-cheetah
 
 %description
 Tito is a tool for managing tarballs, rpms, and builds for projects using
