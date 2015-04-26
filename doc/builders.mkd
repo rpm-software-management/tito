@@ -6,7 +6,7 @@ An unorthodox builder which can build packages for a git repo which does not act
 
 One strategy is currently included which parses a CLI argument to the build command which points to the source to use.
 
-Configuration for FetchBuilder in rel-eng/tito.props would look like:
+Configuration for FetchBuilder in .tito/tito.props would look like:
 
     [buildconfig]
     builder = tito.builder.FetchBuilder
@@ -18,7 +18,7 @@ Once configured a build can be run with:
 
   **tito build --rpm --arg=source=/home/username/extsrc-0.0.1.tar.gz**
 
-Note that this does not require a tito tag to have been run, and technically the rel-eng/tito.props does not have to be committed to the git repo. This builder can be used on a repository you do not control or do not wish to push tito configuration into.
+Note that this does not require a tito tag to have been run, and technically the .tito/tito.props does not have to be committed to the git repo. This builder can be used on a repository you do not control or do not wish to push tito configuration into.
 
 The ArgSourceStrategy has a simple mechanism where it will try to parse the version and release to build from the filename with a regular expression. If you need something more advanced, you can override any or all of this behaviour by implementing a custom strategy for the fetch builder. (see lib_dir in **man 5 tito.props**)
 
@@ -41,7 +41,7 @@ Add the spec file as normal, but add the tarball/source via git-annex instead:
     git annex add tito-0.4.18.tar.gz
     git commit -m "add tito 0.4.18"
 
-Edit rel-eng/tito.props to change the builder to the GitAnnexBuilder:
+Edit .tito/tito.props to change the builder to the GitAnnexBuilder:
 
     [globalconfig]
     default_builder = tito.builder.GitAnnexBuilder

@@ -48,7 +48,7 @@ builder = tito.builder.Builder
 
 [version_template]
 destination_file = version.txt
-template_file = rel-eng/templates/version.rb
+template_file = .tito/templates/version.rb
 """
 
 VERSION_TEMPLATE_FILE = """
@@ -90,9 +90,9 @@ class MultiProjectTests(TitoGitTestFixture):
         pkg_dir = join(self.repo_dir, 'pkg3')
         filename = join(pkg_dir, "tito.props")
         self.write_file(filename, TEMPLATE_TAGGER_TITO_PROPS)
-        run_command('mkdir -p %s' % join(self.repo_dir, 'rel-eng/templates'))
+        run_command('mkdir -p %s' % join(self.repo_dir, '.tito/templates'))
         self.write_file(join(self.repo_dir,
-            'rel-eng/templates/version.rb'), VERSION_TEMPLATE_FILE)
+            '.tito/templates/version.rb'), VERSION_TEMPLATE_FILE)
 
         os.chdir(self.repo_dir)
         run_command('git add pkg3/tito.props')
@@ -119,7 +119,7 @@ class MultiProjectTests(TitoGitTestFixture):
         for pkg_name in TEST_PKGS:
             self.assertTrue(tag_exists_locally("%s-0.0.1-1" % pkg_name))
             self.assertTrue(os.path.exists(os.path.join(self.repo_dir,
-                "rel-eng/packages", pkg_name)))
+                ".tito/packages", pkg_name)))
 
     def test_release_tagger(self):
         os.chdir(os.path.join(self.repo_dir, 'pkg2'))

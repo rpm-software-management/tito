@@ -122,8 +122,8 @@ class TitoGitTestFixture(unittest.TestCase):
 
         # Next we tito init:
         tito("init")
-        run_command('echo "offline = true" >> rel-eng/tito.props')
-        run_command('git add rel-eng/tito.props')
+        run_command('echo "offline = true" >> .tito/tito.props')
+        run_command('git add .tito/tito.props')
         run_command("git commit -m 'set offline in tito.props'")
 
     def tearDown(self):

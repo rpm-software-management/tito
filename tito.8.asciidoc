@@ -30,7 +30,7 @@ After setting up a directory as a Git repo, use `tito`
 to manage the tags and builds. A simple workflow may look like:
 
 . Save user preferences as described in `titorc(5)`
-. Initialize a `rel-eng` directory
+. Initialize a `.tito` directory
 . Test
   .. Make changes to source
   .. Use git to commit changes
@@ -48,7 +48,7 @@ OPTIONS
 `tito init`
 ~~~~~~~~~~~
 
-This will create a top-level metadata directory called "rel-eng/" and commit it
+This will create a top-level metadata directory called ".tito/" and commit it
 to git. This directory will store tito's configuration and package metadata on
 a per branch basis. It will be filtered out when creating .tar.gz's.
 
@@ -61,7 +61,7 @@ By default, tito will tag by bumping the rpm version
 (i.e. we bump the Z in X.Y.Z). If you'd prefer to bump the package
 release instead (normally should just be used for changes to the spec file or
 patches applied within it), you can change the tagger class in
-rel-eng/tito.props to ReleaseTagger. This will affect all packages in this git
+.tito/tito.props to ReleaseTagger. This will affect all packages in this git
 branch; if you'd prefer to do this on a per-package basis you can do so in a
 package specific `tito.props`.
 
@@ -174,7 +174,7 @@ src.rpm, because for rpm you want to define this option for specific tag in tito
 `tito release [options] TARGETS`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Runs the release targets defined in rel-eng/releasers.conf.
+Runs the release targets defined in .tito/releasers.conf.
 
 -h, --help::
 show this help message and exit
@@ -202,10 +202,10 @@ Do not perform a brew/koji build, only DistGit commit.
 (only for Koji/DistGit releasers)
 
 --all::
-Run all release targets defined in rel-eng/releasers.conf.
+Run all release targets defined in .tito/releasers.conf.
 
 --list::
-List all release targets defined in rel-eng/releasers.conf.
+List all release targets defined in .tito/releasers.conf.
 
 --all-starting-with=ALL_STARTING_WITH::
 Run all release targets starting with the given string. (i.e.

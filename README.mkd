@@ -52,7 +52,7 @@ From your git repository:
 
     tito init
 
-This will create a top-level metadata directory called "rel-eng/" and commit it
+This will create a top-level metadata directory called ".tito/" and commit it
 to git. This directory will store tito's configuration and package metadata on
 a per branch basis. It will be filtered out when creating .tar.gz's.
 
@@ -70,7 +70,7 @@ root of the project at the top level of the git repository:
     docs/
     mypackage.spec
     README
-    rel-eng/
+    .tito/
     src/
     test/
 
@@ -78,7 +78,7 @@ For a multi-project git repository, packages can be defined in various
 sub-directories, provided they do not nest (i.e. walking up the tree, two spec
 files will never be encountered):
 
-    rel-eng/
+    .tito/
     package1/
         docs/
         mypackage.spec
@@ -113,7 +113,7 @@ By default if you omit --keep-version, tito will tag by bumping the rpm
 version. (i.e. we bump the Z in X.Y.Z. If you'd prefer to bump the package
 release instead (normally should just be used for changes to the spec file or
 patches applied within it), you can change the 'tagger' class in
-rel-eng/tito.props to ReleaseTagger. This will affect all packages in this git
+.tito/tito.props to ReleaseTagger. This will affect all packages in this git
 branch, if you'd prefer to do this on a per-package basis you can do so in a
 package specific tito.props. (see section below)
 
@@ -154,7 +154,7 @@ RELEASING PACKAGES
 
 Tito supports a mechanism where you can define multiple release targets.
 
-In rel-eng/releasers.conf, create a section like:
+In .tito/releasers.conf, create a section like:
 
     [yum-f15-x86_64]
     releaser = tito.release.YumRepoReleaser
@@ -207,7 +207,7 @@ history, and run:
     git reset --hard HEAD^1
 
 If your project is standalone (no remote reference you communicate with as
-authoritative) you may wish to set offline = "true" in rel-eng/tito.props under
+authoritative) you may wish to set offline = "true" in .tito/tito.props under
 the globalconfig section, so you do not need to specify --offline with each
 invocation.
 

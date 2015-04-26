@@ -22,8 +22,8 @@ from optparse import OptionParser
 
 from tito.common import find_git_root, error_out, debug, get_class_by_name, \
     BUILDCONFIG_SECTION, DEFAULT_BUILDER, BUILDCONFIG_SECTION, DEFAULT_TAGGER, \
-    create_builder, find_git_root, get_project_name, get_relative_project_dir, \
-    DEFAULT_BUILD_DIR, run_command
+    create_builder, get_project_name, get_relative_project_dir, \
+    DEFAULT_BUILD_DIR, run_command, tito_config_dir
 from tito.compat import RawConfigParser, getstatusoutput, getoutput
 from tito.exception import TitoException
 
@@ -77,14 +77,14 @@ class ConfigLoader(object):
 
     def _read_config(self):
         """
-        Read global build.py configuration from the rel-eng dir of the git
+        Read global build.py configuration from the .tito dir of the git
         repository we're being run from.
 
         NOTE: We always load the latest config file, not tito.props as it
         was for the tag being operated on.
         """
         # List of filepaths to config files we'll be loading:
-        rel_eng_dir = os.path.join(find_git_root(), "rel-eng")
+        rel_eng_dir = os.path.join(find_git_root(), tito_config_dir())
         filename = os.path.join(rel_eng_dir, TITO_PROPS)
         if not os.path.exists(filename):
             error_out("Unable to locate branch configuration: %s"
@@ -491,9 +491,9 @@ class ReleaseModule(BaseCliModule):
 
     def _read_releaser_config(self):
         """
-        Read the releaser targets from rel-eng/releasers.conf.
+        Read the releaser targets from .tito/releasers.conf.
         """
-        rel_eng_dir = os.path.join(find_git_root(), "rel-eng")
+        rel_eng_dir = os.path.join(find_git_root(), tito_config_dir())
         filename = os.path.join(rel_eng_dir, RELEASERS_CONF_FILENAME)
         config = RawConfigParser()
         config.read(filename)
@@ -701,7 +701,7 @@ class InitModule(BaseCliModule):
         # calling main will result in a configuration error.
         should_commit = False
 
-        rel_eng_dir = os.path.join(find_git_root(), "rel-eng")
+        rel_eng_dir = os.path.join(find_git_root(), '.tito')
         print("Creating tito metadata in: %s" % rel_eng_dir)
 
         propsfile = os.path.join(rel_eng_dir, TITO_PROPS)
@@ -736,7 +736,7 @@ class InitModule(BaseCliModule):
             # write out readme file explaining what pkg_dir is for
             readme = os.path.join(pkg_dir, '.readme')
             out_f = open(readme, 'w')
-            out_f.write("the rel-eng/packages directory contains metadata files\n")
+            out_f.write("the .tito/packages directory contains metadata files\n")
             out_f.write("named after their packages. Each file has the latest tagged\n")
             out_f.write("version and the project's relative directory.\n")
             out_f.close()
@@ -795,7 +795,7 @@ class ReportModule(BaseCliModule):
         print("Scanning for packages that may need to be tagged...")
         print("")
         git_root = find_git_root()
-        rel_eng_dir = os.path.join(git_root, "rel-eng")
+        rel_eng_dir = os.path.join(git_root, tito_config_dir())
         os.chdir(git_root)
         package_metadata_dir = os.path.join(rel_eng_dir, "packages")
         for root, dirs, files in os.walk(package_metadata_dir):
@@ -821,7 +821,7 @@ class ReportModule(BaseCliModule):
         print("Scanning for packages that may need to be tagged...")
         print("")
         git_root = find_git_root()
-        rel_eng_dir = os.path.join(git_root, "rel-eng")
+        rel_eng_dir = os.path.join(git_root, tito_config_dir())
         os.chdir(git_root)
         package_metadata_dir = os.path.join(rel_eng_dir, "packages")
         for root, dirs, files in os.walk(package_metadata_dir):

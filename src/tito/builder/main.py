@@ -358,7 +358,7 @@ class Builder(ConfigObject, BuilderBase):
         self.relative_project_dir = get_relative_project_dir(
             project_name=self.project_name, commit=self.git_commit_id)
         if self.relative_project_dir is None and self.test:
-            sys.stderr.write("WARNING: rel-eng/packages/%s doesn't exist "
+            sys.stderr.write("WARNING: .tito/packages/%s doesn't exist "
                 "in git, using current directory\n" % self.project_name)
             self.relative_project_dir = get_relative_project_dir_cwd(
                 self.git_root)
@@ -510,7 +510,7 @@ class Builder(ConfigObject, BuilderBase):
         """
         Get the package display version to build.
 
-        Normally this is whatever is rel-eng/packages/. In the case of a --test
+        Normally this is whatever is .tito/packages/. In the case of a --test
         build it will be the SHA1 for the HEAD commit of the current git
         branch.
         """

@@ -44,10 +44,10 @@ class SingleProjectTests(TitoGitTestFixture):
     def test_init_worked(self):
         # Not actually running init here, just making sure it worked when
         # run during setup.
-        self.assertTrue(os.path.exists(os.path.join(self.repo_dir, "rel-eng")))
-        self.assertTrue(os.path.exists(os.path.join(self.repo_dir, "rel-eng",
+        self.assertTrue(os.path.exists(os.path.join(self.repo_dir, ".tito")))
+        self.assertTrue(os.path.exists(os.path.join(self.repo_dir, ".tito",
             "packages")))
-        self.assertTrue(os.path.exists(os.path.join(self.repo_dir, "rel-eng",
+        self.assertTrue(os.path.exists(os.path.join(self.repo_dir, ".tito",
             "tito.props")))
 
     def test_initial_tag(self):
