@@ -109,6 +109,21 @@ class TarFixer(object):
         self.timestamp = int(timestamp)
         self.gitref = gitref
 
+    def full_read(self, read_size):
+        read = self.fh.read(read_size)
+        amount_read = len(read)
+        while (amount_read < read_size):
+            left_to_read = read_size - amount_read
+            next_read = self.fh.read(left_to_read)
+
+            if next_read == '':
+                raise IOError("Buffer underflow when reading")
+
+            amount_read += len(next_read)
+            read = read + next_read
+
+        return read
+
     def chunk_to_hash(self, chunk):
         # Our struct template is only 500 bytes, but the last 12 bytes are NUL
         # I elected to ignore them completely instead of including them in the
@@ -178,7 +193,7 @@ class TarFixer(object):
 
     def process_extended_header(self):
         # Trash the original comment
-        _ = self.fh.read(RECORD_SIZE)
+        _ = self.full_read(RECORD_SIZE)
         self.create_extended_header()
 
     def create_extended_header(self):
@@ -194,7 +209,7 @@ class TarFixer(object):
         self.total_length += len(data_out)
 
     def process_file_data(self, size):
-        data_out = self.fh.read(self.padded_size(size))
+        data_out = self.full_read(self.padded_size(size))
         self.out.write(data_out)
         self.total_length += len(data_out)
 
@@ -267,10 +282,10 @@ class TarFixer(object):
 
     def fix(self):
         try:
-            chunk = self.fh.read(RECORD_SIZE)
+            chunk = self.full_read(RECORD_SIZE)
             while chunk != "" and not self.done:
                 self.process_chunk(chunk)
-                chunk = self.fh.read(RECORD_SIZE)
+                chunk = self.full_read(RECORD_SIZE)
         finally:
             self.fh.close()
 
