@@ -225,8 +225,8 @@ class TarFixer(object):
 
         new_chksum = 0
         for val in values:
-            for x in val:
-                new_chksum += ord(x)
+            val_bytes = bytearray(val, 'ASCII')
+            new_chksum += reduce(lambda x, y: x + y, val_bytes, 0)
         for blank in " " * 8:
             new_chksum += ord(blank)
 
