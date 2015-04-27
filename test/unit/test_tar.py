@@ -4,6 +4,7 @@ import unittest
 
 from StringIO import StringIO
 from tito.tar import TarFixer
+from mock import Mock
 
 EXPECTED_TIMESTAMP = 1429725106
 EXPECTED_REF = "3518d720bff20db887b7a5e5dddd411d14dca1f9"
@@ -27,6 +28,37 @@ class TarTest(unittest.TestCase):
         hasher = hashlib.sha256()
         hasher.update(buf)
         return hasher.hexdigest()
+
+    def _irregular_reader(self, items):
+        def item_read(read_length):
+            try:
+                item = items.pop(0)
+            except IndexError:
+                # If no more items, the buffer is empty and would return empty string
+                return ''
+
+            return item.read(read_length)
+
+        mock_fh = Mock()
+        mock_fh.read = Mock()
+        mock_fh.read.side_effect = item_read
+
+        return mock_fh
+
+    def test_full_read(self):
+        items = [StringIO("1" * 5), StringIO("1" * 2), StringIO("1" * 6)]
+        self.tarfixer.fh = self._irregular_reader(items)
+        self.assertEqual("1" * 10, self.tarfixer.full_read(10))
+
+    def test_full_read_buffer_underflow(self):
+        input = StringIO("1" * 9)
+        self.tarfixer.fh = input
+        self.assertRaises(IOError, self.tarfixer.full_read, 10)
+
+    def test_full_read_eventual_buffer_underflow(self):
+        items = [StringIO("1" * 5), StringIO("1" * 2), StringIO("1" * 2)]
+        self.tarfixer.fh = self._irregular_reader(items)
+        self.assertRaises(IOError, self.tarfixer.full_read, 10)
 
     def test_fix(self):
         self.fh = open(self.test_file)
