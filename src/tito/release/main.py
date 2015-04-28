@@ -28,8 +28,6 @@ from tito.compat import PY2, dictionary_override
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
 
-DEFAULT_KOJI_OPTS = "build --nowait"
-
 # List of files to protect when syncing:
 PROTECTED_BUILD_SYS_FILES = ('branch', 'Makefile', 'sources', ".git", ".gitignore", ".osc")
 
@@ -432,6 +430,7 @@ class KojiReleaser(Releaser):
 
     REQUIRED_CONFIG = ['autobuild_tags']
     NAME = "Koji"
+    DEFAULT_KOJI_OPTS = "build --nowait"
 
     def __init__(self, name=None, tag=None, build_dir=None,
             config=None, user_config=None,
@@ -440,6 +439,18 @@ class KojiReleaser(Releaser):
         Releaser.__init__(self, name, tag, build_dir, config,
                 user_config, target, releaser_config, no_cleanup, test, auto_accept,
                 **kwargs)
+
+        if self.releaser_config.has_option(self.target, "koji_profile"):
+            self.profile = self.releaser_config.get(self.target, "koji_profile")
+        else:
+            self.profile = None
+
+        if self.releaser_config.has_option(self.target, "koji_config_file"):
+            self.conf_file = self.releaser_config.get(self.target, "koji_config_file")
+        else:
+            self.conf_file = None
+
+        self.executable = "koji"
 
         self.only_tags = []
         if 'ONLY_TAGS' in os.environ:
@@ -467,12 +478,18 @@ class KojiReleaser(Releaser):
         print("Building release in %s..." % self.NAME)
         debug("%s tags: %s" % (self.NAME, koji_tags))
 
-        koji_opts = DEFAULT_KOJI_OPTS
+        koji_opts = self.DEFAULT_KOJI_OPTS
         if 'KOJI_OPTIONS' in self.builder.user_config:
             koji_opts = self.builder.user_config['KOJI_OPTIONS']
 
         if self.scratch or ('SCRATCH' in os.environ and os.environ['SCRATCH'] == '1'):
             koji_opts = ' '.join([koji_opts, '--scratch'])
+
+        if self.profile:
+            koji_opts = ' '.join(['--profile', self.profile, koji_opts])
+
+        if self.conf_file:
+            koji_opts = ' '.join(['--config', self.conf_file, koji_opts])
 
         # TODO: need to re-do this metaphor to use release targets instead:
         for koji_tag in koji_tags:
@@ -510,7 +527,7 @@ class KojiReleaser(Releaser):
                     builder.scl = scl
                 builder.srpm(dist=disttag)
 
-            self._submit_build("koji", koji_opts, koji_tag, builder.srpm_location)
+            self._submit_build(self.executable, koji_opts, koji_tag, builder.srpm_location)
 
     def __is_whitelisted(self, koji_tag, scl):
         """ Return true if package is whitelisted in tito.props"""

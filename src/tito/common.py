@@ -10,6 +10,7 @@
 # Red Hat trademarks are not licensed under GPLv2. No permission is
 # granted to use or replicate Red Hat trademarks that are incorporated
 # in this software or its documentation.
+from contextlib import contextmanager
 """
 Common operations.
 """
@@ -185,16 +186,32 @@ def error_out(error_msgs):
     """
     Print the given error message (or list of messages) and exit.
     """
-    print
-    if isinstance(error_msgs, list):
-        for line in error_msgs:
-            print("ERROR: %s" % line)
-    else:
-        print("ERROR: %s" % error_msgs)
-    print
-#    if 'DEBUG' in os.environ:
-#        traceback.print_stack()
+    warn_out(error_msgs, "ERROR")
     sys.exit(1)
+
+
+def warn_out(msgs, prefix="WARNING"):
+    """
+    Print the given error message (or list of messages) and exit.
+    """
+    print
+    if isinstance(msgs, list):
+        for line in msgs:
+            print("%s: %s" % (prefix, line))
+    else:
+        print("%s: %s" % (prefix, msgs))
+    print
+
+
+@contextmanager
+def chdir(path):
+    previous_dir = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    except:
+        os.chdir(previous_dir)
+        raise
 
 
 def create_builder(package_name, build_tag,

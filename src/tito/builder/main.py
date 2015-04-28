@@ -31,7 +31,7 @@ from tito.common import scl_to_rpm_option, get_latest_tagged_version, \
     check_tag_exists, create_tgz, get_script_path, get_latest_commit, \
     get_commit_count, find_gemspec_file, create_builder, compare_version,\
     find_cheetah_template_file, render_cheetah, replace_spec_release, \
-    find_spec_like_file
+    find_spec_like_file, warn_out
 from tito.compat import getoutput, getstatusoutput
 from tito.exception import RunCommandException
 from tito.exception import TitoException
@@ -857,6 +857,10 @@ class MeadBuilder(Builder):
             # a build.  If they do, they can set maven_args=''
             self.maven_args.append("-Dmaven.test.skip")
 
+        # People calling `tito build` will almost certainly want to do a maven build locally.
+        # But with a `tito release` we want the Mead stuff to happen on the build system
+        self.local_build = args.setdefault('local', True)
+
     def _maven_deploy(self):
         print("Running Maven build...")
         run_command("mvn -B -q %s deploy" % (" ".join(self.maven_args)))
@@ -865,15 +869,40 @@ class MeadBuilder(Builder):
         self._create_build_dirs()
         self._setup_sources()
 
-        # We are not building a tarball here.  Mead doesn't operate that way.  If you
-        # have files external to the JAR or WAR, you need to setup the maven assembly plugin to
-        # generate the equivalent of a source tarball
-        self.spec_file_name = find_spec_file(in_dir=self.rpmbuild_gitcopy)
+        try:
+            manual_tarball = False
+            run_command("mvn -B -q %s assembly:single" % (" ".join(self.maven_args)))
+        except:
+            warn_out("No Maven assembly defined!  Falling back to git-archive.")
+            warn_out("Please set up the assembly plugin in your pom.xml")
+            manual_tarball = True
+
+        destination_path = os.path.join(self.rpmbuild_basedir, self.tgz_filename)
+        if manual_tarball:
+            full_path = os.path.join(self.rpmbuild_sourcedir, self.tgz_filename)
+            print("Creating %s from git tag: %s..." % (self.tgz_filename, self.build_tag))
+            create_tgz(self.git_root, self.tgz_dir, self.git_commit_id, self.relative_project_dir, full_path)
+        else:
+            for directory, unused, filenames in os.walk(self.deploy_dir):
+                for f in filenames:
+                    name, ext = os.path.splitext(f)
+                    if ext == ".gz" and name.startswith("%s-%s" % (self.project_name, self.spec_version)):
+                        full_path = os.path.join(self.deploy_dir, directory, f)
+                        break
+
+        shutil.copy(full_path, destination_path)
+        print("Wrote: %s" % destination_path)
+        self.sources.append(destination_path)
+        self.artifacts.append(destination_path)
+        self.spec_file_name = find_spec_like_file(self.rpmbuild_gitcopy)
         self.spec_file = os.path.join(self.rpmbuild_gitcopy, self.spec_file_name)
         self.ran_tgz = True
 
     def _setup_sources(self):
         self._maven_deploy()
+
+        if not self.local_build:
+            return
 
         artifacts = {}
         all_artifacts = []

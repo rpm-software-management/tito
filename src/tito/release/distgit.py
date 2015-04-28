@@ -11,14 +11,13 @@
 # granted to use or replicate Red Hat trademarks that are incorporated
 # in this software or its documentation.
 
-import os
 import os.path
 import subprocess
 import sys
 import tempfile
 
 from tito.common import run_command, BugzillaExtractor, debug, extract_sources, \
-    MissingBugzillaCredsException, error_out
+    MissingBugzillaCredsException, error_out, chdir
 from tito.compat import getoutput, getstatusoutput, write
 from tito.release import Releaser
 from tito.release.main import PROTECTED_BUILD_SYS_FILES
@@ -69,16 +68,18 @@ class FedoraGitReleaser(Releaser):
         return None
 
     def _git_release(self):
-
         getoutput("mkdir -p %s" % self.working_dir)
-        os.chdir(self.working_dir)
-        run_command("%s clone %s" % (self.cli_tool, self.project_name))
+        with chdir(self.working_dir):
+            run_command("%s clone %s" % (self.cli_tool, self.project_name))
 
         project_checkout = os.path.join(self.working_dir, self.project_name)
-        os.chdir(project_checkout)
-        run_command("%s switch-branch %s" % (self.cli_tool, self.git_branches[0]))
+        with chdir(project_checkout):
+            run_command("%s switch-branch %s" % (self.cli_tool, self.git_branches[0]))
 
-        self.builder.tgz()
+        # Mead builds need to be in the git_root.  Other builders are agnostic.
+        with chdir(self.git_root):
+            self.builder.tgz()
+
         if self.test:
             self.builder._setup_test_specfile()
 
@@ -385,6 +386,68 @@ class FedoraGitReleaser(Releaser):
 
 class DistGitReleaser(FedoraGitReleaser):
     cli_tool = "rhpkg"
+
+
+class MeadDistGitReleaser(DistGitReleaser):
+    def __init__(self, name=None, tag=None, build_dir=None,
+        config=None, user_config=None,
+        target=None, releaser_config=None, no_cleanup=False,
+        test=False, auto_accept=False,
+        prefix="temp_dir=", **kwargs):
+
+        if 'builder_args' in kwargs:
+            kwargs['builder_args']['local'] = False
+
+        DistGitReleaser.__init__(self, name, tag, build_dir, config,
+                user_config, target, releaser_config, no_cleanup, test,
+                auto_accept, **kwargs)
+
+    def _git_upload_sources(self, project_checkout):
+        DistGitReleaser._git_upload_sources(self, project_checkout)
+
+        os.chdir(project_checkout)
+
+        mead_url = "%s?%s#%s" % (
+            self.releaser_config.get(self.target, 'git_url'),
+            self.project_name,
+            self.builder.build_tag)
+
+        if self.dry_run:
+            self.print_dry_run_warning("echo '%s' > tito-mead-url" % mead_url)
+            return
+
+        with open("tito-mead-url", "w") as f:
+            f.write(mead_url)
+            f.write("\n")
+
+    def _build(self, branch):
+        """ Submit a Mead build from current directory. """
+        target_param = ""
+        build_target = self._get_build_target_for_branch(branch)
+        if build_target:
+            target_param = "--target %s" % build_target
+
+        build_cmd = "%s maven-build --nowait --maven-option '%s' %s " % (
+            self.cli_tool, self.builder.maven_args, target_param)
+
+        if self.dry_run:
+            self.print_dry_run_warning(build_cmd)
+            return
+
+        print("Submitting build: %s" % build_cmd)
+        (status, output) = getstatusoutput(build_cmd)
+        if status > 0:
+            if "already been built" in output:
+                print("Build has been submitted previously, continuing...")
+            else:
+                sys.stderr.write("ERROR: Unable to submit build.\n")
+                sys.stderr.write("  Status code: %s\n" % status)
+                sys.stderr.write("  Output: %s\n" % output)
+                sys.exit(1)
+
+        # Print the task ID and URL:
+        for line in extract_task_info(output):
+            print(line)
 
 
 def extract_task_info(output):
