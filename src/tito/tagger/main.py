@@ -28,7 +28,7 @@ from string import Template
 from time import strftime
 
 from tito.common import (debug, error_out, run_command,
-        find_spec_file, get_project_name, get_latest_tagged_version,
+        find_spec_like_file, get_project_name, get_latest_tagged_version,
         get_spec_version_and_release, replace_version,
         tag_exists_locally, tag_exists_remotely, head_points_to_tag, undo_tag,
         increase_version, reset_release, increase_zstream,
@@ -52,7 +52,7 @@ class VersionTagger(ConfigObject):
         self.user_config = user_config
 
         self.full_project_dir = os.getcwd()
-        self.spec_file_name = find_spec_file()
+        self.spec_file_name = find_spec_like_file()
         self.project_name = get_project_name(tag=None)
 
         self.relative_project_dir = get_relative_project_dir_cwd(

@@ -30,8 +30,8 @@ from tito.common import scl_to_rpm_option, get_latest_tagged_version, \
     get_relative_project_dir_cwd, get_spec_version_and_release, \
     check_tag_exists, create_tgz, get_script_path, get_latest_commit, \
     get_commit_count, find_gemspec_file, create_builder, compare_version,\
-    find_cheetah_template_file, scrape_version_and_release, render_cheetah,\
-    replace_spec_release
+    find_cheetah_template_file, render_cheetah, replace_spec_release, \
+    find_spec_like_file
 from tito.compat import getoutput, getstatusoutput
 from tito.exception import RunCommandException
 from tito.exception import TitoException
@@ -404,9 +404,11 @@ class Builder(ConfigObject, BuilderBase):
                 sys.stderr.write("WARNING: unable to lookup latest package "
                     "tag, building untagged test project\n")
                 build_version = get_spec_version_and_release(self.start_dir,
-                    find_spec_file(in_dir=self.start_dir))
+                    find_spec_like_file(self.start_dir))
             self.build_tag = "%s-%s" % (self.project_name, build_version)
 
+        self.spec_version = build_version.split('-')[-2]
+        self.spec_release = build_version.split('-')[-1]
         if not self.test:
             check_tag_exists(self.build_tag, offline=self.offline)
         return build_version
@@ -858,33 +860,6 @@ class MeadBuilder(Builder):
     def _maven_deploy(self):
         print("Running Maven build...")
         run_command("mvn -B -q %s deploy" % (" ".join(self.maven_args)))
-
-    def _get_build_version(self):
-        """
-        Figure out the git tag and version-release we're building.
-        """
-        # Determine which package version we should build:
-        build_version = None
-        if self.build_tag:
-            build_version = self.build_tag[len(self.project_name + "-"):]
-        else:
-            build_version = get_latest_tagged_version(self.project_name)
-            if build_version is None:
-                if not self.test:
-                    error_out(["Unable to lookup latest package info.",
-                            "Perhaps you need to tag first?"])
-                sys.stderr.write("WARNING: unable to lookup latest package "
-                    "tag, building untagged test project\n")
-                build_version = scrape_version_and_release(self.start_dir,
-                    find_cheetah_template_file(in_dir=self.start_dir))
-            self.build_tag = "%s-%s" % (self.project_name, build_version)
-
-        if not self.test:
-            check_tag_exists(self.build_tag, offline=self.offline)
-
-        self.spec_version = self.build_tag.split('-')[-2]
-        self.spec_release = self.build_tag.split('-')[-1]
-        return build_version
 
     def tgz(self):
         self._create_build_dirs()

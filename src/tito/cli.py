@@ -368,12 +368,7 @@ class BuildModule(BaseCliModule):
         BaseCliModule.main(self, argv)
 
         build_dir = os.path.normpath(os.path.abspath(self.options.output_dir))
-
-        is_mead = False
-        if self.options.builder in ["tito.builder.MeadBuilder", "mead"]:
-            is_mead = True
-
-        package_name = get_project_name(tag=self.options.tag, is_mead=is_mead)
+        package_name = get_project_name(tag=self.options.tag)
 
         build_tag = self.options.tag
 

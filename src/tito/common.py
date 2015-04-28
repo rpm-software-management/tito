@@ -236,10 +236,8 @@ def create_builder(package_name, build_tag,
     return builder
 
 
-def find_file_with_extension(in_dir=None, suffix=None):
+def find_file_with_extension(in_dir, suffix=None):
     """ Find the file with given extension in the current directory. """
-    if in_dir is None:
-        in_dir = os.getcwd()
     file_name = None
     debug("Looking for %s in %s" % (suffix, in_dir))
     for f in os.listdir(in_dir):
@@ -248,10 +246,7 @@ def find_file_with_extension(in_dir=None, suffix=None):
                 error_out("At least two %s files in directory: %s and %s" % (suffix, file_name, f))
             file_name = f
             debug("Using file: %s" % f)
-    if file_name is None:
-        error_out("Unable to locate a %s file in %s" % (suffix, in_dir))
-    else:
-        return file_name
+    return file_name
 
 
 def find_spec_file(in_dir=None):
@@ -260,7 +255,12 @@ def find_spec_file(in_dir=None):
 
     Returns only the file name, rather than the full path.
     """
-    return find_file_with_extension(in_dir, '.spec')
+    if in_dir is None:
+        in_dir = os.getcwd()
+    result = find_file_with_extension(in_dir, '.spec')
+    if result is None:
+        error_out("Unable to locate a %s file in %s" % ('.spec', in_dir))
+    return result
 
 
 def find_gemspec_file(in_dir=None):
@@ -269,11 +269,33 @@ def find_gemspec_file(in_dir=None):
 
     Returns only the file name, rather than the full path.
     """
-    return find_file_with_extension(in_dir, '.gemspec')
+    if in_dir is None:
+        in_dir = os.getcwd()
+    result = find_file_with_extension(in_dir, '.gemspec')
+    if result is None:
+        error_out("Unable to locate a %s file in %s" % ('.gemspec', in_dir))
+    return result
+
+
+def find_spec_like_file(in_dir=None):
+    if in_dir is None:
+        in_dir = os.getcwd()
+    extension_list = ['.spec', '.spec.tmpl']
+    for ext in extension_list:
+        result = find_file_with_extension(in_dir, ext)
+        if result:
+            return result
+    else:
+        error_out("Unable to locate files ending with %s in %s" % (list(extension_list), in_dir))
 
 
 def find_cheetah_template_file(in_dir=None):
-    return find_file_with_extension(in_dir, '.spec.tmpl')
+    if in_dir is None:
+        in_dir = os.getcwd()
+    result = find_file_with_extension(in_dir, '.spec.tmpl')
+    if result is None:
+        error_out("Unable to locate a %s file in %s" % ('.spec.tmpl', in_dir))
+    return result
 
 
 def find_git_root():
@@ -496,6 +518,9 @@ def debug(text, cmd=None):
 
 
 def get_spec_version_and_release(sourcedir, spec_file_name):
+    if os.path.splitext(spec_file_name)[1] == ".tmpl":
+        return scrape_version_and_release(spec_file_name)
+
     command = ("""rpm -q --qf '%%{version}-%%{release}\n' --define """
         """"_sourcedir %s" --define 'dist %%undefined' --specfile """
         """%s 2> /dev/null | grep -e '^$' -v | head -1""" % (sourcedir, spec_file_name))
@@ -564,7 +589,7 @@ def scl_to_rpm_option(scl, silent=None):
     return rpm_options
 
 
-def get_project_name(tag=None, scl=None, is_mead=False):
+def get_project_name(tag=None, scl=None):
     """
     Extract the project name from the specified tag or a spec file in the
     current working directory. Error out if neither is present.
@@ -576,22 +601,22 @@ def get_project_name(tag=None, scl=None, is_mead=False):
             error_out("Unable to determine project name in tag: %s" % tag)
         return m.group(1)
     else:
-        if is_mead:
-            template_file_path = os.path.join(os.getcwd(), find_cheetah_template_file())
-            name = search_for(template_file_path, r"\s*Name:\s*(.*?)\s*$")[0][0]
+        file_path = find_spec_like_file()
+        file_path = os.path.join(os.getcwd(), file_path)
+        if not os.path.exists(file_path):
+            error_out("spec file: %s does not exist" % file_path)
+
+        if os.path.splitext(file_path)[1] == ".tmpl":
+            name = search_for(file_path, r"\s*Name:\s*(.*?)\s*$")[0][0]
             return name
         else:
-            spec_file_path = os.path.join(os.getcwd(), find_spec_file())
-            if not os.path.exists(spec_file_path):
-                error_out("spec file: %s does not exist" % spec_file_path)
-
             output = run_command(
                 "rpm -q --qf '%%{name}\n' %s --specfile %s 2> /dev/null | grep -e '^$' -v | head -1" %
-                (scl_to_rpm_option(scl, silent=True), spec_file_path))
+                (scl_to_rpm_option(scl, silent=True), file_path))
             if not output:
-                error_out(["Unable to determine project name from spec file: %s" % spec_file_path,
-                    "Try rpm -q --specfile %s" % spec_file_path,
-                    "Try rpmlint -i %s" % spec_file_path])
+                error_out(["Unable to determine project name from spec file: %s" % file_path,
+                    "Try rpm -q --specfile %s" % file_path,
+                    "Try rpmlint -i %s" % file_path])
             return output
 
 
