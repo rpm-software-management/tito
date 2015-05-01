@@ -1,5 +1,5 @@
 # https://index.docker.io/_/centos/
-FROM centos:6.4
+FROM centos:6
 
 # http://jumanjiman.github.io/
 MAINTAINER Paul Morgan <jumanjiman@gmail.com>
@@ -25,11 +25,12 @@ RUN yum -y install \
     python-mock \
     python-nose \
     python-pep8 \
+    tar \
     ; yum clean all
 
 RUN useradd sandbox
-RUN git config --global user.email "sandbox@example.com"
-RUN git config --global user.name  "sandbox"
+RUN git config --system user.email "sandbox@example.com"
+RUN git config --system user.name  "sandbox"
 
 USER sandbox
 VOLUME ["/home/sandbox"]

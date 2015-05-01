@@ -1,5 +1,5 @@
 # https://index.docker.io/_/centos/
-FROM tianon/centos:5.9
+FROM centos:5
 
 # http://jumanjiman.github.io/
 MAINTAINER Paul Morgan <jumanjiman@gmail.com>
@@ -21,8 +21,9 @@ RUN pip-python install mock --upgrade
 RUN yum clean all
 
 RUN useradd sandbox
-RUN git config --global user.email "sandbox@example.com"
-RUN git config --global user.name  "sandbox"
+
+RUN git config --system user.email "sandbox@example.com"
+RUN git config --system user.name  "sandbox"
 
 USER sandbox
 VOLUME ["/home/sandbox"]
