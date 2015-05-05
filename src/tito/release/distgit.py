@@ -138,10 +138,10 @@ class FedoraGitReleaser(Releaser):
         print("")
 
         os.lseek(fd, 0, 0)
-        file = os.fdopen(fd)
-        for line in file.readlines():
+        f = os.fdopen(fd)
+        for line in f.readlines():
             print(line)
-        file.close()
+        f.close()
 
         print("")
         print("###############################")
@@ -169,10 +169,10 @@ class FedoraGitReleaser(Releaser):
         os.chdir(project_checkout)
 
         # Newer versions of git don't seem to want --cached here? Try both:
-        (status, diff_output) = getstatusoutput("git diff --cached")
+        (unused, diff_output) = getstatusoutput("git diff --cached")
         if diff_output.strip() == "":
             debug("git diff --cached returned nothing, falling back to git diff.")
-            (status, diff_output) = getstatusoutput("git diff")
+            (unused, diff_output) = getstatusoutput("git diff")
 
         if diff_output.strip() == "":
             print("No changes in main branch, skipping commit for: %s" % main_branch)
@@ -196,7 +196,7 @@ class FedoraGitReleaser(Releaser):
             else:
                 print("Proceeding with commit.")
                 os.chdir(self.package_workdir)
-                output = run_command(cmd)
+                run_command(cmd)
 
             os.unlink(commit_msg_file)
 
