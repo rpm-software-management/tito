@@ -395,8 +395,18 @@ class MeadDistGitReleaser(DistGitReleaser):
         test=False, auto_accept=False,
         prefix="temp_dir=", **kwargs):
 
+        # We don't use the builder.maven_args because they include arguments meant to
+        # deal with local builds
+        self.maven_args = []
         if 'builder_args' in kwargs:
             kwargs['builder_args']['local'] = False
+
+            if 'mvn_args' in kwargs['builder_args']:
+                self.maven_args.append(kwargs['builder_args']['maven_args'])
+            else:
+                # Generally people aren't going to want to run their tests during
+                # a build.  If they do, they can set maven_args=''
+                self.maven_args.append("-Dmaven.test.skip")
 
         DistGitReleaser.__init__(self, name, tag, build_dir, config,
                 user_config, target, releaser_config, no_cleanup, test,
@@ -428,7 +438,7 @@ class MeadDistGitReleaser(DistGitReleaser):
             target_param = "--target %s" % build_target
 
         build_cmd = "%s maven-build --nowait --maven-option '%s' %s " % (
-            self.cli_tool, self.builder.maven_args, target_param)
+            self.cli_tool, " ".join(self.maven_args), target_param)
 
         if self.dry_run:
             self.print_dry_run_warning(build_cmd)
