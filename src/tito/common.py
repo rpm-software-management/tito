@@ -263,7 +263,9 @@ def find_file_with_extension(in_dir, suffix=None):
                 error_out("At least two %s files in directory: %s and %s" % (suffix, file_name, f))
             file_name = f
             debug("Using file: %s" % f)
-    return file_name
+    if file_name:
+        return os.path.join(in_dir, file_name)
+    return None
 
 
 def find_spec_file(in_dir=None):
@@ -409,13 +411,17 @@ def render_cheetah(template_file, destination_directory, cheetah_input):
         pickle.dump(cheetah_input, pickle_file)
         pickle_file.close()
 
-        run_command("cheetah fill --pickle=%s --odir=%s --oext=cheetah .spec %s" %
+        run_command("cheetah fill --pickle=%s --odir=%s --oext=cheetah %s" %
             (pickle_file.name, destination_directory, template_file))
 
         # Annoyingly Cheetah won't let you specify an empty string for a file extension
         # and most Mead templates end with ".spec.tmpl"
         for rendered in glob.glob(os.path.join(destination_directory, "*.cheetah")):
             shutil.move(rendered, os.path.splitext(rendered)[0])
+            break
+        else:
+            # Cheetah returns zero even if it doesn't find the template to render.  Thanks Cheetah.
+            error_out("Could not find rendered file in %s for %s" % (destination_directory, template_file))
     finally:
         os.unlink(pickle_file.name)
 
@@ -619,7 +625,6 @@ def get_project_name(tag=None, scl=None):
         return m.group(1)
     else:
         file_path = find_spec_like_file()
-        file_path = os.path.join(os.getcwd(), file_path)
         if not os.path.exists(file_path):
             error_out("spec file: %s does not exist" % file_path)
 

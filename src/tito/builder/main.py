@@ -468,7 +468,7 @@ class Builder(ConfigObject, BuilderBase):
         # archive into the temp build directory. This is done so we can
         # modify the version/release on the fly when building test rpms
         # that use a git SHA1 for their version.
-        self.spec_file_name = find_spec_file(in_dir=self.rpmbuild_gitcopy)
+        self.spec_file_name = find_spec_like_file(self.rpmbuild_gitcopy)
         self.spec_file = os.path.join(
             self.rpmbuild_gitcopy, self.spec_file_name)
 
@@ -607,7 +607,7 @@ class GemBuilder(NoTgzBuilder):
             self.tgz_filename))
 
         # Find the gemspec
-        gemspec_filename = find_gemspec_file(in_dir=self.rpmbuild_gitcopy)
+        gemspec_filename = find_gemspec_file(self.rpmbuild_gitcopy)
 
         debug("Building gem: %s in %s" % (gemspec_filename,
             self.rpmbuild_gitcopy))
@@ -622,7 +622,7 @@ class GemBuilder(NoTgzBuilder):
         # archive into the temp build directory. This is done so we can
         # modify the version/release on the fly when building test rpms
         # that use a git SHA1 for their version.
-        self.spec_file_name = find_spec_file(in_dir=self.rpmbuild_gitcopy)
+        self.spec_file_name = find_spec_file(self.rpmbuild_gitcopy)
         self.spec_file = os.path.join(
             self.rpmbuild_gitcopy, self.spec_file_name)
 
@@ -866,7 +866,6 @@ class MeadBuilder(Builder):
         run_command("mvn -B -q %s deploy" % (" ".join(self.maven_args)))
 
     def tgz(self):
-        self._create_build_dirs()
         self._setup_sources()
 
         try:
@@ -894,46 +893,66 @@ class MeadBuilder(Builder):
         print("Wrote: %s" % destination_path)
         self.sources.append(destination_path)
         self.artifacts.append(destination_path)
-        self.spec_file_name = find_spec_like_file(self.rpmbuild_gitcopy)
-        self.spec_file = os.path.join(self.rpmbuild_gitcopy, self.spec_file_name)
         self.ran_tgz = True
 
     def _setup_sources(self):
         self._maven_deploy()
+        self._create_build_dirs()
 
-        if not self.local_build:
-            return
+        debug("Creating %s from git tag: %s..." % (self.tgz_filename,
+            self.git_commit_id))
+        create_tgz(self.git_root, self.tgz_dir, self.git_commit_id,
+                self.relative_project_dir,
+                os.path.join(self.rpmbuild_sourcedir, self.tgz_filename))
 
-        artifacts = {}
-        all_artifacts = []
-        all_artifacts_with_path = []
+        # Extract the source so we can get at the spec file, etc.
+        debug("Copying git source to: %s" % self.rpmbuild_gitcopy)
+        run_command("cd %s/ && tar xzf %s" % (self.rpmbuild_sourcedir,
+            self.tgz_filename))
 
-        # XXX: From what I can tell, Mead actually builds from the top project and packs in
-        # *every* artifact to the data available to the template.  I am electing to only
-        # run the build for the subproject although that may need to change.
-        for directory, unused, filenames in os.walk(self.deploy_dir):
-            for f in filenames:
-                artifacts.setdefault(os.path.splitext(f)[1], []).append(f)
-            dir_artifacts_with_path = [os.path.join(directory, f) for f in filenames]
+        # Show contents of the directory structure we just extracted.
+        debug('', 'ls -lR %s/' % self.rpmbuild_gitcopy)
 
-            # Place the Maven artifacts in the SOURCES directory for rpmbuild to use
-            for artifact in dir_artifacts_with_path:
-                shutil.copy(artifact, self.rpmbuild_sourcedir)
+        if self.local_build:
+            artifacts = {}
+            all_artifacts = []
+            all_artifacts_with_path = []
 
-            dir_artifacts_with_path = map(lambda x: os.path.relpath(x, self.deploy_dir), dir_artifacts_with_path)
-            all_artifacts_with_path.extend(dir_artifacts_with_path)
-            all_artifacts.extend([os.path.basename(f) for f in filenames])
+            # XXX: From what I can tell, Mead actually builds from the top project and packs in
+            # *every* artifact to the data available to the template.  I am electing to only
+            # run the build for the subproject although that may need to change.
+            for directory, unused, filenames in os.walk(self.deploy_dir):
+                for f in filenames:
+                    artifacts.setdefault(os.path.splitext(f)[1], []).append(f)
+                dir_artifacts_with_path = [os.path.join(directory, f) for f in filenames]
 
-        cheetah_input = {
-            'name': self.project_name,
-            'version': self.spec_version,
-            'release': self.spec_release,
-            'epoch': None,  # TODO: May need to support this at some point
-            'artifacts': artifacts,
-            'all_artifacts': all_artifacts,
-            'all_artifacts_with_path': all_artifacts_with_path,
-        }
-        render_cheetah(find_cheetah_template_file(self.start_dir), self.rpmbuild_gitcopy, cheetah_input)
+                # Place the Maven artifacts in the SOURCES directory for rpmbuild to use
+                for artifact in dir_artifacts_with_path:
+                    shutil.copy(artifact, self.rpmbuild_sourcedir)
+
+                dir_artifacts_with_path = map(lambda x: os.path.relpath(x, self.deploy_dir), dir_artifacts_with_path)
+                all_artifacts_with_path.extend(dir_artifacts_with_path)
+                all_artifacts.extend([os.path.basename(f) for f in filenames])
+
+            cheetah_input = {
+                'name': self.project_name,
+                'version': self.spec_version,
+                'release': self.spec_release,
+                'epoch': None,  # TODO: May need to support this at some point
+                'artifacts': artifacts,
+                'all_artifacts': all_artifacts,
+                'all_artifacts_with_path': all_artifacts_with_path,
+            }
+            render_cheetah(find_cheetah_template_file(self.start_dir), self.rpmbuild_gitcopy, cheetah_input)
+            self.spec_file_name = find_spec_file(self.rpmbuild_gitcopy)
+        else:
+            self.spec_file_name = find_cheetah_template_file(self.rpmbuild_gitcopy)
+
+        # NOTE: The spec file we actually use is the one exported by git
+        # archive into the temp build directory. This is done so we can
+        # modify the version/release on the fly when building test rpms
+        # that use a git SHA1 for their version.
+        self.spec_file = os.path.join(self.rpmbuild_gitcopy, self.spec_file_name)
 
     def _setup_test_specfile(self):
         if self.test and not self.ran_setup_test_specfile:
