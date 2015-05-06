@@ -92,6 +92,8 @@ rm -f $RPM_BUILD_ROOT%{python_sitelib}/*egg-info/requires.txt
 %{__mkdir_p} %{buildroot}%{_mandir}/man8
 cp -a titorc.5 tito.props.5 releasers.conf.5 %{buildroot}/%{_mandir}/man5/
 cp -a tito.8 %{buildroot}/%{_mandir}/man8/
+# bash completion facilities
+install -Dp -m 0644 share/tito_completion.sh %{buildroot}%{_datadir}/bash-completion/completions/tito
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -108,6 +110,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/tar-fixup-stamp-comment.pl
 %{_bindir}/test-setup-specfile.pl
 %{_bindir}/generate-patches.pl
+%{_datadir}/bash-completion/completions/tito
 %dir %{python_sitelib}/tito
 %{python_sitelib}/tito/*
 %{python_sitelib}/tito-*.egg-info
