@@ -388,25 +388,15 @@ class DistGitReleaser(FedoraGitReleaser):
     cli_tool = "rhpkg"
 
 
-class MeadDistGitReleaser(DistGitReleaser):
+class DistGitMeadReleaser(DistGitReleaser):
     def __init__(self, name=None, tag=None, build_dir=None,
         config=None, user_config=None,
         target=None, releaser_config=None, no_cleanup=False,
         test=False, auto_accept=False,
         prefix="temp_dir=", **kwargs):
 
-        # We don't use the builder.maven_args because they include arguments meant to
-        # deal with local builds
-        self.maven_args = []
         if 'builder_args' in kwargs:
             kwargs['builder_args']['local'] = False
-
-            if 'mvn_args' in kwargs['builder_args']:
-                self.maven_args.append(kwargs['builder_args']['maven_args'])
-            else:
-                # Generally people aren't going to want to run their tests during
-                # a build.  If they do, they can set maven_args=''
-                self.maven_args.append("-Dmaven.test.skip")
 
         DistGitReleaser.__init__(self, name, tag, build_dir, config,
                 user_config, target, releaser_config, no_cleanup, test,
@@ -437,8 +427,11 @@ class MeadDistGitReleaser(DistGitReleaser):
         if build_target:
             target_param = "--target %s" % build_target
 
-        build_cmd = "%s maven-build --nowait --maven-option '%s' %s " % (
-            self.cli_tool, " ".join(self.maven_args), target_param)
+        build_cmd = "%s maven-build --nowait --maven-option '%s' --jvm-option '%s' --specfile . %s" % (
+            self.cli_tool,
+            " ".join(self.builder.maven_args),
+            " ".join(self.builder.maven_properties),
+            target_param)
 
         if self.dry_run:
             self.print_dry_run_warning(build_cmd)

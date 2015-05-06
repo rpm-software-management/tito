@@ -846,48 +846,43 @@ class MeadBuilder(Builder):
         Builder.__init__(self, name=name, tag=tag, build_dir=build_dir,
             config=config, user_config=user_config, args=args, **kwargs)
 
+        self.ran_maven = False
         self.deploy_dir = mkdtemp(dir=self.rpmbuild_basedir, prefix="maven-%s" % self.project_name)
-
-        # We always want to deploy to a tito controlled location
-        self.maven_args = ["-DaltDeploymentRepository=local-output::default::file://%s" % self.deploy_dir]
-        if 'mvn_args' in args:
-            self.maven_args.append(args['maven_args'])
-        else:
-            # Generally people aren't going to want to run their tests during
-            # a build.  If they do, they can set maven_args=''
-            self.maven_args.append("-Dmaven.test.skip")
 
         # People calling `tito build` will almost certainly want to do a maven build locally.
         # But with a `tito release` we want the Mead stuff to happen on the build system
         self.local_build = args.setdefault('local', True)
+        self.maven_properties = []
 
-    def _maven_deploy(self):
-        print("Running Maven build...")
-        run_command("mvn -B -q %s deploy" % (" ".join(self.maven_args)))
+        if 'maven_properties' in args:
+            self.maven_properties.append(args['maven_properties'])
+        else:
+            # Generally people aren't going to want to run their tests during
+            # a build.  If they do, they can set maven_properties=''
+            self.maven_properties.append("-Dmaven.test.skip")
+
+        self.maven_args = ['-B']
+        if 'maven_args' in args:
+            self.maven_args.append(args['maven_args'])
+        else:
+            self.maven_args.append('-q')
+
 
     def tgz(self):
         self._setup_sources()
 
-        try:
-            manual_tarball = False
-            run_command("mvn -B -q %s assembly:single" % (" ".join(self.maven_args)))
-        except:
-            warn_out("No Maven assembly defined!  Falling back to git-archive.")
-            warn_out("Please set up the assembly plugin in your pom.xml")
-            manual_tarball = True
-
         destination_path = os.path.join(self.rpmbuild_basedir, self.tgz_filename)
-        if manual_tarball:
-            full_path = os.path.join(self.rpmbuild_sourcedir, self.tgz_filename)
-            print("Creating %s from git tag: %s..." % (self.tgz_filename, self.build_tag))
-            create_tgz(self.git_root, self.tgz_dir, self.git_commit_id, self.relative_project_dir, full_path)
-        else:
+        if self.ran_maven:
             for directory, unused, filenames in os.walk(self.deploy_dir):
                 for f in filenames:
                     name, ext = os.path.splitext(f)
                     if ext == ".gz" and name.startswith("%s-%s" % (self.project_name, self.spec_version)):
                         full_path = os.path.join(self.deploy_dir, directory, f)
                         break
+        else:
+            full_path = os.path.join(self.rpmbuild_sourcedir, self.tgz_filename)
+            print("Creating %s from git tag: %s..." % (self.tgz_filename, self.build_tag))
+            create_tgz(self.git_root, self.tgz_dir, self.git_commit_id, self.relative_project_dir, full_path)
 
         shutil.copy(full_path, destination_path)
         print("Wrote: %s" % destination_path)
@@ -896,7 +891,28 @@ class MeadBuilder(Builder):
         self.ran_tgz = True
 
     def _setup_sources(self):
-        self._maven_deploy()
+        # We always want to deploy to a tito controlled location during local builds but
+        # we don't want to tamper with self.maven_properties so we copy the list
+        local_properties = list(self.maven_properties).append(
+            "-DaltDeploymentRepository=local-output::default::file://%s" % self.deploy_dir)
+
+        if self.local_build:
+            print("Running Maven build...")
+            run_command("mvn %s %s deploy" % (
+                " ".join(self.maven_args),
+                " ".join(local_properties)))
+            self.ran_maven = True
+        else:
+            try:
+                print("Building Maven assembly")
+                run_command("mvn %s %s assembly:single" % (
+                    " ".join(self.maven_args),
+                    " ".join(local_properties)))
+                self.ran_maven = True
+            except:
+                warn_out("No Maven assembly defined!  Falling back to git-archive.")
+                warn_out("Please set up the assembly plugin in your pom.xml")
+
         self._create_build_dirs()
 
         debug("Creating %s from git tag: %s..." % (self.tgz_filename,
