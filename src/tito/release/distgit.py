@@ -22,6 +22,7 @@ from tito.compat import getoutput, getstatusoutput, write
 from tito.release import Releaser
 from tito.release.main import PROTECTED_BUILD_SYS_FILES
 from tito.buildparser import BuildTargetParser
+from tito.exception import RunCommandException
 
 
 class FedoraGitReleaser(Releaser):
@@ -389,6 +390,8 @@ class DistGitReleaser(FedoraGitReleaser):
 
 
 class DistGitMeadReleaser(DistGitReleaser):
+    REQUIRED_CONFIG = ['mead_scm', 'branches']
+
     def __init__(self, name=None, tag=None, build_dir=None,
         config=None, user_config=None,
         target=None, releaser_config=None, no_cleanup=False,
@@ -402,13 +405,32 @@ class DistGitMeadReleaser(DistGitReleaser):
                 user_config, target, releaser_config, no_cleanup, test,
                 auto_accept, **kwargs)
 
+        self.mead_scm = self.releaser_config.get(self.target, "mead_scm")
+
+    def _sync_mead_scm(self):
+        with chdir(self.git_root):
+            print("Syncing local repo with %s" % self.mead_scm)
+            try:
+                run_command("git push %s %s" % (self.mead_scm, self.builder.build_tag))
+            except RunCommandException, e:
+                if "rejected" in e.output:
+                    if self._ask_yes_no("The remote rejected a push.  Force push? [y/n] ", False):
+                        run_command("git push --force %s %s" % (self.mead_scm, self.builder.build_tag))
+                    else:
+                        error_out("Could not sync with %s" % self.mead_scm)
+                raise
+
+    def _git_release(self):
+        self._sync_mead_scm()
+        DistGitReleaser._git_release(self)
+
     def _git_upload_sources(self, project_checkout):
         DistGitReleaser._git_upload_sources(self, project_checkout)
 
         os.chdir(project_checkout)
 
         mead_url = "%s?%s#%s" % (
-            self.releaser_config.get(self.target, 'git_url'),
+            self.mead_scm,
             self.project_name,
             self.builder.build_tag)
 
@@ -427,11 +449,17 @@ class DistGitMeadReleaser(DistGitReleaser):
         if build_target:
             target_param = "--target %s" % build_target
 
-        build_cmd = "%s maven-build --nowait --maven-option '%s' --jvm-option '%s' --specfile . %s" % (
-            self.cli_tool,
-            " ".join(self.builder.maven_args),
-            " ".join(self.builder.maven_properties),
-            target_param)
+        build_cmd = [self.cli_tool, "maven-build", "--nowait", "--specfile", "."]
+
+        for opt in self.builder.maven_args:
+            build_cmd.extend(["--maven-option", opt])
+
+        for prop in self.builder.maven_properties:
+            build_cmd.extend(["--property", prop])
+
+        build_cmd.append(target_param)
+
+        build_cmd = " ".join(build_cmd)
 
         if self.dry_run:
             self.print_dry_run_warning(build_cmd)
