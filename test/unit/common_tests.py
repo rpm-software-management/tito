@@ -13,14 +13,15 @@
 # in this software or its documentation.
 
 """ Pure unit tests for tito's common module. """
-
 from tito.common import *
 from tito import common
 
 import unittest
 
-from mock import Mock
+from mock import Mock, patch, call, mock_open
+from unit import open_mock
 
+from textwrap import dedent
 
 class CommonTests(unittest.TestCase):
 
@@ -113,16 +114,119 @@ class CommonTests(unittest.TestCase):
 
         self.assertEquals(succeeded_result, success_line[0])
 
-    def test_rpmbuild_which_ended_with_error_is_described_with_the_analyzed_line(self):
+    @patch("tito.common.error_out")
+    def test_rpmbuild_which_ended_with_error_is_described_with_the_analyzed_line(self, mock_error):
         output = "some error output from rpmbuild\n" \
             "next error line"
 
-        common.error_out = Mock()
-
         find_wrote_in_rpmbuild_output(output)
 
-        common.error_out.assert_called_once_with("Unable to locate 'Wrote: ' lines in rpmbuild output: '%s'" % output)
+        mock_error.assert_called_once_with("Unable to locate 'Wrote: ' lines in rpmbuild output: '%s'" % output)
 
+    @patch("tito.common.find_file_with_extension")
+    def test_find_spec_like_file_tmpl(self, mock_find):
+        mock_find.side_effect = [None, "result.spec.tmpl"]
+        result = find_spec_like_file()
+        self.assertEquals("result.spec.tmpl", result)
+        self.assertEquals(2, len(mock_find.mock_calls))
+
+    @patch("tito.common.find_file_with_extension")
+    def test_find_spec_like_file_spec(self, mock_find):
+        mock_find.side_effect = ["result.spec"]
+        result = find_spec_like_file()
+        self.assertEquals("result.spec", result)
+        self.assertEquals(1, len(mock_find.mock_calls))
+
+    @patch("tito.common.find_file_with_extension")
+    def test_find_spec_like_file_no_match(self, mock_find):
+        mock_find.side_effect = [None, None]
+        self.assertRaises(SystemExit, find_spec_like_file)
+        self.assertEquals(2, len(mock_find.mock_calls))
+
+    @patch("os.listdir")
+    def test_find_file_with_extension(self, mock_listdir):
+        mock_listdir.return_value = ["hello.txt"]
+        result = find_file_with_extension("/tmp", ".txt")
+        self.assertEquals(mock_listdir.mock_calls[0], call("/tmp"))
+        self.assertEquals("/tmp/hello.txt", result)
+
+    @patch("os.listdir")
+    def test_find_file_with_extension_no_match(self, mock_listdir):
+        mock_listdir.return_value = ["hello.txt"]
+        result = find_file_with_extension("/tmp", ".foo")
+        self.assertEquals(mock_listdir.mock_calls[0], call("/tmp"))
+        self.assertEqual(None, result)
+
+    @patch("os.listdir")
+    def test_find_file_with_extension_duplicates(self, mock_listdir):
+        mock_listdir.return_value = ["hello.txt", "goodbye.txt"]
+        self.assertRaises(SystemExit, find_file_with_extension, "/tmp", ".txt")
+
+    def test_search_for(self):
+        content = dedent("""
+        HelloWorld
+        Hello World
+        """)
+        with open_mock(content) as fh:
+            results = search_for("foo", r"(Hello\s+World)", r"(HelloWorld)")
+            self.assertEquals(("Hello World",) , results[0])
+            self.assertEquals(("HelloWorld",) , results[1])
+
+    def test_search_for_gets_first_match(self):
+        content = dedent("""
+        HelloWorld
+        Hello World
+        """)
+        with open_mock(content) as fh:
+            results = search_for("foo", r"(Hello.*)")
+            self.assertEquals(("HelloWorld",) , results[0])
+
+    def test_search_for_no_match(self):
+        content = dedent("""
+        HelloWorld
+        Goodbye World
+        """)
+        with open_mock(content) as fh:
+            self.assertRaises(SystemExit, search_for, "foo", r"(NoMatch)")
+
+
+class CheetahRenderTest(unittest.TestCase):
+    @patch("os.unlink")
+    @patch("glob.glob")
+    @patch("shutil.move")
+    @patch("tito.common.run_command")
+    @patch("tempfile.NamedTemporaryFile")
+    def test_renders_cheetah(self, mock_tempfile, mock_run_command, mock_move, mock_glob, mock_unlink):
+        mock_run_command.return_value = True
+        mock_tempfile.return_value.name = "temp_pickle"
+        mock_unlink.return_value = True
+        mock_glob.return_value = ["/tmp/foo.spec.cheetah"]
+        mock_move.return_value = True
+
+        render_cheetah("foo.spec.tmpl", "/tmp", {})
+        expected = "cheetah fill --pickle=temp_pickle --odir=/tmp --oext=cheetah foo.spec.tmpl"
+        self.assertEquals(call(expected), mock_run_command.mock_calls[0])
+
+        self.assertEquals(call("/tmp/*.cheetah"), mock_glob.mock_calls[0])
+        self.assertEquals(call("/tmp/foo.spec.cheetah", "/tmp/foo.spec"), mock_move.mock_calls[0])
+        self.assertEquals(call("temp_pickle"), mock_unlink.mock_calls[0])
+
+    @patch("os.unlink")
+    @patch("glob.glob")
+    @patch("tito.common.run_command")
+    @patch("tempfile.NamedTemporaryFile")
+    def test_renders_cheetah_missing_result(self, mock_tempfile, mock_run_command, mock_glob, mock_unlink):
+        mock_run_command.return_value = True
+        mock_tempfile.return_value.name = "temp_pickle"
+        mock_unlink.return_value = True
+        mock_glob.return_value = []
+
+        self.assertRaises(SystemExit, render_cheetah, "foo.spec.tmpl", "/tmp", {})
+        expected = "cheetah fill --pickle=temp_pickle --odir=/tmp --oext=cheetah foo.spec.tmpl"
+        self.assertEquals(call(expected), mock_run_command.mock_calls[0])
+
+        self.assertEquals(call("/tmp/*.cheetah"), mock_glob.mock_calls[0])
+        self.assertEquals(call("temp_pickle"), mock_unlink.mock_calls[0])
 
 class VersionMathTest(unittest.TestCase):
     def test_increase_version_minor(self):

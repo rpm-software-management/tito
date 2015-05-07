@@ -209,9 +209,8 @@ def chdir(path):
     os.chdir(path)
     try:
         yield
-    except:
+    finally:
         os.chdir(previous_dir)
-        raise
 
 
 def create_builder(package_name, build_tag,
@@ -416,12 +415,14 @@ def render_cheetah(template_file, destination_directory, cheetah_input):
 
         # Annoyingly Cheetah won't let you specify an empty string for a file extension
         # and most Mead templates end with ".spec.tmpl"
-        for rendered in glob.glob(os.path.join(destination_directory, "*.cheetah")):
-            shutil.move(rendered, os.path.splitext(rendered)[0])
-            break
-        else:
-            # Cheetah returns zero even if it doesn't find the template to render.  Thanks Cheetah.
+        rendered_files = glob.glob(os.path.join(destination_directory, "*.cheetah"))
+
+        # Cheetah returns zero even if it doesn't find the template to render.  Thanks Cheetah.
+        if not rendered_files:
             error_out("Could not find rendered file in %s for %s" % (destination_directory, template_file))
+
+        for rendered in rendered_files:
+            shutil.move(rendered, os.path.splitext(rendered)[0])
     finally:
         os.unlink(pickle_file.name)
 
@@ -552,21 +553,35 @@ def get_spec_version_and_release(sourcedir, spec_file_name):
 
 def search_for(file_name, *args):
     """Send in a file and regular expressions as arguments.  Returns the value of the
-    matching groups for each regular expression in the same order that the expressions were
-    provided in."""
+    matching groups (or the entire matching string if no groups are in the regex) for
+    each regular expression in the same order that the expressions were provided in.
+    ONLY THE FIRST MATCH IS RETURNED!
+
+    Note that this method uses re.search and not re.match so your regexs don't need
+    to match the entire line.
+    """
     results = [None] * len(args)
     with open(file_name, 'r') as fh:
         for line in fh:
             for index, regex in enumerate(args):
-                m = re.match(regex, line)
-                if m:
+                m = re.search(regex, line)
+                if not m:
+                    continue
+
+                if results[index]:
+                    warn_out("Multiple matches found for %s in %s" % (regex, file_name))
+                elif m.groups():
                     results[index] = m.groups()
+                else:
+                    results[index] = (m.string,)
 
-        missing_results = filter(lambda x: x is None, results)
+        # Get the index of every regex that didn't match
+        missing_results = [i for i, x in enumerate(results) if x is None]
 
-        if missing_results:
-            error_out("Could not find match to %s in %s" % (missing_results, file_name))
-    return results
+        if len(missing_results) > 0:
+            error_out("Could not find match to %s in %s" % (map(lambda x: args[x], missing_results), file_name))
+
+        return results
 
 
 def replace_spec_release(file_name, release):
