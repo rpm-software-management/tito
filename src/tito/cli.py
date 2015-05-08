@@ -17,7 +17,7 @@ Tito's Command Line Interface
 import sys
 import os
 
-from optparse import OptionParser
+from optparse import OptionParser, SUPPRESS_HELP
 
 from tito.common import find_git_root, error_out, debug, get_class_by_name, \
     DEFAULT_BUILDER, BUILDCONFIG_SECTION, DEFAULT_TAGGER, \
@@ -625,7 +625,7 @@ class TagModule(BaseCliModule):
         # NOTE: deprecated and no longer needed:
         self.parser.add_option("--tag-release", dest="tag_release",
                 action="store_true",
-                help="Deprecated, no longer required.")
+                help=SUPPRESS_HELP)
         self.parser.add_option("--keep-version", dest="keep_version",
                 action="store_true",
                 help=("Use spec file version/release exactly as "
