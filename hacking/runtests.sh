@@ -60,9 +60,10 @@
 #     docker run --rm -i -t -v $PWD:/home/sandbox titotest-centos-5.9 /bin/bash
 
 #titotest-centos-5.9
-#titotest-fedora-20
 #titotest-fedora-rawhide
+
 distros='
+titotest-fedora-20
 titotest-centos-6
 '
 

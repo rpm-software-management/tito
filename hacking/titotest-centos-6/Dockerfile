@@ -28,11 +28,13 @@ RUN yum -y install \
     rpm-build \
     createrepo \
     tar \
+    python-devel \
+    which \
+    asciidoc \
+    docbook-style-xsl \
+    libxslt \
+    rpmdevtools \
     ; yum clean all
-
-RUN yum install -y python-devel
-RUN yum install -y which
-RUN yum install -y asciidoc docbook-style-xsl libxslt rpmdevtools
 
 RUN useradd sandbox
 RUN git config --system user.email "sandbox@example.com"
