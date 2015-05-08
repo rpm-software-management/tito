@@ -60,16 +60,16 @@
 #     docker run --rm -i -t -v $PWD:/home/sandbox titotest-centos-5.9 /bin/bash
 
 #titotest-centos-5.9
-#titotest-fedora-rawhide
 
+#titotest-fedora-20
+#titotest-centos-6
 distros='
-titotest-fedora-20
-titotest-centos-6
+titotest-fedora-rawhide
 '
 
-#titotest-fedora-rawhide
+#titotest-fedora-20
 python3_distros='
-titotest-fedora-20
+titotest-fedora-rawhide
 '
 
 rm -f /tmp/titotest*.out &> /dev/null
