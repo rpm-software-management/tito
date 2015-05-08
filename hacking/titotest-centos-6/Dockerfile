@@ -25,8 +25,14 @@ RUN yum -y install \
     python-mock \
     python-nose \
     python-pep8 \
+    rpm-build \
+    createrepo \
     tar \
     ; yum clean all
+
+RUN yum install -y python-devel
+RUN yum install -y which
+RUN yum install -y asciidoc docbook-style-xsl libxslt rpmdevtools
 
 RUN useradd sandbox
 RUN git config --system user.email "sandbox@example.com"
@@ -35,6 +41,7 @@ RUN git config --system user.name  "sandbox"
 USER sandbox
 VOLUME ["/home/sandbox"]
 WORKDIR /home/sandbox
+
 
 ENV LANG C
 CMD ["/bin/bash"]

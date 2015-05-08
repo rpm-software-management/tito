@@ -1011,6 +1011,7 @@ class GitAnnexBuilder(NoTgzBuilder):
         old_cwd = os.getcwd()
         os.chdir(os.path.join(old_cwd, self.relative_project_dir))
 
+        # NOTE: 'which' may not be installed... (docker containers)
         (status, output) = getstatusoutput("which git-annex")
         if status != 0:
             msg = "Please run 'yum install git-annex' as root."
