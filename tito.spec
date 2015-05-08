@@ -6,10 +6,15 @@
 %else
 %global use_python3 0
 %global use_python2 1
+%if 0%{?__python2:1}
 %global pythonbin %{__python2}
 %global python_sitelib %{python2_sitelib}
+%else
+%global pythonbin %{__python}
+%global python_sitelib %{python_sitelib}
 %endif
-%{!?python2_sitelib: %define python_sitelib %(%{pythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
+%endif
+%{!?python_sitelib: %define python_sitelib %(%{pythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
 Version: 0.5.6
@@ -73,7 +78,7 @@ git.
 
 %prep
 %setup -q -n tito-%{version}
-sed -i 1"s|#!/usr/bin/python|#!/usr/bin/python3|" bin/tito
+sed -i 1"s|#!.*|#!%{pythonbin}|" bin/tito
 
 %build
 %{pythonbin} setup.py build
