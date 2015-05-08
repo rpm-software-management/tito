@@ -17,9 +17,7 @@ RUN yum -y install \
     git-annex \
     python-mock \
     python-nose \
-    python-pep8
-
-RUN yum -y install \
+    python-pep8 \
     python3-mock \
     python3-nose \
     python3-pep8
@@ -30,8 +28,6 @@ RUN yum clean all
 RUN useradd sandbox
 RUN git config --system user.email "sandbox@example.com"
 RUN git config --system user.name  "sandbox"
-
-RUN yum install -y python-nose
 
 USER sandbox
 VOLUME ["/home/sandbox"]
