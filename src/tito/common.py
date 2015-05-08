@@ -405,13 +405,13 @@ def render_cheetah(template_file, destination_directory, cheetah_input):
     that Mead uses.  Instead of importing the potentially incompatible code,
     we use a command-line utility that Cheetah provides.  Yes, this is a total
     hack."""
-    pickle_file = tempfile.NamedTemporaryFile(prefix="tito-cheetah-pickle", delete=False)
+    pickle_file = tempfile.NamedTemporaryFile(dir=destination_directory, prefix="tito-cheetah-pickle", delete=False)
     try:
         pickle.dump(cheetah_input, pickle_file)
         pickle_file.close()
-
-        run_command("cheetah fill --pickle=%s --odir=%s --oext=cheetah %s" %
+        output = run_command("cheetah fill --flat --pickle=%s --odir=%s --oext=cheetah %s" %
             (pickle_file.name, destination_directory, template_file))
+        print(output)
 
         # Annoyingly Cheetah won't let you specify an empty string for a file extension
         # and most Mead templates end with ".spec.tmpl"

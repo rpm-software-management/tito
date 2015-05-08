@@ -207,9 +207,8 @@ class CheetahRenderTest(unittest.TestCase):
         mock_move.return_value = True
 
         render_cheetah("foo.spec.tmpl", "/tmp", {})
-        expected = "cheetah fill --pickle=temp_pickle --odir=/tmp --oext=cheetah foo.spec.tmpl"
+        expected = "cheetah fill --flat --pickle=temp_pickle --odir=/tmp --oext=cheetah foo.spec.tmpl"
         self.assertEquals(call(expected), mock_run_command.mock_calls[0])
-
         self.assertEquals(call("/tmp/*.cheetah"), mock_glob.mock_calls[0])
         self.assertEquals(call("/tmp/foo.spec.cheetah", "/tmp/foo.spec"), mock_move.mock_calls[0])
         self.assertEquals(call("temp_pickle"), mock_unlink.mock_calls[0])
@@ -225,7 +224,7 @@ class CheetahRenderTest(unittest.TestCase):
         mock_glob.return_value = []
 
         self.assertRaises(SystemExit, render_cheetah, "foo.spec.tmpl", "/tmp", {})
-        expected = "cheetah fill --pickle=temp_pickle --odir=/tmp --oext=cheetah foo.spec.tmpl"
+        expected = "cheetah fill --flat --pickle=temp_pickle --odir=/tmp --oext=cheetah foo.spec.tmpl"
         self.assertEquals(call(expected), mock_run_command.mock_calls[0])
 
         self.assertEquals(call("/tmp/*.cheetah"), mock_glob.mock_calls[0])
