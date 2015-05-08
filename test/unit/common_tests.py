@@ -13,15 +13,18 @@
 # in this software or its documentation.
 
 """ Pure unit tests for tito's common module. """
-from tito.common import *
-from tito import common
+from tito.common import (replace_version, find_spec_like_file, increase_version,
+    search_for, compare_version, run_command_print, find_wrote_in_rpmbuild_output,
+    render_cheetah, increase_zstream, reset_release, find_file_with_extension,
+    normalize_class_name, extract_sha1, BugzillaExtractor
+    )
 
 import unittest
 
-from mock import Mock, patch, call, mock_open
+from mock import Mock, patch, call
+from textwrap import dedent
 from unit import open_mock
 
-from textwrap import dedent
 
 class CommonTests(unittest.TestCase):
 
@@ -167,26 +170,26 @@ class CommonTests(unittest.TestCase):
         HelloWorld
         Hello World
         """)
-        with open_mock(content) as fh:
+        with open_mock(content):
             results = search_for("foo", r"(Hello\s+World)", r"(HelloWorld)")
-            self.assertEquals(("Hello World",) , results[0])
-            self.assertEquals(("HelloWorld",) , results[1])
+            self.assertEquals(("Hello World",), results[0])
+            self.assertEquals(("HelloWorld",), results[1])
 
     def test_search_for_gets_first_match(self):
         content = dedent("""
         HelloWorld
         Hello World
         """)
-        with open_mock(content) as fh:
+        with open_mock(content):
             results = search_for("foo", r"(Hello.*)")
-            self.assertEquals(("HelloWorld",) , results[0])
+            self.assertEquals(("HelloWorld",), results[0])
 
     def test_search_for_no_match(self):
         content = dedent("""
         HelloWorld
         Goodbye World
         """)
-        with open_mock(content) as fh:
+        with open_mock(content):
             self.assertRaises(SystemExit, search_for, "foo", r"(NoMatch)")
 
 
@@ -227,6 +230,7 @@ class CheetahRenderTest(unittest.TestCase):
 
         self.assertEquals(call("/tmp/*.cheetah"), mock_glob.mock_calls[0])
         self.assertEquals(call("temp_pickle"), mock_unlink.mock_calls[0])
+
 
 class VersionMathTest(unittest.TestCase):
     def test_increase_version_minor(self):

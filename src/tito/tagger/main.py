@@ -251,15 +251,15 @@ class VersionTagger(ConfigObject):
                     subprocess.call(editor.split() + [name])
 
                 os.lseek(fd, 0, 0)
-                file = os.fdopen(fd)
+                f = os.fdopen(fd)
 
-                for line in file.readlines():
+                for line in f.readlines():
                     if not line.startswith("#"):
                         out_f.write(line)
 
-                output = file.read()
+                output = f.read()
 
-                file.close()
+                f.close()
                 os.unlink(name)
 
         if not found_changelog:

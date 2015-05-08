@@ -14,7 +14,7 @@
 from contextlib import contextmanager
 from mock import mock_open, patch
 from StringIO import StringIO
-from itertools import repeat
+
 
 @contextmanager
 def open_mock(content, **kwargs):

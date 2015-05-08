@@ -14,7 +14,7 @@
 import os
 import unittest
 
-from tito.compat import *
+from tito.compat import *  # NOQA
 
 UNIT_DIR = os.path.abspath(os.path.dirname(__file__))
 REPO_DIR = os.path.join(UNIT_DIR, '..', '..')

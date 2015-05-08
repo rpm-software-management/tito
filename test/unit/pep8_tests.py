@@ -22,7 +22,8 @@ http://docs.python.org/3.3/reference/lexical_analysis.html
 """
 
 import pep8
-from unit.fixture import *
+from tito.compat import *  # NOQA
+from unit.fixture import TitoUnitTestFixture
 
 
 class TestPep8(TitoUnitTestFixture):

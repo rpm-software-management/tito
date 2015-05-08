@@ -13,8 +13,8 @@
 # in this software or its documentation.
 
 import os
-from tito.common import *
-from tito.builder import *
+from tito.builder import Builder, UpstreamBuilder
+from tito.common import tag_exists_locally, check_tag_exists
 from tito.release import Releaser
 from tito.compat import getoutput
 from functional.fixture import TitoGitTestFixture, tito

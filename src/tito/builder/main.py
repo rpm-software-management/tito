@@ -867,7 +867,6 @@ class MeadBuilder(Builder):
         else:
             self.maven_args.append('-q')
 
-
     def tgz(self):
         self._setup_sources()
 
@@ -1060,18 +1059,18 @@ class MockBuilder(Builder):
     def _build_in_mock(self):
         if not self.speedup:
             print("Initializing mock...")
-            output = run_command("mock %s -r %s --init" % (self.mock_cmd_args, self.mock_tag))
+            run_command("mock %s -r %s --init" % (self.mock_cmd_args, self.mock_tag))
         else:
             print("Skipping mock --init due to speedup option.")
 
         print("Installing deps in mock...")
-        output = run_command("mock %s -r %s %s" % (
+        run_command("mock %s -r %s %s" % (
             self.mock_cmd_args, self.mock_tag, self.srpm_location))
         print("Building RPMs in mock...")
-        output = run_command('mock %s -r %s --rebuild %s' %
+        run_command('mock %s -r %s --rebuild %s' %
                 (self.mock_cmd_args, self.mock_tag, self.srpm_location))
         mock_output_dir = os.path.join(self.rpmbuild_dir, "mockoutput")
-        output = run_command("mock %s -r %s --copyout /builddir/build/RPMS/ %s" %
+        run_command("mock %s -r %s --copyout /builddir/build/RPMS/ %s" %
                 (self.mock_cmd_args, self.mock_tag, mock_output_dir))
 
         # Copy everything mock wrote out to /tmp/tito:

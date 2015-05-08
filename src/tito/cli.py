@@ -16,12 +16,11 @@ Tito's Command Line Interface
 
 import sys
 import os
-import random
 
 from optparse import OptionParser
 
 from tito.common import find_git_root, error_out, debug, get_class_by_name, \
-    BUILDCONFIG_SECTION, DEFAULT_BUILDER, BUILDCONFIG_SECTION, DEFAULT_TAGGER, \
+    DEFAULT_BUILDER, BUILDCONFIG_SECTION, DEFAULT_TAGGER, \
     create_builder, get_project_name, get_relative_project_dir, \
     DEFAULT_BUILD_DIR, run_command, tito_config_dir
 from tito.compat import RawConfigParser, getstatusoutput, getoutput
@@ -29,7 +28,7 @@ from tito.exception import TitoException
 
 # Hack for Python 2.4, seems to require we import these so they get compiled
 # before we try to dynamically import them based on a string name.
-import tito.tagger
+import tito.tagger  # NOQA
 
 TITO_PROPS = "tito.props"
 RELEASERS_CONF_FILENAME = "releasers.conf"

@@ -23,7 +23,7 @@ import tempfile
 from os.path import join
 
 from tito.common import run_command, tito_config_dir
-from tito.compat import *
+from tito.compat import *  # NOQA
 from functional.fixture import TitoGitTestFixture, tito
 
 EXT_SRC_PKG = "extsrc"

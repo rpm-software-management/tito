@@ -412,7 +412,7 @@ class DistGitMeadReleaser(DistGitReleaser):
             print("Syncing local repo with %s" % self.mead_scm)
             try:
                 run_command("git push %s %s" % (self.mead_scm, self.builder.build_tag))
-            except RunCommandException, e:
+            except RunCommandException as e:
                 if "rejected" in e.output:
                     if self._ask_yes_no("The remote rejected a push.  Force push? [y/n] ", False):
                         run_command("git push --force %s %s" % (self.mead_scm, self.builder.build_tag))

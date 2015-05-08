@@ -514,7 +514,7 @@ def check_tag_exists(tag, offline=False):
     debug("Local tag SHA1: %s" % tag_sha1)
 
     try:
-        repo_url = get_git_repo_url()
+        get_git_repo_url()
     except:
         sys.stderr.write('Warning: remote.origin do not exist. Assuming --offline, for remote tag checking.\n')
         return
@@ -593,7 +593,7 @@ def replace_spec_release(file_name, release):
         if m:
             print("%s%s" % (m.group(1), release))
         else:
-            print line
+            print(line)
 
 
 def scrape_version_and_release(template_file_name):

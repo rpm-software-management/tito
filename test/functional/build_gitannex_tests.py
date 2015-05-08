@@ -24,7 +24,7 @@ from os.path import join
 
 from functional.fixture import TitoGitTestFixture, tito
 
-from tito.compat import *
+from tito.compat import *  # NOQA
 from tito.common import run_command
 from tito.builder import GitAnnexBuilder
 

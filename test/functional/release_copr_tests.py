@@ -17,7 +17,7 @@ Functional Tests for the CoprReleaser.
 
 from functional.fixture import TitoGitTestFixture
 
-from tito.compat import *
+from tito.compat import *  # NOQA
 from tito.release import CoprReleaser
 
 PKG_NAME = "releaseme"
