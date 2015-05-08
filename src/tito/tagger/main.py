@@ -125,6 +125,7 @@ class VersionTagger(ConfigObject):
         self._check_tag_does_not_exist(self._get_new_tag(new_version))
         self._update_changelog(new_version)
         self._update_setup_py(new_version)
+        self._update_pom_xml(new_version)
         self._update_package_metadata(new_version)
 
     def _undo(self):
@@ -325,6 +326,29 @@ class VersionTagger(ConfigObject):
 
         run_command("git add %s" % setup_file)
 
+    def _update_pom_xml(self, new_version):
+        """
+        If this project uses Maven, attempt to update the version in pom.xml
+        """
+        # Remove the release since Maven doesn't understand that really
+
+        pom_file = os.path.join(self.full_project_dir, "pom.xml")
+        if not os.path.exists(pom_file):
+            return
+
+        mvn_new_version = new_version.split('-')[0]
+
+        maven_args = ['-B']
+        if 'maven_args' in self.user_config:
+            maven_args.append(self.user_config['maven_args'])
+        else:
+            maven_args.append('-q')
+
+        run_command("mvn %s versions:set -DnewVersion=%s -DgenerateBackupPoms=false" % (
+            " ".join(maven_args),
+            mvn_new_version))
+        run_command("git add %s" % pom_file)
+
     def _bump_version(self, release=False, zstream=False, force=False):
         """
         Bump up the package version in the spec file.
@@ -452,7 +476,7 @@ class VersionTagger(ConfigObject):
         print("Created tag: %s" % new_tag)
         print("   View: git show HEAD")
         print("   Undo: tito tag -u")
-        print("   Push: git push && git push origin %s" % new_tag)
+        print("   Push: git push origin && git push origin %s" % new_tag)
 
     def _check_tag_does_not_exist(self, new_tag):
         status, output = getstatusoutput(
