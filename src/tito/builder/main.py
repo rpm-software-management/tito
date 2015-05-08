@@ -875,6 +875,18 @@ class MeadBuilder(Builder):
                     return os.path.join(self.deploy_dir, directory, f)
         return None
 
+    def cleanup(self):
+        """
+        Remove all temporary files and directories.
+        """
+        if not self.no_cleanup:
+            os.chdir('/')
+            debug("Cleaning up [%s]" % self.rpmbuild_dir)
+            getoutput("rm -rf %s" % self.rpmbuild_dir)
+            getoutput("rm -rf %s" % self.deploy_dir)
+        else:
+            print("WARNING: Leaving rpmbuild files in: %s" % self.rpmbuild_dir)
+
     def tgz(self):
         self._setup_sources()
 
@@ -888,36 +900,39 @@ class MeadBuilder(Builder):
             create_tgz(self.git_root, self.tgz_dir, self.git_commit_id, self.relative_project_dir, full_path)
             print("Creating %s from git tag: %s..." % (self.tgz_filename, self.build_tag))
 
-        shutil.copy(self._find_tarball(), destination_path)
+        shutil.copy(full_path, destination_path)
         print("Wrote: %s" % destination_path)
         self.sources.append(destination_path)
         self.artifacts.append(destination_path)
         self.ran_tgz = True
 
     def _setup_sources(self):
-        local_properties = ["-D%s" % x for x in self.maven_properties]
+        formatted_properties = ["-D%s" % x for x in self.maven_properties]
 
-        # We always want to deploy to a tito controlled location during local builds
-        local_properties.append(
-            "-DaltDeploymentRepository=local-output::default::file://%s" % self.deploy_dir)
+        # Stupid Maven doesn't give any way on the CLI to define where
+        # an assembly should go.  Nor does it really have a way to indicate
+        # whether an assembly has even been defined.  We just have to try
+        # to run the goal and see what happens.
+        local_properties = formatted_properties + ["-Dassembly.dryRun"]
+        (status, output) = getstatusoutput("mvn %s %s assembly:single" % (
+            " ".join(self.maven_args),
+            " ".join(local_properties)))
 
-        if self.local_build:
-            print("Running Maven build...")
-            run_command("mvn %s %s deploy" % (
-                " ".join(self.maven_args),
-                " ".join(local_properties)))
-            self.ran_maven = True
-        else:
+        if status == 0:
             try:
-                print("Building Maven assembly")
-
-                run_command("mvn %s %s assembly:single" % (
+                print("Running Maven build...")
+                # We always want to deploy to a tito controlled location during local builds
+                local_properties = formatted_properties + [
+                    "-DaltDeploymentRepository=local-output::default::file://%s" % self.deploy_dir]
+                run_command("mvn %s %s deploy" % (
                     " ".join(self.maven_args),
                     " ".join(local_properties)))
                 self.ran_maven = True
             except:
-                warn_out("No Maven assembly defined!  Falling back to git-archive.")
-                warn_out("Please set up the assembly plugin in your pom.xml")
+                warn_out("Maven build failed.  Failing back to git-archive.")
+        else:
+            warn_out("No Maven assembly defined!  Falling back to git-archive.")
+            warn_out("Please set up the assembly plugin in your pom.xml")
 
         self._create_build_dirs()
 
