@@ -407,6 +407,11 @@ class DistGitMeadReleaser(DistGitReleaser):
 
         self.mead_scm = self.releaser_config.get(self.target, "mead_scm")
 
+        self.mead_url = "%s?%s#%s" % (
+            self.mead_scm,
+            self.project_name,
+            self.builder.build_tag)
+
     def _sync_mead_scm(self):
         with chdir(self.git_root):
             print("Syncing local repo with %s" % self.mead_scm)
@@ -429,17 +434,12 @@ class DistGitMeadReleaser(DistGitReleaser):
 
         os.chdir(project_checkout)
 
-        mead_url = "%s?%s#%s" % (
-            self.mead_scm,
-            self.project_name,
-            self.builder.build_tag)
-
         if self.dry_run:
-            self.print_dry_run_warning("echo '%s' > tito-mead-url" % mead_url)
+            self.print_dry_run_warning("echo '%s' > tito-mead-url" % self.mead_url)
             return
 
         with open("tito-mead-url", "w") as f:
-            f.write(mead_url)
+            f.write(self.mead_url)
             f.write("\n")
 
     def _build(self, branch):
@@ -450,13 +450,9 @@ class DistGitMeadReleaser(DistGitReleaser):
             target_param = "--target %s" % build_target
 
         build_cmd = [self.cli_tool, "maven-build", "--nowait", "--specfile", "."]
-
-        for opt in self.builder.maven_args:
-            build_cmd.extend(["--maven-option", opt])
-
-        for prop in self.builder.maven_properties:
-            build_cmd.extend(["--property", prop])
-
+        build_cmd.append("--maven-option '%s'" % " ".join(self.builder.maven_args))
+        build_cmd.append("--property '%s'" % " ".join(self.builder.maven_properties))
+        build_cmd.append("--sources %s" % self.mead_url)
         build_cmd.append(target_param)
 
         build_cmd = " ".join(build_cmd)

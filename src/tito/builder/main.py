@@ -859,7 +859,7 @@ class MeadBuilder(Builder):
         else:
             # Generally people aren't going to want to run their tests during
             # a build.  If they do, they can set maven_properties=''
-            self.maven_properties.append("-Dmaven.test.skip")
+            self.maven_properties.append("maven.test.skip=true")
 
         self.maven_args = ['-B']
         if 'maven_args' in args:
@@ -867,32 +867,38 @@ class MeadBuilder(Builder):
         else:
             self.maven_args.append('-q')
 
+    def _find_tarball(self):
+        for directory, unused, filenames in os.walk(self.deploy_dir):
+            for f in filenames:
+                name, ext = os.path.splitext(f)
+                if ext == ".gz" and name.startswith("%s-%s" % (self.project_name, self.spec_version)):
+                    return os.path.join(self.deploy_dir, directory, f)
+        return None
+
     def tgz(self):
         self._setup_sources()
 
         destination_path = os.path.join(self.rpmbuild_basedir, self.tgz_filename)
         if self.ran_maven:
-            for directory, unused, filenames in os.walk(self.deploy_dir):
-                for f in filenames:
-                    name, ext = os.path.splitext(f)
-                    if ext == ".gz" and name.startswith("%s-%s" % (self.project_name, self.spec_version)):
-                        full_path = os.path.join(self.deploy_dir, directory, f)
-                        break
+            full_path = self._find_tarball()
+            if full_path is None:
+                error_out("Could not find Maven built assembly!")
         else:
             full_path = os.path.join(self.rpmbuild_sourcedir, self.tgz_filename)
-            print("Creating %s from git tag: %s..." % (self.tgz_filename, self.build_tag))
             create_tgz(self.git_root, self.tgz_dir, self.git_commit_id, self.relative_project_dir, full_path)
+            print("Creating %s from git tag: %s..." % (self.tgz_filename, self.build_tag))
 
-        shutil.copy(full_path, destination_path)
+        shutil.copy(self._find_tarball(), destination_path)
         print("Wrote: %s" % destination_path)
         self.sources.append(destination_path)
         self.artifacts.append(destination_path)
         self.ran_tgz = True
 
     def _setup_sources(self):
-        # We always want to deploy to a tito controlled location during local builds but
-        # we don't want to tamper with self.maven_properties so we copy the list
-        local_properties = list(self.maven_properties).append(
+        local_properties = ["-D%s" % x for x in self.maven_properties]
+
+        # We always want to deploy to a tito controlled location during local builds
+        local_properties.append(
             "-DaltDeploymentRepository=local-output::default::file://%s" % self.deploy_dir)
 
         if self.local_build:
@@ -904,6 +910,7 @@ class MeadBuilder(Builder):
         else:
             try:
                 print("Building Maven assembly")
+
                 run_command("mvn %s %s assembly:single" % (
                     " ".join(self.maven_args),
                     " ".join(local_properties)))
