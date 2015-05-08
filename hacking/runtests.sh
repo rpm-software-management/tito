@@ -67,9 +67,9 @@ titotest-fedora-20
 titotest-centos-6
 '
 
-#titotest-fedora-20
 #titotest-fedora-rawhide
 python3_distros='
+titotest-fedora-20
 '
 
 rm -f /tmp/titotest*.out &> /dev/null
