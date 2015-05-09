@@ -63,13 +63,15 @@
 #titotest-centos-5.9
 
 distros='
-titotest-fedora-20
 titotest-centos-6
+titotest-fedora-20
+titotest-fedora-21
 titotest-fedora-rawhide
 '
 
 python3_distros='
 titotest-fedora-20
+titotest-fedora-21
 titotest-fedora-rawhide
 '
 
