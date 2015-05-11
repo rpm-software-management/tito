@@ -88,8 +88,15 @@ class TarTest(unittest.TestCase):
         self.assertEqual("52 comment=%s\n" % EXPECTED_REF, header[:52])
         self.assertEqual("\x00" * (512 - 53), header[53:])
 
-    def test_calculate_checksume(self):
-        result = self.tarfixer.calculate_checksum(['\x01', '\x02', '\x03', '\x04'])
+    def test_calculate_checksum(self):
+        fields = {
+            'a': '\x01',
+            'b': '\x02',
+            'c': '\x03',
+            'd': '\x04',
+        }
+        self.tarfixer.struct_members = fields.keys() + ['checksum']
+        result = self.tarfixer.calculate_checksum(fields)
         expected_result = 10 + ord(" ") * 8
         self.assertEqual("%07o\x00" % expected_result, result)
 

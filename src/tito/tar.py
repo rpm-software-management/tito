@@ -54,8 +54,12 @@ class TarFixer(object):
         the size of the whole string (including the %u), the first %s is the
         keyword, the second one is the value.
     """
-    def __init__(self, fh, out, timestamp, gitref):
+    def __init__(self, fh, out, timestamp, gitref, maven_built=False):
+        self.maven_built = maven_built
+
         # As defined in tar.h
+        # An collections.OrderedDict would be more appropriate here but I'm trying to
+        # maintain Python 2.6 compatibility.
         self.tar_struct = [
             ('name', '100s'),
             ('mode', '8s'),
@@ -162,22 +166,19 @@ class TarFixer(object):
             'devminor': 0,
             'prefix': '',
         }
-        values = self.encode_header(header_props, header_props.keys())
-        header_props['checksum'] = self.calculate_checksum(values)
         self.process_header(header_props)
 
-    def encode_header(self, chunk_props, members=None):
-        if members is None:
-            members = self.struct_members
-
+    def encode_header(self, chunk_props, encode_order=None):
         pack_values = []
-        for member in members:
+        if encode_order is None:
+            encode_order = self.struct_members
+
+        for member in encode_order:
             if member in self.octal_members:
                 # Pad out the octal value to the right length
                 member_template = self.struct_hash[member]
-                size = int(re.match('(\d+)', member_template).group(1)) - 1
-                size = str(size)
-                fmt = "%0" + size + "o\x00"
+                field_size = int(re.match('(\d+)', member_template).group(1)) - 1
+                fmt = "%0" + str(field_size) + "o\x00"
                 pack_values.append(fmt % chunk_props[member])
             else:
                 pack_values.append(chunk_props[member])
@@ -185,7 +186,9 @@ class TarFixer(object):
 
     def process_header(self, chunk_props):
         """There is a header before every file and a global header at the top."""
+        chunk_props['checksum'] = self.calculate_checksum(chunk_props)
         pack_values = self.encode_header(chunk_props)
+
         # The struct itself is only 500 bytes so we have to pad it to 512
         data_out = struct.pack(self.struct_template + "12x", *pack_values)
         self.out.write(data_out)
@@ -193,7 +196,7 @@ class TarFixer(object):
 
     def process_extended_header(self):
         # Trash the original comment
-        _ = self.full_read(RECORD_SIZE)
+        self.full_read(RECORD_SIZE)
         self.create_extended_header()
 
     def create_extended_header(self):
@@ -213,23 +216,19 @@ class TarFixer(object):
         self.out.write(data_out)
         self.total_length += len(data_out)
 
-    def calculate_checksum(self, values):
+    def calculate_checksum(self, chunk_props):
         """The checksum field is the ASCII representation of the octal value of the simple
         sum of all bytes in the header block. Each 8-bit byte in the header is added
         to an unsigned integer, initialized to zero, the precision of which shall be
         no less than seventeen bits. When calculating the checksum, the checksum field is
         treated as if it were all spaces.
-
-        Callers of this method are responsible for *not* sending in the previous checksum.
         """
-
+        chunk_props['checksum'] = " " * 8
+        values = self.encode_header(chunk_props)
         new_chksum = 0
         for val in values:
             val_bytes = bytearray(val, 'ASCII')
             new_chksum += reduce(lambda x, y: x + y, val_bytes, 0)
-        for blank in " " * 8:
-            new_chksum += ord(blank)
-
         return "%07o\x00" % new_chksum
 
     def process_chunk(self, chunk):
@@ -247,17 +246,36 @@ class TarFixer(object):
 
         chunk_props = self.chunk_to_hash(chunk)
 
-        # This line is the whole purpose of this class!
-        chunk_props['mtime'] = "%011o\x00" % self.timestamp
-
-        # Delete the old checksum since it's now invalid and we don't want to pass
-        # it in to calculate_checksum().
+        # Delete the old checksum since it's now invalid and we don't want even
+        # an inadvertent reference to it.
         del(chunk_props['checksum'])
-        chunk_props['checksum'] = self.calculate_checksum(chunk_props.values())
 
         # Remove the trailing NUL byte(s) on the end of members
         for k, v in chunk_props.items():
             chunk_props[k] = v.rstrip("\x00")
+
+        # This line is the whole purpose of this class!
+        chunk_props['mtime'] = "%o" % self.timestamp
+
+        if self.maven_built:
+            # Maven does all sorts of horrible things in the tarfile it creates.
+            # Everything is padded out with spaces instead of NUL bytes and the uid
+            # and gid fields are left empty.
+            #
+            # Plus it sets the uname and gname to the current user resulting in
+            # the checksum changing from person to person.
+            # See https://jira.codehaus.org/browse/PLXCOMP-233
+            chunk_props['uname'] = 'root'
+            chunk_props['gname'] = 'root'
+            chunk_props['uid'] = '0'
+            chunk_props['gid'] = '0'
+            # In a tar file, the highest 3 bits in the mode represent if the tarfile
+            # should be extracted with the GID or UID set.  Maven adds these but we don't
+            # want them, so we just take the last 4 which are the ones that matter to us.
+            chunk_props['mode'] = str(chunk_props['mode'])[-4:-1]
+            chunk_props['version'] = '00'
+            for x in ['size', 'devmajor', 'devminor']:
+                chunk_props[x] = chunk_props[x].strip()
 
         for member in self.octal_members:
             # Convert octals to decimal
@@ -303,7 +321,7 @@ if __name__ == '__main__':
     tar_file = sys.argv[3]
 
     try:
-        fh = open(tar_file, 'rb', RECORD_SIZE)
+        fh = open(tar_file, 'rb')
     except:
         print("Could not read %s" % tar_file)
 

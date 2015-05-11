@@ -30,7 +30,7 @@ from bugzilla.rhbugzilla import RHBugzilla
 from tito.compat import xmlrpclib, getstatusoutput
 from tito.exception import TitoException
 from tito.exception import RunCommandException
-from tito.tar import TarFixer, RECORD_SIZE
+from tito.tar import TarFixer
 
 DEFAULT_BUILD_DIR = "/tmp/tito"
 DEFAULT_BUILDER = "builder"
@@ -809,7 +809,7 @@ def create_tgz(git_root, prefix, commit, relative_dir,
     fixed_tar = "%s.tar" % basename
     fixed_tar_fh = open(fixed_tar, 'wb')
     try:
-        tarfixer = TarFixer(open(initial_tar, 'rb', RECORD_SIZE), fixed_tar_fh, timestamp, commit)
+        tarfixer = TarFixer(open(initial_tar, 'rb'), fixed_tar_fh, timestamp, commit)
         tarfixer.fix()
     finally:
         fixed_tar_fh.close()
