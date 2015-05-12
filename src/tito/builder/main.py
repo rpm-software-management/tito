@@ -31,7 +31,8 @@ from tito.common import scl_to_rpm_option, get_latest_tagged_version, \
     check_tag_exists, create_tgz, get_script_path, get_latest_commit, \
     get_commit_count, find_gemspec_file, create_builder, compare_version,\
     find_cheetah_template_file, render_cheetah, replace_spec_release, \
-    find_spec_like_file, warn_out, get_commit_timestamp, chdir, mkdir_p
+    find_spec_like_file, warn_out, get_commit_timestamp, chdir, mkdir_p, \
+    find_git_root
 from tito.compat import getoutput, getstatusoutput
 from tito.exception import RunCommandException
 from tito.exception import TitoException
@@ -863,7 +864,8 @@ class MeadBuilder(Builder):
             config=config, user_config=user_config, args=args, **kwargs)
 
         self.ran_maven = False
-        self.deploy_dir = mkdtemp(dir=self.rpmbuild_basedir, prefix="maven-%s" % self.project_name)
+        self.deploy_dir = mkdtemp(dir=self.rpmbuild_basedir, prefix="maven-deploy-%s" % self.project_name)
+        self.maven_clone_dir = mkdtemp(dir=self.rpmbuild_basedir, prefix="maven-clone-%s" % self.project_name)
 
         # People calling `tito build` will almost certainly want to do a maven build locally.
         # But with a `tito release` we want the Mead stuff to happen on the build system
@@ -907,30 +909,34 @@ class MeadBuilder(Builder):
         destination_file = os.path.join(self.rpmbuild_basedir, self.tgz_filename)
         formatted_properties = ["-D%s" % x for x in self.maven_properties]
 
-        # Stupid Maven doesn't give any way on the CLI to define where
-        # an assembly should go.  Nor does it really have a way to indicate
-        # whether an assembly has even been defined.  We just have to try
-        # to run the goal and see what happens.
-        local_properties = formatted_properties + ["-Dassembly.dryRun"]
-        (status, output) = getstatusoutput("mvn %s %s assembly:single" % (
-            " ".join(self.maven_args),
-            " ".join(local_properties)))
+        run_command("git clone --local %s %s" % (find_git_root(), self.maven_clone_dir))
+        with chdir(self.maven_clone_dir):
+            run_command("git checkout %s" % self.git_commit_id)
 
-        if status == 0:
-            try:
-                print("Running Maven build...")
-                # We always want to deploy to a tito controlled location during local builds
-                local_properties = formatted_properties + [
-                    "-DaltDeploymentRepository=local-output::default::file://%s" % self.deploy_dir]
-                run_command("mvn %s %s deploy" % (
-                    " ".join(self.maven_args),
-                    " ".join(local_properties)))
-                self.ran_maven = True
-            except:
-                warn_out("Maven build failed.  Failing back to git-archive.")
-        else:
-            warn_out("No Maven assembly defined!  Falling back to git-archive.")
-            warn_out("Please set up the assembly plugin in your pom.xml")
+            # Stupid Maven doesn't give any way on the CLI to define where
+            # an assembly should go.  Nor does it really have a way to indicate
+            # whether an assembly has even been defined.  We just have to try
+            # to run the goal and see what happens.
+            local_properties = formatted_properties + ["-Dassembly.dryRun"]
+            (status, output) = getstatusoutput("mvn %s %s assembly:single" % (
+                " ".join(self.maven_args),
+                " ".join(local_properties)))
+
+            if status == 0:
+                try:
+                    print("Running Maven build...")
+                    # We always want to deploy to a tito controlled location during local builds
+                    local_properties = formatted_properties + [
+                        "-DaltDeploymentRepository=local-output::default::file://%s" % self.deploy_dir]
+                    run_command("mvn %s %s deploy" % (
+                        " ".join(self.maven_args),
+                        " ".join(local_properties)))
+                    self.ran_maven = True
+                except:
+                    warn_out("Maven build failed.  Failing back to git-archive.")
+            else:
+                warn_out("No Maven assembly defined!  Falling back to git-archive.")
+                warn_out("Please set up the assembly plugin in your pom.xml")
 
         self._create_build_dirs()
 
@@ -969,9 +975,6 @@ class MeadBuilder(Builder):
             all_artifacts = []
             all_artifacts_with_path = []
 
-            # XXX: From what I can tell, Mead actually builds from the top project and packs in
-            # *every* artifact to the data available to the template.  I am electing to only
-            # run the build for the subproject although that may need to change.
             for directory, unused, filenames in os.walk(self.deploy_dir):
                 for f in filenames:
                     artifacts.setdefault(os.path.splitext(f)[1], []).append(f)
