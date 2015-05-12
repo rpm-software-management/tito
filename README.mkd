@@ -26,6 +26,14 @@ Tito offers the following features:
  - Manage all of the above for a git repository with many disjoint packages
    within it.
 
+RELATED PROJECTS
+================
+
+* `mockchain` from the  (http://fedoraproject.org/wiki/Projects/Mock)[mock project])
+* `mock`'s built-in SCM support in `mock-scm`
+* Fedora's [Koji](http://koji.fedoraproject.org/koji/) build engine and [fedpkg](https://fedorahosted.org/fedpkg/) tools
+* The [OpenSUSE Build Service](https://build.opensuse.org/).
+
 INSTALL
 =======
 
