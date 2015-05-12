@@ -4,15 +4,6 @@ FROM centos:6
 # http://jumanjiman.github.io/
 MAINTAINER Paul Morgan <jumanjiman@gmail.com>
 
-# NOTE: runtests.sh hard-links tito.spec into this directory on-the-fly
-#       to work around https://github.com/dotcloud/docker/issues/1676
-ADD tito.spec /tmp/tito.spec
-
-# Install build dependencies.
-RUN yum -y install yum-utils \
-    ; yum-builddep -y /tmp/tito.spec \
-    ; yum clean all
-
 # Install test dependencies. It would be nice to add these as
 # build deps and add %check to tito.spec in accordance with
 # https://fedoraproject.org/wiki/QA/Testing_in_check
@@ -39,6 +30,15 @@ RUN yum -y install \
 RUN useradd sandbox
 RUN git config --system user.email "sandbox@example.com"
 RUN git config --system user.name  "sandbox"
+
+# NOTE: runtests.sh hard-links tito.spec into this directory on-the-fly
+#       to work around https://github.com/dotcloud/docker/issues/1676
+ADD tito.spec /tmp/tito.spec
+
+# Install build dependencies.
+RUN yum -y install yum-utils \
+    ; yum-builddep -y /tmp/tito.spec \
+    ; yum clean all
 
 USER sandbox
 VOLUME ["/home/sandbox"]
