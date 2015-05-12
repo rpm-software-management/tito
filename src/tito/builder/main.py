@@ -10,12 +10,12 @@
 # Red Hat trademarks are not licensed under GPLv2. No permission is
 # granted to use or replicate Red Hat trademarks that are incorporated
 # in this software or its documentation.
-
 """
 Tito builders for a variety of common methods of building sources, srpms,
 and rpms.
 """
 
+import gzip
 import os
 import sys
 import re
@@ -31,11 +31,12 @@ from tito.common import scl_to_rpm_option, get_latest_tagged_version, \
     check_tag_exists, create_tgz, get_script_path, get_latest_commit, \
     get_commit_count, find_gemspec_file, create_builder, compare_version,\
     find_cheetah_template_file, render_cheetah, replace_spec_release, \
-    find_spec_like_file, warn_out
+    find_spec_like_file, warn_out, get_commit_timestamp, chdir, mkdir_p
 from tito.compat import getoutput, getstatusoutput
 from tito.exception import RunCommandException
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
+from tito.tar import TarFixer
 
 
 class BuilderBase(object):
@@ -159,27 +160,30 @@ class BuilderBase(object):
         else:
             print("WARNING: Leaving rpmbuild files in: %s" % self.rpmbuild_dir)
 
-    def _check_build_dirs_access(self):
+    def _check_build_dirs_access(self, build_dirs):
         """
         Ensure the build directories are writable.
         """
-        if not os.access(self.rpmbuild_basedir, os.W_OK):
-            error_out("%s is not writable." % self.rpmbuild_basedir)
-        if not os.access(self.rpmbuild_dir, os.W_OK):
-            error_out("%s is not writable." % self.rpmbuild_dir)
-        if not os.access(self.rpmbuild_sourcedir, os.W_OK):
-            error_out("%s is not writable." % self.rpmbuild_sourcedir)
-        if not os.access(self.rpmbuild_builddir, os.W_OK):
-            error_out("%s is not writable." % self.rpmbuild_builddir)
+        msgs = []
+        for d in build_dirs:
+            if not os.access(d, os.W_OK):
+                msgs.append("%s is not writable." % d)
+        if msgs:
+            error_out(msgs)
 
     def _create_build_dirs(self):
         """
         Create the build directories. Can safely be called multiple times.
         """
-        getoutput("mkdir -p %s %s %s %s" % (
-            self.rpmbuild_basedir, self.rpmbuild_dir,
-            self.rpmbuild_sourcedir, self.rpmbuild_builddir))
-        self._check_build_dirs_access()
+        build_dirs = [
+            self.rpmbuild_basedir,
+            self.rpmbuild_dir,
+            self.rpmbuild_sourcedir,
+            self.rpmbuild_builddir,
+        ]
+        for d in build_dirs:
+            mkdir_p(d)
+        self._check_build_dirs_access(build_dirs)
 
     def srpm(self, dist=None):
         """
@@ -386,6 +390,18 @@ class Builder(ConfigObject, BuilderBase):
 
         # Set to path to srpm once we build one.
         self.srpm_location = None
+
+    def _create_build_dirs(self):
+        """
+        Create the build directories. Can safely be called multiple times.
+        """
+        BuilderBase._create_build_dirs(self)
+        build_dirs = [
+            self.rpmbuild_gitcopy,
+        ]
+        for d in build_dirs:
+            mkdir_p(d)
+        self._check_build_dirs_access(build_dirs)
 
     def _get_build_version(self):
         """
@@ -888,25 +904,7 @@ class MeadBuilder(Builder):
             print("WARNING: Leaving rpmbuild files in: %s" % self.rpmbuild_dir)
 
     def tgz(self):
-        self._setup_sources()
-
-        destination_path = os.path.join(self.rpmbuild_basedir, self.tgz_filename)
-        if self.ran_maven:
-            full_path = self._find_tarball()
-            if full_path is None:
-                error_out("Could not find Maven built assembly!")
-        else:
-            full_path = os.path.join(self.rpmbuild_sourcedir, self.tgz_filename)
-            create_tgz(self.git_root, self.tgz_dir, self.git_commit_id, self.relative_project_dir, full_path)
-            print("Creating %s from git tag: %s..." % (self.tgz_filename, self.build_tag))
-
-        shutil.copy(full_path, destination_path)
-        print("Wrote: %s" % destination_path)
-        self.sources.append(destination_path)
-        self.artifacts.append(destination_path)
-        self.ran_tgz = True
-
-    def _setup_sources(self):
+        destination_file = os.path.join(self.rpmbuild_basedir, self.tgz_filename)
         formatted_properties = ["-D%s" % x for x in self.maven_properties]
 
         # Stupid Maven doesn't give any way on the CLI to define where
@@ -936,19 +934,35 @@ class MeadBuilder(Builder):
 
         self._create_build_dirs()
 
-        debug("Creating %s from git tag: %s..." % (self.tgz_filename,
-            self.git_commit_id))
-        create_tgz(self.git_root, self.tgz_dir, self.git_commit_id,
-                self.relative_project_dir,
-                os.path.join(self.rpmbuild_sourcedir, self.tgz_filename))
+        if self.ran_maven:
+            full_path = self._find_tarball()
+            if full_path:
+                fh = gzip.open(full_path, 'rb')
+                fixed_tar = os.path.join(os.path.splitext(full_path)[0])
+                fixed_tar_fh = open(fixed_tar, 'wb')
+                timestamp = get_commit_timestamp(self.git_commit_id)
+                try:
+                    tarfixer = TarFixer(fh, fixed_tar_fh, timestamp, self.git_commit_id, maven_built=True)
+                    tarfixer.fix()
+                finally:
+                    fixed_tar_fh.close()
+
+                # It's a pity we can't use Python's gzip, but it doesn't offer an equivalent of -n
+                run_command("gzip -n -c < %s > %s" % (fixed_tar, destination_file))
+            else:
+                error_out("Could not find Maven built assembly!")
+        else:
+            full_path = os.path.join(self.rpmbuild_sourcedir, self.tgz_filename)
+            create_tgz(self.git_root, self.tgz_dir, self.git_commit_id, self.relative_project_dir, full_path)
+            print("Creating %s from git tag: %s..." % (self.tgz_filename, self.build_tag))
+            shutil.copy(full_path, destination_file)
+
+        debug("Copying git source to: %s" % self.rpmbuild_gitcopy)
+        shutil.copy(destination_file, self.rpmbuild_gitcopy)
 
         # Extract the source so we can get at the spec file, etc.
-        debug("Copying git source to: %s" % self.rpmbuild_gitcopy)
-        run_command("cd %s/ && tar xzf %s" % (self.rpmbuild_sourcedir,
-            self.tgz_filename))
-
-        # Show contents of the directory structure we just extracted.
-        debug('', 'ls -lR %s/' % self.rpmbuild_gitcopy)
+        with chdir(self.rpmbuild_sourcedir):
+            run_command("tar xzf %s" % os.path.join(self.rpmbuild_gitcopy, self.tgz_filename))
 
         if self.local_build:
             artifacts = {}
@@ -990,6 +1004,11 @@ class MeadBuilder(Builder):
         # modify the version/release on the fly when building test rpms
         # that use a git SHA1 for their version.
         self.spec_file = os.path.join(self.rpmbuild_gitcopy, self.spec_file_name)
+
+        print("Wrote: %s" % destination_file)
+        self.sources.append(destination_file)
+        self.artifacts.append(destination_file)
+        self.ran_tgz = True
 
     def _setup_test_specfile(self):
         if self.test and not self.ran_setup_test_specfile:

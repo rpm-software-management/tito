@@ -14,6 +14,7 @@ from contextlib import contextmanager
 """
 Common operations.
 """
+import errno
 import fileinput
 import glob
 import os
@@ -873,6 +874,16 @@ def get_script_path(scriptname):
         bin_dir = os.environ['TITO_SRC_BIN_DIR']
         scriptpath = os.path.join(bin_dir, scriptname)
     return scriptpath
+
+
+def mkdir_p(path, mode=0777):
+    try:
+        os.makedirs(path, mode)
+    except OSError as e:
+        if e.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
 
 
 def get_class_by_name(name):
