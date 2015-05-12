@@ -44,6 +44,24 @@ class BuilderTests(TitoGitTestFixture):
             self.config, {}, {}, **{'offline': True, 'scl': 'ruby193'})
         self.assertEqual('ruby193', builder.scl)
 
+    def test_rpmbuild_options_from_options(self):
+        self.create_project(PKG_NAME)
+        builder = Builder(PKG_NAME, None, self.output_dir,
+            self.config, {}, {'rpmbuild_options': '--define "foo bar"'}, **{'offline': True})
+        self.assertEqual('--define "foo bar"', builder.rpmbuild_options)
+
+    def test_rpmbuild_options_from_kwargs(self):
+        self.create_project(PKG_NAME)
+        builder = Builder(PKG_NAME, None, self.output_dir,
+            self.config, {}, {}, **{'offline': True, 'rpmbuild_options': '--define "foo bar"'})
+        self.assertEqual('--define "foo bar"', builder.rpmbuild_options)
+
+    def test_rpmbuild_options_missing(self):
+        self.create_project(PKG_NAME)
+        builder = Builder(PKG_NAME, None, self.output_dir,
+            self.config, {}, {}, **{'offline': True})
+        self.assertEqual('', builder.rpmbuild_options)
+
     def test_untagged_test_version(self):
         self.create_project(PKG_NAME, tag=False)
         self.assertEqual("", run_command("git tag -l").strip())
