@@ -16,9 +16,10 @@
 from tito.common import (replace_version, find_spec_like_file, increase_version,
     search_for, compare_version, run_command_print, find_wrote_in_rpmbuild_output,
     render_cheetah, increase_zstream, reset_release, find_file_with_extension,
-    normalize_class_name, extract_sha1, BugzillaExtractor
+    normalize_class_name, extract_sha1, BugzillaExtractor, DEFAULT_BUILD_DIR
     )
 
+import os
 import unittest
 
 from mock import Mock, patch, call
@@ -27,6 +28,10 @@ from unit import open_mock
 
 
 class CommonTests(unittest.TestCase):
+    def setUp(self):
+        # Start in a known location to prevent problems with tests that
+        # end in a temp directory that is subsequently deleted.
+        os.chdir(DEFAULT_BUILD_DIR)
 
     def test_normalize_class_name(self):
         """ Test old spacewalk.releng namespace is converted to tito. """
@@ -411,10 +416,10 @@ class ExtractBugzillasTest(unittest.TestCase):
         self.assertEquals("Resolves: #987654 - Such amaze!",
                 results[1])
 
-    def test_required_flags_missing(self):
-
-        extractor = BugzillaExtractor("", required_flags=[
-            'myos-2.0+'])
+    @patch("tito.common.error_out")
+    def test_required_flags_missing(self, mock_error):
+        required_flags = ['myos-2.0+']
+        extractor = BugzillaExtractor("", required_flags)
         bug1 = ('123456', 'Did something interesting.')
         bug2 = ('444555', 'Something else.')
         bug3 = ('987654', 'Such amaze!')
@@ -436,6 +441,7 @@ class ExtractBugzillasTest(unittest.TestCase):
 
         self.assertEquals(0, len(extractor.bzs))
         self.assertEquals(0, len(results))
+        mock_error.assert_called_once_with("No bugzillas found with required flags: %s" % required_flags)
 
     def test_required_flags_missing_with_placeholder(self):
 
@@ -483,10 +489,10 @@ class ExtractBugzillasTest(unittest.TestCase):
         self.assertEquals("Resolves: #123456 - Oops, lets try again.",
                 results[1])
 
-    def test_bug_doesnt_exist(self):
-
-        extractor = BugzillaExtractor("", required_flags=[
-            'myos-1.0+', 'pm_ack+'])
+    @patch("tito.common.error_out")
+    def test_bug_doesnt_exist(self, mock_error):
+        required_flags = ['myos-1.0+', 'pm_ack+']
+        extractor = BugzillaExtractor("", required_flags)
         bug1 = ('123456', 'Did something interesting.')
         extractor._extract_bzs = Mock(return_value=[
             bug1])
@@ -499,6 +505,7 @@ class ExtractBugzillasTest(unittest.TestCase):
 
         self.assertEquals(0, len(extractor.bzs))
         self.assertEquals(0, len(results))
+        mock_error.assert_called_once_with("No bugzillas found with required flags: %s" % required_flags)
 
 
 class MockBug(object):
