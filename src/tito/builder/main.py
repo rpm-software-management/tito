@@ -933,10 +933,9 @@ class MeadBuilder(Builder):
                         " ".join(local_properties)))
                     self.ran_maven = True
                 except:
-                    warn_out("Maven build failed.  Failing back to git-archive.")
+                    error_out("Maven build failed!")
             else:
-                warn_out("No Maven assembly defined!  Falling back to git-archive.")
-                warn_out("Please set up the assembly plugin in your pom.xml")
+                error_out("No Maven assembly defined! Please set up the assembly plugin in your pom.xml")
 
         self._create_build_dirs()
 
