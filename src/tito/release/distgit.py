@@ -207,7 +207,10 @@ class FedoraGitReleaser(Releaser):
         else:
             # Push
             print(cmd)
-            run_command(cmd)
+            try:
+                run_command(cmd)
+            except RunCommandException as e:
+                error_out("`%s` failed with: %s" % (cmd, e.output))
 
         if not self.no_build:
             self._build(main_branch)
@@ -222,7 +225,10 @@ class FedoraGitReleaser(Releaser):
                 self.print_dry_run_warning(cmd)
             else:
                 print(cmd)
-                run_command(cmd)
+                try:
+                    run_command(cmd)
+                except RunCommandException as e:
+                    error_out("`%s` failed with: %s" % (cmd, e.output))
 
             if not self.no_build:
                 self._build(branch)
@@ -407,16 +413,16 @@ class DistGitMeadReleaser(DistGitReleaser):
 
         self.mead_scm = self.releaser_config.get(self.target, "mead_scm")
 
-        self.mead_url = "%s?%s#%s" % (
+        self.mead_url = "%s#%s" % (
             self.mead_scm,
-            self.project_name,
             self.builder.build_tag)
+        self.push_url = self.releaser_config.get(self.target, "mead_push_url")
 
     def _sync_mead_scm(self):
         with chdir(self.git_root):
-            print("Syncing local repo with %s" % self.mead_scm)
+            print("Syncing local repo with %s" % self.push_url)
             try:
-                run_command("git push %s %s" % (self.mead_scm, self.builder.build_tag))
+                run_command("git push %s %s" % (self.push_url, self.builder.build_tag))
             except RunCommandException as e:
                 if "rejected" in e.output:
                     if self._ask_yes_no("The remote rejected a push.  Force push? [y/n] ", False):
@@ -432,15 +438,16 @@ class DistGitMeadReleaser(DistGitReleaser):
     def _git_upload_sources(self, project_checkout):
         DistGitReleaser._git_upload_sources(self, project_checkout)
 
-        os.chdir(project_checkout)
-
         if self.dry_run:
             self.print_dry_run_warning("echo '%s' > tito-mead-url" % self.mead_url)
             return
 
-        with open("tito-mead-url", "w") as f:
-            f.write(self.mead_url)
-            f.write("\n")
+        with chdir(project_checkout):
+            with open("tito-mead-url", "w") as f:
+                f.write(self.mead_url)
+                f.write("\n")
+
+            run_command("git add tito-mead-url")
 
     def _build(self, branch):
         """ Submit a Mead build from current directory. """
@@ -449,12 +456,12 @@ class DistGitMeadReleaser(DistGitReleaser):
         if build_target:
             target_param = "--target %s" % build_target
 
-        build_cmd = [self.cli_tool, "maven-build", "--nowait", "--specfile", "."]
-        build_cmd.append("--maven-option '%s'" % " ".join(self.builder.maven_args))
+        build_cmd = [self.cli_tool, "maven-build", "--nowait"]
+        if self.builder.maven_args:
+            build_cmd.append("--maven-option '%s'" % " ".join(self.builder.maven_args))
         build_cmd.append("--property '%s'" % " ".join(self.builder.maven_properties))
         build_cmd.append("--sources %s" % self.mead_url)
         build_cmd.append(target_param)
-
         build_cmd = " ".join(build_cmd)
 
         if self.dry_run:

@@ -879,11 +879,11 @@ class MeadBuilder(Builder):
             # a build.  If they do, they can set maven_properties=''
             self.maven_properties.append("maven.test.skip=true")
 
-        self.maven_args = ['-B']
+        self.maven_args = []
         if 'maven_args' in args:
             self.maven_args.append(args['maven_args'])
-        else:
-            self.maven_args.append('-q')
+        elif self.local_build:
+            self.maven_args.extend(['-B', '-q'])
 
     def _find_tarball(self):
         for directory, unused, filenames in os.walk(self.deploy_dir):
