@@ -53,8 +53,10 @@ class TestPep8(TitoUnitTestFixture):
         ]
 
         try:
-            checker = pep8.StyleGuide(select=tests, paths=[REPO_DIR])
-            result = checker.check_files().total_errors
+            checker = pep8.StyleGuide(select=tests, paths=[REPO_DIR], reporter=pep8.StandardReport)
+            report = checker.check_files()
+            result = report.total_errors
+            output = "\n".join(report.get_statistics())
         except AttributeError:
             # We don't have pep8.StyleGuide, so we must be
             # using pep8 older than git tag 1.1-72-gf20d656.
@@ -62,9 +64,10 @@ class TestPep8(TitoUnitTestFixture):
             checks = ','.join(tests)
             cmd = "pep8 --select=%s %s | wc -l" % (checks, '.')
             result = int(getoutput(cmd))
+            output = getoutput("pep8 --select %s %s" % (checks, '.'))
 
-        self.assertEqual(result, 0,
-            "Found PEP8 errors that may break your code in Python 3.")
+        if result != 0:
+            self.fail("Found PEP8 errors that may break your code in Python 3:\n%s" % output)
 
 
 class UglyHackishTest(TitoUnitTestFixture):
