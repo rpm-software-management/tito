@@ -24,6 +24,7 @@ from bugzilla.rhbugzilla import RHBugzilla
 from tito.compat import xmlrpclib, getstatusoutput
 from tito.exception import TitoException
 from tito.exception import RunCommandException
+from tito.tar import TarFixer, RECORD_SIZE
 
 DEFAULT_BUILD_DIR = "/tmp/tito"
 DEFAULT_BUILDER = "builder"
@@ -645,16 +646,18 @@ def create_tgz(git_root, prefix, commit, relative_dir,
     os.chdir(os.path.abspath(git_root))
     timestamp = get_commit_timestamp(commit)
 
-    timestamp_script = get_script_path("tar-fixup-stamp-comment.pl")
-
     # Accomodate standalone projects with specfile i root of git repo:
     relative_git_dir = "%s" % relative_dir
     if relative_git_dir in ['/', './']:
         relative_git_dir = ""
 
+    basename = os.path.splitext(dest_tgz)[0]
+    initial_tar = "%s.initial" % basename
+
     # command to generate a git-archive
-    git_archive_cmd = 'git archive --format=tar --prefix=%s/ %s:%s' % (
-        prefix, commit, relative_git_dir)
+    git_archive_cmd = 'git archive --format=tar --prefix=%s/ %s:%s --output=%s' % (
+        prefix, commit, relative_git_dir, initial_tar)
+    run_command(git_archive_cmd)
 
     # Run git-archive separately if --debug was specified.
     # This allows us to detect failure early.
@@ -662,12 +665,16 @@ def create_tgz(git_root, prefix, commit, relative_dir,
     debug('git-archive fails if relative dir is not in git tree',
         '%s > /dev/null' % git_archive_cmd)
 
-    # If we're still alive, the previous command worked
-    archive_cmd = ('%s | %s %s %s | gzip -n -c - > %s' % (
-        git_archive_cmd, timestamp_script,
-        timestamp, commit, dest_tgz))
-    debug(archive_cmd)
-    return run_command(archive_cmd)
+    fixed_tar = "%s.tar" % basename
+    fixed_tar_fh = open(fixed_tar, 'wb')
+    try:
+        tarfixer = TarFixer(open(initial_tar, 'rb', RECORD_SIZE), fixed_tar_fh, timestamp, commit)
+        tarfixer.fix()
+    finally:
+        fixed_tar_fh.close()
+
+    # It's a pity we can't use Python's gzip, but it doesn't offer an equivalent of -n
+    return run_command("gzip -n -c < %s > %s" % (fixed_tar, dest_tgz))
 
 
 def get_git_repo_url():
