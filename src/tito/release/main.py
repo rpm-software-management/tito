@@ -52,7 +52,7 @@ class Releaser(ConfigObject):
         ConfigObject.__init__(self, config=config)
         config_builder_args = self._parse_builder_args(releaser_config, target)
         if test:
-            config_builder_args['test'] = True  # builder must know to build from HEAD
+            config_builder_args['test'] = [True]  # builder must know to build from HEAD
 
         # Override with builder args from command line if any were given:
         if 'builder_args' in kwargs:

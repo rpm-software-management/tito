@@ -12,8 +12,10 @@
 # in this software or its documentation.
 
 from contextlib import contextmanager
-from mock import mock_open, patch
-from StringIO import StringIO
+from mock import patch, MagicMock
+from tito.compat import PY2, StringIO
+
+file_spec = None
 
 
 @contextmanager
@@ -21,9 +23,29 @@ def open_mock(content, **kwargs):
     """Mock's mock_open only supports read() and write() which is not very useful.
     This context manager adds support for getting the value of what was written out
     and for iterating through a file line by line."""
+
+    global file_spec
+    if file_spec is None:
+        # set on first use
+        if PY2:
+            file_spec = file
+        else:
+            import _io
+            file_spec = list(set(dir(_io.TextIOWrapper)).union(set(dir(_io.BytesIO))))
+
+    m = MagicMock(name='open', spec=open)
+
+    handle = MagicMock(spec=file_spec)
+    handle.__enter__.return_value = handle
+    m.return_value = handle
+
     content_out = StringIO()
-    m = mock_open()
-    with patch('__builtin__.open', m, create=True, **kwargs) as mo:
+
+    if PY2:
+        patch_module = "__builtin__.open"
+    else:
+        patch_module = "builtins.open"
+    with patch(patch_module, m, create=True, **kwargs) as mo:
         stream = StringIO(content)
         rv = mo.return_value
         rv.write = lambda x: content_out.write(bytes(x, "utf-8"))

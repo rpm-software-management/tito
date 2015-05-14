@@ -2,7 +2,7 @@ import hashlib
 import os
 import unittest
 
-from StringIO import StringIO
+from tito.compat import StringIO
 from tito.tar import TarFixer
 from mock import Mock
 

@@ -876,7 +876,9 @@ def get_script_path(scriptname):
     return scriptpath
 
 
-def mkdir_p(path, mode=0777):
+# 511 is 777 in octal.  Python 2 and Python 3 disagree about the right
+# way to represent octal numbers.
+def mkdir_p(path, mode=511):
     try:
         os.makedirs(path, mode)
     except OSError as e:

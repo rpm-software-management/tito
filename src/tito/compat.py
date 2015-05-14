@@ -61,7 +61,7 @@ def dictionary_override(d1, d2):
     if PY2:
         overrides = d1.items() + d2.items()
     else:
-        overrides = d1.items() | d2.items()
+        overrides = list(d1.items()) + list(d2.items())
     return dict(overrides)
 
 
