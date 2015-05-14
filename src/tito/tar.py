@@ -303,7 +303,8 @@ class TarFixer(object):
             chunk = self.full_read(RECORD_SIZE)
             while chunk != "" and not self.done:
                 self.process_chunk(chunk)
-                chunk = self.full_read(RECORD_SIZE)
+                if not self.done:
+                    chunk = self.full_read(RECORD_SIZE)
         finally:
             self.fh.close()
 
