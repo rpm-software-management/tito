@@ -71,7 +71,7 @@ class BuilderBase(object):
         self.offline = self._get_optional_arg(kwargs, 'offline', False)
         self.auto_install = self._get_optional_arg(kwargs, 'auto_install',
                 False)
-        self.scl = self._get_optional_arg(args, 'scl', None) or \
+        self.scl = self._get_optional_arg(args, 'scl', [None])[0] or \
                 self._get_optional_arg(kwargs, 'scl', '')
 
         self.rpmbuild_options = self._get_optional_arg(args, 'rpmbuild_options', None) or \
@@ -333,7 +333,8 @@ class Builder(ConfigObject, BuilderBase):
         args - Optional arguments specific to each builder. Can be passed
         in explicitly by user on the CLI, or via a release target config
         entry. Only for things which vary on invocations of the builder,
-        avoid using these if possible.
+        avoid using these if possible.  *Given in the format of a dictionary
+        of lists.*
         """
         ConfigObject.__init__(self, config=config)
         BuilderBase.__init__(self, name=name, build_dir=build_dir, config=config,
@@ -357,8 +358,9 @@ class Builder(ConfigObject, BuilderBase):
 
         self.display_version = self._get_display_version()
 
-        self.git_commit_id = get_build_commit(tag=self.build_tag,
-            test=self.test)
+        with chdir(find_git_root()):
+            self.git_commit_id = get_build_commit(tag=self.build_tag,
+                test=self.test)
 
         self.relative_project_dir = get_relative_project_dir(
             project_name=self.project_name, commit=self.git_commit_id)
@@ -869,21 +871,19 @@ class MeadBuilder(Builder):
 
         # People calling `tito build` will almost certainly want to do a maven build locally.
         # But with a `tito release` we want the Mead stuff to happen on the build system
-        self.local_build = args.setdefault('local', True)
-        self.maven_properties = []
+        self.local_build = args.setdefault('local', [True])
 
-        if 'maven_properties' in args:
-            self.maven_properties.append(args['maven_properties'])
+        self.maven_properties = []
+        if 'maven_property' in args:
+            self.maven_properties = args['maven_property']
         else:
             # Generally people aren't going to want to run their tests during
             # a build.  If they do, they can set maven_properties=''
             self.maven_properties.append("maven.test.skip=true")
 
-        self.maven_args = []
-        if 'maven_args' in args:
-            self.maven_args.append(args['maven_args'])
-        elif self.local_build:
-            self.maven_args.extend(['-B', '-q'])
+        self.maven_args = ['-B']
+        if 'maven_arg' in args:
+            self.maven_args.extend(args['maven_arg'])
 
     def _find_tarball(self):
         for directory, unused, filenames in os.walk(self.deploy_dir):
@@ -933,9 +933,12 @@ class MeadBuilder(Builder):
                         " ".join(local_properties)))
                     self.ran_maven = True
                 except:
-                    error_out("Maven build failed!")
+                    error_out("Maven build failed! %s" % output)
             else:
-                error_out("No Maven assembly defined! Please set up the assembly plugin in your pom.xml")
+                if "No assembly descriptors found" in output:
+                    error_out("No Maven assembly defined! Please set up the assembly plugin in your pom.xml")
+                else:
+                    error_out("Maven build failed: %s" % output)
 
         self._create_build_dirs()
 
@@ -1044,10 +1047,10 @@ class MockBuilder(Builder):
                 user_config=user_config,
                 args=args, **kwargs)
 
-        self.mock_tag = args['mock']
+        self.mock_tag = args['mock'][0]
         self.mock_cmd_args = ""
         if 'mock_config_dir' in args:
-            mock_config_dir = args['mock_config_dir']
+            mock_config_dir = args['mock_config_dir'][0]
             if not mock_config_dir.startswith("/"):
                 # If not an absolute path, assume below git root:
                 mock_config_dir = os.path.join(self.git_root, mock_config_dir)
@@ -1064,7 +1067,7 @@ class MockBuilder(Builder):
                     (self.mock_cmd_args)
 
         if 'mock_args' in args:
-            self.mock_cmd_args = "%s %s" % (self.mock_cmd_args, args['mock_args'])
+            self.mock_cmd_args = "%s %s" % (self.mock_cmd_args, args['mock_args'][0])
 
         # TODO: error out if mock package is not installed
 
@@ -1146,7 +1149,7 @@ class BrewDownloadBuilder(Builder):
                 user_config=user_config,
                 args=args, **kwargs)
 
-        self.dist_tag = args['disttag']
+        self.dist_tag = args['disttag'][0]
 
     def rpm(self):
         """

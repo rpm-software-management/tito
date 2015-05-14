@@ -454,13 +454,16 @@ class DistGitMeadReleaser(DistGitReleaser):
         target_param = ""
         build_target = self._get_build_target_for_branch(branch)
         if build_target:
-            target_param = "--target %s" % build_target
+            target_param = "--target=%s" % build_target
 
         build_cmd = [self.cli_tool, "maven-build", "--nowait"]
-        if self.builder.maven_args:
-            build_cmd.append("--maven-option '%s'" % " ".join(self.builder.maven_args))
-        build_cmd.append("--property '%s'" % " ".join(self.builder.maven_properties))
-        build_cmd.append("--sources %s" % self.mead_url)
+
+        for arg in self.builder.maven_args:
+            build_cmd.append("--maven-option='%s'" % arg)
+
+        for prop in self.builder.maven_properties:
+            build_cmd.append("--property='%s'" % prop)
+        build_cmd.append("--sources=%s" % self.mead_url)
         build_cmd.append(target_param)
         build_cmd = " ".join(build_cmd)
 

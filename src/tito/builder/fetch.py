@@ -128,7 +128,7 @@ class ArgSourceStrategy(SourceStrategy):
         # to all sources specified:
         # TODO: support passing of multiple sources here.
         # TODO: error out if not present
-        manual_sources = [self.builder.args['source']]
+        manual_sources = [self.builder.args['source'][0]]
         debug("Got sources: %s" % manual_sources)
 
         # Copy the live spec from our starting location. Unlike most builders,

@@ -390,6 +390,8 @@ class BuildModule(BaseCliModule):
         return builder.run(self.options)
 
     def _validate_options(self):
+        if not any([self.options.rpm, self.options.srpm, self.options.tgz]):
+            error_out("Need an artifact type to build.  Use --rpm, --srpm, or --tgz")
         if self.options.srpm and self.options.rpm:
             error_out("Cannot combine --srpm and --rpm")
         if self.options.test and self.options.tag:
@@ -413,11 +415,13 @@ class BuildModule(BaseCliModule):
 
         for arg in self.options.builder_args:
             if '=' in arg:
-                key, value = arg.split("=")
-                args[key] = value
+                key, value = arg.split("=", 1)
             else:
                 # Allow no value args such as 'myscript --auto'
-                args[arg] = ''
+                key = arg
+                value = ''
+
+            args.setdefault(key, []).append(value)
         return args
 
 
@@ -575,13 +579,19 @@ class ReleaseModule(BaseCliModule):
                 error_out("No such releaser configured: %s" % target)
             releaser_class = get_class_by_name(releaser_config.get(target, "releaser"))
             debug("Using releaser class: %s" % releaser_class)
+
             builder_args = {}
             if self.options.builder_args and len(self.options.builder_args) > 0:
                 for arg in self.options.builder_args:
-                    key, val = arg.split('=')
-                    debug("Passing builder arg: %s = %s" % (key, val))
-                    # TODO: support list values
-                    builder_args[key] = val
+                    if '=' in arg:
+                        key, value = arg.split("=", 1)
+                    else:
+                        # Allow no value args such as 'myscript --auto'
+                        key = arg
+                        value = ''
+
+                    debug("Passing builder arg: %s = %s" % (key, value))
+                    builder_args.setdefault(key, []).append(value)
             kwargs = {
                 'builder_args': builder_args,
                 'offline': self.options.offline

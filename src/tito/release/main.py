@@ -148,7 +148,8 @@ class Releaser(ConfigObject):
         args = {}
         for opt in releaser_config.options(target):
             if opt.startswith("builder."):
-                args[opt[len("builder."):]] = releaser_config.get(target, opt)
+                prefix, delimiter, opt_name = opt.partition('.')
+                args.setdefault(opt_name, []).append(releaser_config.get(target, opt))
         debug("Parsed custom builder args: %s" % args)
         return args
 
