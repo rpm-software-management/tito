@@ -159,7 +159,7 @@ class BuilderBase(object):
             debug("Cleaning up [%s]" % self.rpmbuild_dir)
             getoutput("rm -rf %s" % self.rpmbuild_dir)
         else:
-            print("WARNING: Leaving rpmbuild files in: %s" % self.rpmbuild_dir)
+            warn_out("Leaving rpmbuild files in: %s" % self.rpmbuild_dir)
 
     def _check_build_dirs_access(self, build_dirs):
         """
@@ -344,8 +344,7 @@ class Builder(ConfigObject, BuilderBase):
         self.build_version = self._get_build_version()
 
         if kwargs and 'options' in kwargs:
-            print("WARNING: 'options' no longer a supported builder "
-                    "constructor argument.")
+            warn_out("'options' no longer a supported builder constructor argument.")
 
         if self.config.has_section("requirements"):
             if self.config.has_option("requirements", "tito"):
@@ -367,6 +366,8 @@ class Builder(ConfigObject, BuilderBase):
         if self.relative_project_dir is None and self.test:
             sys.stderr.write("WARNING: .tito/packages/%s doesn't exist "
                 "in git, using current directory\n" % self.project_name)
+            warn_out(".tito/packages/%s doesn't exist "
+                "in git, using current directory" % self.project_name)
             self.relative_project_dir = get_relative_project_dir_cwd(
                 self.git_root)
 
@@ -420,8 +421,8 @@ class Builder(ConfigObject, BuilderBase):
                 if not self.test:
                     error_out(["Unable to lookup latest package info.",
                             "Perhaps you need to tag first?"])
-                sys.stderr.write("WARNING: unable to lookup latest package "
-                    "tag, building untagged test project\n")
+                warn_out("unable to lookup latest package "
+                    "tag, building untagged test project")
                 build_version = get_spec_version_and_release(self.start_dir,
                     find_spec_like_file(self.start_dir))
             self.build_tag = "%s-%s" % (self.project_name, build_version)
@@ -903,7 +904,7 @@ class MeadBuilder(Builder):
             getoutput("rm -rf %s" % self.rpmbuild_dir)
             getoutput("rm -rf %s" % self.deploy_dir)
         else:
-            print("WARNING: Leaving rpmbuild files in: %s" % self.rpmbuild_dir)
+            warn_out("Leaving rpmbuild files in: %s" % self.rpmbuild_dir)
 
     def tgz(self):
         destination_file = os.path.join(self.rpmbuild_basedir, self.tgz_filename)

@@ -407,7 +407,8 @@ class BuildModule(BaseCliModule):
             --arg key=value
 
         This method parses any --arg's given and splits the key/value
-        pairs out into a dict.
+        pairs out into a *dictionary of lists*.  If you only expect one value
+        for the argument, you would use args['my_key'][0].
         """
         args = {}
         if self.options.builder_args is None:

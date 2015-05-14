@@ -23,7 +23,7 @@ from tempfile import mkdtemp
 import shutil
 
 from tito.common import create_builder, debug, \
-    run_command, get_project_name
+    run_command, get_project_name, warn_out
 from tito.compat import PY2, dictionary_override
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
@@ -164,11 +164,11 @@ class Releaser(ConfigObject):
             if self.builder:
                 self.builder.cleanup()
         else:
-            print("WARNING: leaving %s (--no-cleanup)" % self.working_dir)
+            warn_out("leaving %s (--no-cleanup)" % self.working_dir)
 
     def print_dry_run_warning(self, command_that_would_be_run_otherwise):
         print
-        print("WARNING: Skipping command due to --dry-run: %s" %
+        warn_out("Skipping command due to --dry-run: %s" %
                 command_that_would_be_run_otherwise)
         print
 
@@ -247,8 +247,7 @@ class RsyncReleaser(Releaser):
         self.prefix = prefix
 
         if self.releaser_config.has_option(self.target, "scl"):
-            sys.stderr.write("WARNING: please rename 'scl' to "
-                "'builder.scl' in releasers.conf\n")
+            warn_out("please rename 'scl' to 'builder.scl' in releasers.conf")
             self.builder.scl = self.releaser_config.get(self.target, "scl")
 
     def release(self, dry_run=False, no_build=False, scratch=False):
@@ -306,7 +305,7 @@ class RsyncReleaser(Releaser):
             os.chdir("/")
             shutil.rmtree(temp_dir)
         else:
-            print("WARNING: leaving %s (--no-cleanup)" % temp_dir)
+            warn_out("leaving %s (--no-cleanup)" % temp_dir)
 
     def _copy_files_to_temp_dir(self, temp_dir):
         os.chdir(temp_dir)
@@ -508,12 +507,12 @@ class KojiReleaser(Releaser):
                 # whitelist implies only those packages can be built to the
                 # tag,regardless if blacklist is also defined.
                 if not self.__is_whitelisted(koji_tag, scl):
-                    print("WARNING: %s not specified in whitelist for %s" % (
+                    warn_out("%s not specified in whitelist for %s" % (
                         self.project_name, koji_tag))
                     print("   Package *NOT* submitted to %s." % self.NAME)
                     continue
             elif self.__is_blacklisted(koji_tag, scl):
-                print("WARNING: %s specified in blacklist for %s" % (
+                warn_out("%s specified in blacklist for %s" % (
                     self.project_name, koji_tag))
                 print("   Package *NOT* submitted to %s." % self.NAME)
                 continue
