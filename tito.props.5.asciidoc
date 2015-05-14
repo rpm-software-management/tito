@@ -17,11 +17,11 @@ DESCRIPTION
 -----------
 Project settings can be stored in files:
 
-`GITROOT/rel-eng/tito.props`
+`GITROOT/.tito/tito.props`
 
 `GITROOT/SOME/PACKAGE/tito.props`
 
-The global rel-eng/tito.props is generally where settings are defined. For
+The global .tito/tito.props is generally where settings are defined. For
 some multi-project git repositories, individual packages can override these
 settings by placing a tito.props in the project directory. (i.e. same location
 as it's .spec file)
@@ -97,7 +97,7 @@ VERSION_TEMPLATE
 Allows the user to write out a template file containing version and/or release and add it to git during the tagging process.
 
 template_file::
-Path to a file conforming to a Python string.Template, as described at http://docs.python.org/2/library/string.html#template-strings. Path is relative to root of the entire git checkout, as this is likely to be stored in the top level rel-eng directory.  The variables $version and $release are available inside the template.
+Path to a file conforming to a Python string.Template, as described at http://docs.python.org/2/library/string.html#template-strings. Path is relative to root of the entire git checkout, as this is likely to be stored in the top level .tito directory.  The variables $version and $release are available inside the template.
 
 destination_file::
 Specifies a file to write, relative to the directory for the package being tagged.
@@ -107,7 +107,7 @@ Example:
 ----
 [version_template]
 destination_file = version.txt
-template_file = rel-eng/templates/version.rb
+template_file = .tito/templates/version.rb
 ----
 
 
@@ -177,7 +177,7 @@ the automatic git-annex symlinks on completion.
 TAGGERS
 -------
 All taggers which inherit fom tito.tagger.VersionTagger (all to this date),
-will update file GITROOT/rel-eng/packages/name-of-package and put there one
+will update file GITROOT/.tito/packages/name-of-package and put there one
 line which consist of version-release of package, space delimiter, path to
 package directory relative to GITROOT.
 

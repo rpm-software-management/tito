@@ -413,7 +413,7 @@ class VersionTagger(ConfigObject):
 
     def _update_package_metadata(self, new_version):
         """
-        We track package metadata in the rel-eng/packages/ directory. Each
+        We track package metadata in the .tito/packages/ directory. Each
         file here stores the latest package version (for the git branch you
         are on) as well as the relative path to the project's code. (from the
         git root)
@@ -462,12 +462,12 @@ class VersionTagger(ConfigObject):
 
     def _clear_package_metadata(self):
         """
-        Remove all rel-eng/packages/ files that have a relative path
+        Remove all .tito/packages/ files that have a relative path
         matching the package we're tagging a new version of. Normally
         this just removes the previous package file but if we were
         renaming oldpackage to newpackage, this would git rm
-        rel-eng/packages/oldpackage and add
-        rel-eng/packages/spacewalk-newpackage.
+        .tito/packages/oldpackage and add
+        .tito/packages/spacewalk-newpackage.
         """
         metadata_dir = os.path.join(self.rel_eng_dir, "packages")
         for filename in os.listdir(metadata_dir):
@@ -546,7 +546,7 @@ class VersionTagger(ConfigObject):
         provide a configuration in tito.props to a file that is a
         python string.Template conforming blob, like
             [version_template]
-            template_file = ./rel-eng/templates/my_java_properties
+            template_file = ./.tito/templates/my_java_properties
 
         variables defined inside the template are $version and $release
 

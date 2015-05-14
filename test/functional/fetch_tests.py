@@ -22,7 +22,7 @@ import tempfile
 
 from os.path import join
 
-from tito.common import run_command
+from tito.common import run_command, tito_config_dir
 from tito.compat import *
 from functional.fixture import TitoGitTestFixture, tito
 
@@ -72,7 +72,7 @@ class FetchBuilderTests(TitoGitTestFixture):
     def test_simple_build_no_tag(self):
         # We have not tagged here. Build --rpm should just work:
         self.assertFalse(os.path.exists(
-            join(self.pkg_dir, 'rel-eng/packages/extsrc')))
+            join(self.pkg_dir, '.tito/packages/extsrc')))
 
         tito('build --rpm --output=%s --no-cleanup --debug --arg=source=%s ' %
                 (self.output_dir, self.source_filename))
@@ -87,7 +87,7 @@ class FetchBuilderTests(TitoGitTestFixture):
                 (self.output_dir, self.source_filename))
 
     def _setup_fetchbuilder_releaser(self, yum_repo_dir):
-        self.write_file(join(self.repo_dir, 'rel-eng/releasers.conf'),
+        self.write_file(join(self.repo_dir, '.tito/releasers.conf'),
                 RELEASER_CONF % yum_repo_dir)
 
     def test_with_releaser(self):

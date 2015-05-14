@@ -15,7 +15,7 @@ Shared code for builder and tagger class
 """
 
 import os
-from tito.common import find_git_root
+from tito.common import find_git_root, tito_config_dir
 
 
 class ConfigObject(object):
@@ -38,4 +38,4 @@ class ConfigObject(object):
                         config.get(section, options))
 
         self.git_root = find_git_root()
-        self.rel_eng_dir = os.path.join(self.git_root, "rel-eng")
+        self.rel_eng_dir = os.path.join(self.git_root, tito_config_dir())

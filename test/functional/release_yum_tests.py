@@ -60,7 +60,7 @@ class YumReleaserTests(TitoGitTestFixture):
         pass
 
     def _setup_fetchbuilder_releaser(self, yum_repo_dir):
-        self.write_file(join(self.repo_dir, 'rel-eng/releasers.conf'),
+        self.write_file(join(self.repo_dir, '.tito/releasers.conf'),
                 RELEASER_CONF % yum_repo_dir)
 
     def test_with_releaser(self):

@@ -281,6 +281,17 @@ def find_git_root():
     return os.path.abspath(cdup)
 
 
+def tito_config_dir():
+    """ Returns "rel-eng" for old tito projects and ".tito" for
+    recent projects.
+    """
+    tito_dir = os.path.join(find_git_root(), ".tito")
+    if os.path.isdir(tito_dir):
+        return ".tito"
+    else:
+        return "rel-eng"
+
+
 def extract_sha1(output):
     match = SHA_RE.search(output)
     if match:
@@ -533,11 +544,16 @@ def get_relative_project_dir(project_name, commit):
 
     This could be a different directory than where the project currently
     resides, so we export a copy of the project's metadata from
-    rel-eng/packages/ at the point in time of the tag we are building.
+    .tito/packages/ at the point in time of the tag we are building.
     """
-    cmd = "git show %s:rel-eng/packages/%s" % (commit,
+    cmd = "git show %s:%s/packages/%s" % (commit, tito_config_dir(),
             project_name)
-    (status, pkg_metadata) = getstatusoutput(cmd)
+    try:
+        (status, pkg_metadata) = getstatusoutput(cmd)
+    except:
+        cmd = "git show %s:%s/packages/%s" % (commit, "rel-eng",
+            project_name)
+        (status, pkg_metadata) = getstatusoutput(cmd)
     tokens = pkg_metadata.strip().split(" ")
     debug("Got package metadata: %s" % tokens)
     if status != 0:
@@ -666,12 +682,12 @@ def get_git_repo_url():
 def get_latest_tagged_version(package_name):
     """
     Return the latest git tag for this package in the current branch.
-    Uses the info in rel-eng/packages/package-name.
+    Uses the info in .tito/packages/package-name.
 
     Returns None if file does not exist.
     """
     git_root = find_git_root()
-    rel_eng_dir = os.path.join(git_root, "rel-eng")
+    rel_eng_dir = os.path.join(git_root, tito_config_dir())
     file_path = "%s/packages/%s" % (rel_eng_dir, package_name)
     debug("Getting latest package info from: %s" % file_path)
     if not os.path.exists(file_path):
