@@ -34,6 +34,20 @@ else:
     import xmlrpc.client as xmlrpclib
 
 
+def decode_bytes(x, source_encoding):
+    if PY2:
+        return x
+    else:
+        return x.decode(source_encoding)
+
+
+def encode_bytes(x, destination_encoding):
+    if PY2:
+        return x
+    else:
+        return bytes(x, destination_encoding)
+
+
 def getstatusoutput(cmd):
     """
     Returns (status, output) of executing cmd in a shell.

@@ -15,6 +15,8 @@ import re
 import struct
 import sys
 
+from tito.compat import decode_bytes, encode_bytes
+
 RECORD_SIZE = 512
 
 # Git writes its tarballs to be a multiple of 10240.  I'm not sure why: the
@@ -53,6 +55,8 @@ class TarFixer(object):
         pax extended header records have the format "%u %s=%s\n".  %u contains
         the size of the whole string (including the %u), the first %s is the
         keyword, the second one is the value.
+
+    PAX (also known as POSIX.1-2001) always encodes everything in UTF-8.
     """
     def __init__(self, fh, out, timestamp, gitref, maven_built=False):
         self.maven_built = maven_built
@@ -96,7 +100,7 @@ class TarFixer(object):
 
         # Add an '=' to use native byte order with standard sizes
         self.struct_template = "=" + "".join(map(lambda x: x[1], self.tar_struct))
-        self.struct_members = map(lambda x: x[0], self.tar_struct)
+        self.struct_members = list(map(lambda x: x[0], self.tar_struct))
         self.struct_hash = dict(self.tar_struct)
 
         # The tarballs created by git archive from tree IDs don't have a global
@@ -128,13 +132,22 @@ class TarFixer(object):
 
         return read
 
+    def write(self, data):
+        """Write the data correctly depending on the mode of the file.  While binary mode
+        is preferred, we support text mode for streams like stdout."""
+        if hasattr(self.out, 'mode') and 'b' in self.out.mode:
+            data = bytearray(data)
+        else:
+            data = decode_bytes(data, "utf8")
+        self.out.write(data)
+
     def chunk_to_hash(self, chunk):
         # Our struct template is only 500 bytes, but the last 12 bytes are NUL
         # I elected to ignore them completely instead of including them in the
         # template as '12x'.  The unpack_from method will read the bytes our
         # template defines from chunk and discard the rest.
         unpacked = struct.unpack_from(self.struct_template, chunk)
-
+        unpacked = list(map(lambda x: decode_bytes(x, 'utf8'), unpacked))
         # Zip what we read together with the member names and create a dictionary
         chunk_props = dict(zip(self.struct_members, unpacked))
 
@@ -143,28 +156,28 @@ class TarFixer(object):
     def padded_size(self, length, pad_size=RECORD_SIZE):
         """Function to pad out a length to the nearest multiple of pad_size
         that can contain it."""
-        blocks = length / pad_size
+        blocks = length // pad_size
         if length % pad_size != 0:
             blocks += 1
         return blocks * pad_size
 
     def create_global_header(self):
         header_props = {
-            'name': 'pax_global_header',
+            'name': u'pax_global_header',
             'mode': 0o666,
             'uid': 0,
             'gid': 0,
             'size': 52,  # The size of the extended header with the gitref
             'mtime': self.timestamp,
-            'typeflag': 'g',
-            'linkname': '',
-            'magic': 'ustar',
-            'version': '00',
-            'uname': 'root',
-            'gname': 'root',
+            'typeflag': u'g',
+            'linkname': u'',
+            'magic': u'ustar',
+            'version': u'00',
+            'uname': u'root',
+            'gname': u'root',
             'devmajor': 0,
             'devminor': 0,
-            'prefix': '',
+            'prefix': u'',
         }
         self.process_header(header_props)
 
@@ -179,9 +192,10 @@ class TarFixer(object):
                 member_template = self.struct_hash[member]
                 field_size = int(re.match('(\d+)', member_template).group(1)) - 1
                 fmt = "%0" + str(field_size) + "o\x00"
-                pack_values.append(fmt % chunk_props[member])
+                as_string = fmt % chunk_props[member]
+                pack_values.append(as_string.encode("utf8"))
             else:
-                pack_values.append(chunk_props[member])
+                pack_values.append(chunk_props[member].encode("utf8"))
         return pack_values
 
     def process_header(self, chunk_props):
@@ -191,7 +205,7 @@ class TarFixer(object):
 
         # The struct itself is only 500 bytes so we have to pad it to 512
         data_out = struct.pack(self.struct_template + "12x", *pack_values)
-        self.out.write(data_out)
+        self.write(data_out)
         self.total_length += len(data_out)
 
     def process_extended_header(self):
@@ -207,13 +221,13 @@ class TarFixer(object):
         # Since the git ref is always 40 characters we can
         # pre-compute the length to put in the extended header
         comment = "52 comment=%s\n" % self.gitref
-        data_out = struct.pack("=512s", comment)
-        self.out.write(data_out)
+        data_out = struct.pack("=52s460x", encode_bytes(comment, "ascii"))
+        self.write(data_out)
         self.total_length += len(data_out)
 
     def process_file_data(self, size):
         data_out = self.full_read(self.padded_size(size))
-        self.out.write(data_out)
+        self.write(data_out)
         self.total_length += len(data_out)
 
     def calculate_checksum(self, chunk_props):
@@ -227,17 +241,19 @@ class TarFixer(object):
         values = self.encode_header(chunk_props)
         new_chksum = 0
         for val in values:
-            val_bytes = bytearray(val, 'ASCII')
-            new_chksum += reduce(lambda x, y: x + y, val_bytes, 0)
+            val_bytes = val.decode("utf8")
+            for b in val_bytes:
+                new_chksum += ord(b)
         return "%07o\x00" % new_chksum
 
     def process_chunk(self, chunk):
         # Tar archives end with two 512 byte blocks of zeroes
-        if chunk == "\x00" * 512:
-            self.out.write(chunk)
+        if chunk == b"\x00" * 512:
+            self.write(b"\x00" * 512)
             self.total_length += len(chunk)
             if self.last_chunk_was_nulls:
-                self.out.write("\x00" * (self.padded_size(self.total_length, GIT_BLOCK_SIZE) - self.total_length))
+                final_padding = b"\x00" * (self.padded_size(self.total_length, GIT_BLOCK_SIZE) - self.total_length)
+                self.write(final_padding)
                 self.done = True
             self.last_chunk_was_nulls = True
             return
@@ -299,6 +315,9 @@ class TarFixer(object):
             self.process_file_data(chunk_props['size'])
 
     def fix(self):
+        if 'b' not in self.fh.mode:
+            raise IOError("The input file must be opened in binary mode!")
+
         try:
             chunk = self.full_read(RECORD_SIZE)
             while chunk != "" and not self.done:

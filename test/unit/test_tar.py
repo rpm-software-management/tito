@@ -2,7 +2,7 @@ import hashlib
 import os
 import unittest
 
-from tito.compat import StringIO
+from tito.compat import StringIO, encode_bytes
 from tito.tar import TarFixer
 from mock import Mock
 
@@ -22,7 +22,8 @@ class TarTest(unittest.TestCase):
         self.out = None
 
     def hash_file(self, filename):
-        return self.hash_buffer(open(filename, 'rb').read())
+        file_bytes = open(filename, 'rb').read()
+        return self.hash_buffer(file_bytes)
 
     def hash_buffer(self, buf):
         hasher = hashlib.sha256()
@@ -61,10 +62,15 @@ class TarTest(unittest.TestCase):
         self.assertRaises(IOError, self.tarfixer.full_read, 10)
 
     def test_fix(self):
-        self.fh = open(self.test_file)
+        self.fh = open(self.test_file, 'rb')
         self.tarfixer.fh = self.fh
         self.tarfixer.fix()
-        self.assertEqual(self.reference_hash, self.hash_buffer("".join(self.out.buflist)))
+        self.assertEqual(self.reference_hash, self.hash_buffer(encode_bytes(self.out.getvalue(), "utf8")))
+
+    def test_fix_fails_unless_file_in_binary_mode(self):
+        self.fh = open(self.test_file, 'r')
+        self.tarfixer.fh = self.fh
+        self.assertRaises(IOError, self.tarfixer.fix)
 
     def test_padded_size_length_small(self):
         length = 10
@@ -81,9 +87,14 @@ class TarTest(unittest.TestCase):
         block_size = 512
         self.assertEqual(1024, self.tarfixer.padded_size(length, block_size))
 
+    def test_padded_size_length_long(self):
+        length = 82607
+        block_size = 512
+        self.assertEqual(82944, self.tarfixer.padded_size(length, block_size))
+
     def test_create_extended_header(self):
         self.tarfixer.create_extended_header()
-        header = "".join(self.out.buflist)
+        header = self.out.getvalue()
         self.assertEqual(512, len(header))
         self.assertEqual("52 comment=%s\n" % EXPECTED_REF, header[:52])
         self.assertEqual("\x00" * (512 - 53), header[53:])
@@ -95,7 +106,7 @@ class TarTest(unittest.TestCase):
             'c': '\x03',
             'd': '\x04',
         }
-        self.tarfixer.struct_members = fields.keys() + ['checksum']
+        self.tarfixer.struct_members = list(fields.keys()) + ['checksum']
         result = self.tarfixer.calculate_checksum(fields)
         expected_result = 10 + ord(" ") * 8
         self.assertEqual("%07o\x00" % expected_result, result)
@@ -107,5 +118,6 @@ class TarTest(unittest.TestCase):
             'name': 'hello',
         }
         result = self.tarfixer.encode_header(chunk, ['mode', 'name'])
-        expected_result = ["%07o\x00" % mode, 'hello']
-        self.assertEqual(result, expected_result)
+        expected_result = ["%07o\x00" % mode, "hello"]
+        expected_result = list(map(lambda x: encode_bytes(x, "utf8"), expected_result))
+        self.assertEqual(expected_result, result)
