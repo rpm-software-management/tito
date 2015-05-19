@@ -416,7 +416,11 @@ class DistGitMeadReleaser(DistGitReleaser):
         self.mead_url = "%s#%s" % (
             self.mead_scm,
             self.builder.build_tag)
-        self.push_url = self.releaser_config.get(self.target, "mead_push_url")
+
+        if self.releaser_config.has_option(self.target, "mead_push_url"):
+            self.push_url = self.releaser_config.get(self.target, "mead_push_url")
+        else:
+            self.push_url = self.mead_scm
 
     def _sync_mead_scm(self):
         with chdir(self.git_root):
