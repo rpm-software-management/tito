@@ -315,7 +315,14 @@ class TarFixer(object):
             self.process_file_data(chunk_props['size'])
 
     def fix(self):
-        if 'b' not in self.fh.mode:
+        # The gzip file object has its mode as an integer.  We have to
+        # access the underlying file object to get the real mode.
+        if hasattr(self.fh, "myfileobj"):
+            mode = self.fh.myfileobj.mode
+        else:
+            mode = self.fh.mode
+
+        if 'b' not in mode:
             raise IOError("The input file must be opened in binary mode!")
 
         try:
