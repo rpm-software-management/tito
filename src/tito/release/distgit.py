@@ -59,6 +59,7 @@ class FedoraGitReleaser(Releaser):
         self.copy_extensions = (".spec", ".patch")
 
     def release(self, dry_run=False, no_build=False, scratch=False):
+        self.scratch = scratch
         self.dry_run = dry_run
         self.no_build = no_build
         self._git_release()
@@ -257,11 +258,14 @@ class FedoraGitReleaser(Releaser):
     def _build(self, branch):
         """ Submit a Fedora build from current directory. """
         target_param = ""
+        scratch_param = ""
         build_target = self._get_build_target_for_branch(branch)
         if build_target:
             target_param = "--target %s" % build_target
+        if self.scratch:
+            scratch_param = "--scratch"
 
-        build_cmd = "%s build --nowait %s" % (self.cli_tool, target_param)
+        build_cmd = "%s build --nowait %s %s" % (self.cli_tool, scratch_param, target_param)
 
         if self.dry_run:
             self.print_dry_run_warning(build_cmd)
@@ -473,7 +477,12 @@ class DistGitMeadReleaser(DistGitReleaser):
         for prop in self.builder.maven_properties:
             build_cmd.append("--property='%s'" % prop)
         build_cmd.append("--sources=%s" % self.mead_url)
+        build_cmd.append("--specfile=.")
         build_cmd.append(target_param)
+
+        if self.scratch:
+            build_cmd.append("--scratch")
+
         build_cmd = " ".join(build_cmd)
 
         if self.dry_run:
