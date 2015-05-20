@@ -910,7 +910,7 @@ class MeadBuilder(Builder):
         destination_file = os.path.join(self.rpmbuild_basedir, self.tgz_filename)
         formatted_properties = ["-D%s" % x for x in self.maven_properties]
 
-        run_command("git clone --local %s %s" % (find_git_root(), self.maven_clone_dir))
+        run_command("git clone %s %s" % (find_git_root(), self.maven_clone_dir))
         with chdir(self.maven_clone_dir):
             run_command("git checkout %s" % self.git_commit_id)
 
