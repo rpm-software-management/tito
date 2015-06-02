@@ -408,7 +408,7 @@ def render_cheetah(template_file, destination_directory, cheetah_input):
     hack."""
     pickle_file = tempfile.NamedTemporaryFile(dir=destination_directory, prefix="tito-cheetah-pickle", delete=False)
     try:
-        pickle.dump(cheetah_input, pickle_file)
+        pickle.dump(cheetah_input, pickle_file, protocol=2)
         pickle_file.close()
         output = run_command("cheetah fill --flat --pickle=%s --odir=%s --oext=cheetah %s" %
             (pickle_file.name, destination_directory, template_file))
