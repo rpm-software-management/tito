@@ -429,9 +429,9 @@ class DistGitMeadReleaser(DistGitReleaser):
             self.push_url = self.mead_scm
 
         # rhpkg maven-build takes an optional override --target:
-        self.mead_target = None
-        if self.releaser_config.has_option(self.target, "mead_target"):
-            self.mead_target = self.releaser_config.get(self.target, "mead_target")
+        self.brew_target = None
+        if self.releaser_config.has_option(self.target, "target"):
+            self.brew_target = self.releaser_config.get(self.target, "target")
 
         # If the push URL contains MEAD_SCM_URL, we require the user to set this
         # in ~/.titorc before they can run this releaser. This allows us to
@@ -493,8 +493,8 @@ class DistGitMeadReleaser(DistGitReleaser):
         for arg in self.builder.maven_args:
             build_cmd.append("--maven-option='%s'" % arg)
 
-        if self.mead_target:
-            build_cmd.append("--target=%s" % self.mead_target)
+        if self.brew_target:
+            build_cmd.append("--target=%s" % self.brew_target)
 
         for prop in self.builder.maven_properties:
             build_cmd.append("--property='%s'" % prop)
