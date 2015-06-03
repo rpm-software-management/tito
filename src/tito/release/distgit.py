@@ -22,7 +22,9 @@ from tito.compat import getoutput, getstatusoutput, write
 from tito.release import Releaser
 from tito.release.main import PROTECTED_BUILD_SYS_FILES
 from tito.buildparser import BuildTargetParser
-from tito.exception import RunCommandException
+from tito.exception import RunCommandException, ConfigException
+
+MEAD_SCM_USERNAME = 'MEAD_SCM_USERNAME'
 
 
 class FedoraGitReleaser(Releaser):
@@ -426,6 +428,23 @@ class DistGitMeadReleaser(DistGitReleaser):
         else:
             self.push_url = self.mead_scm
 
+        # rhpkg maven-build takes an optional override --target:
+        self.brew_target = None
+        if self.releaser_config.has_option(self.target, "target"):
+            self.brew_target = self.releaser_config.get(self.target, "target")
+
+        # If the push URL contains MEAD_SCM_URL, we require the user to set this
+        # in ~/.titorc before they can run this releaser. This allows us to
+        # use push URLs that require username auth, but still check a generic
+        # URL into source control:
+        if MEAD_SCM_USERNAME in self.push_url:
+            debug("Push URL contains %s, checking for value in ~/.titorc" %
+                MEAD_SCM_USERNAME)
+            if MEAD_SCM_USERNAME not in user_config:
+                raise ConfigException('Must specify MEAD_SCM_USERNAME in ~/.titorc')
+            self.push_url = self.push_url.replace(MEAD_SCM_USERNAME,
+                user_config[MEAD_SCM_USERNAME])
+
     def _sync_mead_scm(self):
         cmd = "git push %s %s" % (self.push_url, self.builder.build_tag)
         if self.dry_run:
@@ -473,6 +492,9 @@ class DistGitMeadReleaser(DistGitReleaser):
 
         for arg in self.builder.maven_args:
             build_cmd.append("--maven-option='%s'" % arg)
+
+        if self.brew_target:
+            build_cmd.append("--target=%s" % self.brew_target)
 
         for prop in self.builder.maven_properties:
             build_cmd.append("--property='%s'" % prop)

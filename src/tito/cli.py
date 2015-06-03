@@ -172,30 +172,26 @@ class ConfigLoader(object):
 
 def read_user_config():
     config = {}
-    file_loc = os.path.expanduser("~/.spacewalk-build-rc")
+    file_loc = os.path.expanduser("~/.titorc")
     try:
         f = open(file_loc)
     except:
-        file_loc = os.path.expanduser("~/.titorc")
-        try:
-            f = open(file_loc)
-        except:
-            # File doesn't exist but that's ok because it's optional.
-            return config
+        # File doesn't exist but that's ok because it's optional.
+        return config
 
     for line in f.readlines():
         if line.strip() == "":
             continue
         tokens = line.split("=")
         if len(tokens) != 2:
-            raise Exception("Error parsing ~/.spacewalk-build-rc: %s" % line)
+            raise Exception("Error parsing ~/.titorc: %s" % line)
         config[tokens[0]] = tokens[1].strip()
     return config
 
 
 def lookup_build_dir(user_config):
     """
-    Read build_dir in from ~/.spacewalk-build-rc if it exists, otherwise
+    Read build_dir user config if it exists, otherwise
     return the current working directory.
     """
     build_dir = DEFAULT_BUILD_DIR

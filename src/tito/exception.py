@@ -27,7 +27,7 @@ class TitoException(Exception):
         self.message = message
 
     def __str__(self):
-        return "TitoException: %s" % self.message
+        return "%s" % self.message
 
 
 class RunCommandException(Exception):
@@ -37,3 +37,10 @@ class RunCommandException(Exception):
         self.command = command
         self.status = status
         self.output = output
+
+
+class ConfigException(TitoException):
+    """
+    Exception thrown when the user has specified invalid configuration.
+    """
+    pass
