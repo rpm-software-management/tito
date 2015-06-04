@@ -25,6 +25,7 @@ from os.path import join
 from tito.common import run_command
 from tito.compat import *  # NOQA
 from functional.fixture import TitoGitTestFixture, tito
+from unit import Capture
 
 EXT_SRC_PKG = "extsrc"
 
@@ -82,9 +83,10 @@ class FetchBuilderTests(TitoGitTestFixture):
             "noarch/extsrc-0.0.2-1.*noarch.rpm"))))
 
     def test_tag_rejected(self):
-        self.assertRaises(SystemExit, tito,
-                'build --tag=extsrc-0.0.1-1 --rpm --output=%s --arg=source=%s ' %
-                (self.output_dir, self.source_filename))
+        with Capture(silent=True):
+            self.assertRaises(SystemExit, tito,
+                    'build --tag=extsrc-0.0.1-1 --rpm --output=%s --arg=source=%s ' %
+                    (self.output_dir, self.source_filename))
 
     def _setup_fetchbuilder_releaser(self, yum_repo_dir):
         self.write_file(join(self.repo_dir, '.tito/releasers.conf'),

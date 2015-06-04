@@ -11,11 +11,54 @@
 # granted to use or replicate Red Hat trademarks that are incorporated
 # in this software or its documentation.
 
+import sys
+
 from contextlib import contextmanager
 from mock import patch, MagicMock
 from tito.compat import PY2, StringIO
 
 file_spec = None
+
+
+class Capture(object):
+    class Tee(object):
+        def __init__(self, stream, silent):
+            self.buf = StringIO()
+            self.stream = stream
+            self.silent = silent
+
+        def write(self, data):
+            self.buf.write(data)
+            if not self.silent:
+                self.stream.write(data)
+
+        def getvalue(self):
+            return self.buf.getvalue()
+
+        def isatty(self):
+            return False
+
+    def __init__(self, silent=False):
+        self.silent = silent
+
+    def __enter__(self):
+        self.buffs = (self.Tee(sys.stdout, self.silent), self.Tee(sys.stderr, self.silent))
+        self.stdout = sys.stdout
+        self.stderr = sys.stderr
+        sys.stdout, sys.stderr = self.buffs
+        return self
+
+    @property
+    def out(self):
+        return self.buffs[0].getvalue()
+
+    @property
+    def err(self):
+        return self.buffs[1].getvalue()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        sys.stdout = self.stdout
+        sys.stderr = self.stderr
 
 
 @contextmanager

@@ -24,7 +24,7 @@ import unittest
 
 from mock import Mock, patch, call
 from textwrap import dedent
-from unit import open_mock
+from unit import open_mock, Capture
 
 
 class CommonTests(unittest.TestCase):
@@ -148,8 +148,9 @@ class CommonTests(unittest.TestCase):
     @patch("tito.common.find_file_with_extension")
     def test_find_spec_like_file_no_match(self, mock_find):
         mock_find.side_effect = [None, None]
-        self.assertRaises(SystemExit, find_spec_like_file)
-        self.assertEquals(2, len(mock_find.mock_calls))
+        with Capture(silent=True):
+            self.assertRaises(SystemExit, find_spec_like_file)
+            self.assertEquals(2, len(mock_find.mock_calls))
 
     @patch("os.listdir")
     def test_find_file_with_extension(self, mock_listdir):
@@ -168,7 +169,8 @@ class CommonTests(unittest.TestCase):
     @patch("os.listdir")
     def test_find_file_with_extension_duplicates(self, mock_listdir):
         mock_listdir.return_value = ["hello.txt", "goodbye.txt"]
-        self.assertRaises(SystemExit, find_file_with_extension, "/tmp", ".txt")
+        with Capture(silent=True):
+            self.assertRaises(SystemExit, find_file_with_extension, "/tmp", ".txt")
 
     def test_search_for(self):
         content = dedent("""
@@ -195,7 +197,8 @@ class CommonTests(unittest.TestCase):
         Goodbye World
         """)
         with open_mock(content):
-            self.assertRaises(SystemExit, search_for, "foo", r"(NoMatch)")
+            with Capture(silent=True):
+                self.assertRaises(SystemExit, search_for, "foo", r"(NoMatch)")
 
 
 class CheetahRenderTest(unittest.TestCase):
@@ -228,12 +231,13 @@ class CheetahRenderTest(unittest.TestCase):
         mock_unlink.return_value = True
         mock_glob.return_value = []
 
-        self.assertRaises(SystemExit, render_cheetah, "foo.spec.tmpl", "/tmp", {})
-        expected = "cheetah fill --flat --pickle=temp_pickle --odir=/tmp --oext=cheetah foo.spec.tmpl"
-        self.assertEquals(call(expected), mock_run_command.mock_calls[0])
+        with Capture(silent=True):
+            self.assertRaises(SystemExit, render_cheetah, "foo.spec.tmpl", "/tmp", {})
+            expected = "cheetah fill --flat --pickle=temp_pickle --odir=/tmp --oext=cheetah foo.spec.tmpl"
+            self.assertEquals(call(expected), mock_run_command.mock_calls[0])
 
-        self.assertEquals(call("/tmp/*.cheetah"), mock_glob.mock_calls[0])
-        self.assertEquals(call("temp_pickle"), mock_unlink.mock_calls[0])
+            self.assertEquals(call("/tmp/*.cheetah"), mock_glob.mock_calls[0])
+            self.assertEquals(call("temp_pickle"), mock_unlink.mock_calls[0])
 
 
 class VersionMathTest(unittest.TestCase):
