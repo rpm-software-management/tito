@@ -26,6 +26,8 @@ import shlex
 import shutil
 import tempfile
 
+from blessings import Terminal
+
 from bugzilla.rhbugzilla import RHBugzilla
 
 from tito.compat import xmlrpclib, getstatusoutput
@@ -183,25 +185,39 @@ class BugzillaExtractor(object):
         return bugzilla.getbug(bug_id, include_fields=['id', 'flags'])
 
 
+def _out(msgs, prefix, color_func):
+    if prefix is None:
+        fmt = "%(msg)s"
+    else:
+        fmt = "%(prefix)s: %(msg)s"
+
+    if isinstance(msgs, list):
+        for line in msgs:
+            print(color_func(fmt % {'prefix': prefix, 'msg': line}))
+    else:
+        print(color_func(fmt % {'prefix': prefix, 'msg': msgs}))
+
+
 def error_out(error_msgs):
     """
     Print the given error message (or list of messages) and exit.
     """
-    warn_out(error_msgs, "ERROR")
+    term = Terminal()
+    _out(error_msgs, "ERROR", term.red)
     sys.exit(1)
 
 
-def warn_out(msgs, prefix="WARNING"):
+def info_out(msgs):
+    term = Terminal()
+    _out(msgs, None, term.blue)
+    sys.exit(1)
+
+def warn_out(msgs):
     """
     Print the given error message (or list of messages) and exit.
     """
-    print
-    if isinstance(msgs, list):
-        for line in msgs:
-            print("%s: %s" % (prefix, line))
-    else:
-        print("%s: %s" % (prefix, msgs))
-    print
+    term = Terminal()
+    _out(msgs, "WARNING", term.yellow)
 
 
 @contextmanager
