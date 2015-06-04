@@ -17,12 +17,13 @@ import sys
 import tempfile
 
 from tito.common import run_command, BugzillaExtractor, debug, extract_sources, \
-    MissingBugzillaCredsException, error_out, chdir
+    MissingBugzillaCredsException, error_out, chdir, warn_out
 from tito.compat import getoutput, getstatusoutput, write
 from tito.release import Releaser
 from tito.release.main import PROTECTED_BUILD_SYS_FILES
 from tito.buildparser import BuildTargetParser
 from tito.exception import RunCommandException, ConfigException
+import getpass
 
 MEAD_SCM_USERNAME = 'MEAD_SCM_USERNAME'
 
@@ -441,10 +442,13 @@ class DistGitMeadReleaser(DistGitReleaser):
         if MEAD_SCM_USERNAME in self.push_url:
             debug("Push URL contains %s, checking for value in ~/.titorc" %
                 MEAD_SCM_USERNAME)
-            if MEAD_SCM_USERNAME not in user_config:
-                raise ConfigException('Must specify MEAD_SCM_USERNAME in ~/.titorc')
-            self.push_url = self.push_url.replace(MEAD_SCM_USERNAME,
-                user_config[MEAD_SCM_USERNAME])
+            if MEAD_SCM_USERNAME in user_config:
+                user = user_config[MEAD_SCM_USERNAME]
+            else:
+                user = getpass.getuser()
+                warn_out("You should specify MEAD_SCM_USERNAME in '~/.titorc'.  Using %s for now" % user)
+
+            self.push_url = self.push_url.replace(MEAD_SCM_USERNAME, user)
 
     def _sync_mead_scm(self):
         cmd = "git push %s %s" % (self.push_url, self.builder.build_tag)
