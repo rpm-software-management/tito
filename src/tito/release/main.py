@@ -507,14 +507,16 @@ class KojiReleaser(Releaser):
                 # whitelist implies only those packages can be built to the
                 # tag,regardless if blacklist is also defined.
                 if not self.__is_whitelisted(koji_tag, scl):
-                    warn_out("%s not specified in whitelist for %s" % (
-                        self.project_name, koji_tag))
-                    print("   Package *NOT* submitted to %s." % self.NAME)
+                    warn_out([
+                        "%s not specified in whitelist for %s" % (self.project_name, koji_tag),
+                        "   Package *NOT* submitted to %s." % self.NAME,
+                    ])
                     continue
             elif self.__is_blacklisted(koji_tag, scl):
-                warn_out("%s specified in blacklist for %s" % (
-                    self.project_name, koji_tag))
-                print("   Package *NOT* submitted to %s." % self.NAME)
+                warn_out([
+                    "%s specified in blacklist for %s" % (self.project_name, koji_tag),
+                    "   Package *NOT* submitted to %s." % self.NAME,
+                ])
                 continue
 
             # Getting tricky here, normally Builder's are only used to

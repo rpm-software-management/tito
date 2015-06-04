@@ -32,7 +32,7 @@ from tito.common import scl_to_rpm_option, get_latest_tagged_version, \
     get_commit_count, find_gemspec_file, create_builder, compare_version,\
     find_cheetah_template_file, render_cheetah, replace_spec_release, \
     find_spec_like_file, warn_out, get_commit_timestamp, chdir, mkdir_p, \
-    find_git_root
+    find_git_root, info_out
 from tito.compat import getoutput, getstatusoutput
 from tito.exception import RunCommandException
 from tito.exception import TitoException
@@ -127,7 +127,7 @@ class BuilderBase(object):
         NOTE: this method may do nothing if the user requested no build actions
         be performed. (i.e. only release tagging, etc)
         """
-        print("Building package [%s]" % (self.build_tag))
+        info_out("Building package [%s]" % (self.build_tag))
         self.no_cleanup = options.no_cleanup
 
         # Reset list of artifacts on each call to run().
@@ -257,7 +257,7 @@ class BuilderBase(object):
         self.artifacts.extend(files_written)
 
         print
-        print("Successfully built: %s" % ' '.join(files_written))
+        info_out("Successfully built: %s" % ' '.join(files_written))
 
     def _scl_to_rpmbuild_option(self):
         """ Returns rpmbuild option which disable or enable SC and print warning if needed """
@@ -350,10 +350,11 @@ class Builder(ConfigObject, BuilderBase):
             if self.config.has_option("requirements", "tito"):
                 if loose_version(self.config.get("requirements", "tito")) > \
                         loose_version(require('tito')[0].version):
-                    print("Error: tito version %s or later is needed to build this project." %
-                            self.config.get("requirements", "tito"))
-                    print("Your version: %s" % require('tito')[0].version)
-                    sys.exit(-1)
+                    error_out([
+                        "tito version %s or later is needed to build this project." %
+                            self.config.get("requirements", "tito"),
+                        "Your version: %s" % require('tito')[0].version
+                    ])
 
         self.display_version = self._get_display_version()
 
@@ -364,8 +365,6 @@ class Builder(ConfigObject, BuilderBase):
         self.relative_project_dir = get_relative_project_dir(
             project_name=self.project_name, commit=self.git_commit_id)
         if self.relative_project_dir is None and self.test:
-            sys.stderr.write("WARNING: .tito/packages/%s doesn't exist "
-                "in git, using current directory\n" % self.project_name)
             warn_out(".tito/packages/%s doesn't exist "
                 "in git, using current directory" % self.project_name)
             self.relative_project_dir = get_relative_project_dir_cwd(
@@ -447,7 +446,7 @@ class Builder(ConfigObject, BuilderBase):
 
         self.ran_tgz = True
         full_path = os.path.join(self.rpmbuild_basedir, self.tgz_filename)
-        print("Wrote: %s" % full_path)
+        info_out("Wrote: %s" % full_path)
         self.sources.append(full_path)
         self.artifacts.append(full_path)
         return full_path
@@ -925,7 +924,7 @@ class MeadBuilder(Builder):
 
             if status == 0:
                 try:
-                    print("Running Maven build...")
+                    info_out("Running Maven build...")
                     # We always want to deploy to a tito controlled location during local builds
                     local_properties = formatted_properties + [
                         "-DaltDeploymentRepository=local-output::default::file://%s" % self.deploy_dir]
@@ -1011,7 +1010,7 @@ class MeadBuilder(Builder):
         # that use a git SHA1 for their version.
         self.spec_file = os.path.join(self.rpmbuild_gitcopy, self.spec_file_name)
 
-        print("Wrote: %s" % destination_file)
+        info_out("Wrote: %s" % destination_file)
         self.sources.append(destination_file)
         self.artifacts.append(destination_file)
         self.ran_tgz = True
@@ -1125,7 +1124,7 @@ class MockBuilder(Builder):
         run_command("cp -v %s/*.rpm %s" %
                 (mock_output_dir, self.rpmbuild_basedir))
         print
-        print("Wrote:")
+        info_out("Wrote:")
         for rpm in files:
             rpm_path = os.path.join(self.rpmbuild_basedir, rpm)
             print("  %s" % rpm_path)
@@ -1176,7 +1175,7 @@ class BrewDownloadBuilder(Builder):
         run_command("cp -v %s/*.rpm %s" %
                 (self.rpmbuild_dir, self.rpmbuild_basedir))
         print
-        print("Wrote:")
+        info_out("Wrote:")
         for rpm in files:
             # Just incase anything slips into the build dir:
             if not rpm.endswith(".rpm"):

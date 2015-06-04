@@ -17,12 +17,12 @@ import sys
 import tempfile
 
 from tito.common import run_command, BugzillaExtractor, debug, extract_sources, \
-    MissingBugzillaCredsException, error_out, chdir, warn_out
+    MissingBugzillaCredsException, error_out, chdir, warn_out, info_out
 from tito.compat import getoutput, getstatusoutput, write
 from tito.release import Releaser
 from tito.release.main import PROTECTED_BUILD_SYS_FILES
 from tito.buildparser import BuildTargetParser
-from tito.exception import RunCommandException, ConfigException
+from tito.exception import RunCommandException
 import getpass
 
 MEAD_SCM_USERNAME = 'MEAD_SCM_USERNAME'
@@ -220,7 +220,7 @@ class FedoraGitReleaser(Releaser):
             self._build(main_branch)
 
         for branch in self.git_branches[1:]:
-            print("Merging branch: '%s' -> '%s'" % (main_branch, branch))
+            info_out("Merging branch: '%s' -> '%s'" % (main_branch, branch))
             run_command("%s switch-branch %s" % (self.cli_tool, branch))
             self._merge(main_branch)
 
@@ -244,7 +244,7 @@ class FedoraGitReleaser(Releaser):
             run_command("git merge %s" % main_branch)
         except:
             print
-            print("WARNING!!! Conflicts occurred during merge.")
+            warn_out("Conflicts occurred during merge.")
             print
             print("You are being dropped to a shell in the working directory.")
             print
@@ -274,16 +274,17 @@ class FedoraGitReleaser(Releaser):
             self.print_dry_run_warning(build_cmd)
             return
 
-        print("Submitting build: %s" % build_cmd)
+        info_out("Submitting build: %s" % build_cmd)
         (status, output) = getstatusoutput(build_cmd)
         if status > 0:
             if "already been built" in output:
-                print("Build has been submitted previously, continuing...")
+                warn_out("Build has been submitted previously, continuing...")
             else:
-                sys.stderr.write("ERROR: Unable to submit build.\n")
-                sys.stderr.write("  Status code: %s\n" % status)
-                sys.stderr.write("  Output: %s\n" % output)
-                sys.exit(1)
+                error_out([
+                    "Unable to submit build."
+                    "  Status code: %s\n" % status,
+                    "  Output: %s\n" % output,
+                ])
 
         # Print the task ID and URL:
         for line in extract_task_info(output):
@@ -457,7 +458,7 @@ class DistGitMeadReleaser(DistGitReleaser):
             return
 
         with chdir(self.git_root):
-            print("Syncing local repo with %s" % self.push_url)
+            info_out("Syncing local repo with %s" % self.push_url)
             try:
                 run_command(cmd)
             except RunCommandException as e:
@@ -516,16 +517,17 @@ class DistGitMeadReleaser(DistGitReleaser):
             self.print_dry_run_warning(build_cmd)
             return
 
-        print("Submitting build: %s" % build_cmd)
+        info_out("Submitting build: %s" % build_cmd)
         (status, output) = getstatusoutput(build_cmd)
         if status > 0:
             if "already been built" in output:
-                print("Build has been submitted previously, continuing...")
+                warn_out("Build has been submitted previously, continuing...")
             else:
-                sys.stderr.write("ERROR: Unable to submit build.\n")
-                sys.stderr.write("  Status code: %s\n" % status)
-                sys.stderr.write("  Output: %s\n" % output)
-                sys.exit(1)
+                error_out([
+                    "Unable to submit build.",
+                    "  Status code: %s\n" % status,
+                    "  Output: %s\n" % output,
+                ])
 
         # Print the task ID and URL:
         for line in extract_task_info(output):

@@ -31,8 +31,8 @@ from tito.common import (debug, error_out, run_command,
         find_spec_like_file, get_project_name, get_latest_tagged_version,
         get_spec_version_and_release, replace_version,
         tag_exists_locally, tag_exists_remotely, head_points_to_tag, undo_tag,
-        increase_version, reset_release, increase_zstream,
-        BUILDCONFIG_SECTION, get_relative_project_dir_cwd)
+        increase_version, reset_release, increase_zstream, warn_out,
+        BUILDCONFIG_SECTION, get_relative_project_dir_cwd, info_out)
 from tito.compat import write, StringIO, getstatusoutput
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
@@ -83,7 +83,7 @@ class VersionTagger(ConfigObject):
         be performed. (i.e. only release tagging, etc)
         """
         if options.tag_release:
-            print("WARNING: --tag-release option no longer necessary,"
+            warn_out("--tag-release option no longer necessary,"
                 " 'tito tag' will accomplish the same thing.")
         if options.no_auto_changelog:
             self._no_auto_changelog = True
@@ -137,7 +137,7 @@ class VersionTagger(ConfigObject):
         """
         tag = "%s-%s" % (self.project_name,
                 get_latest_tagged_version(self.project_name))
-        print("Undoing tag: %s" % tag)
+        info_out("Undoing tag: %s" % tag)
         if not tag_exists_locally(tag):
             raise TitoException(
                 "Cannot undo tag that does not exist locally.")
@@ -264,7 +264,7 @@ class VersionTagger(ConfigObject):
                 os.unlink(name)
 
         if not found_changelog:
-            print("WARNING: no %changelog section find in spec file. Changelog entry was not appended.")
+            warn_out("no %changelog section find in spec file. Changelog entry was not appended.")
 
         in_f.close()
         out_f.close()
@@ -424,7 +424,7 @@ class VersionTagger(ConfigObject):
             msg = "Error getting bumped package version, try: \n"
             msg = msg + "  'rpm -q --specfile %s'" % self.spec_file
             error_out(msg)
-        print("Tagging new version of %s: %s -> %s" % (self.project_name,
+        info_out("Tagging new version of %s: %s -> %s" % (self.project_name,
             old_version, new_version))
         return new_version
 
@@ -473,7 +473,7 @@ class VersionTagger(ConfigObject):
         new_tag = self._get_new_tag(new_version)
         run_command('git tag -m "%s" %s' % (tag_msg, new_tag))
         print
-        print("Created tag: %s" % new_tag)
+        info_out("Created tag: %s" % new_tag)
         print("   View: git show HEAD")
         print("   Undo: tito tag -u")
         print("   Push: git push origin && git push origin %s" % new_tag)
@@ -513,8 +513,7 @@ class VersionTagger(ConfigObject):
                     debug("Updating %s with new version." %
                             metadata_file)
                 else:
-                    print("WARNING: %s also references %s" % (filename,
-                            self.relative_project_dir))
+                    warn_out("%s also references %s" % (filename, self.relative_project_dir))
                     print("Assuming package has been renamed and removing it.")
                     run_command("git rm %s" % metadata_file)
 
@@ -523,12 +522,12 @@ class VersionTagger(ConfigObject):
         try:
             name = run_command('git config --get user.name')
         except:
-            sys.stderr.write('Warning: user.name in ~/.gitconfig not set.\n')
+            warn_out('user.name in ~/.gitconfig not set.\n')
             name = 'Unknown name'
         try:
             email = run_command('git config --get user.email')
         except:
-            sys.stderr.write('Warning: user.email in ~/.gitconfig not set.\n')
+            warn_out('user.email in ~/.gitconfig not set.\n')
             email = None
         return (name, email)
 

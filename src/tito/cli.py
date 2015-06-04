@@ -22,7 +22,7 @@ from optparse import OptionParser, SUPPRESS_HELP
 from tito.common import find_git_root, error_out, debug, get_class_by_name, \
     DEFAULT_BUILDER, BUILDCONFIG_SECTION, DEFAULT_TAGGER, \
     create_builder, get_project_name, get_relative_project_dir, \
-    DEFAULT_BUILD_DIR, run_command, tito_config_dir
+    DEFAULT_BUILD_DIR, run_command, tito_config_dir, warn_out, info_out
 from tito.compat import RawConfigParser, getstatusoutput, getoutput
 from tito.exception import TitoException
 
@@ -105,15 +105,15 @@ class ConfigLoader(object):
         if config.has_section('globalconfig'):
             if not config.has_section('buildconfig'):
                 config.add_section('buildconfig')
-            print("WARNING: Please rename [globalconfig] to [buildconfig] in "
+            warn_out("Please rename [globalconfig] to [buildconfig] in "
                 "tito.props")
             for k, v in config.items('globalconfig'):
                 if k == 'default_builder':
-                    print("WARNING: please rename 'default_builder' to "
+                    warn_out("please rename 'default_builder' to "
                         "'builder' in tito.props")
                     config.set('buildconfig', 'builder', v)
                 elif k == 'default_tagger':
-                    print("WARNING: please rename 'default_tagger' to "
+                    warn_out("please rename 'default_tagger' to "
                         "'tagger' in tito.props")
                     config.set('buildconfig', 'tagger', v)
                 else:
@@ -300,8 +300,7 @@ class BaseCliModule(object):
                 sys.path.append(lib_dir)
                 debug("Added lib dir to PYTHONPATH: %s" % lib_dir)
             else:
-                print("WARNING: lib_dir specified but does not exist: %s" %
-                    lib_dir)
+                warn_out("lib_dir specified but does not exist: %s" % lib_dir)
 
     def _validate_options(self):
         """
@@ -507,7 +506,7 @@ class ReleaseModule(BaseCliModule):
         # Handle koji:
         if self.config.has_section("koji") and not \
                 releaser_config.has_section("koji"):
-            print("WARNING: legacy 'koji' section in tito.props, please "
+            warn_out("legacy 'koji' section in tito.props, please "
                     "consider creating a target in releasers.conf.")
             print("Simulating 'koji' release target for now.")
             releaser_config.add_section('koji')
@@ -755,7 +754,7 @@ class InitModule(BaseCliModule):
             getoutput('git commit -m "Initialized to use tito. "')
             print("   - committed to git")
 
-        print("Done!")
+        info_out("Done!")
         return []
 
 

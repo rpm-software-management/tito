@@ -10,6 +10,8 @@
 # Red Hat trademarks are not licensed under GPLv2. No permission is
 # granted to use or replicate Red Hat trademarks that are incorporated
 # in this software or its documentation.
+from __future__ import print_function
+
 from contextlib import contextmanager
 """
 Common operations.
@@ -185,32 +187,35 @@ class BugzillaExtractor(object):
         return bugzilla.getbug(bug_id, include_fields=['id', 'flags'])
 
 
-def _out(msgs, prefix, color_func):
+def _out(msgs, prefix, color_func, stream=sys.stdout):
     if prefix is None:
         fmt = "%(msg)s"
     else:
         fmt = "%(prefix)s: %(msg)s"
 
     if isinstance(msgs, list):
+        first_line = msgs.pop(0)
+        print(color_func(fmt % {'prefix': prefix, 'msg': first_line}), file=stream)
         for line in msgs:
-            print(color_func(fmt % {'prefix': prefix, 'msg': line}))
+            print(color_func("%s" % line), file=stream)
     else:
-        print(color_func(fmt % {'prefix': prefix, 'msg': msgs}))
+        print(color_func(fmt % {'prefix': prefix, 'msg': msgs}), file=stream)
 
 
-def error_out(error_msgs):
+def error_out(error_msgs, die=True):
     """
     Print the given error message (or list of messages) and exit.
     """
     term = Terminal()
-    _out(error_msgs, "ERROR", term.red)
-    sys.exit(1)
+    _out(error_msgs, "ERROR", term.red, sys.stderr)
+    if die:
+        sys.exit(1)
 
 
 def info_out(msgs):
     term = Terminal()
     _out(msgs, None, term.blue)
-    sys.exit(1)
+
 
 def warn_out(msgs):
     """
@@ -375,10 +380,12 @@ def run_command(command, print_on_success=False):
     """
     (status, output) = getstatusoutput(command)
     if status > 0:
-        sys.stderr.write("\n########## ERROR ############\n")
-        sys.stderr.write("Error running command: %s\n" % command)
-        sys.stderr.write("Status code: %s\n" % status)
-        sys.stderr.write("Command output: %s\n" % output)
+        msgs = [
+            "Error running command: %s\n" % command,
+            "Status code: %s\n" % status,
+            "Command output: %s\n" % output,
+        ]
+        error_out(msgs, die=False)
         raise RunCommandException(command, status, output)
     elif print_on_success:
         print("Command: %s\n" % command)
@@ -457,7 +464,7 @@ def tag_exists_remotely(tag):
     try:
         get_git_repo_url()
     except:
-        sys.stderr.write('Warning: remote.origin do not exist. Assuming --offline, for remote tag checking.\n')
+        warn_out('remote.origin does not exist. Assuming --offline, for remote tag checking.\n')
         return False
     sha1 = get_remote_tag_sha1(tag)
     debug("sha1 = %s" % sha1)
@@ -533,7 +540,7 @@ def check_tag_exists(tag, offline=False):
     try:
         get_git_repo_url()
     except:
-        sys.stderr.write('Warning: remote.origin do not exist. Assuming --offline, for remote tag checking.\n')
+        warn_out('remote.origin does not exist. Assuming --offline, for remote tag checking.\n')
         return
     upstream_tag_sha1 = get_remote_tag_sha1(tag)
     if upstream_tag_sha1 == "":
@@ -632,13 +639,17 @@ def scl_to_rpm_option(scl, silent=None):
     output = run_command(cmd).rstrip()
     if scl:
         if (output != scl) and (output != "%scl") and not silent:
-            print("Warning: Meta package of software collection %s installed, but --scl defines %s" % (output, scl))
-            print("         Redefining scl macro to %s for this package." % scl)
+            warn_out([
+                "Meta package of software collection %s installed, but --scl defines %s" % (output, scl),
+                "Redefining scl macro to %s for this package." % scl
+            ])
         rpm_options += " --define 'scl %s'" % scl
     else:
         if (output != "%scl") and (not silent):
-            print("Warning: Meta package of software collection %s installed, but --scl is not present." % output)
-            print("         Undefining scl macro for this package.")
+            warn_out([
+                "Warning: Meta package of software collection %s installed, but --scl is not present." % output,
+                "Undefining scl macro for this package.",
+                ])
         # can be replaced by "--undefined scl" when el6 and fc17 is retired
         rpm_options += " --eval '%undefine scl'"
     return rpm_options
@@ -873,7 +884,7 @@ def normalize_class_name(name):
     """
     look_for = "spacewalk.releng."
     if name.startswith(look_for):
-        sys.stderr.write("Warning: spacewalk.releng.* namespace in tito.props is obsolete. Use tito.* instead.\n")
+        warn_out("spacewalk.releng.* namespace in tito.props is obsolete. Use tito.* instead.\n")
         name = "%s%s" % ("tito.", name[len(look_for):])
     return name
 
