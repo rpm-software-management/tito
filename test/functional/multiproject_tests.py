@@ -17,11 +17,13 @@ Functional Tests for Tito at the CLI level.
 NOTE: These tests require a makeshift git repository created in /tmp.
 """
 
+from mock import patch
 import os
 from os.path import join
+import sys
 
 from tito.common import run_command, \
-    get_latest_tagged_version, tag_exists_locally
+    get_latest_tagged_version, tag_exists_locally, find_file_with_extension
 from functional.fixture import *
 
 # A location where we can safely create a test git repository.
@@ -67,7 +69,7 @@ class MultiProjectTests(TitoGitTestFixture):
 
         self.create_project(TEST_PKG_1, os.path.join(self.repo_dir, 'pkg1'))
         self.create_project(TEST_PKG_2, os.path.join(self.repo_dir, 'pkg2'))
-        self.create_project(TEST_PKG_3, os.path.join(self.repo_dir, 'pkg3'))
+        self.create_project_with_spec_moved(TEST_PKG_3, os.path.join(self.repo_dir, 'pkg3'))
 
         # For second test package, use a tito.props to override and use the
         # ReleaseTagger:
@@ -139,3 +141,8 @@ class MultiProjectTests(TitoGitTestFixture):
         os.chdir(os.path.join(self.repo_dir, 'pkg1'))
         artifacts = tito('build --rpm')
         self.assertEquals(3, len(artifacts))
+
+    def test_find_file_with_extension(self):
+        self.assertEquals(find_file_with_extension(os.path.join(self.repo_dir, 'pkg1'), '.spec'), '{0}.spec'.format(TEST_PKG_1))
+        self.assertEquals(find_file_with_extension(os.path.join(self.repo_dir, 'pkg3'), '.spec'), 'packaging/{0}.spec'.format(TEST_PKG_3))
+        self.assertRaises(SystemExit, find_file_with_extension, self.repo_dir, '.spec')
