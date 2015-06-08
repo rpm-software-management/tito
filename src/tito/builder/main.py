@@ -155,9 +155,8 @@ class BuilderBase(object):
         Remove all temporary files and directories.
         """
         if not self.no_cleanup:
-            os.chdir('/')
-            debug("Cleaning up [%s]" % self.rpmbuild_dir)
-            getoutput("rm -rf %s" % self.rpmbuild_dir)
+            debug("Cleaning up %s" % self.rpmbuild_dir)
+            shutil.rmtree(self.rpmbuild_dir)
         else:
             warn_out("Leaving rpmbuild files in: %s" % self.rpmbuild_dir)
 
@@ -898,10 +897,9 @@ class MeadBuilder(Builder):
         Remove all temporary files and directories.
         """
         if not self.no_cleanup:
-            os.chdir('/')
-            debug("Cleaning up [%s]" % self.rpmbuild_dir)
-            getoutput("rm -rf %s" % self.rpmbuild_dir)
-            getoutput("rm -rf %s" % self.deploy_dir)
+            for d in [self.rpmbuild_dir, self.deploy_dir, self.maven_clone_dir]:
+                debug("Cleaning up %s" % d)
+                shutil.rmtree(d)
         else:
             warn_out("Leaving rpmbuild files in: %s" % self.rpmbuild_dir)
 
