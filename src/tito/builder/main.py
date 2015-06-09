@@ -351,7 +351,7 @@ class Builder(ConfigObject, BuilderBase):
                         loose_version(require('tito')[0].version):
                     error_out([
                         "tito version %s or later is needed to build this project." %
-                            self.config.get("requirements", "tito"),
+                        self.config.get("requirements", "tito"),
                         "Your version: %s" % require('tito')[0].version
                     ])
 
