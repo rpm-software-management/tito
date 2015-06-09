@@ -11,9 +11,11 @@ RUN yum -y install \
     python-devel \
     python-mock \
     python-nose \
+    python-blessings \
     python-pep8 \
     python3-mock \
     python3-nose \
+    python3-blessings \
     python3-pep8
 
 RUN useradd sandbox
