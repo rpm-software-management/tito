@@ -16,13 +16,14 @@
 from tito.common import (replace_version, find_spec_like_file, increase_version,
     search_for, compare_version, run_command_print, find_wrote_in_rpmbuild_output,
     render_cheetah, increase_zstream, reset_release, find_file_with_extension,
-    normalize_class_name, extract_sha1, BugzillaExtractor, DEFAULT_BUILD_DIR
-    )
+    normalize_class_name, extract_sha1, BugzillaExtractor, DEFAULT_BUILD_DIR, munge_specfile)
+
 
 import os
 import unittest
 
 from mock import Mock, patch, call
+from tempfile import NamedTemporaryFile
 from textwrap import dedent
 from unit import open_mock, Capture
 
@@ -238,6 +239,97 @@ class CheetahRenderTest(unittest.TestCase):
 
             self.assertEquals(call("/tmp/*.cheetah"), mock_glob.mock_calls[0])
             self.assertEquals(call("temp_pickle"), mock_unlink.mock_calls[0])
+
+
+class SpecTransformTest(unittest.TestCase):
+    def setUp(self):
+        self.spec_file = NamedTemporaryFile(delete=False).name
+
+    def tearDown(self):
+        os.unlink(self.spec_file)
+
+    def test_simple_transform(self):
+        simple_spec = dedent("""
+        Name: Hello
+        Version: 1.0.0
+        Release: 1%{?dist}
+        Source: hello-1.0.0.tar.gz
+
+        %prep
+        %setup -q
+        """)
+        with open(self.spec_file, 'w') as f:
+            f.write(simple_spec)
+
+        sha = "acecafe"
+        commit_count = 5
+        display_version = "git-%s.%s" % (commit_count, sha)
+        fullname = "hello-%s" % display_version
+        munge_specfile(self.spec_file, sha, commit_count, fullname, "%s.tar.gz" % fullname)
+        output = open(self.spec_file, 'r').readlines()
+
+        self.assertEquals(8, len(output))
+        self.assertEquals("Release: 1.git.%s.%s%%{?dist}\n" % (commit_count, sha), output[3])
+        self.assertEquals("Source: %s.tar.gz\n" % fullname, output[4])
+        self.assertEquals("%%setup -q -n %s\n" % fullname, output[7])
+
+        # Spot check some things that should not change
+        self.assertEquals("Name: Hello\n", output[1])
+        self.assertEqual("%prep\n", output[6])
+
+    def test_transform_release_only(self):
+        simple_spec = dedent("""
+        Release: 1%{?dist}
+        Source: hello-1.0.0.tar.gz
+        %setup -q
+        """)
+        with open(self.spec_file, 'w') as f:
+            f.write(simple_spec)
+
+        sha = "acecafe"
+        commit_count = 5
+        display_version = "git-%s.%s" % (commit_count, sha)
+        munge_specfile(self.spec_file, sha, commit_count)
+        output = open(self.spec_file, 'r').readlines()
+
+        self.assertEquals(4, len(output))
+        self.assertEquals("Release: 1.git.%s.%s%%{?dist}\n" % (commit_count, sha), output[1])
+        self.assertEquals("Source: hello-1.0.0.tar.gz\n", output[2])
+        self.assertEquals("%setup -q\n", output[3])
+
+    def test_transform_no_whitespace_modifications(self):
+        simple_spec = dedent("""
+        Release:    1%{?dist}
+        Source:     hello-1.0.0.tar.gz
+        """)
+        with open(self.spec_file, 'w') as f:
+            f.write(simple_spec)
+
+        sha = "acecafe"
+        commit_count = 5
+        display_version = "git-%s.%s" % (commit_count, sha)
+        munge_specfile(self.spec_file, sha, commit_count)
+        output = open(self.spec_file, 'r').readlines()
+
+        self.assertEquals(3, len(output))
+        self.assertEquals("Release:    1.git.%s.%s%%{?dist}\n" % (commit_count, sha), output[1])
+        self.assertEquals("Source:     hello-1.0.0.tar.gz\n", output[2])
+
+    def test_complex_setup_transform(self):
+        simple_spec = dedent("""
+        %setup -q -n hello-1
+        """)
+        with open(self.spec_file, 'w') as f:
+            f.write(simple_spec)
+
+        sha = "acecafe"
+        commit_count = 5
+        display_version = "git-%s.%s" % (commit_count, sha)
+        fullname = "hello-%s" % display_version
+        munge_specfile(self.spec_file, sha, commit_count, fullname, "%s.tar.gz" % fullname)
+        output = open(self.spec_file, 'r').readlines()
+
+        self.assertEquals("%%setup -q -n %s\n" % fullname, output[1])
 
 
 class VersionMathTest(unittest.TestCase):

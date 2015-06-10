@@ -32,7 +32,7 @@ from tito.common import scl_to_rpm_option, get_latest_tagged_version, \
     get_commit_count, find_gemspec_file, create_builder, compare_version,\
     find_cheetah_template_file, render_cheetah, replace_spec_release, \
     find_spec_like_file, warn_out, get_commit_timestamp, chdir, mkdir_p, \
-    find_git_root, info_out
+    find_git_root, info_out, munge_specfile
 from tito.compat import getstatusoutput
 from tito.exception import RunCommandException
 from tito.exception import TitoException
@@ -496,19 +496,17 @@ class Builder(ConfigObject, BuilderBase):
             # file we're building off. (note that this is a temp copy of the
             # spec) Swap out the actual release for one that includes the git
             # SHA1 we're building for our test package:
-            setup_specfile_script = get_script_path("test-setup-specfile.pl")
-            cmd = "%s %s %s %s %s-%s %s" % \
-                    (
-                        setup_specfile_script,
-                        self.spec_file,
-                        self.git_commit_id[:7],
-                        self.commit_count,
-                        self.project_name,
-                        self.display_version,
-                        self.tgz_filename,
-                    )
-            run_command(cmd)
-            self.build_version += ".git." + str(self.commit_count) + "." + str(self.git_commit_id[:7])
+            sha = self.git_commit_id[:7]
+            fullname = "%s-%s" % (self.project_name, self.display_version)
+            munge_specfile(
+                self.spec_file,
+                sha,
+                self.commit_count,
+                fullname,
+                self.tgz_filename,
+            )
+
+            self.build_version += ".git." + str(self.commit_count) + "." + str(sha)
             self.ran_setup_test_specfile = True
 
     def _get_rpmbuild_dir_options(self):
@@ -585,15 +583,11 @@ class NoTgzBuilder(Builder):
             # spec) Swap out the actual release for one that includes the git
             # SHA1 we're building for our test package:
             debug("setup_test_specfile:commit_count = %s" % str(self.commit_count))
-            script = "test-setup-specfile.pl"
-            cmd = "%s %s %s %s" % \
-                    (
-                        script,
-                        self.spec_file,
-                        self.git_commit_id[:7],
-                        self.commit_count,
-                    )
-            run_command(cmd)
+            munge_specfile(
+                self.spec_file,
+                self.git_commit_id[:7],
+                self.commit_count
+            )
 
 
 class GemBuilder(NoTgzBuilder):

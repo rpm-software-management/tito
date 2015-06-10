@@ -628,6 +628,51 @@ def replace_spec_release(file_name, release):
             print(line.rstrip('\n'))
 
 
+def munge_specfile(spec_file, commit_id, commit_count, fullname=None, tgz_filename=None):
+    # If making a test rpm we need to get a little crazy with the spec
+    # file we're building off. (Note we are modifying a temp copy of the
+    # spec) Swap out the actual release for one that includes the git
+    # SHA1 we're building for our test package.
+    sha = commit_id[:7]
+
+    for line in fileinput.input(spec_file, inplace=True):
+        m = re.match(r'^(\s*Release:\s*)(.+?)(%{\?dist})?\s*$', line)
+        if m:
+            print('%s%s.git.%s.%s%s' % (
+                m.group(1),
+                m.group(2),
+                commit_count,
+                sha,
+                m.group(3),
+            ))
+            continue
+
+        m = re.match(r'^(\s*Source0?):\s*(.+?)$', line)
+        if tgz_filename and m:
+            print('%s: %s' % (m.group(1), tgz_filename))
+            continue
+
+        m = re.match(r'^(\s*%setup)(.*?)$', line)
+        if fullname and m:
+            macro = m.group(1)
+            setup_arg = " -n %s" % fullname
+
+            args = m.group(2)
+            args_match = re.search(r'(.+?)\s+-n\s+\S+(.*)', args)
+            if args_match:
+                macro += args_match.group(1)
+                macro += args_match.group(2)
+                macro += setup_arg
+            else:
+                macro += args
+                macro += setup_arg
+
+            print(macro)
+            continue
+
+        print(line.rstrip('\n'))
+
+
 def scrape_version_and_release(template_file_name):
     """Ideally, we'd let RPM report the version and release of a spec file as
     in get_spec_version_and_release.  However, when we are dealing with Cheetah
