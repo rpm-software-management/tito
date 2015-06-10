@@ -338,6 +338,15 @@ def find_cheetah_template_file(in_dir=None):
     return result
 
 
+def find_mead_chain_file(in_dir=None):
+    if in_dir is None:
+        in_dir = os.getcwd()
+    result = find_file_with_extension(in_dir, '.chain')
+    if result is None:
+        error_out("Unable to locate a %s file in %s" % ('.chain', in_dir))
+    return result
+
+
 def find_git_root():
     """
     Find the top-level directory for this git repository.
@@ -433,9 +442,8 @@ def render_cheetah(template_file, destination_directory, cheetah_input):
     try:
         pickle.dump(cheetah_input, pickle_file, protocol=2)
         pickle_file.close()
-        output = run_command("cheetah fill --flat --pickle=%s --odir=%s --oext=cheetah %s" %
+        run_command("cheetah fill --flat --pickle=%s --odir=%s --oext=cheetah %s" %
             (pickle_file.name, destination_directory, template_file))
-        print(output)
 
         # Annoyingly Cheetah won't let you specify an empty string for a file extension
         # and most Mead templates end with ".spec.tmpl"
@@ -617,7 +625,7 @@ def replace_spec_release(file_name, release):
         if m:
             print("%s%s" % (m.group(1), release))
         else:
-            print(line)
+            print(line.rstrip('\n'))
 
 
 def scrape_version_and_release(template_file_name):
@@ -649,7 +657,7 @@ def scl_to_rpm_option(scl, silent=None):
             warn_out([
                 "Warning: Meta package of software collection %s installed, but --scl is not present." % output,
                 "Undefining scl macro for this package.",
-                ])
+            ])
         # can be replaced by "--undefined scl" when el6 and fc17 is retired
         rpm_options += " --eval '%undefine scl'"
     return rpm_options

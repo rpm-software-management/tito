@@ -17,13 +17,14 @@ import sys
 import tempfile
 
 from tito.common import run_command, BugzillaExtractor, debug, extract_sources, \
-    MissingBugzillaCredsException, error_out, chdir, warn_out, info_out
+    MissingBugzillaCredsException, error_out, chdir, warn_out, info_out, find_mead_chain_file
 from tito.compat import getoutput, getstatusoutput, write
 from tito.release import Releaser
 from tito.release.main import PROTECTED_BUILD_SYS_FILES
 from tito.buildparser import BuildTargetParser
 from tito.exception import RunCommandException
 import getpass
+from string import Template
 
 MEAD_SCM_USERNAME = 'MEAD_SCM_USERNAME'
 
@@ -77,8 +78,7 @@ class FedoraGitReleaser(Releaser):
         with chdir(self.working_dir):
             run_command("%s clone %s" % (self.cli_tool, self.project_name))
 
-        project_checkout = os.path.join(self.working_dir, self.project_name)
-        with chdir(project_checkout):
+        with chdir(self.package_workdir):
             run_command("%s switch-branch %s" % (self.cli_tool, self.git_branches[0]))
 
         # Mead builds need to be in the git_root.  Other builders are agnostic.
@@ -88,9 +88,9 @@ class FedoraGitReleaser(Releaser):
         if self.test:
             self.builder._setup_test_specfile()
 
-        self._git_sync_files(project_checkout)
-        self._git_upload_sources(project_checkout)
-        self._git_user_confirm_commit(project_checkout)
+        self._git_sync_files(self.package_workdir)
+        self._git_upload_sources(self.package_workdir)
+        self._git_user_confirm_commit(self.package_workdir)
 
     def _get_bz_flags(self):
         required_bz_flags = None
@@ -421,11 +421,6 @@ class DistGitMeadReleaser(DistGitReleaser):
 
         self.mead_scm = self.releaser_config.get(self.target, "mead_scm")
 
-        self.mead_url = "%s?%s#%s" % (
-            self.mead_scm,
-            name,
-            self.builder.build_tag)
-
         if self.releaser_config.has_option(self.target, "mead_push_url"):
             self.push_url = self.releaser_config.get(self.target, "mead_push_url")
         else:
@@ -453,6 +448,7 @@ class DistGitMeadReleaser(DistGitReleaser):
 
     def _sync_mead_scm(self):
         cmd = "git push %s %s" % (self.push_url, self.builder.build_tag)
+
         if self.dry_run:
             self.print_dry_run_warning(cmd)
             return
@@ -474,18 +470,34 @@ class DistGitMeadReleaser(DistGitReleaser):
         DistGitReleaser._git_release(self)
 
     def _git_upload_sources(self, project_checkout):
-        DistGitReleaser._git_upload_sources(self, project_checkout)
+        chain_file = find_mead_chain_file(self.builder.rpmbuild_gitcopy)
+        with open(chain_file, 'r') as f:
+            template = Template(f.read())
 
-        if self.dry_run:
-            self.print_dry_run_warning("echo '%s' > tito-mead-url" % self.mead_url)
-            return
+            ref = self.builder.build_tag
+            if self.test:
+                ref = self.builder.git_commit_id
+
+            values = {
+                'mead_scm': self.mead_scm,
+                'git_ref': ref,
+                # Each property on its own line with a few leading spaces to indicate
+                # that it's a continuation
+                'maven_properties': "\n  ".join(self.builder.maven_properties),
+                'maven_options': " ".join(self.builder.maven_args),
+            }
+            rendered_chain = template.safe_substitute(values)
 
         with chdir(project_checkout):
-            with open("tito-mead-url", "w") as f:
-                f.write(self.mead_url)
-                f.write("\n")
+            with open("mead.chain", "w") as f:
+                f.write(rendered_chain)
 
-            run_command("git add tito-mead-url")
+            cmd = "git add mead.chain"
+            if self.dry_run:
+                self.print_dry_run_warning(cmd)
+                info_out("Chain file contents:\n%s" % rendered_chain)
+            else:
+                run_command(cmd)
 
     def _build(self, branch):
         """ Submit a Mead build from current directory. """
@@ -494,18 +506,12 @@ class DistGitMeadReleaser(DistGitReleaser):
         if build_target:
             target_param = "--target=%s" % build_target
 
-        build_cmd = [self.cli_tool, "maven-build", "--nowait"]
-
-        for arg in self.builder.maven_args:
-            build_cmd.append("--maven-option='%s'" % arg)
+        build_cmd = [self.cli_tool, "maven-chain", "--nowait"]
 
         if self.brew_target:
             build_cmd.append("--target=%s" % self.brew_target)
 
-        for prop in self.builder.maven_properties:
-            build_cmd.append("--property='%s'" % prop)
-        build_cmd.append("--sources=%s" % self.mead_url)
-        build_cmd.append("--specfile=.")
+        build_cmd.append("--ini=%s" % (os.path.join(self.package_workdir, "mead.chain")))
         build_cmd.append(target_param)
 
         if self.scratch:

@@ -21,7 +21,6 @@ import shutil
 import subprocess
 import tempfile
 import textwrap
-import sys
 
 from string import Template
 

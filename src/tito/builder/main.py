@@ -33,7 +33,7 @@ from tito.common import scl_to_rpm_option, get_latest_tagged_version, \
     find_cheetah_template_file, render_cheetah, replace_spec_release, \
     find_spec_like_file, warn_out, get_commit_timestamp, chdir, mkdir_p, \
     find_git_root, info_out
-from tito.compat import getoutput, getstatusoutput
+from tito.compat import getstatusoutput
 from tito.exception import RunCommandException
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
@@ -911,53 +911,37 @@ class MeadBuilder(Builder):
         with chdir(self.maven_clone_dir):
             run_command("git checkout %s" % self.git_commit_id)
 
-            # Stupid Maven doesn't give any way on the CLI to define where
-            # an assembly should go.  Nor does it really have a way to indicate
-            # whether an assembly has even been defined.  We just have to try
-            # to run the goal and see what happens.
-            local_properties = formatted_properties + ["-Dassembly.dryRun"]
-            (status, output) = getstatusoutput("mvn %s %s assembly:single" % (
-                " ".join(self.maven_args),
-                " ".join(local_properties)))
-
-            if status == 0:
-                try:
-                    info_out("Running Maven build...")
-                    # We always want to deploy to a tito controlled location during local builds
-                    local_properties = formatted_properties + [
-                        "-DaltDeploymentRepository=local-output::default::file://%s" % self.deploy_dir]
-                    run_command("mvn %s %s deploy" % (
-                        " ".join(self.maven_args),
-                        " ".join(local_properties)))
-                    self.ran_maven = True
-                except:
-                    error_out("Maven build failed! %s" % output)
-            else:
-                if "No assembly descriptors found" in output:
-                    error_out("No Maven assembly defined! Please set up the assembly plugin in your pom.xml")
-                else:
-                    error_out("Maven build failed: %s" % output)
+            try:
+                info_out("Running Maven build...")
+                # We always want to deploy to a tito controlled location during local builds
+                local_properties = formatted_properties + [
+                    "-DaltDeploymentRepository=local-output::default::file://%s" % self.deploy_dir]
+                run_command("mvn %s %s deploy" % (
+                    " ".join(self.maven_args),
+                    " ".join(local_properties)))
+            except RunCommandException as e:
+                error_out("Maven build failed! %s" % e.output)
 
         self._create_build_dirs()
 
-        if self.ran_maven:
-            full_path = self._find_tarball()
-            if full_path:
-                fh = gzip.open(full_path, 'rb')
-                fixed_tar = os.path.join(os.path.splitext(full_path)[0])
-                fixed_tar_fh = open(fixed_tar, 'wb')
-                timestamp = get_commit_timestamp(self.git_commit_id)
-                try:
-                    tarfixer = TarFixer(fh, fixed_tar_fh, timestamp, self.git_commit_id, maven_built=True)
-                    tarfixer.fix()
-                finally:
-                    fixed_tar_fh.close()
+        full_path = self._find_tarball()
+        if full_path:
+            fh = gzip.open(full_path, 'rb')
+            fixed_tar = os.path.join(os.path.splitext(full_path)[0])
+            fixed_tar_fh = open(fixed_tar, 'wb')
+            timestamp = get_commit_timestamp(self.git_commit_id)
+            try:
+                tarfixer = TarFixer(fh, fixed_tar_fh, timestamp, self.git_commit_id, maven_built=True)
+                tarfixer.fix()
+            finally:
+                fixed_tar_fh.close()
 
-                # It's a pity we can't use Python's gzip, but it doesn't offer an equivalent of -n
-                run_command("gzip -n -c < %s > %s" % (fixed_tar, destination_file))
-            else:
-                error_out("Could not find Maven built assembly!")
+            # It's a pity we can't use Python's gzip, but it doesn't offer an equivalent of -n
+            run_command("gzip -n -c < %s > %s" % (fixed_tar, destination_file))
         else:
+            warn_out([
+                "No Maven generated tarball found.",
+                "Please set up the assembly plugin in your pom.xml to generate a .tar.gz"])
             full_path = os.path.join(self.rpmbuild_sourcedir, self.tgz_filename)
             create_tgz(self.git_root, self.tgz_dir, self.git_commit_id, self.relative_project_dir, full_path)
             print("Creating %s from git tag: %s..." % (self.tgz_filename, self.build_tag))
@@ -967,8 +951,8 @@ class MeadBuilder(Builder):
         shutil.copy(destination_file, self.rpmbuild_gitcopy)
 
         # Extract the source so we can get at the spec file, etc.
-        with chdir(self.rpmbuild_sourcedir):
-            run_command("tar xzf %s" % os.path.join(self.rpmbuild_gitcopy, self.tgz_filename))
+        with chdir(self.rpmbuild_gitcopy):
+            run_command("tar --strip-components=1 -xvf %s" % os.path.join(self.rpmbuild_gitcopy, self.tgz_filename))
 
         if self.local_build:
             artifacts = {}
