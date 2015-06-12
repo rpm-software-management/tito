@@ -28,7 +28,7 @@ from tito.common import scl_to_rpm_option, get_latest_tagged_version, \
     find_wrote_in_rpmbuild_output, debug, error_out, run_command_print, \
     find_spec_file, run_command, get_build_commit, get_relative_project_dir, \
     get_relative_project_dir_cwd, get_spec_version_and_release, \
-    check_tag_exists, create_tgz, get_script_path, get_latest_commit, \
+    check_tag_exists, create_tgz, get_latest_commit, \
     get_commit_count, find_gemspec_file, create_builder, compare_version,\
     find_cheetah_template_file, render_cheetah, replace_spec_release, \
     find_spec_like_file, warn_out, get_commit_timestamp, chdir, mkdir_p, \
@@ -975,6 +975,7 @@ class MeadBuilder(Builder):
                 'all_artifacts': all_artifacts,
                 'all_artifacts_with_path': all_artifacts_with_path,
             }
+            debug("Cheetah input: %s" % cheetah_input)
             render_cheetah(find_cheetah_template_file(self.start_dir), self.rpmbuild_gitcopy, cheetah_input)
             self.spec_file_name = find_spec_file(self.rpmbuild_gitcopy)
         else:

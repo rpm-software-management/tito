@@ -288,7 +288,6 @@ class SpecTransformTest(unittest.TestCase):
 
         sha = "acecafe"
         commit_count = 5
-        display_version = "git-%s.%s" % (commit_count, sha)
         munge_specfile(self.spec_file, sha, commit_count)
         output = open(self.spec_file, 'r').readlines()
 
@@ -307,7 +306,6 @@ class SpecTransformTest(unittest.TestCase):
 
         sha = "acecafe"
         commit_count = 5
-        display_version = "git-%s.%s" % (commit_count, sha)
         munge_specfile(self.spec_file, sha, commit_count)
         output = open(self.spec_file, 'r').readlines()
 

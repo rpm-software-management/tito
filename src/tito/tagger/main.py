@@ -338,8 +338,8 @@ class VersionTagger(ConfigObject):
         mvn_new_version = new_version.split('-')[0]
 
         maven_args = ['-B']
-        if 'maven_args' in self.user_config:
-            maven_args.append(self.user_config['maven_args'])
+        if 'MAVEN_ARGS' in self.user_config:
+            maven_args.append(self.user_config['MAVEN_ARGS'])
         else:
             maven_args.append('-q')
 
