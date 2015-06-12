@@ -10,6 +10,9 @@
 # Red Hat trademarks are not licensed under GPLv2. No permission is
 # granted to use or replicate Red Hat trademarks that are incorporated
 # in this software or its documentation.
+
+# flake8: noqa
+
 """
 Compatibility library for Python 2.4 up through Python 3.
 """
@@ -29,6 +32,20 @@ else:
     from configparser import RawConfigParser
     from io import StringIO
     import xmlrpc.client as xmlrpclib
+
+
+def decode_bytes(x, source_encoding):
+    if PY2:
+        return x
+    else:
+        return x.decode(source_encoding)
+
+
+def encode_bytes(x, destination_encoding):
+    if PY2:
+        return x
+    else:
+        return bytes(x, destination_encoding)
 
 
 def getstatusoutput(cmd):
@@ -58,7 +75,7 @@ def dictionary_override(d1, d2):
     if PY2:
         overrides = d1.items() + d2.items()
     else:
-        overrides = d1.items() | d2.items()
+        overrides = list(d1.items()) + list(d2.items())
     return dict(overrides)
 
 

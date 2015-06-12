@@ -1,7 +1,7 @@
 
 import unittest
 from tito.buildparser import BuildTargetParser
-from tito.compat import *
+from tito.compat import *  # NOQA
 from tito.exception import TitoException
 
 

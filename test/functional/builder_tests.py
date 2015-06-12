@@ -14,9 +14,8 @@
 
 import os
 import tempfile
-from os.path import join
 from tito.builder import Builder
-from tito.common import *
+from tito.common import run_command
 from tito.compat import RawConfigParser
 from functional.fixture import TitoGitTestFixture, tito
 
@@ -35,7 +34,7 @@ class BuilderTests(TitoGitTestFixture):
     def test_scl_from_options(self):
         self.create_project(PKG_NAME)
         builder = Builder(PKG_NAME, None, self.output_dir,
-            self.config, {}, {'scl': 'ruby193'}, **{'offline': True})
+            self.config, {}, {'scl': ['ruby193']}, **{'offline': True})
         self.assertEqual('ruby193', builder.scl)
 
     def test_scl_from_kwargs(self):

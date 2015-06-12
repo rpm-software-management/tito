@@ -33,12 +33,14 @@ BuildRequires: python3-devel
 BuildRequires: python3-setuptools
 Requires: python3-setuptools
 Requires: python3-bugzilla
+Requires: python3-blessings
 Requires: rpm-python3
 %else
 BuildRequires: python-devel
 BuildRequires: python-setuptools
 Requires: python-setuptools
 Requires: python-bugzilla
+Requires: python-blessings
 Requires: rpm-python
 %endif
 BuildRequires: asciidoc
@@ -71,6 +73,10 @@ Requires: fedora-cert
 Requires: fedora-packager
 Requires: rpmdevtools
 Requires: yum-utils
+# Cheetah doesn't exist for Python 3, but it's what Mead uses.  We
+# install it and call via the command line instead of importing the
+# potentially incompatible code
+Requires: python-cheetah
 
 %description
 Tito is a tool for managing tarballs, rpms, and builds for projects using
@@ -112,8 +118,6 @@ rm -rf $RPM_BUILD_ROOT
 %doc %{_mandir}/man5/releasers.conf.5*
 %doc %{_mandir}/man8/tito.8*
 %{_bindir}/tito
-%{_bindir}/tar-fixup-stamp-comment.pl
-%{_bindir}/test-setup-specfile.pl
 %{_bindir}/generate-patches.pl
 %{_datadir}/bash-completion/completions/tito
 %dir %{python_sitelib}/tito

@@ -11,10 +11,9 @@
 # granted to use or replicate Red Hat trademarks that are incorporated
 # in this software or its documentation.
 
-import os
 import os.path
 
-from tito.common import run_command
+from tito.common import run_command, info_out
 from tito.release import KojiReleaser
 
 
@@ -70,5 +69,5 @@ class CoprReleaser(KojiReleaser):
             print("Uploading src.rpm.")
             print(run_command(cmd_upload))
             self.srpm_submitted = srpm_location
-        print("Submiting build into %s." % self.NAME)
+        info_out("Submiting build into %s." % self.NAME)
         print(run_command(cmd_submit))

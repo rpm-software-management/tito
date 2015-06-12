@@ -10,12 +10,12 @@
 # Red Hat trademarks are not licensed under GPLv2. No permission is
 # granted to use or replicate Red Hat trademarks that are incorporated
 # in this software or its documentation.
-
 """
 Tito builders for a variety of common methods of building sources, srpms,
 and rpms.
 """
 
+import gzip
 import os
 import sys
 import re
@@ -28,12 +28,16 @@ from tito.common import scl_to_rpm_option, get_latest_tagged_version, \
     find_wrote_in_rpmbuild_output, debug, error_out, run_command_print, \
     find_spec_file, run_command, get_build_commit, get_relative_project_dir, \
     get_relative_project_dir_cwd, get_spec_version_and_release, \
-    check_tag_exists, create_tgz, get_script_path, get_latest_commit, \
-    get_commit_count, find_gemspec_file, create_builder, compare_version
-from tito.compat import getoutput, getstatusoutput
+    check_tag_exists, create_tgz, get_latest_commit, \
+    get_commit_count, find_gemspec_file, create_builder, compare_version,\
+    find_cheetah_template_file, render_cheetah, replace_spec_release, \
+    find_spec_like_file, warn_out, get_commit_timestamp, chdir, mkdir_p, \
+    find_git_root, info_out, munge_specfile
+from tito.compat import getstatusoutput
 from tito.exception import RunCommandException
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
+from tito.tar import TarFixer
 
 
 class BuilderBase(object):
@@ -67,7 +71,7 @@ class BuilderBase(object):
         self.offline = self._get_optional_arg(kwargs, 'offline', False)
         self.auto_install = self._get_optional_arg(kwargs, 'auto_install',
                 False)
-        self.scl = self._get_optional_arg(args, 'scl', None) or \
+        self.scl = self._get_optional_arg(args, 'scl', [None])[0] or \
                 self._get_optional_arg(kwargs, 'scl', '')
 
         self.rpmbuild_options = self._get_optional_arg(args, 'rpmbuild_options', None) or \
@@ -123,7 +127,7 @@ class BuilderBase(object):
         NOTE: this method may do nothing if the user requested no build actions
         be performed. (i.e. only release tagging, etc)
         """
-        print("Building package [%s]" % (self.build_tag))
+        info_out("Building package [%s]" % (self.build_tag))
         self.no_cleanup = options.no_cleanup
 
         # Reset list of artifacts on each call to run().
@@ -151,33 +155,35 @@ class BuilderBase(object):
         Remove all temporary files and directories.
         """
         if not self.no_cleanup:
-            os.chdir('/')
-            debug("Cleaning up [%s]" % self.rpmbuild_dir)
-            getoutput("rm -rf %s" % self.rpmbuild_dir)
+            debug("Cleaning up %s" % self.rpmbuild_dir)
+            shutil.rmtree(self.rpmbuild_dir)
         else:
-            print("WARNING: Leaving rpmbuild files in: %s" % self.rpmbuild_dir)
+            warn_out("Leaving rpmbuild files in: %s" % self.rpmbuild_dir)
 
-    def _check_build_dirs_access(self):
+    def _check_build_dirs_access(self, build_dirs):
         """
         Ensure the build directories are writable.
         """
-        if not os.access(self.rpmbuild_basedir, os.W_OK):
-            error_out("%s is not writable." % self.rpmbuild_basedir)
-        if not os.access(self.rpmbuild_dir, os.W_OK):
-            error_out("%s is not writable." % self.rpmbuild_dir)
-        if not os.access(self.rpmbuild_sourcedir, os.W_OK):
-            error_out("%s is not writable." % self.rpmbuild_sourcedir)
-        if not os.access(self.rpmbuild_builddir, os.W_OK):
-            error_out("%s is not writable." % self.rpmbuild_builddir)
+        msgs = []
+        for d in build_dirs:
+            if not os.access(d, os.W_OK):
+                msgs.append("%s is not writable." % d)
+        if msgs:
+            error_out(msgs)
 
     def _create_build_dirs(self):
         """
         Create the build directories. Can safely be called multiple times.
         """
-        getoutput("mkdir -p %s %s %s %s" % (
-            self.rpmbuild_basedir, self.rpmbuild_dir,
-            self.rpmbuild_sourcedir, self.rpmbuild_builddir))
-        self._check_build_dirs_access()
+        build_dirs = [
+            self.rpmbuild_basedir,
+            self.rpmbuild_dir,
+            self.rpmbuild_sourcedir,
+            self.rpmbuild_builddir,
+        ]
+        for d in build_dirs:
+            mkdir_p(d)
+        self._check_build_dirs_access(build_dirs)
 
     def srpm(self, dist=None):
         """
@@ -250,7 +256,7 @@ class BuilderBase(object):
         self.artifacts.extend(files_written)
 
         print
-        print("Successfully built: %s" % ' '.join(files_written))
+        info_out("Successfully built: %s" % ' '.join(files_written))
 
     def _scl_to_rpmbuild_option(self):
         """ Returns rpmbuild option which disable or enable SC and print warning if needed """
@@ -326,7 +332,8 @@ class Builder(ConfigObject, BuilderBase):
         args - Optional arguments specific to each builder. Can be passed
         in explicitly by user on the CLI, or via a release target config
         entry. Only for things which vary on invocations of the builder,
-        avoid using these if possible.
+        avoid using these if possible.  *Given in the format of a dictionary
+        of lists.*
         """
         ConfigObject.__init__(self, config=config)
         BuilderBase.__init__(self, name=name, build_dir=build_dir, config=config,
@@ -336,28 +343,29 @@ class Builder(ConfigObject, BuilderBase):
         self.build_version = self._get_build_version()
 
         if kwargs and 'options' in kwargs:
-            print("WARNING: 'options' no longer a supported builder "
-                    "constructor argument.")
+            warn_out("'options' no longer a supported builder constructor argument.")
 
         if self.config.has_section("requirements"):
             if self.config.has_option("requirements", "tito"):
                 if loose_version(self.config.get("requirements", "tito")) > \
                         loose_version(require('tito')[0].version):
-                    print("Error: tito version %s or later is needed to build this project." %
-                            self.config.get("requirements", "tito"))
-                    print("Your version: %s" % require('tito')[0].version)
-                    sys.exit(-1)
+                    error_out([
+                        "tito version %s or later is needed to build this project." %
+                        self.config.get("requirements", "tito"),
+                        "Your version: %s" % require('tito')[0].version
+                    ])
 
         self.display_version = self._get_display_version()
 
-        self.git_commit_id = get_build_commit(tag=self.build_tag,
-            test=self.test)
+        with chdir(find_git_root()):
+            self.git_commit_id = get_build_commit(tag=self.build_tag,
+                test=self.test)
 
         self.relative_project_dir = get_relative_project_dir(
             project_name=self.project_name, commit=self.git_commit_id)
         if self.relative_project_dir is None and self.test:
-            sys.stderr.write("WARNING: .tito/packages/%s doesn't exist "
-                "in git, using current directory\n" % self.project_name)
+            warn_out(".tito/packages/%s doesn't exist "
+                "in git, using current directory" % self.project_name)
             self.relative_project_dir = get_relative_project_dir_cwd(
                 self.git_root)
 
@@ -385,6 +393,18 @@ class Builder(ConfigObject, BuilderBase):
         # Set to path to srpm once we build one.
         self.srpm_location = None
 
+    def _create_build_dirs(self):
+        """
+        Create the build directories. Can safely be called multiple times.
+        """
+        BuilderBase._create_build_dirs(self)
+        build_dirs = [
+            self.rpmbuild_gitcopy,
+        ]
+        for d in build_dirs:
+            mkdir_p(d)
+        self._check_build_dirs_access(build_dirs)
+
     def _get_build_version(self):
         """
         Figure out the git tag and version-release we're building.
@@ -399,12 +419,14 @@ class Builder(ConfigObject, BuilderBase):
                 if not self.test:
                     error_out(["Unable to lookup latest package info.",
                             "Perhaps you need to tag first?"])
-                sys.stderr.write("WARNING: unable to lookup latest package "
-                    "tag, building untagged test project\n")
+                warn_out("unable to lookup latest package "
+                    "tag, building untagged test project")
                 build_version = get_spec_version_and_release(self.start_dir,
-                    find_spec_file(in_dir=self.start_dir))
+                    find_spec_like_file(self.start_dir))
             self.build_tag = "%s-%s" % (self.project_name, build_version)
 
+        self.spec_version = build_version.split('-')[-2]
+        self.spec_release = build_version.split('-')[-1]
         if not self.test:
             check_tag_exists(self.build_tag, offline=self.offline)
         return build_version
@@ -423,7 +445,7 @@ class Builder(ConfigObject, BuilderBase):
 
         self.ran_tgz = True
         full_path = os.path.join(self.rpmbuild_basedir, self.tgz_filename)
-        print("Wrote: %s" % full_path)
+        info_out("Wrote: %s" % full_path)
         self.sources.append(full_path)
         self.artifacts.append(full_path)
         return full_path
@@ -464,7 +486,7 @@ class Builder(ConfigObject, BuilderBase):
         # archive into the temp build directory. This is done so we can
         # modify the version/release on the fly when building test rpms
         # that use a git SHA1 for their version.
-        self.spec_file_name = find_spec_file(in_dir=self.rpmbuild_gitcopy)
+        self.spec_file_name = find_spec_like_file(self.rpmbuild_gitcopy)
         self.spec_file = os.path.join(
             self.rpmbuild_gitcopy, self.spec_file_name)
 
@@ -474,19 +496,17 @@ class Builder(ConfigObject, BuilderBase):
             # file we're building off. (note that this is a temp copy of the
             # spec) Swap out the actual release for one that includes the git
             # SHA1 we're building for our test package:
-            setup_specfile_script = get_script_path("test-setup-specfile.pl")
-            cmd = "%s %s %s %s %s-%s %s" % \
-                    (
-                        setup_specfile_script,
-                        self.spec_file,
-                        self.git_commit_id[:7],
-                        self.commit_count,
-                        self.project_name,
-                        self.display_version,
-                        self.tgz_filename,
-                    )
-            run_command(cmd)
-            self.build_version += ".git." + str(self.commit_count) + "." + str(self.git_commit_id[:7])
+            sha = self.git_commit_id[:7]
+            fullname = "%s-%s" % (self.project_name, self.display_version)
+            munge_specfile(
+                self.spec_file,
+                sha,
+                self.commit_count,
+                fullname,
+                self.tgz_filename,
+            )
+
+            self.build_version += ".git." + str(self.commit_count) + "." + str(sha)
             self.ran_setup_test_specfile = True
 
     def _get_rpmbuild_dir_options(self):
@@ -563,15 +583,11 @@ class NoTgzBuilder(Builder):
             # spec) Swap out the actual release for one that includes the git
             # SHA1 we're building for our test package:
             debug("setup_test_specfile:commit_count = %s" % str(self.commit_count))
-            script = "test-setup-specfile.pl"
-            cmd = "%s %s %s %s" % \
-                    (
-                        script,
-                        self.spec_file,
-                        self.git_commit_id[:7],
-                        self.commit_count,
-                    )
-            run_command(cmd)
+            munge_specfile(
+                self.spec_file,
+                self.git_commit_id[:7],
+                self.commit_count
+            )
 
 
 class GemBuilder(NoTgzBuilder):
@@ -603,7 +619,7 @@ class GemBuilder(NoTgzBuilder):
             self.tgz_filename))
 
         # Find the gemspec
-        gemspec_filename = find_gemspec_file(in_dir=self.rpmbuild_gitcopy)
+        gemspec_filename = find_gemspec_file(self.rpmbuild_gitcopy)
 
         debug("Building gem: %s in %s" % (gemspec_filename,
             self.rpmbuild_gitcopy))
@@ -618,7 +634,7 @@ class GemBuilder(NoTgzBuilder):
         # archive into the temp build directory. This is done so we can
         # modify the version/release on the fly when building test rpms
         # that use a git SHA1 for their version.
-        self.spec_file_name = find_spec_file(in_dir=self.rpmbuild_gitcopy)
+        self.spec_file_name = find_spec_file(self.rpmbuild_gitcopy)
         self.spec_file = os.path.join(
             self.rpmbuild_gitcopy, self.spec_file_name)
 
@@ -835,6 +851,158 @@ class SatelliteBuilder(UpstreamBuilder):
     pass
 
 
+class MeadBuilder(Builder):
+    def __init__(self, name=None, tag=None, build_dir=None,
+        config=None, user_config=None, args=None, **kwargs):
+
+        Builder.__init__(self, name=name, tag=tag, build_dir=build_dir,
+            config=config, user_config=user_config, args=args, **kwargs)
+
+        self.ran_maven = False
+        self.deploy_dir = mkdtemp(dir=self.rpmbuild_basedir, prefix="maven-deploy-%s" % self.project_name)
+        self.maven_clone_dir = mkdtemp(dir=self.rpmbuild_basedir, prefix="maven-clone-%s" % self.project_name)
+
+        # People calling `tito build` will almost certainly want to do a maven build locally.
+        # But with a `tito release` we want the Mead stuff to happen on the build system
+        self.local_build = args.setdefault('local', [True])
+
+        self.maven_properties = []
+        if 'maven_property' in args:
+            self.maven_properties = args['maven_property']
+        else:
+            # Generally people aren't going to want to run their tests during
+            # a build.  If they do, they can set maven_properties=''
+            self.maven_properties.append("maven.test.skip=true")
+
+        self.maven_args = ['-B']
+        if 'maven_arg' in args:
+            self.maven_args.extend(args['maven_arg'])
+
+    def _find_tarball(self):
+        for directory, unused, filenames in os.walk(self.deploy_dir):
+            for f in filenames:
+                name, ext = os.path.splitext(f)
+                if ext == ".gz" and name.startswith("%s-%s" % (self.project_name, self.spec_version)):
+                    return os.path.join(self.deploy_dir, directory, f)
+        return None
+
+    def cleanup(self):
+        """
+        Remove all temporary files and directories.
+        """
+        if not self.no_cleanup:
+            for d in [self.rpmbuild_dir, self.deploy_dir, self.maven_clone_dir]:
+                debug("Cleaning up %s" % d)
+                shutil.rmtree(d)
+        else:
+            warn_out("Leaving rpmbuild files in: %s" % self.rpmbuild_dir)
+
+    def tgz(self):
+        destination_file = os.path.join(self.rpmbuild_basedir, self.tgz_filename)
+        formatted_properties = ["-D%s" % x for x in self.maven_properties]
+
+        run_command("git clone --no-hardlinks %s %s" % (find_git_root(), self.maven_clone_dir))
+        with chdir(self.maven_clone_dir):
+            run_command("git checkout %s" % self.git_commit_id)
+
+            try:
+                info_out("Running Maven build...")
+                # We always want to deploy to a tito controlled location during local builds
+                local_properties = formatted_properties + [
+                    "-DaltDeploymentRepository=local-output::default::file://%s" % self.deploy_dir]
+                run_command("mvn %s %s deploy" % (
+                    " ".join(self.maven_args),
+                    " ".join(local_properties)))
+            except RunCommandException as e:
+                error_out("Maven build failed! %s" % e.output)
+
+        self._create_build_dirs()
+
+        full_path = self._find_tarball()
+        if full_path:
+            fh = gzip.open(full_path, 'rb')
+            fixed_tar = os.path.join(os.path.splitext(full_path)[0])
+            fixed_tar_fh = open(fixed_tar, 'wb')
+            timestamp = get_commit_timestamp(self.git_commit_id)
+            try:
+                tarfixer = TarFixer(fh, fixed_tar_fh, timestamp, self.git_commit_id, maven_built=True)
+                tarfixer.fix()
+            finally:
+                fixed_tar_fh.close()
+
+            # It's a pity we can't use Python's gzip, but it doesn't offer an equivalent of -n
+            run_command("gzip -n -c < %s > %s" % (fixed_tar, destination_file))
+        else:
+            warn_out([
+                "No Maven generated tarball found.",
+                "Please set up the assembly plugin in your pom.xml to generate a .tar.gz"])
+            full_path = os.path.join(self.rpmbuild_sourcedir, self.tgz_filename)
+            create_tgz(self.git_root, self.tgz_dir, self.git_commit_id, self.relative_project_dir, full_path)
+            print("Creating %s from git tag: %s..." % (self.tgz_filename, self.build_tag))
+            shutil.copy(full_path, destination_file)
+
+        debug("Copying git source to: %s" % self.rpmbuild_gitcopy)
+        shutil.copy(destination_file, self.rpmbuild_gitcopy)
+
+        # Extract the source so we can get at the spec file, etc.
+        with chdir(self.rpmbuild_gitcopy):
+            run_command("tar --strip-components=1 -xvf %s" % os.path.join(self.rpmbuild_gitcopy, self.tgz_filename))
+
+        if self.local_build:
+            artifacts = {}
+            all_artifacts = []
+            all_artifacts_with_path = []
+
+            for directory, unused, filenames in os.walk(self.deploy_dir):
+                for f in filenames:
+                    artifacts.setdefault(os.path.splitext(f)[1], []).append(f)
+                dir_artifacts_with_path = [os.path.join(directory, f) for f in filenames]
+
+                # Place the Maven artifacts in the SOURCES directory for rpmbuild to use
+                for artifact in dir_artifacts_with_path:
+                    shutil.copy(artifact, self.rpmbuild_sourcedir)
+
+                dir_artifacts_with_path = map(lambda x: os.path.relpath(x, self.deploy_dir), dir_artifacts_with_path)
+                all_artifacts_with_path.extend(dir_artifacts_with_path)
+                all_artifacts.extend([os.path.basename(f) for f in filenames])
+
+            cheetah_input = {
+                'name': self.project_name,
+                'version': self.spec_version,
+                'release': self.spec_release,
+                'epoch': None,  # TODO: May need to support this at some point
+                'artifacts': artifacts,
+                'all_artifacts': all_artifacts,
+                'all_artifacts_with_path': all_artifacts_with_path,
+            }
+            debug("Cheetah input: %s" % cheetah_input)
+            render_cheetah(find_cheetah_template_file(self.start_dir), self.rpmbuild_gitcopy, cheetah_input)
+            self.spec_file_name = find_spec_file(self.rpmbuild_gitcopy)
+        else:
+            self.spec_file_name = find_cheetah_template_file(self.rpmbuild_gitcopy)
+
+        # NOTE: The spec file we actually use is the one exported by git
+        # archive into the temp build directory. This is done so we can
+        # modify the version/release on the fly when building test rpms
+        # that use a git SHA1 for their version.
+        self.spec_file = os.path.join(self.rpmbuild_gitcopy, self.spec_file_name)
+
+        info_out("Wrote: %s" % destination_file)
+        self.sources.append(destination_file)
+        self.artifacts.append(destination_file)
+        self.ran_tgz = True
+
+    def _setup_test_specfile(self):
+        if self.test and not self.ran_setup_test_specfile:
+            # If making a test rpm we need to get a little crazy with the spec
+            # file we're building off. (note that this is a temp copy of the
+            # spec) Swap out the actual release for one that includes the git
+            # SHA1 we're building for our test package:
+            self.build_version += ".git." + str(self.commit_count) + "." + str(self.git_commit_id[:7])
+            replace_spec_release(self.spec_file, self.spec_release)
+            self.ran_setup_test_specfile = True
+
+
 class MockBuilder(Builder):
     """
     Uses the mock tool to create a chroot for building packages for a different
@@ -856,10 +1024,10 @@ class MockBuilder(Builder):
                 user_config=user_config,
                 args=args, **kwargs)
 
-        self.mock_tag = args['mock']
+        self.mock_tag = args['mock'][0]
         self.mock_cmd_args = ""
         if 'mock_config_dir' in args:
-            mock_config_dir = args['mock_config_dir']
+            mock_config_dir = args['mock_config_dir'][0]
             if not mock_config_dir.startswith("/"):
                 # If not an absolute path, assume below git root:
                 mock_config_dir = os.path.join(self.git_root, mock_config_dir)
@@ -876,7 +1044,7 @@ class MockBuilder(Builder):
                     (self.mock_cmd_args)
 
         if 'mock_args' in args:
-            self.mock_cmd_args = "%s %s" % (self.mock_cmd_args, args['mock_args'])
+            self.mock_cmd_args = "%s %s" % (self.mock_cmd_args, args['mock_args'][0])
 
         # TODO: error out if mock package is not installed
 
@@ -914,18 +1082,18 @@ class MockBuilder(Builder):
     def _build_in_mock(self):
         if not self.speedup:
             print("Initializing mock...")
-            output = run_command("mock %s -r %s --init" % (self.mock_cmd_args, self.mock_tag))
+            run_command("mock %s -r %s --init" % (self.mock_cmd_args, self.mock_tag))
         else:
             print("Skipping mock --init due to speedup option.")
 
         print("Installing deps in mock...")
-        output = run_command("mock %s -r %s %s" % (
+        run_command("mock %s -r %s %s" % (
             self.mock_cmd_args, self.mock_tag, self.srpm_location))
         print("Building RPMs in mock...")
-        output = run_command('mock %s -r %s --rebuild %s' %
+        run_command('mock %s -r %s --rebuild %s' %
                 (self.mock_cmd_args, self.mock_tag, self.srpm_location))
         mock_output_dir = os.path.join(self.rpmbuild_dir, "mockoutput")
-        output = run_command("mock %s -r %s --copyout /builddir/build/RPMS/ %s" %
+        run_command("mock %s -r %s --copyout /builddir/build/RPMS/ %s" %
                 (self.mock_cmd_args, self.mock_tag, mock_output_dir))
 
         # Copy everything mock wrote out to /tmp/tito:
@@ -933,7 +1101,7 @@ class MockBuilder(Builder):
         run_command("cp -v %s/*.rpm %s" %
                 (mock_output_dir, self.rpmbuild_basedir))
         print
-        print("Wrote:")
+        info_out("Wrote:")
         for rpm in files:
             rpm_path = os.path.join(self.rpmbuild_basedir, rpm)
             print("  %s" % rpm_path)
@@ -958,7 +1126,7 @@ class BrewDownloadBuilder(Builder):
                 user_config=user_config,
                 args=args, **kwargs)
 
-        self.dist_tag = args['disttag']
+        self.dist_tag = args['disttag'][0]
 
     def rpm(self):
         """
@@ -984,7 +1152,7 @@ class BrewDownloadBuilder(Builder):
         run_command("cp -v %s/*.rpm %s" %
                 (self.rpmbuild_dir, self.rpmbuild_basedir))
         print
-        print("Wrote:")
+        info_out("Wrote:")
         for rpm in files:
             # Just incase anything slips into the build dir:
             if not rpm.endswith(".rpm"):

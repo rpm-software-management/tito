@@ -12,7 +12,6 @@
 # in this software or its documentation.
 
 import re
-import os
 import os.path
 import shutil
 
@@ -43,8 +42,7 @@ class FetchBuilder(ConfigObject, BuilderBase):
                 user_config=user_config, args=args, **kwargs)
 
         if tag:
-            error_out("FetchBuilder does not support building "
-                    "specific tags.")
+            error_out("FetchBuilder does not support building specific tags.")
 
         if not config.has_option("builder",
                 "fetch_strategy"):
@@ -56,8 +54,7 @@ class FetchBuilder(ConfigObject, BuilderBase):
                     'tito.builder.fetch.ArgSourceStrategy')
 
         self.build_tag = '%s-%s' % (self.project_name,
-                get_spec_version_and_release(self.start_dir,
-                    '%s.spec' % self.project_name))
+                get_spec_version_and_release(self.start_dir, '%s.spec' % self.project_name))
 
     def tgz(self):
         self.ran_tgz = True
@@ -128,7 +125,7 @@ class ArgSourceStrategy(SourceStrategy):
         # to all sources specified:
         # TODO: support passing of multiple sources here.
         # TODO: error out if not present
-        manual_sources = [self.builder.args['source']]
+        manual_sources = [self.builder.args['source'][0]]
         debug("Got sources: %s" % manual_sources)
 
         # Copy the live spec from our starting location. Unlike most builders,

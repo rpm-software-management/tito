@@ -10,20 +10,32 @@
 # Red Hat trademarks are not licensed under GPLv2. No permission is
 # granted to use or replicate Red Hat trademarks that are incorporated
 # in this software or its documentation.
+from __future__ import print_function
+
+from contextlib import contextmanager
 """
 Common operations.
 """
+import errno
+import fileinput
+import glob
 import os
+import pickle
 import re
 import sys
 import subprocess
 import shlex
+import shutil
+import tempfile
+
+from blessings import Terminal
 
 from bugzilla.rhbugzilla import RHBugzilla
 
 from tito.compat import xmlrpclib, getstatusoutput
 from tito.exception import TitoException
 from tito.exception import RunCommandException
+from tito.tar import TarFixer
 
 DEFAULT_BUILD_DIR = "/tmp/tito"
 DEFAULT_BUILDER = "builder"
@@ -35,7 +47,8 @@ SHA_RE = re.compile(r'\b[0-9a-f]{30,}\b')
 # a little more concise for CLI users. Mock is probably the only one this
 # is relevant for at this time.
 BUILDER_SHORTCUTS = {
-    'mock': 'tito.builder.MockBuilder'
+    'mock': 'tito.builder.MockBuilder',
+    'mead': 'tito.builder.MeadBuilder',
 }
 
 
@@ -174,20 +187,52 @@ class BugzillaExtractor(object):
         return bugzilla.getbug(bug_id, include_fields=['id', 'flags'])
 
 
-def error_out(error_msgs):
+def _out(msgs, prefix, color_func, stream=sys.stdout):
+    if prefix is None:
+        fmt = "%(msg)s"
+    else:
+        fmt = "%(prefix)s: %(msg)s"
+
+    if isinstance(msgs, list):
+        first_line = msgs.pop(0)
+        print(color_func(fmt % {'prefix': prefix, 'msg': first_line}), file=stream)
+        for line in msgs:
+            print(color_func("%s" % line), file=stream)
+    else:
+        print(color_func(fmt % {'prefix': prefix, 'msg': msgs}), file=stream)
+
+
+def error_out(error_msgs, die=True):
     """
     Print the given error message (or list of messages) and exit.
     """
-    print
-    if isinstance(error_msgs, list):
-        for line in error_msgs:
-            print("ERROR: %s" % line)
-    else:
-        print("ERROR: %s" % error_msgs)
-    print
-#    if 'DEBUG' in os.environ:
-#        traceback.print_stack()
-    sys.exit(1)
+    term = Terminal()
+    _out(error_msgs, "ERROR", term.red, sys.stderr)
+    if die:
+        sys.exit(1)
+
+
+def info_out(msgs):
+    term = Terminal()
+    _out(msgs, None, term.blue)
+
+
+def warn_out(msgs):
+    """
+    Print the given error message (or list of messages) and exit.
+    """
+    term = Terminal()
+    _out(msgs, "WARNING", term.yellow)
+
+
+@contextmanager
+def chdir(path):
+    previous_dir = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(previous_dir)
 
 
 def create_builder(package_name, build_tag,
@@ -229,10 +274,8 @@ def create_builder(package_name, build_tag,
     return builder
 
 
-def find_file_with_extension(in_dir=None, suffix=None):
+def find_file_with_extension(in_dir, suffix=None):
     """ Find the file with given extension in the current directory. """
-    if in_dir is None:
-        in_dir = os.getcwd()
     file_name = None
     debug("Looking for %s in %s" % (suffix, in_dir))
     for f in os.listdir(in_dir):
@@ -241,10 +284,9 @@ def find_file_with_extension(in_dir=None, suffix=None):
                 error_out("At least two %s files in directory: %s and %s" % (suffix, file_name, f))
             file_name = f
             debug("Using file: %s" % f)
-    if file_name is None:
-        error_out("Unable to locate a %s file in %s" % (suffix, in_dir))
-    else:
-        return file_name
+    if file_name:
+        return os.path.join(in_dir, file_name)
+    return None
 
 
 def find_spec_file(in_dir=None):
@@ -253,7 +295,12 @@ def find_spec_file(in_dir=None):
 
     Returns only the file name, rather than the full path.
     """
-    return find_file_with_extension(in_dir, '.spec')
+    if in_dir is None:
+        in_dir = os.getcwd()
+    result = find_file_with_extension(in_dir, '.spec')
+    if result is None:
+        error_out("Unable to locate a %s file in %s" % ('.spec', in_dir))
+    return result
 
 
 def find_gemspec_file(in_dir=None):
@@ -262,7 +309,42 @@ def find_gemspec_file(in_dir=None):
 
     Returns only the file name, rather than the full path.
     """
-    return find_file_with_extension(in_dir, '.gemspec')
+    if in_dir is None:
+        in_dir = os.getcwd()
+    result = find_file_with_extension(in_dir, '.gemspec')
+    if result is None:
+        error_out("Unable to locate a %s file in %s" % ('.gemspec', in_dir))
+    return result
+
+
+def find_spec_like_file(in_dir=None):
+    if in_dir is None:
+        in_dir = os.getcwd()
+    extension_list = ['.spec', '.spec.tmpl']
+    for ext in extension_list:
+        result = find_file_with_extension(in_dir, ext)
+        if result:
+            return result
+    else:
+        error_out("Unable to locate files ending with %s in %s" % (list(extension_list), in_dir))
+
+
+def find_cheetah_template_file(in_dir=None):
+    if in_dir is None:
+        in_dir = os.getcwd()
+    result = find_file_with_extension(in_dir, '.spec.tmpl')
+    if result is None:
+        error_out("Unable to locate a %s file in %s" % ('.spec.tmpl', in_dir))
+    return result
+
+
+def find_mead_chain_file(in_dir=None):
+    if in_dir is None:
+        in_dir = os.getcwd()
+    result = find_file_with_extension(in_dir, '.chain')
+    if result is None:
+        error_out("Unable to locate a %s file in %s" % ('.chain', in_dir))
+    return result
 
 
 def find_git_root():
@@ -307,10 +389,12 @@ def run_command(command, print_on_success=False):
     """
     (status, output) = getstatusoutput(command)
     if status > 0:
-        sys.stderr.write("\n########## ERROR ############\n")
-        sys.stderr.write("Error running command: %s\n" % command)
-        sys.stderr.write("Status code: %s\n" % status)
-        sys.stderr.write("Command output: %s\n" % output)
+        msgs = [
+            "Error running command: %s\n" % command,
+            "Status code: %s\n" % status,
+            "Command output: %s\n" % output,
+        ]
+        error_out(msgs, die=False)
         raise RunCommandException(command, status, output)
     elif print_on_success:
         print("Command: %s\n" % command)
@@ -349,6 +433,32 @@ def run_subprocess(p):
             break
 
 
+def render_cheetah(template_file, destination_directory, cheetah_input):
+    """Cheetah doesn't exist for Python 3, but it's the templating engine
+    that Mead uses.  Instead of importing the potentially incompatible code,
+    we use a command-line utility that Cheetah provides.  Yes, this is a total
+    hack."""
+    pickle_file = tempfile.NamedTemporaryFile(dir=destination_directory, prefix="tito-cheetah-pickle", delete=False)
+    try:
+        pickle.dump(cheetah_input, pickle_file, protocol=2)
+        pickle_file.close()
+        run_command("cheetah fill --flat --pickle=%s --odir=%s --oext=cheetah %s" %
+            (pickle_file.name, destination_directory, template_file))
+
+        # Annoyingly Cheetah won't let you specify an empty string for a file extension
+        # and most Mead templates end with ".spec.tmpl"
+        rendered_files = glob.glob(os.path.join(destination_directory, "*.cheetah"))
+
+        # Cheetah returns zero even if it doesn't find the template to render.  Thanks Cheetah.
+        if not rendered_files:
+            error_out("Could not find rendered file in %s for %s" % (destination_directory, template_file))
+
+        for rendered in rendered_files:
+            shutil.move(rendered, os.path.splitext(rendered)[0])
+    finally:
+        os.unlink(pickle_file.name)
+
+
 def tag_exists_locally(tag):
     (status, output) = getstatusoutput("git tag | grep %s" % tag)
     if status > 0:
@@ -362,7 +472,7 @@ def tag_exists_remotely(tag):
     try:
         get_git_repo_url()
     except:
-        sys.stderr.write('Warning: remote.origin do not exist. Assuming --offline, for remote tag checking.\n')
+        warn_out('remote.origin does not exist. Assuming --offline, for remote tag checking.\n')
         return False
     sha1 = get_remote_tag_sha1(tag)
     debug("sha1 = %s" % sha1)
@@ -436,9 +546,9 @@ def check_tag_exists(tag, offline=False):
     debug("Local tag SHA1: %s" % tag_sha1)
 
     try:
-        repo_url = get_git_repo_url()
+        get_git_repo_url()
     except:
-        sys.stderr.write('Warning: remote.origin do not exist. Assuming --offline, for remote tag checking.\n')
+        warn_out('remote.origin does not exist. Assuming --offline, for remote tag checking.\n')
         return
     upstream_tag_sha1 = get_remote_tag_sha1(tag)
     if upstream_tag_sha1 == "":
@@ -464,10 +574,115 @@ def debug(text, cmd=None):
 
 
 def get_spec_version_and_release(sourcedir, spec_file_name):
+    if os.path.splitext(spec_file_name)[1] == ".tmpl":
+        return scrape_version_and_release(spec_file_name)
+
     command = ("""rpm -q --qf '%%{version}-%%{release}\n' --define """
         """"_sourcedir %s" --define 'dist %%undefined' --specfile """
         """%s 2> /dev/null | grep -e '^$' -v | head -1""" % (sourcedir, spec_file_name))
     return run_command(command)
+
+
+def search_for(file_name, *args):
+    """Send in a file and regular expressions as arguments.  Returns the value of the
+    matching groups (or the entire matching string if no groups are in the regex) for
+    each regular expression in the same order that the expressions were provided in.
+    ONLY THE FIRST MATCH IS RETURNED!
+
+    Note that this method uses re.search and not re.match so your regexs don't need
+    to match the entire line.
+    """
+    results = [None] * len(args)
+    with open(file_name, 'r') as fh:
+        for line in fh:
+            for index, regex in enumerate(args):
+                m = re.search(regex, line)
+                if not m:
+                    continue
+
+                if results[index]:
+                    warn_out("Multiple matches found for %s in %s" % (regex, file_name))
+                elif m.groups():
+                    results[index] = m.groups()
+                else:
+                    results[index] = (m.string,)
+
+        # Get the index of every regex that didn't match
+        missing_results = [i for i, x in enumerate(results) if x is None]
+
+        if len(missing_results) > 0:
+            error_out("Could not find match to %s in %s" % (map(lambda x: args[x], missing_results), file_name))
+
+        return results
+
+
+def replace_spec_release(file_name, release):
+    for line in fileinput.input(file_name, inplace=True):
+        m = re.match(r"(\s*Release:\s*)(.*?)\s*$", line)
+        # The fileinput module redirects stdout to the file handle
+        # for the file being output.
+        #  See https://docs.python.org/2/library/fileinput.html#fileinput.FileInput
+        if m:
+            print("%s%s" % (m.group(1), release))
+        else:
+            print(line.rstrip('\n'))
+
+
+def munge_specfile(spec_file, commit_id, commit_count, fullname=None, tgz_filename=None):
+    # If making a test rpm we need to get a little crazy with the spec
+    # file we're building off. (Note we are modifying a temp copy of the
+    # spec) Swap out the actual release for one that includes the git
+    # SHA1 we're building for our test package.
+    sha = commit_id[:7]
+
+    for line in fileinput.input(spec_file, inplace=True):
+        m = re.match(r'^(\s*Release:\s*)(.+?)(%{\?dist})?\s*$', line)
+        if m:
+            print('%s%s.git.%s.%s%s' % (
+                m.group(1),
+                m.group(2),
+                commit_count,
+                sha,
+                m.group(3),
+            ))
+            continue
+
+        m = re.match(r'^(\s*Source0?):\s*(.+?)$', line)
+        if tgz_filename and m:
+            print('%s: %s' % (m.group(1), tgz_filename))
+            continue
+
+        m = re.match(r'^(\s*%setup)(.*?)$', line)
+        if fullname and m:
+            macro = m.group(1)
+            setup_arg = " -n %s" % fullname
+
+            args = m.group(2)
+            args_match = re.search(r'(.+?)\s+-n\s+\S+(.*)', args)
+            if args_match:
+                macro += args_match.group(1)
+                macro += args_match.group(2)
+                macro += setup_arg
+            else:
+                macro += args
+                macro += setup_arg
+
+            print(macro)
+            continue
+
+        print(line.rstrip('\n'))
+
+
+def scrape_version_and_release(template_file_name):
+    """Ideally, we'd let RPM report the version and release of a spec file as
+    in get_spec_version_and_release.  However, when we are dealing with Cheetah
+    templates for Mead, RPM won't be able to parse the template file.  We have to
+    fall back to using regular expressions."""
+    version, release = search_for(template_file_name, r"\s*Version:\s*(.*?)\s*$", r"\s*Release:\s*(.*?)\s*$")
+    version = version[0]
+    release = release[0]
+    release = release.replace("%{?dist}", "")
+    return "%s-%s" % (version, release)
 
 
 def scl_to_rpm_option(scl, silent=None):
@@ -477,13 +692,17 @@ def scl_to_rpm_option(scl, silent=None):
     output = run_command(cmd).rstrip()
     if scl:
         if (output != scl) and (output != "%scl") and not silent:
-            print("Warning: Meta package of software collection %s installed, but --scl defines %s" % (output, scl))
-            print("         Redefining scl macro to %s for this package." % scl)
+            warn_out([
+                "Meta package of software collection %s installed, but --scl defines %s" % (output, scl),
+                "Redefining scl macro to %s for this package." % scl
+            ])
         rpm_options += " --define 'scl %s'" % scl
     else:
         if (output != "%scl") and (not silent):
-            print("Warning: Meta package of software collection %s installed, but --scl is not present." % output)
-            print("         Undefining scl macro for this package.")
+            warn_out([
+                "Warning: Meta package of software collection %s installed, but --scl is not present." % output,
+                "Undefining scl macro for this package.",
+            ])
         # can be replaced by "--undefined scl" when el6 and fc17 is retired
         rpm_options += " --eval '%undefine scl'"
     return rpm_options
@@ -501,18 +720,22 @@ def get_project_name(tag=None, scl=None):
             error_out("Unable to determine project name in tag: %s" % tag)
         return m.group(1)
     else:
-        spec_file_path = os.path.join(os.getcwd(), find_spec_file())
-        if not os.path.exists(spec_file_path):
-            error_out("spec file: %s does not exist" % spec_file_path)
+        file_path = find_spec_like_file()
+        if not os.path.exists(file_path):
+            error_out("spec file: %s does not exist" % file_path)
 
-        output = run_command(
-            "rpm -q --qf '%%{name}\n' %s --specfile %s 2> /dev/null | grep -e '^$' -v | head -1" %
-            (scl_to_rpm_option(scl, silent=True), spec_file_path))
-        if not output:
-            error_out(["Unable to determine project name from spec file: %s" % spec_file_path,
-                "Try rpm -q --specfile %s" % spec_file_path,
-                "Try rpmlint -i %s" % spec_file_path])
-        return output
+        if os.path.splitext(file_path)[1] == ".tmpl":
+            name = search_for(file_path, r"\s*Name:\s*(.*?)\s*$")[0][0]
+            return name
+        else:
+            output = run_command(
+                "rpm -q --qf '%%{name}\n' %s --specfile %s 2> /dev/null | grep -e '^$' -v | head -1" %
+                (scl_to_rpm_option(scl, silent=True), file_path))
+            if not output:
+                error_out(["Unable to determine project name from spec file: %s" % file_path,
+                    "Try rpm -q --specfile %s" % file_path,
+                    "Try rpmlint -i %s" % file_path])
+            return output
 
 
 def replace_version(line, new_version):
@@ -645,16 +868,18 @@ def create_tgz(git_root, prefix, commit, relative_dir,
     os.chdir(os.path.abspath(git_root))
     timestamp = get_commit_timestamp(commit)
 
-    timestamp_script = get_script_path("tar-fixup-stamp-comment.pl")
-
     # Accomodate standalone projects with specfile i root of git repo:
     relative_git_dir = "%s" % relative_dir
     if relative_git_dir in ['/', './']:
         relative_git_dir = ""
 
+    basename = os.path.splitext(dest_tgz)[0]
+    initial_tar = "%s.initial" % basename
+
     # command to generate a git-archive
-    git_archive_cmd = 'git archive --format=tar --prefix=%s/ %s:%s' % (
-        prefix, commit, relative_git_dir)
+    git_archive_cmd = 'git archive --format=tar --prefix=%s/ %s:%s --output=%s' % (
+        prefix, commit, relative_git_dir, initial_tar)
+    run_command(git_archive_cmd)
 
     # Run git-archive separately if --debug was specified.
     # This allows us to detect failure early.
@@ -662,12 +887,16 @@ def create_tgz(git_root, prefix, commit, relative_dir,
     debug('git-archive fails if relative dir is not in git tree',
         '%s > /dev/null' % git_archive_cmd)
 
-    # If we're still alive, the previous command worked
-    archive_cmd = ('%s | %s %s %s | gzip -n -c - > %s' % (
-        git_archive_cmd, timestamp_script,
-        timestamp, commit, dest_tgz))
-    debug(archive_cmd)
-    return run_command(archive_cmd)
+    fixed_tar = "%s.tar" % basename
+    fixed_tar_fh = open(fixed_tar, 'wb')
+    try:
+        tarfixer = TarFixer(open(initial_tar, 'rb'), fixed_tar_fh, timestamp, commit)
+        tarfixer.fix()
+    finally:
+        fixed_tar_fh.close()
+
+    # It's a pity we can't use Python's gzip, but it doesn't offer an equivalent of -n
+    return run_command("gzip -n -c < %s > %s" % (fixed_tar, dest_tgz))
 
 
 def get_git_repo_url():
@@ -708,7 +937,7 @@ def normalize_class_name(name):
     """
     look_for = "spacewalk.releng."
     if name.startswith(look_for):
-        sys.stderr.write("Warning: spacewalk.releng.* namespace in tito.props is obsolete. Use tito.* instead.\n")
+        warn_out("spacewalk.releng.* namespace in tito.props is obsolete. Use tito.* instead.\n")
         name = "%s%s" % ("tito.", name[len(look_for):])
     return name
 
@@ -725,6 +954,18 @@ def get_script_path(scriptname):
         bin_dir = os.environ['TITO_SRC_BIN_DIR']
         scriptpath = os.path.join(bin_dir, scriptname)
     return scriptpath
+
+
+# 511 is 777 in octal.  Python 2 and Python 3 disagree about the right
+# way to represent octal numbers.
+def mkdir_p(path, mode=511):
+    try:
+        os.makedirs(path, mode)
+    except OSError as e:
+        if e.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
 
 
 def get_class_by_name(name):

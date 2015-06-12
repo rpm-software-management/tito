@@ -1,3 +1,5 @@
+# flake8: noqa
+
 from tito.tagger.main import \
     VersionTagger, \
     ReleaseTagger, \

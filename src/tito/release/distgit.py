@@ -11,18 +11,22 @@
 # granted to use or replicate Red Hat trademarks that are incorporated
 # in this software or its documentation.
 
-import os
 import os.path
 import subprocess
 import sys
 import tempfile
 
 from tito.common import run_command, BugzillaExtractor, debug, extract_sources, \
-    MissingBugzillaCredsException, error_out
+    MissingBugzillaCredsException, error_out, chdir, warn_out, info_out, find_mead_chain_file
 from tito.compat import getoutput, getstatusoutput, write
 from tito.release import Releaser
 from tito.release.main import PROTECTED_BUILD_SYS_FILES
 from tito.buildparser import BuildTargetParser
+from tito.exception import RunCommandException
+import getpass
+from string import Template
+
+MEAD_SCM_USERNAME = 'MEAD_SCM_USERNAME'
 
 
 class FedoraGitReleaser(Releaser):
@@ -59,6 +63,7 @@ class FedoraGitReleaser(Releaser):
         self.copy_extensions = (".spec", ".patch")
 
     def release(self, dry_run=False, no_build=False, scratch=False):
+        self.scratch = scratch
         self.dry_run = dry_run
         self.no_build = no_build
         self._git_release()
@@ -69,22 +74,23 @@ class FedoraGitReleaser(Releaser):
         return None
 
     def _git_release(self):
-
         getoutput("mkdir -p %s" % self.working_dir)
-        os.chdir(self.working_dir)
-        run_command("%s clone %s" % (self.cli_tool, self.project_name))
+        with chdir(self.working_dir):
+            run_command("%s clone %s" % (self.cli_tool, self.project_name))
 
-        project_checkout = os.path.join(self.working_dir, self.project_name)
-        os.chdir(project_checkout)
-        run_command("%s switch-branch %s" % (self.cli_tool, self.git_branches[0]))
+        with chdir(self.package_workdir):
+            run_command("%s switch-branch %s" % (self.cli_tool, self.git_branches[0]))
 
-        self.builder.tgz()
+        # Mead builds need to be in the git_root.  Other builders are agnostic.
+        with chdir(self.git_root):
+            self.builder.tgz()
+
         if self.test:
             self.builder._setup_test_specfile()
 
-        self._git_sync_files(project_checkout)
-        self._git_upload_sources(project_checkout)
-        self._git_user_confirm_commit(project_checkout)
+        self._git_sync_files(self.package_workdir)
+        self._git_upload_sources(self.package_workdir)
+        self._git_user_confirm_commit(self.package_workdir)
 
     def _get_bz_flags(self):
         required_bz_flags = None
@@ -137,10 +143,10 @@ class FedoraGitReleaser(Releaser):
         print("")
 
         os.lseek(fd, 0, 0)
-        file = os.fdopen(fd)
-        for line in file.readlines():
+        f = os.fdopen(fd)
+        for line in f.readlines():
             print(line)
-        file.close()
+        f.close()
 
         print("")
         print("###############################")
@@ -168,10 +174,10 @@ class FedoraGitReleaser(Releaser):
         os.chdir(project_checkout)
 
         # Newer versions of git don't seem to want --cached here? Try both:
-        (status, diff_output) = getstatusoutput("git diff --cached")
+        (unused, diff_output) = getstatusoutput("git diff --cached")
         if diff_output.strip() == "":
             debug("git diff --cached returned nothing, falling back to git diff.")
-            (status, diff_output) = getstatusoutput("git diff")
+            (unused, diff_output) = getstatusoutput("git diff")
 
         if diff_output.strip() == "":
             print("No changes in main branch, skipping commit for: %s" % main_branch)
@@ -195,7 +201,7 @@ class FedoraGitReleaser(Releaser):
             else:
                 print("Proceeding with commit.")
                 os.chdir(self.package_workdir)
-                output = run_command(cmd)
+                run_command(cmd)
 
             os.unlink(commit_msg_file)
 
@@ -205,13 +211,16 @@ class FedoraGitReleaser(Releaser):
         else:
             # Push
             print(cmd)
-            run_command(cmd)
+            try:
+                run_command(cmd)
+            except RunCommandException as e:
+                error_out("`%s` failed with: %s" % (cmd, e.output))
 
         if not self.no_build:
             self._build(main_branch)
 
         for branch in self.git_branches[1:]:
-            print("Merging branch: '%s' -> '%s'" % (main_branch, branch))
+            info_out("Merging branch: '%s' -> '%s'" % (main_branch, branch))
             run_command("%s switch-branch %s" % (self.cli_tool, branch))
             self._merge(main_branch)
 
@@ -220,7 +229,10 @@ class FedoraGitReleaser(Releaser):
                 self.print_dry_run_warning(cmd)
             else:
                 print(cmd)
-                run_command(cmd)
+                try:
+                    run_command(cmd)
+                except RunCommandException as e:
+                    error_out("`%s` failed with: %s" % (cmd, e.output))
 
             if not self.no_build:
                 self._build(branch)
@@ -232,7 +244,7 @@ class FedoraGitReleaser(Releaser):
             run_command("git merge %s" % main_branch)
         except:
             print
-            print("WARNING!!! Conflicts occurred during merge.")
+            warn_out("Conflicts occurred during merge.")
             print
             print("You are being dropped to a shell in the working directory.")
             print
@@ -249,26 +261,30 @@ class FedoraGitReleaser(Releaser):
     def _build(self, branch):
         """ Submit a Fedora build from current directory. """
         target_param = ""
+        scratch_param = ""
         build_target = self._get_build_target_for_branch(branch)
         if build_target:
             target_param = "--target %s" % build_target
+        if self.scratch:
+            scratch_param = "--scratch"
 
-        build_cmd = "%s build --nowait %s" % (self.cli_tool, target_param)
+        build_cmd = "%s build --nowait %s %s" % (self.cli_tool, scratch_param, target_param)
 
         if self.dry_run:
             self.print_dry_run_warning(build_cmd)
             return
 
-        print("Submitting build: %s" % build_cmd)
+        info_out("Submitting build: %s" % build_cmd)
         (status, output) = getstatusoutput(build_cmd)
         if status > 0:
             if "already been built" in output:
-                print("Build has been submitted previously, continuing...")
+                warn_out("Build has been submitted previously, continuing...")
             else:
-                sys.stderr.write("ERROR: Unable to submit build.\n")
-                sys.stderr.write("  Status code: %s\n" % status)
-                sys.stderr.write("  Output: %s\n" % output)
-                sys.exit(1)
+                error_out([
+                    "Unable to submit build."
+                    "  Status code: %s\n" % status,
+                    "  Output: %s\n" % output,
+                ])
 
         # Print the task ID and URL:
         for line in extract_task_info(output):
@@ -385,6 +401,143 @@ class FedoraGitReleaser(Releaser):
 
 class DistGitReleaser(FedoraGitReleaser):
     cli_tool = "rhpkg"
+
+
+class DistGitMeadReleaser(DistGitReleaser):
+    REQUIRED_CONFIG = ['mead_scm', 'branches']
+
+    def __init__(self, name=None, tag=None, build_dir=None,
+        config=None, user_config=None,
+        target=None, releaser_config=None, no_cleanup=False,
+        test=False, auto_accept=False,
+        prefix="temp_dir=", **kwargs):
+
+        if 'builder_args' in kwargs:
+            kwargs['builder_args']['local'] = False
+
+        DistGitReleaser.__init__(self, name, tag, build_dir, config,
+                user_config, target, releaser_config, no_cleanup, test,
+                auto_accept, **kwargs)
+
+        self.mead_scm = self.releaser_config.get(self.target, "mead_scm")
+
+        if self.releaser_config.has_option(self.target, "mead_push_url"):
+            self.push_url = self.releaser_config.get(self.target, "mead_push_url")
+        else:
+            self.push_url = self.mead_scm
+
+        # rhpkg maven-build takes an optional override --target:
+        self.brew_target = None
+        if self.releaser_config.has_option(self.target, "target"):
+            self.brew_target = self.releaser_config.get(self.target, "target")
+
+        # If the push URL contains MEAD_SCM_URL, we require the user to set this
+        # in ~/.titorc before they can run this releaser. This allows us to
+        # use push URLs that require username auth, but still check a generic
+        # URL into source control:
+        if MEAD_SCM_USERNAME in self.push_url:
+            debug("Push URL contains %s, checking for value in ~/.titorc" %
+                MEAD_SCM_USERNAME)
+            if MEAD_SCM_USERNAME in user_config:
+                user = user_config[MEAD_SCM_USERNAME]
+            else:
+                user = getpass.getuser()
+                warn_out("You should specify MEAD_SCM_USERNAME in '~/.titorc'.  Using %s for now" % user)
+
+            self.push_url = self.push_url.replace(MEAD_SCM_USERNAME, user)
+
+    def _sync_mead_scm(self):
+        cmd = "git push %s %s" % (self.push_url, self.builder.build_tag)
+
+        if self.dry_run:
+            self.print_dry_run_warning(cmd)
+            return
+
+        with chdir(self.git_root):
+            info_out("Syncing local repo with %s" % self.push_url)
+            try:
+                run_command(cmd)
+            except RunCommandException as e:
+                if "rejected" in e.output:
+                    if self._ask_yes_no("The remote rejected a push.  Force push? [y/n] ", False):
+                        run_command("git push --force %s %s" % (self.mead_scm, self.builder.build_tag))
+                    else:
+                        error_out("Could not sync with %s" % self.mead_scm)
+                raise
+
+    def _git_release(self):
+        self._sync_mead_scm()
+        DistGitReleaser._git_release(self)
+
+    def _git_upload_sources(self, project_checkout):
+        chain_file = find_mead_chain_file(self.builder.rpmbuild_gitcopy)
+        with open(chain_file, 'r') as f:
+            template = Template(f.read())
+
+            ref = self.builder.build_tag
+            if self.test:
+                ref = self.builder.git_commit_id
+
+            values = {
+                'mead_scm': self.mead_scm,
+                'git_ref': ref,
+                # Each property on its own line with a few leading spaces to indicate
+                # that it's a continuation
+                'maven_properties': "\n  ".join(self.builder.maven_properties),
+                'maven_options': " ".join(self.builder.maven_args),
+            }
+            rendered_chain = template.safe_substitute(values)
+
+        with chdir(project_checkout):
+            with open("mead.chain", "w") as f:
+                f.write(rendered_chain)
+
+            cmd = "git add mead.chain"
+            if self.dry_run:
+                self.print_dry_run_warning(cmd)
+                info_out("Chain file contents:\n%s" % rendered_chain)
+            else:
+                run_command(cmd)
+
+    def _build(self, branch):
+        """ Submit a Mead build from current directory. """
+        target_param = ""
+        build_target = self._get_build_target_for_branch(branch)
+        if build_target:
+            target_param = "--target=%s" % build_target
+
+        build_cmd = [self.cli_tool, "maven-chain", "--nowait"]
+
+        if self.brew_target:
+            build_cmd.append("--target=%s" % self.brew_target)
+
+        build_cmd.append("--ini=%s" % (os.path.join(self.package_workdir, "mead.chain")))
+        build_cmd.append(target_param)
+
+        if self.scratch:
+            build_cmd.append("--scratch")
+
+        build_cmd = " ".join(build_cmd)
+
+        if self.dry_run:
+            self.print_dry_run_warning(build_cmd)
+            return
+
+        info_out("Submitting build: %s" % build_cmd)
+        (status, output) = getstatusoutput(build_cmd)
+        if status > 0:
+            if "already been built" in output:
+                warn_out("Build has been submitted previously, continuing...")
+            else:
+                error_out([
+                    "Unable to submit build.",
+                    "  Status code: %s\n" % status,
+                    "  Output: %s\n" % output,
+                ])
+
+        # Print the task ID and URL:
+        for line in extract_task_info(output):
+            print(line)
 
 
 def extract_task_info(output):

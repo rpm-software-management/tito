@@ -23,15 +23,13 @@ from tempfile import mkdtemp
 import shutil
 
 from tito.common import create_builder, debug, \
-    run_command, get_project_name
+    run_command, get_project_name, warn_out
 from tito.compat import PY2, dictionary_override
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
 
-DEFAULT_KOJI_OPTS = "build --nowait"
-
 # List of files to protect when syncing:
-PROTECTED_BUILD_SYS_FILES = ('branch', 'Makefile', 'sources', ".git", ".gitignore", ".osc")
+PROTECTED_BUILD_SYS_FILES = ('branch', 'Makefile', 'sources', ".git", ".gitignore", ".osc", "tito-mead-url")
 
 RSYNC_USERNAME = 'RSYNC_USERNAME'  # environment variable name
 
@@ -54,7 +52,7 @@ class Releaser(ConfigObject):
         ConfigObject.__init__(self, config=config)
         config_builder_args = self._parse_builder_args(releaser_config, target)
         if test:
-            config_builder_args['test'] = True  # builder must know to build from HEAD
+            config_builder_args['test'] = [True]  # builder must know to build from HEAD
 
         # Override with builder args from command line if any were given:
         if 'builder_args' in kwargs:
@@ -150,7 +148,8 @@ class Releaser(ConfigObject):
         args = {}
         for opt in releaser_config.options(target):
             if opt.startswith("builder."):
-                args[opt[len("builder."):]] = releaser_config.get(target, opt)
+                prefix, delimiter, opt_name = opt.partition('.')
+                args.setdefault(opt_name, []).append(releaser_config.get(target, opt))
         debug("Parsed custom builder args: %s" % args)
         return args
 
@@ -165,11 +164,11 @@ class Releaser(ConfigObject):
             if self.builder:
                 self.builder.cleanup()
         else:
-            print("WARNING: leaving %s (--no-cleanup)" % self.working_dir)
+            warn_out("leaving %s (--no-cleanup)" % self.working_dir)
 
     def print_dry_run_warning(self, command_that_would_be_run_otherwise):
         print
-        print("WARNING: Skipping command due to --dry-run: %s" %
+        warn_out("Skipping command due to --dry-run: %s" %
                 command_that_would_be_run_otherwise)
         print
 
@@ -248,8 +247,7 @@ class RsyncReleaser(Releaser):
         self.prefix = prefix
 
         if self.releaser_config.has_option(self.target, "scl"):
-            sys.stderr.write("WARNING: please rename 'scl' to "
-                "'builder.scl' in releasers.conf\n")
+            warn_out("please rename 'scl' to 'builder.scl' in releasers.conf")
             self.builder.scl = self.releaser_config.get(self.target, "scl")
 
     def release(self, dry_run=False, no_build=False, scratch=False):
@@ -307,7 +305,7 @@ class RsyncReleaser(Releaser):
             os.chdir("/")
             shutil.rmtree(temp_dir)
         else:
-            print("WARNING: leaving %s (--no-cleanup)" % temp_dir)
+            warn_out("leaving %s (--no-cleanup)" % temp_dir)
 
     def _copy_files_to_temp_dir(self, temp_dir):
         os.chdir(temp_dir)
@@ -432,6 +430,7 @@ class KojiReleaser(Releaser):
 
     REQUIRED_CONFIG = ['autobuild_tags']
     NAME = "Koji"
+    DEFAULT_KOJI_OPTS = "build --nowait"
 
     def __init__(self, name=None, tag=None, build_dir=None,
             config=None, user_config=None,
@@ -440,6 +439,18 @@ class KojiReleaser(Releaser):
         Releaser.__init__(self, name, tag, build_dir, config,
                 user_config, target, releaser_config, no_cleanup, test, auto_accept,
                 **kwargs)
+
+        if self.releaser_config.has_option(self.target, "koji_profile"):
+            self.profile = self.releaser_config.get(self.target, "koji_profile")
+        else:
+            self.profile = None
+
+        if self.releaser_config.has_option(self.target, "koji_config_file"):
+            self.conf_file = self.releaser_config.get(self.target, "koji_config_file")
+        else:
+            self.conf_file = None
+
+        self.executable = "koji"
 
         self.only_tags = []
         if 'ONLY_TAGS' in os.environ:
@@ -467,12 +478,18 @@ class KojiReleaser(Releaser):
         print("Building release in %s..." % self.NAME)
         debug("%s tags: %s" % (self.NAME, koji_tags))
 
-        koji_opts = DEFAULT_KOJI_OPTS
+        koji_opts = self.DEFAULT_KOJI_OPTS
         if 'KOJI_OPTIONS' in self.builder.user_config:
             koji_opts = self.builder.user_config['KOJI_OPTIONS']
 
         if self.scratch or ('SCRATCH' in os.environ and os.environ['SCRATCH'] == '1'):
             koji_opts = ' '.join([koji_opts, '--scratch'])
+
+        if self.profile:
+            koji_opts = ' '.join(['--profile', self.profile, koji_opts])
+
+        if self.conf_file:
+            koji_opts = ' '.join(['--config', self.conf_file, koji_opts])
 
         # TODO: need to re-do this metaphor to use release targets instead:
         for koji_tag in koji_tags:
@@ -490,14 +507,16 @@ class KojiReleaser(Releaser):
                 # whitelist implies only those packages can be built to the
                 # tag,regardless if blacklist is also defined.
                 if not self.__is_whitelisted(koji_tag, scl):
-                    print("WARNING: %s not specified in whitelist for %s" % (
-                        self.project_name, koji_tag))
-                    print("   Package *NOT* submitted to %s." % self.NAME)
+                    warn_out([
+                        "%s not specified in whitelist for %s" % (self.project_name, koji_tag),
+                        "   Package *NOT* submitted to %s." % self.NAME,
+                    ])
                     continue
             elif self.__is_blacklisted(koji_tag, scl):
-                print("WARNING: %s specified in blacklist for %s" % (
-                    self.project_name, koji_tag))
-                print("   Package *NOT* submitted to %s." % self.NAME)
+                warn_out([
+                    "%s specified in blacklist for %s" % (self.project_name, koji_tag),
+                    "   Package *NOT* submitted to %s." % self.NAME,
+                ])
                 continue
 
             # Getting tricky here, normally Builder's are only used to
@@ -510,7 +529,7 @@ class KojiReleaser(Releaser):
                     builder.scl = scl
                 builder.srpm(dist=disttag)
 
-            self._submit_build("koji", koji_opts, koji_tag, builder.srpm_location)
+            self._submit_build(self.executable, koji_opts, koji_tag, builder.srpm_location)
 
     def __is_whitelisted(self, koji_tag, scl):
         """ Return true if package is whitelisted in tito.props"""

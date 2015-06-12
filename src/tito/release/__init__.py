@@ -1,3 +1,5 @@
+# flake8: noqa
+
 from tito.release.main import \
     Releaser, \
     RsyncReleaser, \
@@ -5,6 +7,6 @@ from tito.release.main import \
     KojiReleaser, \
     KojiGitReleaser
 
-from tito.release.distgit import FedoraGitReleaser, DistGitReleaser
+from tito.release.distgit import FedoraGitReleaser, DistGitReleaser, DistGitMeadReleaser
 from tito.release.obs import ObsReleaser
 from tito.release.copr import CoprReleaser
