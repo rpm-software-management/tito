@@ -17,7 +17,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{pythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.5.6
+Version: 0.6.0
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -126,6 +126,24 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Fri Jun 12 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.6.0-1
+- Add support for Red Hat Java MEAD builds. (awood@redhat.com)
+- Enable mkdocs and add documentation on Mead. (awood@redhat.com)
+- Add RHPKG/FEDPKG_USER to be passed to rh/fedpkg (elobatocs@gmail.com)
+- Replace old Perl script for munging RPM release number. (awood@redhat.com)
+- Give Tito some color! (awood@redhat.com)
+- Remove support for very old spacewalk user config file. (dgoodwin@redhat.com)
+- Allow builder arguments to be given multiple times. (awood@redhat.com)
+- Fix tarball timestamps from git archive with Python. (awood@redhat.com)
+- New - bash-completion facilities (john_florian@dart.biz)
+- clarify --offline option #141 (miroslav@suchy.cz)
+- substitute /releng for /.tito #161 (miroslav@suchy.cz)
+- Allow override of rpmbuild_options from builder arguments (dcleal@redhat.com)
+- Fixes macro initialisation on EL6, F22+ (dcleal@redhat.com)
+- Help new packagers find tools related to tito (craig@2ndquadrant.com)
+- no need to gzip man pages, rpmbuild do that automatically (miroslav@suchy.cz)
+- use python3 on Fedora 22 (miroslav@suchy.cz)
+
 * Tue Dec 23 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.5.6-1
 - Require new srpm_disttag for rsync/yum releasers. (dgoodwin@rm-rf.ca)
 - Drop more test only requirements from spec. (dgoodwin@redhat.com)
