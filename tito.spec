@@ -111,7 +111,7 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %files
-%doc README.mkd AUTHORS COPYING
+%doc AUTHORS COPYING
 %doc doc/*
 %doc %{_mandir}/man5/titorc.5*
 %doc %{_mandir}/man5/tito.props.5*
