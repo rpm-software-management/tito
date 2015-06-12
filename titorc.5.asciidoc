@@ -45,6 +45,12 @@ changelog entries. I.e. instead of
 You will get:
  * Tue Feb 11 2011 Miroslav Suchy 0.3.0-2
 
+RHPKG_USER::
+FEDPKG_USER::
+By default this is the UNIX user running the command. Overriding it will run
+all rhpkg/fedpkg commands with --user $RHPKG_USER/FEDPKG_USER
+
+
 EXAMPLE
 -------
 KOJI_OPTIONS=-c ~/.koji/spacewalkproject.org-config build --nowait
