@@ -33,7 +33,6 @@ from tito.cli import read_user_config
 class FedoraGitReleaser(Releaser):
 
     REQUIRED_CONFIG = ['branches']
-    cli_tool = "fedpkg"
 
     def __init__(self, name=None, tag=None, build_dir=None,
             config=None, user_config=None,
@@ -44,9 +43,9 @@ class FedoraGitReleaser(Releaser):
                 auto_accept, **kwargs)
 
         if 'FEDPKG_USER' in user_config:
-             cli_tool = "fedpkg --user=%s" % user_config["FEDPKG_USER"]
+            self.cli_tool = "fedpkg --user=%s" % user_config["FEDPKG_USER"]
         else:
-             cli_tool = "fedpkg"
+            self.cli_tool = "fedpkg"
 
         self.git_branches = \
             self.releaser_config.get(self.target, "branches").split(" ")
@@ -406,11 +405,19 @@ class FedoraGitReleaser(Releaser):
 
 
 class DistGitReleaser(FedoraGitReleaser):
-    user_config = read_user_config()
-    if "RHPKG_USER" in user_config:
-         cli_tool = "rhpkg --user=%s" % user_config["RHPKG_USER"]
-    else:
-         cli_tool = "rhpkg"
+    def __init__(self, name=None, tag=None, build_dir=None,
+            config=None, user_config=None,
+            target=None, releaser_config=None, no_cleanup=False,
+            test=False, auto_accept=False, **kwargs):
+        FedoraGitReleaser.__init__(self, name, tag, build_dir, config,
+                user_config, target, releaser_config, no_cleanup, test,
+                auto_accept, **kwargs)
+        # Override the cli_tool config from Fedora:
+        if "RHPKG_USER" in user_config:
+            self.cli_tool = "rhpkg --user=%s" % user_config["RHPKG_USER"]
+        else:
+            self.cli_tool = "rhpkg"
+
 
 class DistGitMeadReleaser(DistGitReleaser):
     REQUIRED_CONFIG = ['mead_scm', 'branches']
