@@ -1,0 +1,10 @@
+site_name: Tito
+repo_url: https://github.com/dgoodwin/tito
+docs_dir: doc
+markdown_extensions:
+  - codehilite
+  - extra
+pages:
+  - 'Introduction': 'index.md'
+  - 'Builders': 'builders.md'
+  - 'Mead': 'mead.md'
