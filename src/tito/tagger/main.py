@@ -189,8 +189,15 @@ class VersionTagger(ConfigObject):
         Run git-log and will generate changelog, which still can be edited by user
         in _make_changelog.
         """
-        patch_command = "git log --pretty='format:%s'" \
-                         " --relative %s..%s -- %s" % (self._changelog_format(), last_tag, "HEAD", ".")
+        patch_command = "git log"
+        if self.config.has_option(BUILDCONFIG_SECTION, "keep_merge_commits"):
+            keep = self.config.get(BUILDCONFIG_SECTION, "keep_merge_commits")
+            if not keep or keep.strip().lower() not in ['1', 'true']:
+                patch_command += " --no-merges"
+        else:
+            patch_command += " --no-merges"
+        patch_command += " --pretty='format:%s' --relative %s..%s -- %s" % (
+            self._changelog_format(), last_tag, "HEAD", ".")
         output = run_command(patch_command)
         result = []
         for line in output.split('\n'):
