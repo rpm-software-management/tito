@@ -27,7 +27,6 @@ import getpass
 from string import Template
 
 MEAD_SCM_USERNAME = 'MEAD_SCM_USERNAME'
-from tito.cli import read_user_config
 
 
 class FedoraGitReleaser(Releaser):

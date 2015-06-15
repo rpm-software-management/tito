@@ -50,6 +50,14 @@ FEDPKG_USER::
 By default this is the UNIX user running the command. Overriding it will run
 all rhpkg/fedpkg commands with --user $RHPKG_USER/FEDPKG_USER
 
+COLOR::
+Set to '0' or 'False' to disable colored output.
+
+MEAD_SCM_USERNAME::
+The username to use when pushing the repository MEAD is going to build
+from.  If this value is unset, the MEAD releaser will default to using
+the name of the current user.
+
 
 EXAMPLE
 -------

@@ -52,6 +52,25 @@ BUILDER_SHORTCUTS = {
 }
 
 
+def read_user_config():
+    config = {}
+    file_loc = os.path.expanduser("~/.titorc")
+    try:
+        f = open(file_loc)
+    except:
+        # File doesn't exist but that's ok because it's optional.
+        return config
+
+    for line in f.readlines():
+        if line.strip() == "":
+            continue
+        tokens = line.split("=")
+        if len(tokens) != 2:
+            raise Exception("Error parsing ~/.titorc: %s" % line)
+        config[tokens[0]] = tokens[1].strip()
+    return config
+
+
 def extract_sources(spec_file_lines):
     """
     Returns a list of sources from the given spec file.
@@ -192,6 +211,10 @@ def _out(msgs, prefix, color_func, stream=sys.stdout):
         fmt = "%(msg)s"
     else:
         fmt = "%(prefix)s: %(msg)s"
+
+    user_conf = read_user_config()
+    if 'COLOR' in user_conf and (user_conf['COLOR'] == '0' or user_conf['COLOR'].lower() == 'false'):
+        color_func = lambda x: x
 
     if isinstance(msgs, list):
         first_line = msgs.pop(0)

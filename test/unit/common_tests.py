@@ -16,16 +16,20 @@
 from tito.common import (replace_version, find_spec_like_file, increase_version,
     search_for, compare_version, run_command_print, find_wrote_in_rpmbuild_output,
     render_cheetah, increase_zstream, reset_release, find_file_with_extension,
-    normalize_class_name, extract_sha1, BugzillaExtractor, DEFAULT_BUILD_DIR, munge_specfile)
+    normalize_class_name, extract_sha1, BugzillaExtractor, DEFAULT_BUILD_DIR, munge_specfile,
+    _out)
 
+from tito.compat import StringIO
 
 import os
+import re
 import unittest
 
 from mock import Mock, patch, call
 from tempfile import NamedTemporaryFile
 from textwrap import dedent
 from unit import open_mock, Capture
+from blessings import Terminal
 
 
 class CommonTests(unittest.TestCase):
@@ -200,6 +204,21 @@ class CommonTests(unittest.TestCase):
         with open_mock(content):
             with Capture(silent=True):
                 self.assertRaises(SystemExit, search_for, "foo", r"(NoMatch)")
+
+    @patch("tito.common.read_user_config")
+    def test_turn_off_colors(self, mock_user_conf):
+        mock_user_conf.return_value = {'COLOR': '0'}
+        stream = StringIO()
+        _out('Hello world', None, Terminal().red, stream)
+        self.assertEquals('Hello world\n', stream.getvalue())
+
+    @patch("tito.common.read_user_config")
+    def test_colors(self, mock_user_conf):
+        mock_user_conf.return_value = {}
+        stream = StringIO()
+        _out('Hello world', None, Terminal().red, stream)
+        # RHEL 6 doesn't have self.assertRegexpMatches unfortunately
+        self.assertTrue(re.match('.+Hello world.+\n', stream.getvalue()))
 
 
 class CheetahRenderTest(unittest.TestCase):
