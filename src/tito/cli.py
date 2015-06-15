@@ -22,7 +22,8 @@ from optparse import OptionParser, SUPPRESS_HELP
 from tito.common import find_git_root, error_out, debug, get_class_by_name, \
     DEFAULT_BUILDER, BUILDCONFIG_SECTION, DEFAULT_TAGGER, \
     create_builder, get_project_name, get_relative_project_dir, \
-    DEFAULT_BUILD_DIR, run_command, tito_config_dir, warn_out, info_out
+    DEFAULT_BUILD_DIR, run_command, tito_config_dir, warn_out, info_out, \
+    read_user_config
 from tito.compat import RawConfigParser, getstatusoutput, getoutput
 from tito.exception import TitoException
 
@@ -168,25 +169,6 @@ class ConfigLoader(object):
                 return
 
         debug("Unable to locate package specific config for this package.")
-
-
-def read_user_config():
-    config = {}
-    file_loc = os.path.expanduser("~/.titorc")
-    try:
-        f = open(file_loc)
-    except:
-        # File doesn't exist but that's ok because it's optional.
-        return config
-
-    for line in f.readlines():
-        if line.strip() == "":
-            continue
-        tokens = line.split("=")
-        if len(tokens) != 2:
-            raise Exception("Error parsing ~/.titorc: %s" % line)
-        config[tokens[0]] = tokens[1].strip()
-    return config
 
 
 def lookup_build_dir(user_config):
