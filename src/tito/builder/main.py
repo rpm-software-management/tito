@@ -74,8 +74,11 @@ class BuilderBase(object):
         self.scl = self._get_optional_arg(args, 'scl', [None])[0] or \
                 self._get_optional_arg(kwargs, 'scl', '')
 
-        self.rpmbuild_options = self._get_optional_arg(args, 'rpmbuild_options', None) or \
-                self._get_optional_arg(kwargs, 'rpmbuild_options', '')
+        rpmbuildopts = self._get_optional_arg(args, 'rpmbuild_options', None)
+        if rpmbuildopts:
+            self.rpmbuild_options = ' '.join(rpmbuildopts)
+        else:
+            self.rpmbuild_options = self._get_optional_arg(kwargs, 'rpmbuild_options', '')
 
         self.test = self._get_optional_arg(kwargs, 'test', False)
         # Allow a builder arg to override the test setting passed in, used by
