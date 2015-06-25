@@ -46,8 +46,9 @@ class BuilderTests(TitoGitTestFixture):
     def test_rpmbuild_options_from_options(self):
         self.create_project(PKG_NAME)
         builder = Builder(PKG_NAME, None, self.output_dir,
-            self.config, {}, {'rpmbuild_options': '--define "foo bar"'}, **{'offline': True})
-        self.assertEqual('--define "foo bar"', builder.rpmbuild_options)
+            self.config, {}, {'rpmbuild_options': ['--define "foo bar"',
+            '--define "bar baz"']}, **{'offline': True})
+        self.assertEqual('--define "foo bar" --define "bar baz"', builder.rpmbuild_options)
 
     def test_rpmbuild_options_from_kwargs(self):
         self.create_project(PKG_NAME)
