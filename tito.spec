@@ -17,7 +17,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{pythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.6.0
+Version: 0.6.1
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -126,6 +126,11 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Mon Jul 20 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.6.1-1
+- Fix rpmbuild_options array handling from builder args (dcleal@redhat.com)
+- Filter lines beginning with "Merge" from the changelog. (awood@redhat.com)
+- Provide ability to turn off colored output.  Fixes #182. (awood@redhat.com)
+
 * Fri Jun 12 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.6.0-1
 - Add support for Red Hat Java MEAD builds. (awood@redhat.com)
 - Enable mkdocs and add documentation on Mead. (awood@redhat.com)
