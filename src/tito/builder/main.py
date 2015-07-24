@@ -1197,14 +1197,18 @@ class GitAnnexBuilder(NoTgzBuilder):
             os.remove(os.path.join(self.rpmbuild_gitcopy, annex))
             shutil.copy(annex, self.rpmbuild_gitcopy)
 
+        self._lock()
         os.chdir(old_cwd)
 
     def cleanup(self):
+        self._lock()
+        super(GitAnnexBuilder, self).cleanup()
+    
+    def _lock(self):
         if self._lock_force_supported(self._get_annex_version()):
             run_command("git-annex lock --force")
         else:
             run_command("git-annex lock")
-        super(GitAnnexBuilder, self).cleanup()
 
     def _get_annex_version(self):
         # git-annex needs to support --force when locking files.
