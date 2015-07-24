@@ -23,7 +23,7 @@ from tempfile import mkdtemp
 import shutil
 
 from tito.common import create_builder, debug, \
-    run_command, get_project_name, warn_out
+    run_command, get_project_name, warn_out, error_out
 from tito.compat import PY2, dictionary_override
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
@@ -115,13 +115,11 @@ class Releaser(ConfigObject):
         """
         for opt in self.GLOBAL_REQUIRED_CONFIG:
             if not self.releaser_config.has_option(self.target, opt):
-                raise TitoException(
-                    "Release target '%s' missing required option '%s'" %
+                error_out("Release target '%s' missing required option '%s'" %
                     (self.target, opt))
         for opt in self.REQUIRED_CONFIG:
             if not self.releaser_config.has_option(self.target, opt):
-                raise TitoException(
-                    "Release target '%s' missing required option '%s'" %
+                error_out("Release target '%s' missing required option '%s'" %
                     (self.target, opt))
 
         # TODO: accomodate 'builder.*' for yum releaser and we can use this:

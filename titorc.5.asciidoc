@@ -58,6 +58,8 @@ The username to use when pushing the repository MEAD is going to build
 from.  If this value is unset, the MEAD releaser will default to using
 the name of the current user.
 
+COPR_REMOTE_LOCATION::
+URL that Tito will push SRPMs to for Copr to use.
 
 EXAMPLE
 -------
