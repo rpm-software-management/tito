@@ -489,7 +489,7 @@ class Builder(ConfigObject, BuilderBase):
         # archive into the temp build directory. This is done so we can
         # modify the version/release on the fly when building test rpms
         # that use a git SHA1 for their version.
-        self.spec_file_name = find_spec_like_file(self.rpmbuild_gitcopy)
+        self.spec_file_name = os.path.basename(find_spec_like_file(self.rpmbuild_gitcopy))
         self.spec_file = os.path.join(
             self.rpmbuild_gitcopy, self.spec_file_name)
 
@@ -699,8 +699,9 @@ class UpstreamBuilder(NoTgzBuilder):
 
         self.spec_file = os.path.join(self.rpmbuild_sourcedir,
                 self.spec_file_name)
-        run_command("cp %s %s" % (os.path.join(self.rpmbuild_gitcopy,
-            self.spec_file_name), self.spec_file))
+        command = "cp %s %s" % (os.path.join(self.rpmbuild_gitcopy,
+            self.spec_file_name), self.spec_file)
+        run_command(command)
 
         # Create the upstream tgz:
         prefix = "%s-%s" % (self.upstream_name, self.upstream_version)
@@ -1203,7 +1204,7 @@ class GitAnnexBuilder(NoTgzBuilder):
     def cleanup(self):
         self._lock()
         super(GitAnnexBuilder, self).cleanup()
-    
+
     def _lock(self):
         if self._lock_force_supported(self._get_annex_version()):
             run_command("git-annex lock --force")
