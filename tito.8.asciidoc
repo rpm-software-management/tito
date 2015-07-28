@@ -87,6 +87,9 @@ Deprecated, no longer required.
 Use spec file version/release exactly as specified in
 spec file to tag package.
 
+--use-version='USE_VERSION'::
+Update the spec file with the specified version.
+
 --no-auto-changelog::
 Don't automatically create a changelog entry for this
 tag if none is found
