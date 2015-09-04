@@ -246,7 +246,7 @@ class BuilderBase(object):
             err = sys.exc_info()[1]
             msg = str(err)
             if (re.search('Failed build dependencies', err.output)):
-                msg = "Please run 'yum-builddep %s' as root." % \
+                msg = "Please run 'dnf builddep %s' as root." % \
                     find_spec_file(self.relative_project_dir)
             error_out('%s' % msg)
         except Exception:
@@ -1184,7 +1184,7 @@ class GitAnnexBuilder(NoTgzBuilder):
         # NOTE: 'which' may not be installed... (docker containers)
         (status, output) = getstatusoutput("which git-annex")
         if status != 0:
-            msg = "Please run 'yum install git-annex' as root."
+            msg = "Please run 'dnf install git-annex' as root."
             error_out('%s' % msg)
 
         run_command("git-annex lock")
