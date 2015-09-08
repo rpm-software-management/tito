@@ -386,6 +386,11 @@ def find_git_root():
     return os.path.abspath(cdup)
 
 
+def package_manager():
+    """ Return current running distribution's package manager"""
+    return "dnf" if os.path.isfile("/usr/bin/dnf") else "yum"
+
+
 def tito_config_dir():
     """ Returns "rel-eng" for old tito projects and ".tito" for
     recent projects.

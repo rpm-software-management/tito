@@ -32,7 +32,7 @@ from tito.common import scl_to_rpm_option, get_latest_tagged_version, \
     get_commit_count, find_gemspec_file, create_builder, compare_version,\
     find_cheetah_template_file, render_cheetah, replace_spec_release, \
     find_spec_like_file, warn_out, get_commit_timestamp, chdir, mkdir_p, \
-    find_git_root, info_out, munge_specfile
+    find_git_root, info_out, munge_specfile, package_manager
 from tito.compat import getstatusoutput
 from tito.exception import RunCommandException
 from tito.exception import TitoException
@@ -245,9 +245,10 @@ class BuilderBase(object):
         except RunCommandException:
             err = sys.exc_info()[1]
             msg = str(err)
-            if (re.search('Failed build dependencies', err.output)):
-                msg = "Please run 'dnf builddep %s' as root." % \
-                    find_spec_file(self.relative_project_dir)
+            if re.search('Failed build dependencies', err.output):
+                cmd = "dnf builddep %s" if package_manager() == "dnf" else "yum-builddep %s"
+                msg = "Please run '%s' as root." % \
+                    cmd % find_spec_file(self.relative_project_dir)
             error_out('%s' % msg)
         except Exception:
             err = sys.exc_info()[1]
@@ -1184,7 +1185,7 @@ class GitAnnexBuilder(NoTgzBuilder):
         # NOTE: 'which' may not be installed... (docker containers)
         (status, output) = getstatusoutput("which git-annex")
         if status != 0:
-            msg = "Please run 'dnf install git-annex' as root."
+            msg = "Please run '%s install git-annex' as root." % package_manager()
             error_out('%s' % msg)
 
         run_command("git-annex lock")
