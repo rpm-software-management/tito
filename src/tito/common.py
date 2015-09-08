@@ -67,7 +67,8 @@ def read_user_config():
         tokens = line.split("=")
         if len(tokens) != 2:
             raise Exception("Error parsing ~/.titorc: %s" % line)
-        config[tokens[0]] = tokens[1].strip()
+        # Remove whitespace from the values
+        config[tokens[0].strip()] = tokens[1].strip()
     return config
 
 

@@ -19,6 +19,7 @@ from functional.fixture import TitoGitTestFixture
 
 from tito.compat import *  # NOQA
 from tito.release import CoprReleaser
+from unit import Capture
 
 PKG_NAME = "releaseme"
 
@@ -61,3 +62,19 @@ class CoprReleaserTests(TitoGitTestFixture):
             False, False, **{'offline': True})
         releaser.release(dry_run=True)
         self.assertTrue(releaser.srpm_submitted is not None)
+
+    def test_with_remote_defined_in_user_conf(self):
+        self.releaser_config.remove_option("test", "remote_location")
+        user_config = {'COPR_REMOTE_LOCATION': 'http://example.com/~otheruser/'}
+        releaser = CoprReleaser(PKG_NAME, None, '/tmp/tito/',
+            self.config, user_config, 'test', self.releaser_config, False,
+            False, False, **{'offline': True})
+        releaser.release(dry_run=True)
+        self.assertTrue(releaser.srpm_submitted is not None)
+
+    def test_no_remote_defined(self):
+        self.releaser_config.remove_option("test", "remote_location")
+        with Capture(silent=True):
+            self.assertRaises(SystemExit, CoprReleaser, PKG_NAME, None, '/tmp/tito/',
+                self.config, {}, 'test', self.releaser_config, False,
+                False, False, **{'offline': True})

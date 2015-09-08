@@ -13,14 +13,14 @@
 
 import os.path
 
-from tito.common import run_command, info_out
+from tito.common import run_command, info_out, error_out
 from tito.release import KojiReleaser
 
 
 class CoprReleaser(KojiReleaser):
     """ Releaser for Copr using copr-cli command """
 
-    REQUIRED_CONFIG = ['project_name', 'upload_command', 'remote_location']
+    REQUIRED_CONFIG = ['project_name', 'upload_command']
     cli_tool = "copr-cli"
     NAME = "Copr"
 
@@ -28,6 +28,8 @@ class CoprReleaser(KojiReleaser):
             config=None, user_config=None,
             target=None, releaser_config=None, no_cleanup=False,
             test=False, auto_accept=False, **kwargs):
+        self.user_config = user_config
+
         KojiReleaser.__init__(self, name, tag, build_dir, config,
                 user_config, target, releaser_config, no_cleanup, test,
                 auto_accept, **kwargs)
@@ -47,10 +49,24 @@ class CoprReleaser(KojiReleaser):
             self.builder.config.add_section(self.copr_project_name)
         KojiReleaser._koji_release(self)
 
+    def _check_releaser_config(self):
+        """
+        Verify this release target has all the config options it needs.
+        """
+        if self.releaser_config.has_option(self.target, "remote_location"):
+            self.remote_location = self.releaser_config.get(self.target, "remote_location")
+        elif 'COPR_REMOTE_LOCATION' in self.user_config:
+            self.remote_location = self.user_config['COPR_REMOTE_LOCATION']
+        else:
+            error_out(["No remote location for Copr SRPMs found.",
+                "Either define 'remote_location' in the releaser configuration "
+                "or 'COPR_REMOTE_LOCATION' in ~/.titorc"])
+        KojiReleaser._check_releaser_config(self)
+
     def _submit_build(self, executable, koji_opts, tag, srpm_location):
         """ Copy srpm to remote destination and submit it to Copr """
         cmd = self.releaser_config.get(self.target, "upload_command")
-        url = self.releaser_config.get(self.target, "remote_location")
+
         if self.srpm_submitted:
             srpm_location = self.srpm_submitted
         srpm_base_name = os.path.basename(srpm_location)
@@ -58,7 +74,7 @@ class CoprReleaser(KojiReleaser):
         # e.g. "scp %(srpm)s my.web.com:public_html/my_srpm/"
         cmd_upload = cmd % {'srpm': srpm_location}
         cmd_submit = "/usr/bin/copr-cli build %s %s%s" % (self.releaser_config.get(self.target, "project_name"),
-            url, srpm_base_name)
+            self.remote_location, srpm_base_name)
 
         if self.dry_run:
             self.print_dry_run_warning(cmd_upload)
