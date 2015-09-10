@@ -12,6 +12,7 @@
 # in this software or its documentation.
 
 import os.path
+import subprocess
 
 from tito.common import run_command, info_out, error_out
 from tito.release import KojiReleaser
@@ -20,7 +21,7 @@ from tito.release import KojiReleaser
 class CoprReleaser(KojiReleaser):
     """ Releaser for Copr using copr-cli command """
 
-    REQUIRED_CONFIG = ['project_name', 'upload_command']
+    REQUIRED_CONFIG = ['project_name']
     cli_tool = "copr-cli"
     NAME = "Copr"
 
@@ -53,37 +54,54 @@ class CoprReleaser(KojiReleaser):
         """
         Verify this release target has all the config options it needs.
         """
+        self.remote_location = None
         if self.releaser_config.has_option(self.target, "remote_location"):
             self.remote_location = self.releaser_config.get(self.target, "remote_location")
         elif 'COPR_REMOTE_LOCATION' in self.user_config:
             self.remote_location = self.user_config['COPR_REMOTE_LOCATION']
-        else:
-            error_out(["No remote location for Copr SRPMs found.",
-                "Either define 'remote_location' in the releaser configuration "
-                "or 'COPR_REMOTE_LOCATION' in ~/.titorc"])
         KojiReleaser._check_releaser_config(self)
 
     def _submit_build(self, executable, koji_opts, tag, srpm_location):
-        """ Copy srpm to remote destination and submit it to Copr """
-        cmd = self.releaser_config.get(self.target, "upload_command")
+        """
+        Submit the build into Copr
+        If `remote_location` was specified, the SRPM package is uploaded
+        there and then submitted into Copr via URL. Otherwise the package
+        is submitted from local storage directly to the Copr
+        """
+        path = srpm_location
+        if self.remote_location:
+            path = self.remote_location + os.path.basename(srpm_location)
+            self._upload(srpm_location)
+        self._submit(path)
 
+    def _upload(self, srpm_location):
         if self.srpm_submitted:
             srpm_location = self.srpm_submitted
-        srpm_base_name = os.path.basename(srpm_location)
 
         # e.g. "scp %(srpm)s my.web.com:public_html/my_srpm/"
+        cmd = self.releaser_config.get(self.target, "upload_command")
         cmd_upload = cmd % {'srpm': srpm_location}
-        cmd_submit = "/usr/bin/copr-cli build %s %s%s" % (self.releaser_config.get(self.target, "project_name"),
-            self.remote_location, srpm_base_name)
 
         if self.dry_run:
             self.print_dry_run_warning(cmd_upload)
-            self.print_dry_run_warning(cmd_submit)
             return
+
         # TODO: no error handling when run_command fails:
         if not self.srpm_submitted:
             print("Uploading src.rpm.")
             print(run_command(cmd_upload))
             self.srpm_submitted = srpm_location
+
+    def _submit(self, srpm_location):
+        cmd_submit = "/usr/bin/%s build %s %s" % \
+                     (self.cli_tool, self.releaser_config.get(self.target, "project_name"), srpm_location)
+        if self.dry_run:
+            self.print_dry_run_warning(cmd_submit)
+            return
+
         info_out("Submiting build into %s." % self.NAME)
-        print(run_command(cmd_submit))
+        self._run_command(cmd_submit)
+
+    def _run_command(self, cmd):
+        process = subprocess.Popen(cmd.split())
+        process.wait()
