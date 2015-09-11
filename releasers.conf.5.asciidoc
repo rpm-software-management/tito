@@ -144,7 +144,7 @@ but if it is not present name of package directory is used.
 This releaser assume that you have ~/.oscrc correctly configured.
 
 tito.release.CoprReleaser::
-This releaser publish your src.rpm on internet and submit it to Copr.
+This releaser submits your src.rpm to Copr.
 
  [my-copr]
  releaser = tito.release.CoprReleaser
@@ -155,8 +155,10 @@ This releaser publish your src.rpm on internet and submit it to Copr.
 Variables are:
 
  * project_name - this is name of your project on Copr
- * upload_command - this command is executed to upload src.rpm to internet. It can be scp, rsync or just cp. It may containt string "%(srpm)s" (even several times), which is substitued by real srpm path.
- * remote_location - how can be accessed the location above over www.
+ * upload_command - this command is executed to upload src.rpm to internet. It can be scp, rsync or just cp. It may containt string "%(srpm)s" (even several times), which is substitued by real srpm path. (optional)
+ * remote_location - how can be accessed the location above over www. (optional)
+
+The releaser will publish your src.rpm to remote server and then submit it into Copr via URL. If you rather want to submit the package directly from your computer, just omit "upload_command" and "remote_location" variables.
 
 Project_name behave exactly as "autobuild_tags" in KojiReleaser, and you can define various options for each project name in tito.props (e.g. disttag, whitelist, blacklist, scl). For more information see man page of tito.props.
 
@@ -218,9 +220,14 @@ EXAMPLE
  releaser=tito.release.ObsReleaser
  project_name=home:xsuchy
 
+ ; Upload src.rpm to remote server and then submit it into Copr via URL
  [copr-project]
  releaser = tito.release.CoprReleaser
  project_name = my-copr-project-name another-project
  upload_command = cp %(srpm)s /home/msuchy/public_html/my_srpm/
  remote_location = http://my.web.com/~msuchy/my_srpm/
 
+ ; Submit src.rpm from your computer directly to Copr
+ [copr-project]
+ releaser = tito.release.CoprReleaser
+ project_name = my-copr-project-name another-project
