@@ -105,3 +105,5 @@ class CoprReleaser(KojiReleaser):
     def _run_command(self, cmd):
         process = subprocess.Popen(cmd.split())
         process.wait()
+        if process.returncode > 0:
+            error_out("Failed running `%s`" % cmd)
