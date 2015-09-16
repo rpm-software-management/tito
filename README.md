@@ -29,7 +29,7 @@ Tito offers the following features:
 RELATED PROJECTS
 ================
 
-* `mockchain` from the  (http://fedoraproject.org/wiki/Projects/Mock)[mock project])
+* `mockchain` from the [mock project](http://fedoraproject.org/wiki/Projects/Mock))
 * `mock`'s built-in SCM support in `mock-scm`
 * Fedora's [Koji](http://koji.fedoraproject.org/koji/) build engine and [fedpkg](https://fedorahosted.org/fedpkg/) tools
 * The [OpenSUSE Build Service](https://build.opensuse.org/).
