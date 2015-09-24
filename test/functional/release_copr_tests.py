@@ -17,6 +17,7 @@ Functional Tests for the CoprReleaser.
 
 from functional.fixture import TitoGitTestFixture
 
+import mock
 from tito.compat import *  # NOQA
 from tito.release import CoprReleaser
 from unit import Capture
@@ -72,9 +73,14 @@ class CoprReleaserTests(TitoGitTestFixture):
         releaser.release(dry_run=True)
         self.assertTrue(releaser.srpm_submitted is not None)
 
-    def test_no_remote_defined(self):
+    @mock.patch("tito.release.CoprReleaser._submit")
+    @mock.patch("tito.release.CoprReleaser._upload")
+    def test_no_remote_defined(self, upload, submit):
         self.releaser_config.remove_option("test", "remote_location")
-        with Capture(silent=True):
-            self.assertRaises(SystemExit, CoprReleaser, PKG_NAME, None, '/tmp/tito/',
-                self.config, {}, 'test', self.releaser_config, False,
-                False, False, **{'offline': True})
+        releaser = CoprReleaser(PKG_NAME, None, '/tmp/tito/',
+            self.config, {}, 'test', self.releaser_config, False,
+            False, False, **{'offline': True})
+        releaser.release(dry_run=True)
+
+        self.assertFalse(upload.called)
+        self.assertTrue(submit.called)
