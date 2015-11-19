@@ -39,6 +39,13 @@ class CoprReleaser(KojiReleaser):
             self.releaser_config.get(self.target, "project_name")
         self.srpm_submitted = False
 
+        # 'copr-cli build' options, e.g. --chroot
+        # Default to --nowait, so that it mirrors the behavior of fedpkg
+        self.copr_options = '--nowait'
+        if self.releaser_config.has_option(self.target, "copr_options"):
+            self.copr_options = \
+                self.releaser_config.get(self.target, "copr_options")
+
     def autobuild_tags(self):
         """ will return list of project for which we are building """
         result = self.releaser_config.get(self.target, "project_name")
@@ -93,8 +100,8 @@ class CoprReleaser(KojiReleaser):
             self.srpm_submitted = srpm_location
 
     def _submit(self, srpm_location):
-        cmd_submit = "/usr/bin/%s build %s %s" % \
-                     (self.cli_tool, self.releaser_config.get(self.target, "project_name"), srpm_location)
+        cmd_submit = "/usr/bin/%s build %s %s %s" % \
+                     (self.cli_tool, self.copr_options, self.releaser_config.get(self.target, "project_name"), srpm_location)
         if self.dry_run:
             self.print_dry_run_warning(cmd_submit)
             return
