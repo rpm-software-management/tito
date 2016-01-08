@@ -17,7 +17,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{pythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.6.2
+Version: 0.6.3
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -126,6 +126,22 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Fri Jan 08 2016 Devan Goodwin <dgoodwin@rm-rf.ca> 0.6.3-1
+- Added ability to pass extra copr-cli build options to the copr releaser.
+  (twiest@redhat.com)
+- Fix changelog format function name (araszka@redhat.com)
+- fix mock link (glen@delfi.ee)
+- Set non-zero exit code when copr-cli fails (frostyx@email.cz)
+- Document possibility to upload SRPM directly to Copr (frostyx@email.cz)
+- Change asserted behavior after fe4c0bf (frostyx@email.cz)
+- Add possibility to upload SRPM directly to Copr (frostyx@email.cz)
+- Determine correct package manager DNF is now prefered on Fedora, but it is
+  not installed on EL6 or EL7 (frostyx@email.cz)
+- Ask user to run DNF instead of YUM (frostyx@email.cz)
+- Add tito tag --use-version argument to man page (dcleal@redhat.com)
+- Fix upstream/distribution builder failure to copy spec. (dgoodwin@redhat.com)
+- Allow a user specific Copr remote SRPM URL. (awood@redhat.com)
+
 * Fri Jul 24 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.6.2-1
 - fixes(188) Run git-annex lock after building annexed file set.
   (ericdhelms@gmail.com)
