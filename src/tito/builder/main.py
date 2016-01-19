@@ -1179,8 +1179,8 @@ class GitAnnexBuilder(NoTgzBuilder):
     def _setup_sources(self):
         super(GitAnnexBuilder, self)._setup_sources()
 
-        old_cwd = os.getcwd()
-        os.chdir(os.path.join(old_cwd, self.relative_project_dir))
+        self.old_cwd = os.getcwd()
+        os.chdir(os.path.join(self.old_cwd, self.relative_project_dir))
 
         # NOTE: 'which' may not be installed... (docker containers)
         (status, output) = getstatusoutput("which git-annex")
@@ -1200,9 +1200,10 @@ class GitAnnexBuilder(NoTgzBuilder):
             shutil.copy(annex, self.rpmbuild_gitcopy)
 
         self._lock()
-        os.chdir(old_cwd)
+        os.chdir(self.old_cwd)
 
     def cleanup(self):
+        os.chdir(self.old_cwd)
         self._lock()
         super(GitAnnexBuilder, self).cleanup()
 
