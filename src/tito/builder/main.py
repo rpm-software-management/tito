@@ -1203,7 +1203,8 @@ class GitAnnexBuilder(NoTgzBuilder):
         os.chdir(self.old_cwd)
 
     def cleanup(self):
-        os.chdir(self.old_cwd)
+        if hasattr(self, 'old_cwd'):
+            os.chdir(self.old_cwd)
         self._lock()
         super(GitAnnexBuilder, self).cleanup()
 
