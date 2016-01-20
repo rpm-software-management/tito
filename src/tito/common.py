@@ -324,7 +324,7 @@ def find_spec_file(in_dir=None):
     result = find_file_with_extension(in_dir, '.spec')
     if result is None:
         error_out("Unable to locate a %s file in %s" % ('.spec', in_dir))
-    return result
+    return os.path.basename(result)
 
 
 def find_gemspec_file(in_dir=None):
