@@ -641,4 +641,5 @@ class ForceVersionTagger(VersionTagger):
         self._check_tag_does_not_exist(self._get_new_tag(new_version))
         self._update_changelog(new_version)
         self._update_setup_py(new_version)
+        self._update_pom_xml(new_version)
         self._update_package_metadata(new_version)
