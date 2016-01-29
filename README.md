@@ -235,9 +235,6 @@ See:
 EXTERNAL DOCS
 =============
 
-[Tito release announcements]
-(http://rm-rf.ca/blogs/dgoodwin)
-
 [How to create new release of RPM package in 5 seconds]
 (http://miroslav.suchy.cz/blog/archives/2013/12/17/how_to_create_new_release_of_rpm_package_in_5_seconds)
 
