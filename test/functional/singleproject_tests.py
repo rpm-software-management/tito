@@ -61,6 +61,28 @@ class SingleProjectTests(TitoGitTestFixture):
         tito("tag --accept-auto-changelog --debug --use-version 9.0.0")
         check_tag_exists("%s-9.0.0-1" % PKG_NAME, offline=True)
 
+    def test_tag_with_changelog(self):
+        tito("tag --accept-auto-changelog --use-version 9.0.0 --changelog='-Test'")
+        check_tag_exists("%s-9.0.0-1" % PKG_NAME, offline=True)
+
+        changelog = getoutput("cat *.spec")
+        self.assertTrue('-Test' in changelog)
+
+    def test_tag_with_changelog_format(self):
+        tito("tag --accept-auto-changelog --use-version 9.0.0 --changelog=Test")
+        check_tag_exists("%s-9.0.0-1" % PKG_NAME, offline=True)
+
+        changelog = getoutput("cat *.spec")
+        self.assertTrue('- Test' in changelog)
+
+    def test_tag_with_changelog_multiple(self):
+        tito("tag --accept-auto-changelog --use-version 9.0.0 --changelog=Test --changelog=Fake")
+        check_tag_exists("%s-9.0.0-1" % PKG_NAME, offline=True)
+
+        changelog = getoutput("cat *.spec")
+        self.assertTrue('- Test' in changelog)
+        self.assertTrue('- Fake' in changelog)
+
     def test_undo_tag(self):
         os.chdir(self.repo_dir)
         original_head = getoutput('git show-ref -s refs/heads/master')

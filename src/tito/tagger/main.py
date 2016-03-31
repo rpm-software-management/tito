@@ -72,6 +72,7 @@ class VersionTagger(ConfigObject):
         self._no_auto_changelog = False
         self._accept_auto_changelog = False
         self._new_changelog_msg = "new package built with tito"
+        self._changelog = None
         self.offline = offline
 
     def run(self, options):
@@ -92,6 +93,8 @@ class VersionTagger(ConfigObject):
             self._new_changelog_msg = options.auto_changelog_msg
         if options.use_version:
             self._use_version = options.use_version
+        if options.changelog:
+            self._changelog = options.changelog
 
         self.check_tag_precondition()
 
@@ -225,13 +228,6 @@ class VersionTagger(ConfigObject):
 
                 old_version = get_latest_tagged_version(self.project_name)
 
-                # don't die if this is a new package with no history
-                if old_version is not None:
-                    last_tag = "%s-%s" % (self.project_name, old_version)
-                    output = self._generate_default_changelog(last_tag)
-                else:
-                    output = self._new_changelog_msg
-
                 fd, name = tempfile.mkstemp()
                 write(fd, "# Create your changelog entry below:\n")
                 if self.git_email is None or (('HIDE_EMAIL' in self.user_config) and
@@ -243,10 +239,24 @@ class VersionTagger(ConfigObject):
 
                 write(fd, header)
 
-                for cmd_out in output.split("\n"):
-                    write(fd, "- ")
-                    write(fd, "\n  ".join(textwrap.wrap(cmd_out, 77)))
-                    write(fd, "\n")
+                # don't die if this is a new package with no history
+                if self._changelog is not None:
+                    for entry in self._changelog:
+                        if not entry.startswith('-'):
+                            entry = '- ' + entry
+                        write(fd, entry)
+                        write(fd, "\n")
+                else:
+                    if old_version is not None:
+                        last_tag = "%s-%s" % (self.project_name, old_version)
+                        output = self._generate_default_changelog(last_tag)
+                    else:
+                        output = self._new_changelog_msg
+
+                    for cmd_out in output.split("\n"):
+                        write(fd, "- ")
+                        write(fd, "\n  ".join(textwrap.wrap(cmd_out, 77)))
+                        write(fd, "\n")
 
                 write(fd, "\n")
 
