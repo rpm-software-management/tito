@@ -17,7 +17,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{pythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.6.4
+Version: 0.6.5
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -126,6 +126,10 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Fri Apr 08 2016 Devan Goodwin <dgoodwin@rm-rf.ca> 0.6.5-1
+- Add ability to specify a custom changelog during tag (ericdhelms@gmail.com)
+- Removes broken link to tito annoucements (cnsnyder@users.noreply.github.com)
+
 * Tue Jan 26 2016 Devan Goodwin <dgoodwin@rm-rf.ca> 0.6.4-1
 - Tagging with --use-version did not work with Mead projects.
   (awood@redhat.com)
