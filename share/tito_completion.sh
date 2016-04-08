@@ -61,6 +61,7 @@ __tito_report_opts='
 __tito_tag_opts='
     --accept-auto-changelog
     --auto-changelog-message=
+    --changelog
     --debug
     --help
     --keep-version

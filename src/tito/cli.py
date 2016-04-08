@@ -634,6 +634,10 @@ class TagModule(BaseCliModule):
                 help=("Use MESSAGE as the default changelog message for "
                       "new packages"))
 
+        self.parser.add_option("--changelog",
+                dest="changelog", action="append",
+                help=("Supply a custom changelog message to be used for this tag"))
+
         self.parser.add_option("--undo", "-u", dest="undo", action="store_true",
                 help="Undo the most recent (un-pushed) tag.")
 

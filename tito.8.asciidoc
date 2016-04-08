@@ -101,6 +101,11 @@ Automatically accept the generated changelog.
 Use 'MESSAGE' as the default changelog message for new
 packages
 
+--changelog='MESSAGE'::
+Use 'MESSAGE' as the changelog when tagging, this can be specified
+everytime a package is tagged. Useful when needing to generate
+custom changelogs. This will override the auto generated changelog.
+
 -u, --undo::
 Undo the most recent (un-pushed) tag.
 
