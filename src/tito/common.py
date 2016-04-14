@@ -681,7 +681,7 @@ def munge_specfile(spec_file, commit_id, commit_count, fullname=None, tgz_filena
             print('%s: %s' % (m.group(1), tgz_filename))
             continue
 
-        m = re.match(r'^(\s*%setup)(.*?)$', line)
+        m = re.match(r'^(\s*%(?:auto)?setup)(.*?)$', line)
         if fullname and m:
             macro = m.group(1)
             setup_arg = " -n %s" % fullname
@@ -695,6 +695,10 @@ def munge_specfile(spec_file, commit_id, commit_count, fullname=None, tgz_filena
             else:
                 macro += args
                 macro += setup_arg
+
+            args_match = re.search(r'(.+?)\s+-p[01]\s+\S+(.*)', args)
+            if not args_match:
+                macro = "{} -p1".format(macro)
 
             print(macro)
             continue

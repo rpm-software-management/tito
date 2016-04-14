@@ -755,6 +755,8 @@ class UpstreamBuilder(NoTgzBuilder):
                 patch_apply_index = array_index + 2
             elif line.startswith("%setup"):
                 patch_apply_index = array_index + 2  # already added a line
+            elif line.startswith("%autosetup"):
+                patch_apply_index = -1  # autosetup will do this for us
 
             array_index += 1
 
@@ -803,7 +805,8 @@ class UpstreamBuilder(NoTgzBuilder):
 
         lines.insert(patch_insert_index, "Patch%s: %s\n" % (patch_number,
             patch_filename))
-        lines.insert(patch_apply_index, "%%patch%s -p1\n" % (patch_number))
+        if patch_apply_index > 0:
+            lines.insert(patch_apply_index, "%%patch%s -p1\n" % (patch_number))
         self._write_spec(lines)
 
     def _write_spec(self, lines):
