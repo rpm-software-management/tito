@@ -17,6 +17,7 @@ from tito.common import (replace_version, find_spec_like_file, increase_version,
     search_for, compare_version, run_command_print, find_wrote_in_rpmbuild_output,
     render_cheetah, increase_zstream, reset_release, find_file_with_extension,
     normalize_class_name, extract_sha1, BugzillaExtractor, DEFAULT_BUILD_DIR, munge_specfile,
+    munge_setup_macro,
     _out)
 
 from tito.compat import StringIO
@@ -632,3 +633,17 @@ class MockBug(object):
             return self.flags[flag]
         else:
             return None
+
+
+class MungeSetupMacroTests(unittest.TestCase):
+    SOURCE = "tito-git-3.20362dd"
+
+    def test_setup(self):
+        line = "%setup -q -n tito-%{version}"
+        self.assertEqual("%setup -q -n " + self.SOURCE,
+                         munge_setup_macro(self.SOURCE, line))
+
+    def test_autosetup(self):
+        line = "%autosetup -n tito-%{version}"
+        self.assertEqual("%autosetup -n " + self.SOURCE + " -p1",
+                         munge_setup_macro(self.SOURCE, line))

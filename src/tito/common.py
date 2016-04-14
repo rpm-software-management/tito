@@ -681,30 +681,43 @@ def munge_specfile(spec_file, commit_id, commit_count, fullname=None, tgz_filena
             print('%s: %s' % (m.group(1), tgz_filename))
             continue
 
-        m = re.match(r'^(\s*%(?:auto)?setup)(.*?)$', line)
-        if fullname and m:
-            macro = m.group(1)
-            setup_arg = " -n %s" % fullname
-
-            args = m.group(2)
-            args_match = re.search(r'(.+?)\s+-n\s+\S+(.*)', args)
-            if args_match:
-                macro += args_match.group(1)
-                macro += args_match.group(2)
-                macro += setup_arg
-            else:
-                macro += args
-                macro += setup_arg
-
-            if "%autosetup" in macro:
-                args_match = re.search(r'(.+?)\s+-p[01]\s+\S+(.*)', args)
-                if not args_match:
-                    macro = "{} -p1".format(macro)
-
+        macro = munge_setup_macro(fullname, line)
+        if macro is not None:
             print(macro)
             continue
 
         print(line.rstrip('\n'))
+
+
+def munge_setup_macro(fullname, line):
+    """
+    Adjust the %setup or %autosetup line in spec file to accomodate the renamed
+    test source.
+
+    Return None if the given line is not the setup or autosetup line.
+    """
+    m = re.match(r'^(\s*%(?:auto)?setup)(.*?)$', line)
+    if fullname and m:
+        macro = m.group(1)
+        setup_arg = " -n %s" % fullname
+
+        args = m.group(2)
+        args_match = re.search(r'(.*?)\s+-n\s+\S+(.*)', args)
+        if args_match:
+            macro += args_match.group(1)
+            macro += args_match.group(2)
+            macro += setup_arg
+        else:
+            macro += args
+            macro += setup_arg
+
+        if "%autosetup" in macro:
+            args_match = re.search(r'(.+?)\s+-p[01]\s+\S+(.*)', args)
+            if not args_match:
+                macro = "{} -p1".format(macro)
+
+        return macro
+    return None
 
 
 def scrape_version_and_release(template_file_name):
