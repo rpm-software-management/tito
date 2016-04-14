@@ -696,9 +696,10 @@ def munge_specfile(spec_file, commit_id, commit_count, fullname=None, tgz_filena
                 macro += args
                 macro += setup_arg
 
-            args_match = re.search(r'(.+?)\s+-p[01]\s+\S+(.*)', args)
-            if not args_match:
-                macro = "{} -p1".format(macro)
+            if "%autosetup" in macro:
+                args_match = re.search(r'(.+?)\s+-p[01]\s+\S+(.*)', args)
+                if not args_match:
+                    macro = "{} -p1".format(macro)
 
             print(macro)
             continue
