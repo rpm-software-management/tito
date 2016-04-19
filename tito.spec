@@ -17,7 +17,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{pythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.6.5
+Version: 0.6.6
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -126,6 +126,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Tue Apr 19 2016 Devan Goodwin <dgoodwin@rm-rf.ca> 0.6.6-1
+- add support for %%autosetup (ignatenko@redhat.com)
+
 * Fri Apr 08 2016 Devan Goodwin <dgoodwin@rm-rf.ca> 0.6.5-1
 - Add ability to specify a custom changelog during tag (ericdhelms@gmail.com)
 - Removes broken link to tito annoucements (cnsnyder@users.noreply.github.com)
