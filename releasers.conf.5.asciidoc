@@ -98,7 +98,7 @@ tito.release.DistGitReleaser::
 Same as FedoraGitReleaser, but use rhpkg instead of fedpkg.
 
 tito.release.KojiReleaser::
-Releaser which create src.rpm and submit them into Koji. Can submit more then
+Releaser which create src.rpm and submit them into Koji. Can submit more than
 one build at once.
 +
 NOTE: This is targeted for private instances of Koji. You can not submit
