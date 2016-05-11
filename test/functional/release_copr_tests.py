@@ -84,3 +84,17 @@ class CoprReleaserTests(TitoGitTestFixture):
 
         self.assertFalse(upload.called)
         self.assertTrue(submit.called)
+
+    @mock.patch("tito.release.CoprReleaser._run_command")
+    def test_multiple_project_names(self, run_command):
+        self.releaser_config.remove_option("test", "remote_location")
+        self.releaser_config.set('test', 'project_name', "%s %s" % (PKG_NAME,
+            PKG_NAME))
+        releaser = CoprReleaser(PKG_NAME, None, '/tmp/tito/',
+            self.config, {}, 'test', self.releaser_config, False,
+            False, False, **{'offline': True})
+        releaser.release()
+        args = mock.call('/usr/bin/copr-cli build --nowait releaseme %s' %
+                releaser.builder.srpm_location)
+        self.assertEquals(args, run_command.mock_calls[0])
+        self.assertEquals(args, run_command.mock_calls[1])
