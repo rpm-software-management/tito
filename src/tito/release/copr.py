@@ -79,7 +79,7 @@ class CoprReleaser(KojiReleaser):
         if self.remote_location:
             path = self.remote_location + os.path.basename(srpm_location)
             self._upload(srpm_location)
-        self._submit(path)
+        self._submit(path, tag)
 
     def _upload(self, srpm_location):
         if self.srpm_submitted:
@@ -99,9 +99,9 @@ class CoprReleaser(KojiReleaser):
             print(run_command(cmd_upload))
             self.srpm_submitted = srpm_location
 
-    def _submit(self, srpm_location):
+    def _submit(self, srpm_location, project):
         cmd_submit = "/usr/bin/%s build %s %s %s" % \
-                     (self.cli_tool, self.copr_options, self.releaser_config.get(self.target, "project_name"), srpm_location)
+                     (self.cli_tool, self.copr_options, project, srpm_location)
         if self.dry_run:
             self.print_dry_run_warning(cmd_submit)
             return
