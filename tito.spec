@@ -1,4 +1,4 @@
-%if 0%{?fedora} > 21
+%if 0%{?fedora}
 %global use_python3 1
 %global use_python2 0
 %global pythonbin %{__python3}
@@ -25,7 +25,6 @@ Group: Development/Tools
 License: GPLv2
 URL: http://rm-rf.ca/tito
 Source0: http://rm-rf.ca/files/tito/tito-%{version}.tar.gz
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildArch: noarch
 %if %{use_python3}
@@ -52,14 +51,11 @@ BuildRequires: createrepo
 BuildRequires: tar
 BuildRequires: which
 
-%if 0%{?fedora} >= 19
+%if 0%{?fedora}
 # todo: add %check to spec file in accordance with
 # https://fedoraproject.org/wiki/QA/Testing_in_check
 BuildRequires: git
 BuildRequires: python-bugzilla
-%endif
-
-%if 0%{?fedora} >= 20
 BuildRequires: python3-devel
 BuildRequires: python3-setuptools
 BuildRequires: python3-bugzilla
