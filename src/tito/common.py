@@ -879,6 +879,15 @@ def get_commit_count(tag, commit_id):
 
     if status != 0:
         debug("git describe of tag %s failed (%d)" % (tag, status))
+        debug("going to use number of commits from initial commit")
+        (status, output) = getstatusoutput(
+            "git rev-list --max-parents=0 HEAD")
+        if status == 0:
+            # output is now inital commit
+            (status, output) = getstatusoutput(
+                "git rev-list %s..%s --count" % (output, commit_id))
+            if status == 0:
+                return output
         return 0
 
     if tag != output:
