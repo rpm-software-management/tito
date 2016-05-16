@@ -33,6 +33,7 @@ RELATED PROJECTS
 * `mock`'s built-in SCM support in `mock-scm`
 * Fedora's [Koji](http://koji.fedoraproject.org/koji/) build engine and [fedpkg](https://fedorahosted.org/fedpkg/) tools
 * The [OpenSUSE Build Service](https://build.opensuse.org/).
+* See also [Fedora wiki page for layered build tools](https://fedoraproject.org/wiki/Layered_build_scripts_for_package_maintainers)
 
 INSTALL
 =======
