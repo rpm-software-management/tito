@@ -19,6 +19,7 @@ from tito.release import Releaser
 from tito.compat import getoutput
 from functional.fixture import TitoGitTestFixture, tito
 from tito.compat import RawConfigParser
+from unit import Capture
 
 PKG_NAME = "titotestpkg"
 
@@ -99,6 +100,36 @@ class SingleProjectTests(TitoGitTestFixture):
         self.assertFalse(tag_exists_locally(tag))
         new_head = getoutput('git show-ref -s refs/heads/master')
         self.assertEqual(original_head, new_head)
+
+    def test_tag_with_custom_message(self):
+        os.chdir(self.repo_dir)
+        with open(os.path.join(self.repo_dir, '.tito', 'tito.props'), 'a') as f:
+            f.write('tag_commit_message_format = No info plz\n')
+
+        tito("tag --accept-auto-changelog")
+
+        last_msg = getoutput('git log -n 1 --pretty=format:%s')
+        self.assertEqual('No info plz', last_msg.strip())
+
+    def test_tag_with_custom_message_bad_placeholder(self):
+        os.chdir(self.repo_dir)
+        with open(os.path.join(self.repo_dir, '.tito', 'tito.props'), 'a') as f:
+            f.write('tag_commit_message_format = %(ultimate_answer)s\n')
+
+        with Capture(silent=True) as capture:
+            self.assertRaises(SystemExit, tito, "tag --accept-auto-changelog")
+        self.assertIn("Unknown placeholder 'ultimate_answer' in tag_commit_message_format",
+                      capture.err)
+
+    def test_tag_with_custom_message_containing_quotes(self):
+        os.chdir(self.repo_dir)
+        with open(os.path.join(self.repo_dir, '.tito', 'tito.props'), 'a') as f:
+            f.write('tag_commit_message_format = Hack"%(name)s\\\n')
+
+        tito("tag --accept-auto-changelog")
+
+        last_msg = getoutput('git log -n 1 --pretty=format:%s')
+        self.assertEqual('Hack"titotestpkg\\', last_msg.strip())
 
     def test_latest_tgz(self):
         tito("build --tgz -o %s" % self.repo_dir)
