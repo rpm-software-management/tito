@@ -75,6 +75,11 @@ for this repo. Can be useful for situations where one git repository is
 inheriting from another, but tags are created in both. The suffix will be an
 indicator as to which repo the tag originated in. (i.e. tag_suffix = -mysuffix)
 
+tag_commit_message_format::
+This option is used control the text of git commit message that is used when
+new tag is generated. You can use "%(name)s", "%(release_type)s" and
+"%(version)s" placeholders.
+
 
 KOJI and COPR
 -------------
