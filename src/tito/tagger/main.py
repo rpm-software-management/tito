@@ -19,8 +19,14 @@ import re
 import rpm
 import shutil
 import subprocess
+import sys
 import tempfile
 import textwrap
+
+try:
+    from shlex import quote
+except ImportError:
+    from pipes import quote
 
 from string import Template
 
@@ -478,9 +484,22 @@ class VersionTagger(ConfigObject):
         run_command("git add %s" % os.path.join(self.full_project_dir,
             self.spec_file_name))
 
-        run_command('git commit -m "Automatic commit of package ' +
-                '[%s] %s [%s]."' % (self.project_name, self.release_type(),
-                    new_version_w_suffix))
+        fmt = ('Automatic commit of package '
+               '[%(name)s] %(release_type)s [%(version)s].')
+        if self.config.has_option(BUILDCONFIG_SECTION, "tag_commit_message_format"):
+            fmt = self.config.get(BUILDCONFIG_SECTION, "tag_commit_message_format")
+        try:
+            msg = fmt % {
+                'name': self.project_name,
+                'release_type': self.release_type(),
+                'version': new_version_w_suffix,
+            }
+        except KeyError:
+            exc = sys.exc_info()[1]
+            raise TitoException('Unknown placeholder %s in tag_commit_message_format'
+                                % exc)
+
+        run_command('git commit -m %s' % quote(msg))
 
         tag_msg = "Tagging package [%s] version [%s] in directory [%s]." % \
                 (self.project_name, new_version_w_suffix,
