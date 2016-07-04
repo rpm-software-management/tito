@@ -45,7 +45,7 @@ From Fedora:
 From CentOS / RHEL:
 
     # Enable EPEL https://fedoraproject.org/wiki/EPEL#How_can_I_use_these_extra_packages.3F
-    dnf install tito
+    yum install tito
     
 To install from source
 
