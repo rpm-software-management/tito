@@ -297,6 +297,8 @@ class BuilderBase(object):
 
             print
             cmd = "sudo rpm -Uvh --force %s" % ' '.join(do_install)
+            if package_manager() == "dnf":
+                cmd = "sudo dnf -Cy install %s " % " ".join(do_install)
             print("%s" % cmd)
             try:
                 run_command(cmd)
