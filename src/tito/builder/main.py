@@ -20,6 +20,7 @@ import os
 import sys
 import re
 import shutil
+import rpm
 from pkg_resources import require
 from distutils.version import LooseVersion as loose_version
 from tempfile import mkdtemp
@@ -298,7 +299,8 @@ class BuilderBase(object):
                     do_install.append(to_inst)
 
             print
-            cmd = self.package_manager.install(do_install)
+            reinstall = self.package_manager.is_installed(self.project_name, self.build_version)
+            cmd = self.package_manager.install(do_install, reinstall=reinstall)
             print("%s" % cmd)
             try:
                 run_command(cmd)
@@ -1240,23 +1242,37 @@ def get_package_manager():
 
 
 class Rpm(object):
-    def install(self, packages):
+    def install(self, packages, **kwargs):
         return "sudo rpm -Uvh --force %s" % ' '.join(packages)
 
     def builddep(self, spec):
         raise NotImplementedError
 
+    def is_installed(self, package, version):
+        q = self.query(package)
+        if not q:
+            return False
+
+        installed_version = ".".join("{}-{}".format(q.version, q.release).split(".")[:-1])
+        return version == installed_version
+
+    def query(self, package):
+        ts = rpm.TransactionSet()
+        results = list(ts.dbMatch("name", package))
+        return results[0] if results else None
+
 
 class Dnf(Rpm):
-    def install(self, packages):
-        return "sudo dnf -Cy install %s " % " ".join(packages)
+    def install(self, packages, reinstall=False):
+        action = "reinstall" if reinstall else "install"
+        return "sudo dnf -Cy %s %s " % (action, " ".join(packages))
 
     def builddep(self, spec):
         return "dnf builddep %s" % spec
 
 
 class Yum(Rpm):
-    def install(self, packages):
+    def install(self, packages, **kwargs):
         return "%s" % " ".join(packages)
 
     def builddep(self, spec):
