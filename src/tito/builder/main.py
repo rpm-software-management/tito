@@ -1253,8 +1253,9 @@ class Rpm(object):
         if not q:
             return False
 
-        installed_version = ".".join("{}-{}".format(q.version, q.release).split(".")[:-1])
-        return version == installed_version
+        iv = "%s-%s" % (q.version.decode("utf-8"), q.release.decode("utf-8"))
+        iv_short = ".".join(iv.split(".")[:-1])
+        return version == iv_short
 
     def query(self, package):
         ts = rpm.TransactionSet()
