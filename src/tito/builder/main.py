@@ -1192,7 +1192,7 @@ class GitAnnexBuilder(NoTgzBuilder):
         # NOTE: 'which' may not be installed... (docker containers)
         (status, output) = getstatusoutput("which git-annex")
         if status != 0:
-            msg = "Please run '%s install git-annex' as root." % package_manager()
+            msg = "Please run '%s' as root." % self.package_manager.install(["git-annex"])
             error_out('%s' % msg)
 
         run_command("git-annex lock")
