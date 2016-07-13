@@ -300,7 +300,7 @@ class BuilderBase(object):
 
             print
             reinstall = self.package_manager.is_installed(self.project_name, self.build_version)
-            cmd = self.package_manager.install(do_install, reinstall=reinstall)
+            cmd = self.package_manager.install(do_install, reinstall=reinstall, auto=True, offline=True)
             print("%s" % cmd)
             try:
                 run_command(cmd)
@@ -1264,9 +1264,14 @@ class Rpm(object):
 
 
 class Dnf(Rpm):
-    def install(self, packages, reinstall=False):
+    def install(self, packages, reinstall=False, auto=False, offline=False, **kwargs):
         action = "reinstall" if reinstall else "install"
-        return "sudo dnf -Cy %s %s " % (action, " ".join(packages))
+        args = filter(lambda x: x, [
+            "-C" if offline else None,
+            "-y" if auto else None,
+        ])
+        cmd = "sudo dnf %s %s" % (action, " ".join(args + packages))
+        return " ".join(cmd.split())
 
     def builddep(self, spec):
         return "dnf builddep %s" % spec
