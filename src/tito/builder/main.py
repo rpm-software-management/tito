@@ -33,7 +33,7 @@ from tito.common import scl_to_rpm_option, get_latest_tagged_version, \
     get_commit_count, find_gemspec_file, create_builder, compare_version,\
     find_cheetah_template_file, render_cheetah, replace_spec_release, \
     find_spec_like_file, warn_out, get_commit_timestamp, chdir, mkdir_p, \
-    find_git_root, info_out, munge_specfile, package_manager
+    find_git_root, info_out, munge_specfile
 from tito.compat import getstatusoutput
 from tito.exception import RunCommandException
 from tito.exception import TitoException
@@ -110,7 +110,7 @@ class BuilderBase(object):
         self.artifacts = []
 
         # Use most suitable package manager for current OS
-        self.package_manager = get_package_manager()
+        self.package_manager = package_manager()
 
     def _get_optional_arg(self, kwargs, arg, default):
         """
@@ -1233,7 +1233,7 @@ class GitAnnexBuilder(NoTgzBuilder):
         return compare_version(version, '5.20131213') >= 0
 
 
-def get_package_manager():
+def package_manager():
     if os.path.isfile("/usr/bin/dnf"):
         return Dnf()
     if os.path.isfile("/usr/bin/yum"):
