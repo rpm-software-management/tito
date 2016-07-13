@@ -108,6 +108,9 @@ class BuilderBase(object):
         # Artifacts we built:
         self.artifacts = []
 
+        # Use most suitable package manager for current OS
+        self.package_manager = get_package_manager()
+
     def _get_optional_arg(self, kwargs, arg, default):
         """
         Return the value of an optional keyword argument if it's present,
@@ -246,9 +249,8 @@ class BuilderBase(object):
             err = sys.exc_info()[1]
             msg = str(err)
             if re.search('Failed build dependencies', err.output):
-                cmd = "dnf builddep %s" if package_manager() == "dnf" else "yum-builddep %s"
-                msg = "Please run '%s' as root." % \
-                    cmd % find_spec_file(self.relative_project_dir)
+                cmd = self.package_manager.builddep(find_spec_file(self.relative_project_dir))
+                msg = "Please run '%s' as root." % cmd
             error_out('%s' % msg)
         except Exception:
             err = sys.exc_info()[1]
@@ -296,9 +298,7 @@ class BuilderBase(object):
                     do_install.append(to_inst)
 
             print
-            cmd = "sudo rpm -Uvh --force %s" % ' '.join(do_install)
-            if package_manager() == "dnf":
-                cmd = "sudo dnf -Cy install %s " % " ".join(do_install)
+            cmd = self.package_manager.install(do_install)
             print("%s" % cmd)
             try:
                 run_command(cmd)
@@ -1229,3 +1229,35 @@ class GitAnnexBuilder(NoTgzBuilder):
 
     def _lock_force_supported(self, version):
         return compare_version(version, '5.20131213') >= 0
+
+
+def get_package_manager():
+    if os.path.isfile("/usr/bin/dnf"):
+        return Dnf()
+    if os.path.isfile("/usr/bin/yum"):
+        return Yum()
+    return Rpm()
+
+
+class Rpm(object):
+    def install(self, packages):
+        return "sudo rpm -Uvh --force %s" % ' '.join(packages)
+
+    def builddep(self, spec):
+        raise NotImplementedError
+
+
+class Dnf(Rpm):
+    def install(self, packages):
+        return "sudo dnf -Cy install %s " % " ".join(packages)
+
+    def builddep(self, spec):
+        return "dnf builddep %s" % spec
+
+
+class Yum(Rpm):
+    def install(self, packages):
+        return "%s" % " ".join(packages)
+
+    def builddep(self, spec):
+        return "yum-builddep %s" % spec
