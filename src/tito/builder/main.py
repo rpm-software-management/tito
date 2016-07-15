@@ -1279,7 +1279,8 @@ class Dnf(Rpm):
 
 class Yum(Rpm):
     def install(self, packages, **kwargs):
-        return "%s" % " ".join(packages)
+        # Not the sexiest implementation, but very short
+        return Dnf().install(packages, **kwargs).replace("sudo dnf", "sudo yum")
 
     def builddep(self, spec):
         return "yum-builddep %s" % spec
