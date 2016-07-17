@@ -1266,10 +1266,10 @@ class Rpm(object):
 class Dnf(Rpm):
     def install(self, packages, reinstall=False, auto=False, offline=False, **kwargs):
         action = "reinstall" if reinstall else "install"
-        args = filter(lambda x: x, [
+        args = list(filter(lambda x: x, [
             "-C" if offline else None,
             "-y" if auto else None,
-        ])
+        ]))
         cmd = "sudo dnf %s %s" % (action, " ".join(args + packages))
         return " ".join(cmd.split())
 
