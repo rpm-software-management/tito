@@ -20,6 +20,7 @@ import os
 import sys
 import re
 import shutil
+import rpm
 from pkg_resources import require
 from distutils.version import LooseVersion as loose_version
 from tempfile import mkdtemp
@@ -32,7 +33,7 @@ from tito.common import scl_to_rpm_option, get_latest_tagged_version, \
     get_commit_count, find_gemspec_file, create_builder, compare_version,\
     find_cheetah_template_file, render_cheetah, replace_spec_release, \
     find_spec_like_file, warn_out, get_commit_timestamp, chdir, mkdir_p, \
-    find_git_root, info_out, munge_specfile, package_manager
+    find_git_root, info_out, munge_specfile
 from tito.compat import getstatusoutput
 from tito.exception import RunCommandException
 from tito.exception import TitoException
@@ -107,6 +108,9 @@ class BuilderBase(object):
 
         # Artifacts we built:
         self.artifacts = []
+
+        # Use most suitable package manager for current OS
+        self.package_manager = package_manager()
 
     def _get_optional_arg(self, kwargs, arg, default):
         """
@@ -246,9 +250,8 @@ class BuilderBase(object):
             err = sys.exc_info()[1]
             msg = str(err)
             if re.search('Failed build dependencies', err.output):
-                cmd = "dnf builddep %s" if package_manager() == "dnf" else "yum-builddep %s"
-                msg = "Please run '%s' as root." % \
-                    cmd % find_spec_file(self.relative_project_dir)
+                cmd = self.package_manager.builddep(find_spec_file(self.relative_project_dir))
+                msg = "Please run '%s' as root." % cmd
             error_out('%s' % msg)
         except Exception:
             err = sys.exc_info()[1]
@@ -296,10 +299,11 @@ class BuilderBase(object):
                     do_install.append(to_inst)
 
             print
-            cmd = "sudo rpm -Uvh --force %s" % ' '.join(do_install)
+            reinstall = self.package_manager.is_installed(self.project_name, self.build_version)
+            cmd = self.package_manager.install(do_install, reinstall=reinstall, auto=True, offline=True)
             print("%s" % cmd)
             try:
-                run_command(cmd)
+                run_command_print(cmd)
                 print
             except KeyboardInterrupt:
                 pass
@@ -1188,7 +1192,7 @@ class GitAnnexBuilder(NoTgzBuilder):
         # NOTE: 'which' may not be installed... (docker containers)
         (status, output) = getstatusoutput("which git-annex")
         if status != 0:
-            msg = "Please run '%s install git-annex' as root." % package_manager()
+            msg = "Please run '%s' as root." % self.package_manager.install(["git-annex"])
             error_out('%s' % msg)
 
         run_command("git-annex lock")
@@ -1227,3 +1231,56 @@ class GitAnnexBuilder(NoTgzBuilder):
 
     def _lock_force_supported(self, version):
         return compare_version(version, '5.20131213') >= 0
+
+
+def package_manager():
+    if os.path.isfile("/usr/bin/dnf"):
+        return Dnf()
+    if os.path.isfile("/usr/bin/yum"):
+        return Yum()
+    return Rpm()
+
+
+class Rpm(object):
+    def install(self, packages, **kwargs):
+        return "sudo rpm -U --force %s" % ' '.join(packages)
+
+    def builddep(self, spec):
+        raise NotImplementedError
+
+    def is_installed(self, package, version):
+        q = self.query(package)
+        if not q:
+            return False
+
+        iv = "%s-%s" % (q.version.decode("utf-8"), q.release.decode("utf-8"))
+        iv_short = ".".join(iv.split(".")[:-1])
+        return version == iv_short
+
+    def query(self, package):
+        ts = rpm.TransactionSet()
+        results = list(ts.dbMatch("name", package))
+        return results[0] if results else None
+
+
+class Dnf(Rpm):
+    def install(self, packages, reinstall=False, auto=False, offline=False, **kwargs):
+        action = "reinstall" if reinstall else "install"
+        args = list(filter(lambda x: x, [
+            "-C" if offline else None,
+            "-y" if auto else None,
+        ]))
+        cmd = "sudo dnf %s %s" % (action, " ".join(args + packages))
+        return " ".join(cmd.split())
+
+    def builddep(self, spec):
+        return "dnf builddep %s" % spec
+
+
+class Yum(Rpm):
+    def install(self, packages, **kwargs):
+        # Not the sexiest implementation, but very short
+        return Dnf().install(packages, **kwargs).replace("sudo dnf", "sudo yum")
+
+    def builddep(self, spec):
+        return "yum-builddep %s" % spec
