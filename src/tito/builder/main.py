@@ -303,7 +303,7 @@ class BuilderBase(object):
             cmd = self.package_manager.install(do_install, reinstall=reinstall, auto=True, offline=True)
             print("%s" % cmd)
             try:
-                run_command(cmd)
+                run_command_print(cmd)
                 print
             except KeyboardInterrupt:
                 pass
@@ -1243,7 +1243,7 @@ def package_manager():
 
 class Rpm(object):
     def install(self, packages, **kwargs):
-        return "sudo rpm -Uvh --force %s" % ' '.join(packages)
+        return "sudo rpm -U --force %s" % ' '.join(packages)
 
     def builddep(self, spec):
         raise NotImplementedError
