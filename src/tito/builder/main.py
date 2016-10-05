@@ -224,6 +224,12 @@ class BuilderBase(object):
         self.srpm_location = find_wrote_in_rpmbuild_output(output)[0]
         self.artifacts.append(self.srpm_location)
 
+    # Assume that if tito's --no-cleanup option is set, also disable %clean in rpmbuild:
+    def _get_clean_option(self):
+        if self.no_cleanup:
+            return "--noclean"
+        return "--clean"
+
     def rpm(self):
         """ Build an RPM. """
         self._create_build_dirs()
@@ -237,9 +243,9 @@ class BuilderBase(object):
         rpmbuild_options = self.rpmbuild_options + self._scl_to_rpmbuild_option()
 
         cmd = ('rpmbuild --define "_source_filedigest_algorithm md5"  '
-            '--define "_binary_filedigest_algorithm md5" %s %s %s --clean '
+            '--define "_binary_filedigest_algorithm md5" %s %s %s %s '
             '-ba %s' % (rpmbuild_options,
-                self._get_rpmbuild_dir_options(), define_dist, self.spec_file))
+                self._get_rpmbuild_dir_options(), define_dist, self._get_clean_option(), self.spec_file))
         debug(cmd)
         try:
             output = run_command_print(cmd)
