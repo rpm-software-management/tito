@@ -314,7 +314,7 @@ class BuildModule(BaseCliModule):
                 help="use current branch HEAD instead of latest package tag")
         self.parser.add_option("--no-cleanup", dest="no_cleanup",
                 action="store_true",
-                help="do not clean up temporary build directories/files")
+                help="do not clean up temporary tito build directories/files, and disable rpmbuild %clean")
         self.parser.add_option("--tag", dest="tag", metavar="PKGTAG",
                 help="build a specific tag instead of the latest version " +
                     "(i.e. spacewalk-java-0.4.0-1)")
