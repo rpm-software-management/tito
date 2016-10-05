@@ -17,7 +17,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{pythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.6.6
+Version: 0.6.7
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -121,6 +121,22 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Wed Oct 05 2016 Devan Goodwin <dgoodwin@rm-rf.ca> 0.6.7-1
+- Hookup tito's --no-cleanup with rpmbuild's --noclean. (dgoodwin@redhat.com)
+- Print package manager output in _auto_install (frostyx@email.cz)
+- Use 'dnf reinstall' when package is already installed (frostyx@email.cz)
+- Install packages via DNF if available (frostyx@email.cz)
+- CentOS uses yum (miroslav@suchy.cz)
+- Allow customizing git commit message (lsedlar@redhat.com)
+- README.md: Also link to Fedora wiki page collection of these tools
+  (walters@verbum.org)
+- mv rel-eng/ .tito/ (msuchy@redhat.com)
+- buildroot tag is not needed for ages (msuchy@redhat.com)
+- better release number for untagged packages (msuchy@redhat.com)
+- Only pass one project_name to copr build command (dominic@cleal.org)
+- Just a small typo (dietrich@teilgedanken.de)
+- remove dependency on yum-utils (msuchy@redhat.com)
+
 * Tue Apr 19 2016 Devan Goodwin <dgoodwin@rm-rf.ca> 0.6.6-1
 - add support for %%autosetup (ignatenko@redhat.com)
 
