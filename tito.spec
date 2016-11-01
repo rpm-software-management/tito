@@ -17,7 +17,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{pythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.6.7
+Version: 0.6.8
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -121,6 +121,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Tue Nov 01 2016 Devan Goodwin <dgoodwin@rm-rf.ca> 0.6.8-1
+- Don't use a special tagger for the `--use-version` case (skuznets@redhat.com)
+
 * Wed Oct 05 2016 Devan Goodwin <dgoodwin@rm-rf.ca> 0.6.7-1
 - Hookup tito's --no-cleanup with rpmbuild's --noclean. (dgoodwin@redhat.com)
 - Print package manager output in _auto_install (frostyx@email.cz)
