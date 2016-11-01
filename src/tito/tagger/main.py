@@ -371,7 +371,7 @@ class VersionTagger(ConfigObject):
             mvn_new_version))
         run_command("git add %s" % pom_file)
 
-    def _bump_version(self, release=False, zstream=False, force=False):
+    def _bump_version(self, release=False, zstream=False):
         """
         Bump up the package version in the spec file.
 
@@ -405,7 +405,7 @@ class VersionTagger(ConfigObject):
                                         increase_zstream(match.group(2)),
                                         "\n"
                         ))
-                elif force:
+                elif hasattr(self, '_use_version'):
                     match = re.match(version_regex, line)
                     if match:
                         line = "".join((match.group(1),
@@ -656,19 +656,9 @@ class ReleaseTagger(VersionTagger):
 
 class ForceVersionTagger(VersionTagger):
     """
-    Tagger which forcibly updates the spec file to a version provided on the
-    command line by the --use-version option.
-    TODO: could this be merged into main taggers?
+    Legacy Tagger which is chosen when a user passes the `--use-version`
+    flag in on the command line. This implementation has been merged with
+    the default `VersionTagger`, and remains only for backward compatibility
+    for users that were overriding this class with a custom implementation.
+    TODO: remove this class in a future release
     """
-
-    def _tag_release(self):
-        """
-        Tag a new release of the package.
-        """
-        self._make_changelog()
-        new_version = self._bump_version(force=True)
-        self._check_tag_does_not_exist(self._get_new_tag(new_version))
-        self._update_changelog(new_version)
-        self._update_setup_py(new_version)
-        self._update_pom_xml(new_version)
-        self._update_package_metadata(new_version)
