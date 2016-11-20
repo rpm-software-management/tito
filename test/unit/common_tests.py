@@ -260,6 +260,15 @@ class CheetahRenderTest(unittest.TestCase):
             self.assertEquals(call("/tmp/*.cheetah"), mock_glob.mock_calls[0])
             self.assertEquals(call("temp_pickle"), mock_unlink.mock_calls[0])
 
+class CargoTransformTest(unittest.TestCase):
+    def setUp(self):
+        self.config_file = NamedTemporaryFile(delete=False).name
+
+    def tearDown(self):
+        os.unlink(self.config_file)
+
+    def test_simple_case(self):
+        self.assertIsNotNone(None)
 
 class SpecTransformTest(unittest.TestCase):
     def setUp(self):
