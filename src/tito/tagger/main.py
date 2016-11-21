@@ -132,9 +132,15 @@ class VersionTagger(ConfigObject):
         new_version = self._bump_version()
         self._check_tag_does_not_exist(self._get_new_tag(new_version))
         self._update_changelog(new_version)
+        # Update pkg managers used by the project (e.g. Cargo, Cabal)
+        # XXX: merge setup_py and pom_xml into this method ?
+        self._update_pkg_managers(new_version)
         self._update_setup_py(new_version)
         self._update_pom_xml(new_version)
         self._update_package_metadata(new_version)
+
+    def _update_pkg_managers(new_version):
+        pass
 
     def _undo(self):
         """
