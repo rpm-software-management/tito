@@ -21,6 +21,7 @@ from tito.common import (replace_version, find_spec_like_file, increase_version,
     _out)
 
 from tito.compat import StringIO
+from tito.tagger import CargoTagger
 
 import os
 import re
@@ -268,7 +269,48 @@ class CargoTransformTest(unittest.TestCase):
         os.unlink(self.config_file)
 
     def test_simple_case(self):
-        self.assertIsNotNone(None)
+        cargo_toml = dedent("""
+        [package]
+        name = "hello_world" # the name of the package
+        version = "0.1.0"    # the current version, obeying semver
+        authors = ["you@example.com"]
+        """)
+        with open(self.config_file, 'w') as f:
+            f.write(cargo_toml)
+
+        CargoTagger.tag_new_version("2.2.2-1", self.config_file)
+        output = open(self.config_file, 'r').readlines()
+
+        self.assertEquals(5, len(output))
+        self.assertEquals("[package]\n", output[1])
+        self.assertEquals("name = \"hello_world\" # the name of the package\n", output[2])
+        self.assertEquals("version = \"2.2.2\"    # the current version, obeying semver\n", output[3])
+        self.assertEquals("authors = [\"you@example.com\"]\n", output[4])
+
+    def test_complicated_case(self):
+        cargo_toml = dedent("""
+        [package]
+        name = "hello_world"
+        version = "2.2.2"
+        authors = ["you@example.com"]
+
+        [dependencies]
+        regex = "1.0.0"
+
+        [dependencies.termion]
+        version = "0.1.0"
+        """)
+        with open(self.config_file, 'w') as f:
+            f.write(cargo_toml)
+
+        CargoTagger.tag_new_version("3.3.3-1", self.config_file)
+        output = open(self.config_file, 'r').readlines()
+
+        self.assertEquals(11, len(output))
+        self.assertEquals("version = \"3.3.3\"\n", output[3])
+        self.assertEquals("regex = \"1.0.0\"\n", output[7])
+        self.assertEquals("version = \"0.1.0\"\n", output[10])
+
 
 class SpecTransformTest(unittest.TestCase):
     def setUp(self):
