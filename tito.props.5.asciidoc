@@ -45,8 +45,8 @@ points to. This property is required.
 
 tagger::
 The fully qualified Tagger class implementation to use.
-You can either specify builders shipped with tito(5) (see TAGGERS section
-below), or a custom builder located within the directory your `lib_dir` option
+You can either specify taggers shipped with tito(5) (see TAGGERS section
+below), or a custom tagger located within the directory your `lib_dir` option
 points to. This property is required.
 
 lib_dir::
