@@ -100,6 +100,8 @@ class VersionTagger(ConfigObject):
             self._new_changelog_msg = options.auto_changelog_msg
         if options.use_version:
             self._use_version = options.use_version
+        if options.use_release:
+            self._use_release = options.use_release
         if options.changelog:
             self._changelog = options.changelog
 
@@ -414,13 +416,6 @@ class VersionTagger(ConfigObject):
                                         self._use_version,
                                         "\n"
                         ))
-
-                    match = re.match(release_regex, line)
-                    if match:
-                        line = "".join((match.group(1),
-                                        reset_release(match.group(2)),
-                                        "\n"
-                        ))
                 else:
                     match = re.match(version_regex, line)
                     if match:
@@ -429,12 +424,21 @@ class VersionTagger(ConfigObject):
                                         "\n"
                         ))
 
-                    match = re.match(release_regex, line)
-                    if match:
-                        line = "".join((match.group(1),
-                                        reset_release(match.group(2)),
-                                        "\n"
-                        ))
+                if not release and not zstream:
+                    if hasattr(self, '_use_release'):
+                        match = re.match(release_regex, line)
+                        if match:
+                            line = "".join((match.group(1),
+                                            self._use_release,
+                                            "\n"
+                            ))
+                    else:
+                        match = re.match(release_regex, line)
+                        if match:
+                            line = "".join((match.group(1),
+                                            reset_release(match.group(2)),
+                                            "\n"
+                            ))
 
                 out_f.write(line)
 
