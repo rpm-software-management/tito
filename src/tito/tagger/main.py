@@ -41,7 +41,7 @@ from tito.common import (debug, error_out, run_command,
 from tito.compat import write, StringIO, getstatusoutput
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
-from tito.tagger.cargotagger import CargoTagger
+from tito.tagger.cargobump import CargoBump
 
 
 class VersionTagger(ConfigObject):
@@ -159,7 +159,7 @@ class VersionTagger(ConfigObject):
                 if project_type == "cargo":
                     if file_name is None:
                         file_name = "Cargo.toml"
-                    CargoTagger.tag_new_version(new_version, os.path.join(self.full_project_dir, file_name))
+                    CargoBump.tag_new_version(new_version, os.path.join(self.full_project_dir, file_name))
                 else:
                     # TODO: write a list of supported managers somewhere (man page, --help)
                     debug('Unknown project type: ' + project_type)
