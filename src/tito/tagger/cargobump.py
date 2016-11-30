@@ -1,7 +1,7 @@
 import re
 import os
 
-from tito.common import debug
+from tito.common import debug, run_command
 
 
 class CargoBump:
@@ -14,21 +14,25 @@ class CargoBump:
     """
 
     @staticmethod
-    def tag_new_version(new_version, config_file):
+    def tag_new_version(project_path, new_version):
         """
         Find the line with version number  and change
         it to contain the new version.
         """
+        file_name = "Cargo.toml"
+        config_file = os.path.join(project_path, file_name)
+
         if not os.path.exists(config_file):
-            debug('Config file was not found.')
+            debug('Cargo.toml file not found, this is probably not a Rust project')
             return
 
-        debug("Found config file, attempting to update version.")
+        debug("Found Cargo.toml file, attempting to update the version.")
         # We probably don't want version-release in config file as
         # release is an RPM concept
         rust_new_version = new_version.split('-')[0]
         file_buffer = []
 
+        # Read file line by line and replace version when found
         with open(config_file, 'r') as cfgfile:
             pkg_label = re.compile('^\[package\]$')
             label = re.compile('^\[.*\]$')
@@ -56,5 +60,9 @@ class CargoBump:
                 else:
                     file_buffer.append(line)
 
+        # Write the buffer back into the file
         with open(config_file, 'w') as cfgfile:
             cfgfile.writelines(map(lambda x: x + "\n", file_buffer))
+
+        # Add Cargo.toml into git index
+        run_command("git add %s" % file_name)
