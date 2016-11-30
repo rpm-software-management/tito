@@ -133,41 +133,10 @@ class VersionTagger(ConfigObject):
         new_version = self._bump_version()
         self._check_tag_does_not_exist(self._get_new_tag(new_version))
         self._update_changelog(new_version)
-        # Update pkg managers used by the project (e.g. Cargo, Cabal)
-        # XXX: merge setup_py and pom_xml into this method ?
-        self._update_pkg_managers(new_version)
+        CargoBump.tag_new_version(self.full_project_dir, new_version)
         self._update_setup_py(new_version)
         self._update_pom_xml(new_version)
         self._update_package_metadata(new_version)
-
-    def _update_pkg_managers(self, new_version):
-        section_name = 'remote_pkg_manager'
-        option_type = 'type'
-        option_file = 'config_file'
-        # Check for package manager section in tito.props
-        if self.config.has_section(section_name):
-            debug('Found ' + section_name + ' section')
-            # Read project type
-            if self.config.has_option(section_name, option_type):
-                project_type = self.config.get(section_name, option_type)
-                file_name = None
-                # Read name of the project configuration file
-                if self.config.has_option(section_name, option_file):
-                    file_name = self.config.get(section_name, option_file)
-                # Run update based on the type of the project
-                debug('Found these options: name=' + file_name + ', type: ' + project_type)
-                if project_type == "cargo":
-                    if file_name is None:
-                        file_name = "Cargo.toml"
-                    CargoBump.tag_new_version(new_version, os.path.join(self.full_project_dir, file_name))
-                else:
-                    # TODO: write a list of supported managers somewhere (man page, --help)
-                    debug('Unknown project type: ' + project_type)
-                    return
-                # Add config file into the index
-                run_command("git add %s" % file_name)
-            else:
-                debug('Section ' + section_name + ' was specified, but no ' + option_type + ' was found.')
 
     def _undo(self):
         """
