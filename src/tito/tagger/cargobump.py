@@ -4,7 +4,7 @@ import os
 from tito.common import debug
 
 
-class CargoTagger:
+class CargoBump:
     """
     Cargo is package manager for the Rust programming
     language: http://doc.crates.io/manifest.html

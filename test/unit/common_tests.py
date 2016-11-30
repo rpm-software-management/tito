@@ -21,7 +21,7 @@ from tito.common import (replace_version, find_spec_like_file, increase_version,
     _out)
 
 from tito.compat import StringIO
-from tito.tagger import CargoTagger
+from tito.tagger import CargoBump
 
 import os
 import re
@@ -279,7 +279,7 @@ class CargoTransformTest(unittest.TestCase):
         with open(self.config_file, 'w') as f:
             f.write(cargo_toml)
 
-        CargoTagger.tag_new_version("2.2.2-1", self.config_file)
+        CargoBump.tag_new_version("2.2.2-1", self.config_file)
         output = open(self.config_file, 'r').readlines()
 
         self.assertEquals(5, len(output))
@@ -304,7 +304,7 @@ class CargoTransformTest(unittest.TestCase):
         with open(self.config_file, 'w') as f:
             f.write(cargo_toml)
 
-        CargoTagger.tag_new_version("3.3.3-1", self.config_file)
+        CargoBump.tag_new_version("3.3.3-1", self.config_file)
         output = open(self.config_file, 'r').readlines()
 
         self.assertEquals(11, len(output))
