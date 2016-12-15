@@ -264,53 +264,41 @@ class CheetahRenderTest(unittest.TestCase):
 
 class CargoTransformTest(unittest.TestCase):
     def setUp(self):
-        self.config_file = NamedTemporaryFile(delete=False).name
+        pass
 
     def tearDown(self):
-        os.unlink(self.config_file)
+        pass
 
     def test_simple_case(self):
-        cargo_toml = dedent("""
-        [package]
-        name = "hello_world" # the name of the package
-        version = "0.1.0"    # the current version, obeying semver
-        authors = ["you@example.com"]
-        """)
-        with open(self.config_file, 'w') as f:
-            f.write(cargo_toml)
+        input = ['[package]',
+                 'name = "hello_world" # the name of the package',
+                 'version = "0.1.0"    # the current version, obeying semver',
+                 'authors = ["you@example.com"]']
+        output = CargoBump.process_cargo_toml(input, "2.2.2")
 
-        CargoBump.tag_new_version("2.2.2-1", self.config_file)
-        output = open(self.config_file, 'r').readlines()
-
-        self.assertEquals(5, len(output))
-        self.assertEquals("[package]\n", output[1])
-        self.assertEquals("name = \"hello_world\" # the name of the package\n", output[2])
-        self.assertEquals("version = \"2.2.2\"    # the current version, obeying semver\n", output[3])
-        self.assertEquals("authors = [\"you@example.com\"]\n", output[4])
+        self.assertEquals(4, len(output))
+        self.assertEquals("[package]", output[0])
+        self.assertEquals("name = \"hello_world\" # the name of the package", output[1])
+        self.assertEquals("version = \"2.2.2\"    # the current version, obeying semver", output[2])
+        self.assertEquals("authors = [\"you@example.com\"]", output[3])
 
     def test_complicated_case(self):
-        cargo_toml = dedent("""
-        [package]
-        name = "hello_world"
-        version = "2.2.2"
-        authors = ["you@example.com"]
+        input = ['[package]',
+                 'name = "hello_world"',
+                 'version = "2.2.2"',
+                 'authors = ["you@example.com"]',
+                 '',
+                 '[dependencies]',
+                 'regex = "1.0.0"',
+                 '',
+                 '[dependencies.termion]',
+                 'version = "0.1.0"']
+        output = CargoBump.process_cargo_toml(input, "3.3.3")
 
-        [dependencies]
-        regex = "1.0.0"
-
-        [dependencies.termion]
-        version = "0.1.0"
-        """)
-        with open(self.config_file, 'w') as f:
-            f.write(cargo_toml)
-
-        CargoBump.tag_new_version("3.3.3-1", self.config_file)
-        output = open(self.config_file, 'r').readlines()
-
-        self.assertEquals(11, len(output))
-        self.assertEquals("version = \"3.3.3\"\n", output[3])
-        self.assertEquals("regex = \"1.0.0\"\n", output[7])
-        self.assertEquals("version = \"0.1.0\"\n", output[10])
+        self.assertEquals(10, len(output))
+        self.assertEquals("version = \"3.3.3\"", output[2])
+        self.assertEquals("regex = \"1.0.0\"", output[6])
+        self.assertEquals("version = \"0.1.0\"", output[9])
 
 
 class SpecTransformTest(unittest.TestCase):
