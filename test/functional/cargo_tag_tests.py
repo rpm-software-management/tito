@@ -48,7 +48,7 @@ def tito(argstring):
 
 class CargoTagTest(unittest.TestCase):
     """
-    XXX
+    Test 'CargoBump' class.
     """
     def setUp(self):
         self.repo_dir = tempfile.mkdtemp("-titocargotest")
@@ -99,12 +99,18 @@ class CargoTagTest(unittest.TestCase):
 
 
     def test_cargo_toml_tag(self):
+        """
+        Check that the version string in Cargo.toml file is the same as in spec file
+        """
         changelog = getoutput("grep version Cargo.toml")
         re_version = re.compile(r'"(\d+\.\d+\.\d+)"')
         version = re_version.findall(changelog)
         assert version[0] == "0.1.8"
 
     def test_git_contains_cargo(self):
+        """
+        Check presence of the Cargo.toml file in the last commit (tag)
+        """
         diff = getoutput("git diff HEAD^ -- Cargo.toml")
         assert diff.find("-version = \"0.0.1\"") != -1
         assert diff.find("+version = \"0.1.8\"") != -1
