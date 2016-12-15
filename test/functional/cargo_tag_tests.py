@@ -41,6 +41,7 @@ Source0:        hello_tito-%{version}.tar.gz
 %changelog
 """
 
+
 def tito(argstring):
     """ Run Tito from source with given arguments. """
     return CLI().main(argstring.split(' '))
@@ -50,6 +51,7 @@ class CargoTagTest(unittest.TestCase):
     """
     Test 'CargoBump' class.
     """
+
     def setUp(self):
         self.repo_dir = tempfile.mkdtemp("-titocargotest")
         print("Testing in: %s" % self.repo_dir)
@@ -77,12 +79,10 @@ class CargoTagTest(unittest.TestCase):
         # Run tito tag
         tito("tag --accept-auto-changelog")
 
-
     def write_file(self, path, contents):
         out_f = open(path, 'w')
         out_f.write(contents)
         out_f.close()
-
 
     def create_cargo_project(self):
         os.chdir(self.full_pkg_dir)
@@ -90,13 +90,11 @@ class CargoTagTest(unittest.TestCase):
         run_command('git add Cargo.toml')
         run_command("git commit -m 'add Cargo.toml'")
 
-
     def create_rpm_package(self):
         os.chdir(self.full_pkg_dir)
         self.write_file(os.path.join(self.full_pkg_dir, 'hello_tito.spec'), TEST_SPEC)
         run_command('git add hello_tito.spec')
         run_command("git commit -m 'add spec file'")
-
 
     def test_cargo_toml_tag(self):
         """
