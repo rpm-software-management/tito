@@ -499,7 +499,8 @@ class VersionTagger(ConfigObject):
             raise TitoException('Unknown placeholder %s in tag_commit_message_format'
                                 % exc)
 
-        run_command('git commit -m %s' % quote(msg))
+        run_command('git commit -m {0} -m {1} -m {2}'.format(
+            quote(msg), quote("Created by command:"), quote(" ".join(sys.argv[:]))))
 
         tag_msg = "Tagging package [%s] version [%s] in directory [%s]." % \
                 (self.project_name, new_version_w_suffix,
