@@ -41,6 +41,7 @@ from tito.common import (debug, error_out, run_command,
 from tito.compat import write, StringIO, getstatusoutput
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
+from tito.tagger.cargobump import CargoBump
 
 
 class VersionTagger(ConfigObject):
@@ -132,6 +133,7 @@ class VersionTagger(ConfigObject):
         new_version = self._bump_version()
         self._check_tag_does_not_exist(self._get_new_tag(new_version))
         self._update_changelog(new_version)
+        CargoBump.tag_new_version(self.full_project_dir, new_version)
         self._update_setup_py(new_version)
         self._update_pom_xml(new_version)
         self._update_package_metadata(new_version)
