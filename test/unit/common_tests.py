@@ -21,6 +21,7 @@ from tito.common import (replace_version, find_spec_like_file, increase_version,
     _out)
 
 from tito.compat import StringIO
+from tito.tagger import CargoBump
 
 import os
 import re
@@ -259,6 +260,45 @@ class CheetahRenderTest(unittest.TestCase):
 
             self.assertEquals(call("/tmp/*.cheetah"), mock_glob.mock_calls[0])
             self.assertEquals(call("temp_pickle"), mock_unlink.mock_calls[0])
+
+
+class CargoTransformTest(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_simple_case(self):
+        input = ['[package]',
+                 'name = "hello_world" # the name of the package',
+                 'version = "0.1.0"    # the current version, obeying semver',
+                 'authors = ["you@example.com"]']
+        output = CargoBump.process_cargo_toml(input, "2.2.2")
+
+        self.assertEquals(4, len(output))
+        self.assertEquals("[package]", output[0])
+        self.assertEquals("name = \"hello_world\" # the name of the package", output[1])
+        self.assertEquals("version = \"2.2.2\"    # the current version, obeying semver", output[2])
+        self.assertEquals("authors = [\"you@example.com\"]", output[3])
+
+    def test_complicated_case(self):
+        input = ['[package]',
+                 'name = "hello_world"',
+                 'version = "2.2.2"',
+                 'authors = ["you@example.com"]',
+                 '',
+                 '[dependencies]',
+                 'regex = "1.0.0"',
+                 '',
+                 '[dependencies.termion]',
+                 'version = "0.1.0"']
+        output = CargoBump.process_cargo_toml(input, "3.3.3")
+
+        self.assertEquals(10, len(output))
+        self.assertEquals("version = \"3.3.3\"", output[2])
+        self.assertEquals("regex = \"1.0.0\"", output[6])
+        self.assertEquals("version = \"0.1.0\"", output[9])
 
 
 class SpecTransformTest(unittest.TestCase):
