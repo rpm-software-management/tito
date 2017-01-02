@@ -103,7 +103,7 @@ packages
 
 --changelog='MESSAGE'::
 Use 'MESSAGE' as the changelog when tagging, this can be specified
-everytime a package is tagged. Useful when needing to generate
+every time a package is tagged. Useful when needing to generate
 custom changelogs. This will override the auto generated changelog.
 
 -u, --undo::
@@ -175,7 +175,7 @@ override the default builder for some purpose, such as testing a build via mock.
 Custom arguments specific to a particular builder. (key=value)
 
 --scl='COLLECTION'::
-Build package for software collection. This is mostly usefull for building
+Build package for software collection. This is mostly useful for building
 src.rpm, because for rpm you want to define this option for specific tag in tito.props
 
 

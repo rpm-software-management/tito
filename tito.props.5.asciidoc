@@ -61,7 +61,7 @@ PRETTY FORMATS in git-log(1) for more information.
 
 changelog_with_email::
 If set to 0, then entries in changelog (subject of commits) are not
-followed by email of commiter. Default is 1.  This option is
+followed by email of committer. Default is 1.  This option is
 deprecated and provided for backwards-compatibility only.  New
 configurations should consider changelog_format instead.
 
@@ -181,14 +181,14 @@ the automatic git-annex symlinks on completion.
 
 TAGGERS
 -------
-All taggers which inherit fom tito.tagger.VersionTagger (all to this date),
+All taggers which inherit from tito.tagger.VersionTagger (all to this date),
 will update file GITROOT/.tito/packages/name-of-package and put there one
 line which consist of version-release of package, space delimiter, path to
 package directory relative to GITROOT.
 
 tito.tagger.VersionTagger::
 Standard tagger class, used for tagging packages build from source in git.
-Releaase will be tagged by incrementing the package version, and the actual
+Release will be tagged by incrementing the package version, and the actual
 "Release" will be always set to 1.
 
 tito.tagger.ReleaseTagger::
@@ -210,7 +210,7 @@ You can create section with the name same as releaser target and there you can
 specify this option:
 
 remote_git_name::
-This is usefull for FedoraGitReleaser and DistGitReleaser and will allow you to
+This is useful for FedoraGitReleaser and DistGitReleaser and will allow you to
 specify name of remote dist-git branch.
 +
 For example let say you have in releaser.conf:
