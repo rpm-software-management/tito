@@ -5,8 +5,7 @@ FROM fedora:rawhide
 MAINTAINER Paul Morgan <jumanjiman@gmail.com>
 
 # Install build dependencies.
-RUN yum -y install \
-    yum-utils \
+RUN dnf -y install \
     git-annex \
     python-devel \
     python-mock \
@@ -26,8 +25,8 @@ RUN git config --system user.name  "sandbox"
 #       to work around https://github.com/dotcloud/docker/issues/1676
 ADD tito.spec /tmp/tito.spec
 
-RUN yum-builddep -y /tmp/tito.spec
-RUN yum clean all
+RUN dnf builddep -y /tmp/tito.spec
+RUN dnf clean all
 
 USER sandbox
 VOLUME ["/home/sandbox"]
