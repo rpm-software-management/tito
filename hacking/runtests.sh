@@ -107,11 +107,11 @@ run_inside_image() {
     outfile=/tmp/${name}-${python_cmd}.out
     header $name
 
-    # --rm                 => remove container after run
-    # -i                   => interactive
-    # -t                   => tty
-    # -v host:container:ro => mount host in container read-only
-    docker_run="docker run --rm -i -t -v $PWD:/home/sandbox:ro"
+    # --rm                   => remove container after run
+    # -i                     => interactive
+    # -t                     => tty
+    # -v host:container:ro,Z => label the mount content read-only and with a private unshared label
+    docker_run="docker run --rm -i -t -v $PWD:/home/sandbox:ro,Z"
     printf "%-40s: " $outfile >> $summary
     $docker_run $name $python_cmd ./runtests.py -vv 2>&1 | tee $outfile
     tail -1 $outfile >> $summary
