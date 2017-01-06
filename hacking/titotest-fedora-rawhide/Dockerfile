@@ -4,8 +4,12 @@ FROM fedora:rawhide
 # http://jumanjiman.github.io/
 MAINTAINER Paul Morgan <jumanjiman@gmail.com>
 
+# Run an update to work around https://bugzilla.redhat.com/show_bug.cgi?id=1409590
+# TODO: remove this once the Rawhide base image is updated
+RUN dnf -y update
 # Install build dependencies.
 RUN dnf -y install \
+    'dnf-command(builddep)' \
     git-annex \
     python-devel \
     python-mock \
