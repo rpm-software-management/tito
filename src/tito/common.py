@@ -215,7 +215,8 @@ def _out(msgs, prefix, color_func, stream=sys.stdout):
 
     user_conf = read_user_config()
     if 'COLOR' in user_conf and (user_conf['COLOR'] == '0' or user_conf['COLOR'].lower() == 'false'):
-        color_func = lambda x: x
+        def color_func(x):
+            return x
 
     if isinstance(msgs, list):
         first_line = msgs.pop(0)
