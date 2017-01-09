@@ -15,9 +15,10 @@
 """
 Executes all tests.
 """
-
-import sys
 import os
+import shutil
+import sys
+import tempfile
 
 # Make sure we run from the source, this is tricky because the functional
 # tests need to find both the location of the 'tito' executable script,
@@ -38,5 +39,10 @@ if __name__ == '__main__':
     print("Using Python %s" % sys.version[0:3])
     print("Using nose %s" % nose.__version__[0:3])
     print("Running tito tests against: %s" % SRC_DIR)
+
+    # Make sure no older test directories exist
+    for dir in os.listdir(tempfile.gettempdir()):
+        if dir.endswith('-titotest'):
+            shutil.rmtree(os.path.join(tempfile.gettempdir(), dir))
 
     nose.main()

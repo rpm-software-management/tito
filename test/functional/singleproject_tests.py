@@ -62,6 +62,14 @@ class SingleProjectTests(TitoGitTestFixture):
         tito("tag --accept-auto-changelog --debug --use-version 9.0.0")
         check_tag_exists("%s-9.0.0-1" % PKG_NAME, offline=True)
 
+    def test_tag_with_release(self):
+        tito("tag --accept-auto-changelog --debug --use-release dummyvalue")
+        check_tag_exists("%s-0.0.2-dummyvalue" % PKG_NAME, offline=True)
+
+    def test_tag_with_version_and_release(self):
+        tito("tag --accept-auto-changelog --debug --use-version 9.0.0 --use-release dummyvalue")
+        check_tag_exists("%s-9.0.0-dummyvalue" % PKG_NAME, offline=True)
+
     def test_tag_with_changelog(self):
         tito("tag --accept-auto-changelog --use-version 9.0.0 --changelog='-Test'")
         check_tag_exists("%s-9.0.0-1" % PKG_NAME, offline=True)

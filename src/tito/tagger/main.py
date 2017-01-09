@@ -100,6 +100,8 @@ class VersionTagger(ConfigObject):
             self._new_changelog_msg = options.auto_changelog_msg
         if options.use_version:
             self._use_version = options.use_version
+        if options.use_release:
+            self._use_release = options.use_release
         if options.changelog:
             self._changelog = options.changelog
 
@@ -393,48 +395,30 @@ class VersionTagger(ConfigObject):
             out_f = open(self.spec_file + ".new", 'w')
 
             for line in in_f.readlines():
-                if release:
-                    match = re.match(release_regex, line)
-                    if match:
-                        line = "".join((match.group(1),
-                                        increase_version(match.group(2)),
-                                        "\n"
-                        ))
-                elif zstream:
-                    match = re.match(release_regex, line)
-                    if match:
-                        line = "".join((match.group(1),
-                                        increase_zstream(match.group(2)),
-                                        "\n"
-                        ))
-                elif hasattr(self, '_use_version'):
-                    match = re.match(version_regex, line)
-                    if match:
-                        line = "".join((match.group(1),
-                                        self._use_version,
-                                        "\n"
-                        ))
+                version_match = re.match(version_regex, line)
+                release_match = re.match(release_regex, line)
 
-                    match = re.match(release_regex, line)
-                    if match:
-                        line = "".join((match.group(1),
-                                        reset_release(match.group(2)),
-                                        "\n"
-                        ))
-                else:
-                    match = re.match(version_regex, line)
-                    if match:
-                        line = "".join((match.group(1),
-                                        increase_version(match.group(2)),
-                                        "\n"
-                        ))
+                if version_match and not zstream and not release:
+                    current_version = version_match.group(2)
+                    if hasattr(self, '_use_version'):
+                        updated_content = self._use_version
+                    else:
+                        updated_content = increase_version(current_version)
 
-                    match = re.match(release_regex, line)
-                    if match:
-                        line = "".join((match.group(1),
-                                        reset_release(match.group(2)),
-                                        "\n"
-                        ))
+                    line = "".join([version_match.group(1), updated_content, "\n"])
+
+                elif release_match:
+                    current_release = release_match.group(2)
+                    if hasattr(self, '_use_release'):
+                        updated_content = self._use_release
+                    elif release:
+                        updated_content = increase_version(current_release)
+                    elif zstream:
+                        updated_content = increase_zstream(current_release)
+                    else:
+                        updated_content = reset_release(current_release)
+
+                    line = "".join([release_match.group(1), updated_content, "\n"])
 
                 out_f.write(line)
 

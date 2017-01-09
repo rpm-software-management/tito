@@ -128,7 +128,6 @@ class TitoGitTestFixture(unittest.TestCase):
 
     def tearDown(self):
         run_command('chmod -R u+rw %s' % self.repo_dir)
-        shutil.rmtree(self.repo_dir)
         pass
 
     def write_file(self, path, contents):
