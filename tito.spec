@@ -17,7 +17,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{pythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.6.8
+Version: 0.6.9
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -121,6 +121,22 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Mon Jan 09 2017 Devan Goodwin <dgoodwin@rm-rf.ca> 0.6.9-1
+- Simplified version and release update logic (skuznets@redhat.com)
+- Added `--use-release` flag for `tito tag` (skuznets@redhat.com)
+- Use `def` instead of a lambda for function assignment (skuznets@redhat.com)
+- Fix typos in man pages (lsedlar@redhat.com)
+- explain how automatic tagging was done (msuchy@redhat.com)
+- Rename CargoTagger as CargoBump (msehnout@redhat.com)
+- Fix errors in documentation (lsedlar@redhat.com)
+- fix few pep8 errors (sehnoutka.martin@gmail.com)
+- Read tito.props and look for pkg managers section.
+  (sehnoutka.martin@gmail.com)
+- Implement cargo tagger using regular expressions (without toml library)
+  (sehnoutka.martin@gmail.com)
+- Add entry point for Cargo tagger and tagger class.
+  (sehnoutka.martin@gmail.com)
+
 * Tue Nov 01 2016 Devan Goodwin <dgoodwin@rm-rf.ca> 0.6.8-1
 - Don't use a special tagger for the `--use-version` case (skuznets@redhat.com)
 
