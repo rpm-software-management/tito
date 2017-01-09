@@ -49,6 +49,9 @@ You can either specify taggers shipped with tito(5) (see TAGGERS section
 below), or a custom tagger located within the directory your `lib_dir` option
 points to. This property is required.
 
+forceversiontagger::
+Similar to tagger but used when the --use-version flag is set
+
 lib_dir::
 Optional property defining a directory to be added to the Python path when
 executing tito. Allows you to store custom implementations of Builder, Tagger,
