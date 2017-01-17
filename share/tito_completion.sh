@@ -23,7 +23,6 @@ __tito_build_opts='
     --install
     --list-tags
     --no-cleanup
-    --only-tags=
     --output=
     --rpm
     --rpmbuild-options=
