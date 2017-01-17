@@ -328,11 +328,6 @@ class BuildModule(BaseCliModule):
                 help="Custom arguments specific to a particular builder."
                     " (key=value)")
 
-        self.parser.add_option("--list-tags", dest="list_tags",
-                action="store_true",
-                help="List tags for which we build this package",
-                )
-
         self.parser.add_option("--rpmbuild-options", dest='rpmbuild_options',
                 default='',
                 metavar="OPTIONS", help="Options to pass to rpmbuild.")
@@ -449,16 +444,6 @@ class ReleaseModule(BaseCliModule):
                 action="append",
                 help="Custom arguments to pass to the builder."
                     " (key=value)")
-
-#        self.parser.add_option("--list-tags", dest="list_tags",
-#                action="store_true",
-#                help="List tags for which we build this package",
-#                )
-        # These are specific only to Koji releaser, what can we do?
-#        self.parser.add_option("--only-tags", dest="only_tags",
-#                action="append", metavar="KOJITAG",
-#                help="Build in koji only for specified tags",
-#                )
 
     def _validate_options(self):
 
