@@ -198,7 +198,7 @@ CUSTOM BUILDERS / TAGGERS / RELEASERS
 =====================================
 
 If the existing implementations Tito provides are not sufficient for
-your needs, it is possible to define a lib_dir in tito.props globalconfig
+your needs, it is possible to define a lib_dir in tito.props buildconfig
 section. This is a directory that tito will add to the python path during
 execution, allowing you a place to define your own custom implementations of
 builders, taggers, and releasers.
@@ -227,7 +227,7 @@ history, and run:
 
 If your project is standalone (no remote reference you communicate with as
 authoritative) you may wish to set offline = "true" in .tito/tito.props under
-the globalconfig section, so you do not need to specify --offline with each
+the buildconfig section, so you do not need to specify --offline with each
 invocation.
 
 
