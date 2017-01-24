@@ -307,6 +307,10 @@ class BuildModule(BaseCliModule):
                 action="store_true", default=False,
                 help="Install any binary rpms being built. (WARNING: " +
                     "uses sudo rpm -Uvh --force)")
+        self.parser.add_option("--no-sudo", dest="escalate",
+                action="store_false", default=True,
+                help="Don't escalate privileges when installing. Use when " +
+                "running this command with required privileges.")
         self.parser.add_option("--dist", dest="dist", metavar="DISTTAG",
                 help="Dist tag to apply to srpm and/or rpm. (i.e. .el5)")
 

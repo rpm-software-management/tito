@@ -72,6 +72,8 @@ class BuilderBase(object):
         self.offline = self._get_optional_arg(kwargs, 'offline', False)
         self.auto_install = self._get_optional_arg(kwargs, 'auto_install',
                 False)
+        self.escalate_privileges = self._get_optional_arg(kwargs, 'escalate',
+                True)
         self.scl = self._get_optional_arg(args, 'scl', [None])[0] or \
                 self._get_optional_arg(kwargs, 'scl', '')
 
@@ -306,7 +308,8 @@ class BuilderBase(object):
 
             print
             reinstall = self.package_manager.is_installed(self.project_name, self.build_version)
-            cmd = self.package_manager.install(do_install, reinstall=reinstall, auto=True, offline=True)
+            cmd = self.package_manager.install(do_install, reinstall=reinstall, auto=True, offline=True,
+                                               escalate=self.escalate_privileges)
             print("%s" % cmd)
             try:
                 run_command_print(cmd)
@@ -1248,8 +1251,9 @@ def package_manager():
 
 
 class Rpm(object):
-    def install(self, packages, **kwargs):
-        return "sudo rpm -U --force %s" % ' '.join(packages)
+    def install(self, packages, escalate=True, **kwargs):
+        escalation_cmd = "sudo" if escalate else ""
+        return "%s rpm -U --force %s" % (escalation_cmd, ' '.join(packages))
 
     def builddep(self, spec):
         raise NotImplementedError
@@ -1270,13 +1274,14 @@ class Rpm(object):
 
 
 class Dnf(Rpm):
-    def install(self, packages, reinstall=False, auto=False, offline=False, **kwargs):
+    def install(self, packages, reinstall=False, auto=False, offline=False, escalate=True, **kwargs):
         action = "reinstall" if reinstall else "install"
         args = list(filter(lambda x: x, [
             "-C" if offline else None,
             "-y" if auto else None,
         ]))
-        cmd = "sudo dnf %s %s" % (action, " ".join(args + packages))
+        escalation_cmd = "sudo" if escalate else ""
+        cmd = "%s dnf %s %s" % (escalation_cmd, action, " ".join(args + packages))
         return " ".join(cmd.split())
 
     def builddep(self, spec):
@@ -1286,7 +1291,7 @@ class Dnf(Rpm):
 class Yum(Rpm):
     def install(self, packages, **kwargs):
         # Not the sexiest implementation, but very short
-        return Dnf().install(packages, **kwargs).replace("sudo dnf", "sudo yum")
+        return Dnf().install(packages, **kwargs).replace("dnf", "yum")
 
     def builddep(self, spec):
         return "yum-builddep %s" % spec
