@@ -145,6 +145,9 @@ Install any binary RPMs being built.
 
 WARNING: uses `sudo rpm -Uvh --force`
 
+--no-sudo::
+Don't escalate privileges when installing. Use when running this command with required privileges.
+
 --dist='DISTTAG'::
 Apply 'DISTTAG' to srpm and/or rpm. (e.g., ".el5")
 
