@@ -175,6 +175,12 @@ Custom arguments specific to a particular builder. (key=value)
 Build package for software collection. This is mostly useful for building
 src.rpm, because for rpm you want to define this option for specific tag in tito.props
 
+--quiet::
+Suppress output from the build process.
+
+--verbose::
+Expose more output from the build process.
+
 
 `tito release [options] TARGETS`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
