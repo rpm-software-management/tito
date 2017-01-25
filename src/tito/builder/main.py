@@ -468,7 +468,7 @@ class Builder(ConfigObject, BuilderBase):
         Can be overridden when custom taggers override counterpart,
         tito.VersionTagger._get_tag_for_version().
         """
-        return "%s-%s".format(self.project_name, version)
+        return "{}-{}".format(self.project_name, version)
 
     def tgz(self):
         """
