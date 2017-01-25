@@ -440,13 +440,21 @@ class Builder(ConfigObject, BuilderBase):
                     "tag, building untagged test project")
                 build_version = get_spec_version_and_release(self.start_dir,
                     find_spec_like_file(self.start_dir))
-            self.build_tag = "%s-%s" % (self.project_name, build_version)
+            self.build_tag = self._get_tag_for_version(build_version)
 
         self.spec_version = build_version.split('-')[-2]
         self.spec_release = build_version.split('-')[-1]
         if not self.test:
             check_tag_exists(self.build_tag, offline=self.offline)
         return build_version
+
+    def _get_tag_for_version(self, version):
+        """
+        Determine what the tag will look like for a given version.
+        Can be overridden when custom taggers override counterpart,
+        tito.VersionTagger._get_new_tag().
+        """
+        return "%s-%s".format(self.project_name, version)
 
     def tgz(self):
         """
