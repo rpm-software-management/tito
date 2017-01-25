@@ -90,6 +90,9 @@ spec file to tag package.
 --use-version='USE_VERSION'::
 Update the spec file with the specified version.
 
+--use-release='USE_RELEASE'::
+Update the spec file with the specified release.
+
 --no-auto-changelog::
 Don't automatically create a changelog entry for this
 tag if none is found
