@@ -249,17 +249,19 @@ class BuilderBase(object):
         if not self.ran_tgz:
             self.tgz()
 
-        define_dist = ""
-        if self.dist:
-            define_dist = "--define 'dist %s'" % self.dist
-
-        rpmbuild_options = self.rpmbuild_options + self._scl_to_rpmbuild_option()
-
-        cmd = ('rpmbuild --define "_source_filedigest_algorithm md5"  '
-            '--define "_binary_filedigest_algorithm md5" %s %s %s %s '
-            '-ba %s %s' % (rpmbuild_options,
-                self._get_rpmbuild_dir_options(), define_dist, self._get_clean_option(), self.spec_file,
-                self._get_verbosity_option()))
+        cmd = 'rpmbuild {}'.format(
+            " ".join([
+                '--define "_source_filedigest_algorithm md5"',
+                '--define "_binary_filedigest_algorithm md5"',
+                self.rpmbuild_options,
+                self._scl_to_rpmbuild_option(),
+                self._get_rpmbuild_dir_options(),
+                "--define 'dist {}'".format(self.dist) if self.dist else "",
+                self._get_clean_option(),
+                self._get_verbosity_option(),
+                '-ba {}'.format(self.spec_file),
+            ])
+        )
         debug("Building RPMs with: \n%s".format(cmd))
         try:
             output = run_command_print(cmd)
