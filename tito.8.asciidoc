@@ -90,6 +90,9 @@ spec file to tag package.
 --use-version='USE_VERSION'::
 Update the spec file with the specified version.
 
+--use-release='USE_RELEASE'::
+Update the spec file with the specified release.
+
 --no-auto-changelog::
 Don't automatically create a changelog entry for this
 tag if none is found
@@ -144,6 +147,9 @@ Build srpm and rpm
 Install any binary RPMs being built.
 
 WARNING: uses `sudo rpm -Uvh --force`
+
+--no-sudo::
+Don't escalate privileges when installing. Use when running this command with required privileges.
 
 --dist='DISTTAG'::
 Apply 'DISTTAG' to srpm and/or rpm. (e.g., ".el5")
