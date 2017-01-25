@@ -226,6 +226,8 @@ def _out(msgs, prefix, color_func, stream=sys.stdout):
     else:
         print(color_func(fmt % {'prefix': prefix, 'msg': msgs}), file=stream)
 
+    stream.flush()
+
 
 def error_out(error_msgs, die=True):
     """
