@@ -248,7 +248,7 @@ class BuilderBase(object):
             '--define "_binary_filedigest_algorithm md5" %s %s %s %s '
             '-ba %s' % (rpmbuild_options,
                 self._get_rpmbuild_dir_options(), define_dist, self._get_clean_option(), self.spec_file))
-        debug(cmd)
+        debug("Building RPMs with: \n%s".format(cmd))
         try:
             output = run_command_print(cmd)
         except (KeyboardInterrupt, SystemExit):

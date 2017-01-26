@@ -413,12 +413,6 @@ def run_command(command, print_on_success=False):
     If command fails, print status code and command output.
     """
     (status, output) = getstatusoutput(command)
-
-    # ISSUE 253 - allow for better debug output
-    debug("Command: %s" % command)
-    debug("Status code: %s" % status)
-    debug("Command output: %s\n" % output)
-
     if status > 0:
         msgs = [
             "Error running command: %s\n" % command,
@@ -431,6 +425,11 @@ def run_command(command, print_on_success=False):
         print("Command: %s\n" % command)
         print("Status code: %s\n" % status)
         print("Command output: %s\n" % output)
+    else:
+        debug("Command: %s" % command)
+        debug("Status code: %s" % status)
+        debug("Command output: %s\n" % output)
+
     return output
 
 
