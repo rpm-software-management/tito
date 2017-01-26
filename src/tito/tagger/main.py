@@ -556,7 +556,7 @@ class VersionTagger(ConfigObject):
         suffix = ""
         if self.config.has_option(BUILDCONFIG_SECTION, "tag_suffix"):
             suffix = self.config.get(BUILDCONFIG_SECTION, "tag_suffix")
-        return "{}{}".format(version, suffix)
+        return "{0}{1}".format(version, suffix)
 
     def _get_tag_for_version(self, version):
         """
@@ -564,7 +564,7 @@ class VersionTagger(ConfigObject):
         Can be overridden when custom taggers override counterpart,
         tito.Builder._get_tag_for_version().
         """
-        return "{}-{}".format(self.project_name, version)
+        return "{0}-{1}".format(self.project_name, version)
 
     def _update_version_file(self, new_version):
         """
