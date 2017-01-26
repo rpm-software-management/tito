@@ -232,8 +232,13 @@ class BuilderBase(object):
     # Assume that if tito's --no-cleanup option is set, also disable %clean in rpmbuild:
     def _get_clean_option(self):
         if self.no_cleanup:
-            return "--noclean"
-        return "--clean"
+            output = run_command('rpmbuild --help')
+            if '--noclean' in output:
+                return "--noclean"
+            else:
+                return ""
+        else:
+            return "--clean"
 
     def _get_verbosity_option(self):
         if self.verbose:
@@ -247,17 +252,17 @@ class BuilderBase(object):
         if not self.ran_tgz:
             self.tgz()
 
-        cmd = 'rpmbuild {}'.format(
+        cmd = 'rpmbuild {0}'.format(
             " ".join([
                 '--define "_source_filedigest_algorithm md5"',
                 '--define "_binary_filedigest_algorithm md5"',
                 self.rpmbuild_options,
                 self._scl_to_rpmbuild_option(),
                 self._get_rpmbuild_dir_options(),
-                "--define 'dist {}'".format(self.dist) if self.dist else "",
+                "--define 'dist {0}'".format(self.dist) if self.dist else "",
                 self._get_clean_option(),
                 self._get_verbosity_option(),
-                '-ba {}'.format(self.spec_file),
+                '-ba {0}'.format(self.spec_file),
             ])
         )
         try:
@@ -468,7 +473,7 @@ class Builder(ConfigObject, BuilderBase):
         Can be overridden when custom taggers override counterpart,
         tito.VersionTagger._get_tag_for_version().
         """
-        return "{}-{}".format(self.project_name, version)
+        return "{0}-{1}".format(self.project_name, version)
 
     def tgz(self):
         """

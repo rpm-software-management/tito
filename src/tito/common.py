@@ -718,7 +718,7 @@ def munge_setup_macro(fullname, line):
         if "%autosetup" in macro:
             args_match = re.search(r'(.+?)\s+-p[01]\s+\S+(.*)', args)
             if not args_match:
-                macro = "{} -p1".format(macro)
+                macro = "{0} -p1".format(macro)
 
         return macro
     return None
