@@ -232,8 +232,13 @@ class BuilderBase(object):
     # Assume that if tito's --no-cleanup option is set, also disable %clean in rpmbuild:
     def _get_clean_option(self):
         if self.no_cleanup:
-            return "--noclean"
-        return "--clean"
+            output = run_command('rpmbuild --help')
+            if '--noclean' in output:
+                return "--noclean"
+            else:
+                return ""
+        else:
+            return "--clean"
 
     def _get_verbosity_option(self):
         if self.verbose:
