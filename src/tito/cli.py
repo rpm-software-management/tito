@@ -362,6 +362,8 @@ class BuildModule(BaseCliModule):
             'auto_install': self.options.auto_install,
             'rpmbuild_options': self.options.rpmbuild_options,
             'scl': self.options.scl,
+            'quiet': self.options.quiet,
+            'verbose': self.options.verbose,
         }
 
         builder = create_builder(package_name, build_tag,
