@@ -332,6 +332,11 @@ class BuildModule(BaseCliModule):
                 help="Custom arguments specific to a particular builder."
                     " (key=value)")
 
+        self.parser.add_option("--quiet", dest="quiet", action="store_true",
+                help="Suppress output from the build process.")
+        self.parser.add_option("--verbose", dest="verbose", action="store_true",
+                help="Expose more output from the build process.")
+
         self.parser.add_option("--rpmbuild-options", dest='rpmbuild_options',
                 default='',
                 metavar="OPTIONS", help="Options to pass to rpmbuild.")
@@ -372,6 +377,8 @@ class BuildModule(BaseCliModule):
             error_out("Cannot combine --srpm and --rpm")
         if self.options.test and self.options.tag:
             error_out("Cannot build test version of specific tag.")
+        if self.options.quiet and self.options.verbose:
+            error_out("Cannot set --quiet and --verbose at the same time.")
 
     def _parse_builder_args(self):
         """

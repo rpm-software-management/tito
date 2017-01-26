@@ -77,6 +77,9 @@ class BuilderBase(object):
         self.scl = self._get_optional_arg(args, 'scl', [None])[0] or \
                 self._get_optional_arg(kwargs, 'scl', '')
 
+        self.quiet = self._get_optional_arg(kwargs, 'quiet', False)
+        self.verbose = self._get_optional_arg(kwargs, 'verbose', False)
+
         rpmbuildopts = self._get_optional_arg(args, 'rpmbuild_options', None)
         if rpmbuildopts:
             self.rpmbuild_options = ' '.join(rpmbuildopts)
@@ -232,22 +235,33 @@ class BuilderBase(object):
             return "--noclean"
         return "--clean"
 
+    def _get_verbosity_option(self):
+        if self.quiet:
+            return "--quiet"
+        elif self.verbose:
+            return "--verbose"
+        else:
+            return ""
+
     def rpm(self):
         """ Build an RPM. """
         self._create_build_dirs()
         if not self.ran_tgz:
             self.tgz()
 
-        define_dist = ""
-        if self.dist:
-            define_dist = "--define 'dist %s'" % self.dist
-
-        rpmbuild_options = self.rpmbuild_options + self._scl_to_rpmbuild_option()
-
-        cmd = ('rpmbuild --define "_source_filedigest_algorithm md5"  '
-            '--define "_binary_filedigest_algorithm md5" %s %s %s %s '
-            '-ba %s' % (rpmbuild_options,
-                self._get_rpmbuild_dir_options(), define_dist, self._get_clean_option(), self.spec_file))
+        cmd = 'rpmbuild {}'.format(
+            " ".join([
+                '--define "_source_filedigest_algorithm md5"',
+                '--define "_binary_filedigest_algorithm md5"',
+                self.rpmbuild_options,
+                self._scl_to_rpmbuild_option(),
+                self._get_rpmbuild_dir_options(),
+                "--define 'dist {}'".format(self.dist) if self.dist else "",
+                self._get_clean_option(),
+                self._get_verbosity_option(),
+                '-ba {}'.format(self.spec_file),
+            ])
+        )
         debug("Building RPMs with: \n%s".format(cmd))
         try:
             output = run_command_print(cmd)
@@ -454,7 +468,7 @@ class Builder(ConfigObject, BuilderBase):
         Can be overridden when custom taggers override counterpart,
         tito.VersionTagger._get_tag_for_version().
         """
-        return "%s-%s".format(self.project_name, version)
+        return "{}-{}".format(self.project_name, version)
 
     def tgz(self):
         """
