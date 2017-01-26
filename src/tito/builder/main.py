@@ -236,9 +236,7 @@ class BuilderBase(object):
         return "--clean"
 
     def _get_verbosity_option(self):
-        if self.quiet:
-            return "--quiet"
-        elif self.verbose:
+        if self.verbose:
             return "--verbose"
         else:
             return ""
@@ -262,9 +260,11 @@ class BuilderBase(object):
                 '-ba {}'.format(self.spec_file),
             ])
         )
-        debug("Building RPMs with: \n%s".format(cmd))
         try:
-            output = run_command_print(cmd)
+            if self.quiet:
+                output = run_command(cmd)
+            else:
+                output = run_command_print(cmd)
         except (KeyboardInterrupt, SystemExit):
             print("")
             exit(1)
