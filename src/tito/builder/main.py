@@ -452,7 +452,7 @@ class Builder(ConfigObject, BuilderBase):
         """
         Determine what the tag will look like for a given version.
         Can be overridden when custom taggers override counterpart,
-        tito.VersionTagger._get_new_tag().
+        tito.VersionTagger._get_tag_for_version().
         """
         return "%s-%s".format(self.project_name, version)
 
