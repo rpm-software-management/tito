@@ -262,7 +262,7 @@ class BuilderBase(object):
                 '-ba {}'.format(self.spec_file),
             ])
         )
-        debug("Building RPMs with: \n%s".format(cmd))
+        debug("Building RPMs with: \n{}".format(cmd))
         try:
             output = run_command_print(cmd)
         except (KeyboardInterrupt, SystemExit):
