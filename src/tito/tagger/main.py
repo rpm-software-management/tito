@@ -147,8 +147,7 @@ class VersionTagger(ConfigObject):
         Tag commit must be the most recent commit, and the tag must not
         exist in the remote git repo, otherwise we report and error out.
         """
-        tag = "%s-%s" % (self.project_name,
-                get_latest_tagged_version(self.project_name))
+        tag = self._get_tag_for_version(get_latest_tagged_version(self.project_name))
         info_out("Undoing tag: %s" % tag)
         if not tag_exists_locally(tag):
             raise TitoException(
@@ -258,7 +257,7 @@ class VersionTagger(ConfigObject):
                         write(fd, "\n")
                 else:
                     if old_version is not None:
-                        last_tag = "%s-%s" % (self.project_name, old_version)
+                        last_tag = self._get_tag_for_version(old_version)
                         output = self._generate_default_changelog(last_tag)
                     else:
                         output = self._new_changelog_msg
@@ -452,12 +451,7 @@ class VersionTagger(ConfigObject):
         """
         self._clear_package_metadata()
 
-        suffix = ""
-        # If global config specifies a tag suffix, use it:
-        if self.config.has_option(BUILDCONFIG_SECTION, "tag_suffix"):
-            suffix = self.config.get(BUILDCONFIG_SECTION, "tag_suffix")
-
-        new_version_w_suffix = "%s%s" % (new_version, suffix)
+        new_version_w_suffix = self._get_suffixed_version(new_version)
         # Write out our package metadata:
         metadata_file = os.path.join(self.rel_eng_dir, "packages",
                 self.project_name)
@@ -555,11 +549,22 @@ class VersionTagger(ConfigObject):
 
     def _get_new_tag(self, new_version):
         """ Returns the actual tag we'll be creating. """
+        return self._get_tag_for_version(self._get_suffixed_version(new_version))
+
+    def _get_suffixed_version(self, version):
+        """ If global config specifies a tag suffix, use it """
         suffix = ""
-        # If global config specifies a tag suffix, use it:
         if self.config.has_option(BUILDCONFIG_SECTION, "tag_suffix"):
             suffix = self.config.get(BUILDCONFIG_SECTION, "tag_suffix")
-        return "%s-%s%s" % (self.project_name, new_version, suffix)
+        return "{}{}".format(version, suffix)
+
+    def _get_tag_for_version(self, version):
+        """
+        Determine what the tag will look like for a given version.
+        Can be overridden when custom taggers override counterpart,
+        tito.Builder._get_tag_for_version().
+        """
+        return "{}-{}".format(self.project_name, version)
 
     def _update_version_file(self, new_version):
         """
