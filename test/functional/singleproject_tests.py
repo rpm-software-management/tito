@@ -126,7 +126,7 @@ class SingleProjectTests(TitoGitTestFixture):
 
         with Capture(silent=True) as capture:
             self.assertRaises(SystemExit, tito, "tag --accept-auto-changelog")
-        self.assertIn("Unknown placeholder 'ultimate_answer' in tag_commit_message_format",
+        self.assertTrue("Unknown placeholder 'ultimate_answer' in tag_commit_message_format" in
                       capture.err)
 
     def test_tag_with_custom_message_containing_quotes(self):
