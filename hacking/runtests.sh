@@ -29,6 +29,10 @@
 # to run on the first build.
 # (or if you remove the images)
 #
+# To run tests on only one platform, set the environment
+# variables $PY2_DISTROS and $PY3_DISTROS, like so:
+# PY3_DISTROS= PY2_DISTROS=fedora-25 hacking/runtests.sh
+#
 #
 # Expected output resembles:
 #
@@ -62,17 +66,20 @@
 # Pip no longer supported here, can't install mock libraries:
 #titotest-centos-5.9
 
-distros='
-titotest-centos-6
-titotest-centos-7
-titotest-fedora-25
-titotest-fedora-rawhide
-'
+readonly default_python2_distros=(
+    centos-6
+    centos-7
+    fedora-25
+    fedora-rawhide
+)
 
-python3_distros='
-titotest-fedora-25
-titotest-fedora-rawhide
-'
+readonly default_python3_distros=(
+    fedora-25
+    fedora-rawhide
+)
+
+python2_distros=("${PY2_DISTROS:-"${default_python2_distros[@]}"}")
+python3_distros=("${PY3_DISTROS:-"${default_python3_distros[@]}"}")
 
 rm -f /tmp/titotest*.out &> /dev/null
 summary=/tmp/titotest.out
@@ -96,10 +103,10 @@ build_image() {
     # Do not use...
     #   symlink: not available when building image
     #   cp: invalidates docker build cache
-    ln -f tito.spec hacking/$name/
-    pushd hacking/$name && echo $PWD && docker build --rm -t $name .
+    ln -f tito.spec hacking/titotest-$name/
+    pushd hacking/titotest-$name && echo $PWD && docker build --rm -t titotest-$name .
     popd
-    rm -f hacking/$name/tito.spec
+    rm -f hacking/titotest-$name/tito.spec
 }
 
 run_inside_image() {
@@ -114,20 +121,20 @@ run_inside_image() {
     # -v host:container:ro,Z => label the mount content read-only and with a private unshared label
     docker_run="docker run --rm -i -t -v $PWD:/home/sandbox:ro,Z"
     printf "%-40s: " $outfile >> $summary
-    $docker_run $name $python_cmd ./runtests.py -vv 2>&1 | tee $outfile
+    $docker_run titotest-$name $python_cmd ./runtests.py -vv 2>&1 | tee $outfile
     tail -1 $outfile >> $summary
 }
 
 echo "Building docker images..."
-for distro in $distros; do
+for distro in "${python2_distros[@]}" "${python3_distros[@]}"; do
     build_image $distro || exit 1
 done
 
-for distro in $distros; do
+for distro in "${python2_distros[@]}"; do
     run_inside_image $distro python
 done
 
-for distro in $python3_distros; do
+for distro in "${python3_distros[@]}"; do
     run_inside_image $distro python3
 done
 
