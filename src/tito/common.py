@@ -544,10 +544,28 @@ def undo_tag(tag):
     commit. Assumes you have taken necessary precautions to ensure this is
     what you want to do.
     """
+    if not is_git_state_clean():
+        error_out("Cannot undo a tag when the current git state is not clean!")
+
     # Using --merge here as it appears to undo the changes in the commit,
     # but preserve any modified files:
     output = run_command("git tag -d %s && git reset --merge HEAD^1" % tag)
     print(output)
+
+
+def is_git_state_clean():
+    """
+    Determines if the state of the current git repository is clean or not.
+    """
+    (status, _) = getstatusoutput("git diff-index --quiet HEAD")
+    if status != 0:
+        return False
+
+    (status, output) = getstatusoutput("git ls-files --exclude-standard --others")
+    if len(output) > 0 or status > 0:
+        return False
+
+    return True
 
 
 def get_remote_tag_sha1(tag):
