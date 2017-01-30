@@ -683,6 +683,7 @@ class InitModule(BaseCliModule):
         # DO NOT CALL BaseCliModule.main(self)
         # we are initializing tito to work in this module and
         # calling main will result in a configuration error.
+        (self.options, self.args) = self.parser.parse_args(argv)
         should_commit = False
 
         rel_eng_dir = os.path.join(find_git_root(), '.tito')
