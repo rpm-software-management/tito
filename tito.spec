@@ -80,7 +80,6 @@ git.
 
 %prep
 %setup -q -n tito-%{version}
-sed -i 1"s|#!.*|#!%{ourpythonbin}|" bin/tito
 
 %build
 %{ourpythonbin} setup.py build

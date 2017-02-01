@@ -37,9 +37,15 @@ setup(
         'blessed'
     ],
 
+    # automatically create console scripts
+    entry_points={
+        'console_scripts': [
+            'tito = tito.cli:main',
+        ],
+    },
+
     # non-python scripts go here
     scripts=[
-        'bin/tito',
         'bin/generate-patches.pl'
     ],
 

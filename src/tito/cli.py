@@ -887,3 +887,15 @@ CLI_MODULES = {
     "report": ReportModule,
     "init": InitModule,
 }
+
+
+def main():
+    """Command line's entry point."""
+    try:
+        CLI().main(sys.argv[1:])
+    except KeyboardInterrupt:
+        pass
+
+
+if __name__ == "__main__":
+    main()
