@@ -17,7 +17,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{pythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.6.9
+Version: 0.6.10
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -121,6 +121,39 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Wed Feb 01 2017 Devan Goodwin <dgoodwin@rm-rf.ca> 0.6.10-1
+- Do not undo tags when git state is dirty (skuznets@redhat.com)
+- Parse options in `tito init` (skuznets@redhat.com)
+- Only use `rpmbuild --noclean` if it is supported (skuznets@redhat.com)
+- Explicitly define indicies in formatting statements (skuznets@redhat.com)
+- Achieve quiet output from `rpmbuild` without passing `--quiet`
+  (skuznets@redhat.com)
+- Update the MANIFEST.in (skuznets@redhat.com)
+- Correctly pass verbosity options through the builder CLI
+  (skuznets@redhat.com)
+- Use correct print-formatting directive in debugging (skuznets@redhat.com)
+- Use `.format()` string formatting correctly in Builder (skuznets@redhat.com)
+- Refactor `rpmbuild` invocation for readability (skuznets@redhat.com)
+- Added `--quiet` and `--verbose` to `tito build` (skuznets@redhat.com)
+- Add a Travis CI manifest (skuznets@redhat.com)
+- Only flush output stream if flushing is supported (skuznets@redhat.com)
+- Added support for choosing platforms for tests (skuznets@redhat.com)
+- Refactored version->tag mapping logic in Tagger (skuznets@redhat.com)
+- Improved debugging for RPM build step (skuznets@redhat.com)
+- Print command debugging information only once (skuznets@redhat.com)
+- Flush output buffers (skuznets@redhat.com)
+- Document `tito tag --use-release` in the manpage (skuznets@redhat.com)
+- Added an option to not escalate privileges on `tito build --install`
+  (skuznets@redhat.com)
+- Factor out the version->tag mapping in the Builder (skuznets@redhat.com)
+- Collapse tagger class selection logic (skuznets@redhat.com)
+- Rename `globalconfig` section to `buildconfig` in README
+  (skuznets@redhat.com)
+- fixes #29 - remove --list-tags and --only-tags (jmrodri@gmail.com)
+- 253 - print cmd info when --debug is supplied (jmrodri@gmail.com)
+- Work around `dnf` issues and install builddep for Rawhide
+  (skuznets@redhat.com)
+
 * Mon Jan 09 2017 Devan Goodwin <dgoodwin@rm-rf.ca> 0.6.9-1
 - Simplified version and release update logic (skuznets@redhat.com)
 - Added `--use-release` flag for `tito tag` (skuznets@redhat.com)
