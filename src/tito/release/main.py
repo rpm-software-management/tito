@@ -350,8 +350,8 @@ class YumRepoReleaser(RsyncReleaser):
     # Default list of packages to copy
     filetypes = ['rpm']
 
-    # By default run createrepo without any paramaters
-    createrepo_command = "createrepo ."
+    # By default run createrepo_c without any paramaters
+    createrepo_command = "createrepo_c ."
 
     def __init__(self, name=None, tag=None, build_dir=None,
             config=None, user_config=None,
