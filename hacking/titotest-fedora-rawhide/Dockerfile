@@ -22,7 +22,8 @@ RUN dnf -y install          \
     python3-mock            \
     python3-nose            \
     python3-blessings       \
-    python3-pep8
+    python3-pep8            \
+    createrepo_c
 
 RUN useradd sandbox
 RUN git config --system user.email "sandbox@example.com"
