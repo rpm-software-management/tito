@@ -47,7 +47,6 @@ BuildRequires: docbook-style-xsl
 BuildRequires: libxslt
 BuildRequires: rpmdevtools
 BuildRequires: rpm-build
-BuildRequires: createrepo
 BuildRequires: tar
 BuildRequires: which
 

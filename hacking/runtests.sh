@@ -10,9 +10,8 @@
 #
 # To run all tests on all supported platforms:
 #
-#     yum -y install docker-io
-#     systemctl start docker.service
-#     systemctl enable docker.service
+#     yum -y install docker
+#     systemctl enable --now docker.service
 #     usermod -aG docker <your-username>
 #
 # Log out and log in to refresh your secondary group.
@@ -39,16 +38,13 @@
 #     -snip copious output-
 #     =====================
 #     Summary
-#     /tmp/titotest-centos-5.9-python.out     : OK (SKIP=1)
-#     /tmp/titotest-centos-6.4-python.out     : OK (SKIP=1)
-#     /tmp/titotest-fedora-20-python.out      : OK
-#     /tmp/titotest-fedora-20-python3.out     : OK
+#     /tmp/titotest-centos-6-python.out     : OK (SKIP=1)
+#     /tmp/titotest-fedora-25-python3.out     : OK
 #
 # You can then review the output, such as:
 #
 #     $ grep SKIP: /tmp/titotest-*.out
-#     /tmp/titotest-centos-5.9-python.out:... SKIP: git-annex is not available in epel-5
-#     /tmp/titotest-centos-6.4-python.out:... SKIP: git-annex '3.20120522 ' is too old
+#     /tmp/titotest-centos-6-python.out:... SKIP: git-annex '3.20120522 ' is too old
 #
 # After you run the test harness the first time,
 # you can optionally enter a container like so:
@@ -59,12 +55,9 @@
 #                  |   |  .--- tty
 #                  |   |  |  .---- mount current workdir into container
 #                  |   |  |  |                    .---- name of image
-#                  |   |  |  |                    |                   .-- get a shell
-#                  |   |  |  |                    |                   |
-#     docker run --rm -i -t -v $PWD:/home/sandbox titotest-centos-5.9 /bin/bash
-
-# Pip no longer supported here, can't install mock libraries:
-#titotest-centos-5.9
+#                  |   |  |  |                    |                 .-- get a shell
+#                  |   |  |  |                    |                 |
+#     docker run --rm -i -t -v $PWD:/home/sandbox titotest-centos-6 /bin/bash
 
 readonly default_python2_distros=(
     centos-6
