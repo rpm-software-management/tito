@@ -17,7 +17,7 @@ RUN yum -y install \
     python-nose \
     python-pep8 \
     rpm-build \
-    createrepo \
+    createrepo_c \
     tar \
     python-devel \
     which \
