@@ -468,6 +468,7 @@ class VersionTagger(ConfigObject):
                '[%(name)s] %(release_type)s [%(version)s].')
         if self.config.has_option(BUILDCONFIG_SECTION, "tag_commit_message_format"):
             fmt = self.config.get(BUILDCONFIG_SECTION, "tag_commit_message_format")
+        new_version_w_suffix = self._get_suffixed_version(new_version)
         try:
             msg = fmt % {
                 'name': self.project_name,
@@ -482,11 +483,11 @@ class VersionTagger(ConfigObject):
         run_command('git commit -m {0} -m {1} -m {2}'.format(
             quote(msg), quote("Created by command:"), quote(" ".join(sys.argv[:]))))
 
+        new_tag = self._get_new_tag(new_version)
         tag_msg = "Tagging package [%s] version [%s] in directory [%s]." % \
-                (self.project_name, new_version_w_suffix,
+                (self.project_name, new_tag,
                         self.relative_project_dir)
 
-        new_tag = self._get_new_tag(new_version)
         run_command('git tag -m "%s" %s' % (tag_msg, new_tag))
         print
         info_out("Created tag: %s" % new_tag)
@@ -547,9 +548,17 @@ class VersionTagger(ConfigObject):
             email = None
         return (name, email)
 
-    def _get_new_tag(self, new_version):
+    def _get_new_tag(self, version_and_release):
         """ Returns the actual tag we'll be creating. """
-        return self._get_tag_for_version(self._get_suffixed_version(new_version))
+        suffixed_version = self._get_suffixed_version(self._get_version(version_and_release))
+        release = self._get_release(version_and_release)
+        return self._get_tag_for_version(suffixed_version, release)
+
+    def _get_release(self, version_and_release):
+        return version_and_release.split('-')[-1]
+
+    def _get_version(self, version_and_release):
+        return version_and_release.split('-')[-2]
 
     def _get_suffixed_version(self, version):
         """ If global config specifies a tag suffix, use it """
@@ -558,13 +567,23 @@ class VersionTagger(ConfigObject):
             suffix = self.config.get(BUILDCONFIG_SECTION, "tag_suffix")
         return "{0}{1}".format(version, suffix)
 
-    def _get_tag_for_version(self, version):
+    def _get_tag_for_version(self, version, release=''):
         """
         Determine what the tag will look like for a given version.
         Can be overridden when custom taggers override counterpart,
         tito.Builder._get_tag_for_version().
         """
-        return "{0}-{1}".format(self.project_name, version)
+        if self.config.has_option(BUILDCONFIG_SECTION, "tag_format"):
+            tag_format = self.config.get(BUILDCONFIG_SECTION, "tag_format")
+        else:
+            tag_format = "{component}-{version}-{release}"
+        kwargs = {
+            'component': self.project_name,
+            'version': version,
+            'release': release
+        }
+        # Strip extra dashes if one of the params is empty
+        return tag_format.format(**kwargs).strip('-')
 
     def _update_version_file(self, new_version):
         """
