@@ -65,8 +65,8 @@ class VersionTaggerTest(unittest.TestCase):
         # Init RPM package
         self.create_rpm_package()
 
-        # Run tito tag
-        tito("tag --accept-auto-changelog")
+        # Run tito release
+        tito("tag release --accept-auto-changelog")
 
     def write_file(self, path, contents):
         out_f = open(path, 'w')
