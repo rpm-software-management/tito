@@ -33,7 +33,7 @@ from tito.common import scl_to_rpm_option, get_latest_tagged_version, \
     get_commit_count, find_gemspec_file, create_builder, compare_version,\
     find_cheetah_template_file, render_cheetah, replace_spec_release, \
     find_spec_like_file, warn_out, get_commit_timestamp, chdir, mkdir_p, \
-    find_git_root, info_out, munge_specfile
+    find_git_root, info_out, munge_specfile, BUILDCONFIG_SECTION
 from tito.compat import getstatusoutput
 from tito.exception import RunCommandException
 from tito.exception import TitoException
@@ -461,19 +461,31 @@ class Builder(ConfigObject, BuilderBase):
                     find_spec_like_file(self.start_dir))
             self.build_tag = self._get_tag_for_version(build_version)
 
-        self.spec_version = build_version.split('-')[-2]
+        self.spec_version = build_version.split('-')[0]
         self.spec_release = build_version.split('-')[-1]
         if not self.test:
             check_tag_exists(self.build_tag, offline=self.offline)
         return build_version
 
-    def _get_tag_for_version(self, version):
+    def _get_tag_for_version(self, version_and_release):
         """
         Determine what the tag will look like for a given version.
         Can be overridden when custom taggers override counterpart,
-        tito.VersionTagger._get_tag_for_version().
+        tito.Builder._get_tag_for_version().
         """
-        return "{0}-{1}".format(self.project_name, version)
+        version = version_and_release.split('-')[0]
+        release = version_and_release.split('-')[-1]
+        if self.config.has_option(BUILDCONFIG_SECTION, "tag_format"):
+            tag_format = self.config.get(BUILDCONFIG_SECTION, "tag_format")
+        else:
+            tag_format = "{component}-{version}-{release}"
+        kwargs = {
+            'component': self.project_name,
+            'version': version,
+            'release': release
+        }
+        # Strip extra dashes if one of the params is empty
+        return tag_format.format(**kwargs).strip('-')
 
     def tgz(self):
         """
