@@ -257,7 +257,7 @@ class VersionTagger(ConfigObject):
                         write(fd, "\n")
                 else:
                     if old_version is not None:
-                        last_tag = self._get_tag_for_version(old_version)
+                        last_tag = self._get_new_tag(old_version)
                         output = self._generate_default_changelog(last_tag)
                     else:
                         output = self._new_changelog_msg
