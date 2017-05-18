@@ -653,8 +653,11 @@ class TagModule(BaseCliModule):
             debug("block_tagging defined in tito.props")
             error_out("Tagging has been disabled in this git branch.")
 
-        tagger_class = get_class_by_name(self.config.get(
-            BUILDCONFIG_SECTION, DEFAULT_TAGGER))
+        if self.options.use_version:
+            tagger_class = get_class_by_name("tito.tagger.VersionTagger")
+        else:
+            tagger_class = get_class_by_name(self.config.get(
+                BUILDCONFIG_SECTION, DEFAULT_TAGGER))
         debug("Using tagger class: %s" % tagger_class)
 
         tagger = tagger_class(config=self.config,
