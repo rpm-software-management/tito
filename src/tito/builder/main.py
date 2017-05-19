@@ -290,7 +290,7 @@ class BuilderBase(object):
         self.artifacts.extend(files_written)
 
         print
-        info_out("Successfully built: %s" % ' '.join(files_written))
+        info_out("Successfully built: %s" % '\n\t- '.join(files_written))
 
     def _scl_to_rpmbuild_option(self):
         """ Returns rpmbuild option which disable or enable SC and print warning if needed """
