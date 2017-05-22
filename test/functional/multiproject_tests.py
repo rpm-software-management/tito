@@ -128,6 +128,12 @@ class MultiProjectTests(TitoGitTestFixture):
         new_ver = get_latest_tagged_version(TEST_PKG_2)
         self.assertTrue(release_bumped(start_ver, new_ver))
 
+    def test_release_tagger_use_release(self):
+        os.chdir(os.path.join(self.repo_dir, 'pkg2'))
+        tito('tag --debug --accept-auto-changelog --use-release 42')
+        new_ver = get_latest_tagged_version(TEST_PKG_2)
+        self.assertEquals(new_ver.split('-')[-1], "42")
+
     def test_release_tagger_use_version(self):
         os.chdir(os.path.join(self.repo_dir, 'pkg2'))
         start_ver = get_latest_tagged_version(TEST_PKG_2)
