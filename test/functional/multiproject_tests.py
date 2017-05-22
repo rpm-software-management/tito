@@ -128,6 +128,14 @@ class MultiProjectTests(TitoGitTestFixture):
         new_ver = get_latest_tagged_version(TEST_PKG_2)
         self.assertTrue(release_bumped(start_ver, new_ver))
 
+    def test_release_tagger_use_version(self):
+        os.chdir(os.path.join(self.repo_dir, 'pkg2'))
+        start_ver = get_latest_tagged_version(TEST_PKG_2)
+        tito('tag --debug --accept-auto-changelog --use-version 1.3.37')
+        new_ver = get_latest_tagged_version(TEST_PKG_2)
+        self.assertFalse(release_bumped(start_ver, new_ver))
+        self.assertEquals(new_ver, "1.3.37-1")
+
     def test_build_tgz(self):
         os.chdir(os.path.join(self.repo_dir, 'pkg1'))
         artifacts = tito('build --tgz')
