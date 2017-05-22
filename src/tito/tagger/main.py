@@ -654,7 +654,10 @@ class ReleaseTagger(VersionTagger):
         Tag a new release of the package. (i.e. x.y.z-r+1)
         """
         self._make_changelog()
-        new_version = self._bump_version(release=True)
+        # the user might have passed --use-version
+        # so let's just bump the release if they did not
+        bump_release = not hasattr(self, '_use_version')
+        new_version = self._bump_version(release=bump_release)
 
         self._check_tag_does_not_exist(self._get_new_tag(new_version))
         self._update_changelog(new_version)
