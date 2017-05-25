@@ -442,7 +442,7 @@ def run_command_print(command):
     """
     output = []
     env = os.environ.copy()
-    env['LC_ALL'] = 'C.UTF-8'
+    env['LC_ALL'] = 'C'
     p = subprocess.Popen(shlex.split(command),
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env,
         universal_newlines=True)
