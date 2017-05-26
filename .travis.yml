@@ -5,4 +5,4 @@ sudo: "required"
 services:
   - "docker"
 script:
-  - "hacking/runtests.sh"
+  - "PY2_DISTROS=fedora-25 PY3_DISTROS=fedora-25 hacking/runtests.sh"
