@@ -106,7 +106,7 @@ class CoprReleaser(KojiReleaser):
             self.print_dry_run_warning(cmd_submit)
             return
 
-        info_out("Submiting build into %s." % self.NAME)
+        info_out("Submitting build into %s." % self.NAME)
         self._run_command(cmd_submit)
 
     def _run_command(self, cmd):
