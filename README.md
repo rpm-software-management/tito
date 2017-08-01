@@ -29,9 +29,9 @@ Tito offers the following features:
 RELATED PROJECTS
 ================
 
-* `mockchain` from the [mock project](http://fedoraproject.org/wiki/Projects/Mock))
+* `mockchain` from the [mock project](https://github.com/rpm-software-management/mock/wiki))
 * `mock`'s built-in SCM support in `mock-scm`
-* Fedora's [Koji](http://koji.fedoraproject.org/koji/) build engine and [fedpkg](https://fedorahosted.org/fedpkg/) tools
+* Fedora's [Koji](https://koji.fedoraproject.org/koji/) build engine and [fedpkg](https://fedorahosted.org/fedpkg/) tools
 * The [OpenSUSE Build Service](https://build.opensuse.org/).
 * See also [Fedora wiki page for layered build tools](https://fedoraproject.org/wiki/Layered_build_scripts_for_package_maintainers)
 

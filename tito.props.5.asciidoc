@@ -80,6 +80,10 @@ This option is used control the text of git commit message that is used when
 new tag is generated. You can use "%(name)s", "%(release_type)s" and
 "%(version)s" placeholders.
 
+tag_format::
+This option controls the format used in VersionTagger. If not specified
+default format would be '{component}-{version}-{release}'. It won't affect
+other taggers.
 
 KOJI and COPR
 -------------
