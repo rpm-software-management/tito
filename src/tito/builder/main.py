@@ -614,7 +614,9 @@ class NoTgzBuilder(Builder):
         debug("Scanning for sources.")
         cmd = "/usr/bin/spectool --list-files '%s' | awk '{print $2}' |xargs -l1 --no-run-if-empty basename " % self.spec_file
         result = run_command(cmd)
-        self.sources = map(lambda x: os.path.join(self.rpmbuild_gitcopy, x), result.split("\n"))
+        self.sources = []
+        for source in result.split("\n"):
+            self.sources.append(os.path.join(self.rpmbuild_gitcopy, source))
         debug("  Sources: %s" % self.sources)
 
     def _get_rpmbuild_dir_options(self):
