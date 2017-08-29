@@ -694,7 +694,7 @@ def munge_specfile(spec_file, commit_id, commit_count, fullname=None, tgz_filena
                 m.group(2),
                 commit_count,
                 sha,
-                m.group(3),
+                m.group(3) or '',
             ))
             continue
 

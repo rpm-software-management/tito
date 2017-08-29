@@ -389,6 +389,23 @@ class SpecTransformTest(unittest.TestCase):
 
         self.assertEquals("%%setup -q -n %s\n" % fullname, output[1])
 
+    def test_transform_no_dist_tag(self):
+        simple_spec = dedent("""
+        Release: 1
+        Source: hello-1.0.0.tar.gz
+        """)
+        with open(self.spec_file, 'w') as f:
+            f.write(simple_spec)
+
+        sha = "acecafe"
+        commit_count = 5
+        munge_specfile(self.spec_file, sha, commit_count)
+        output = open(self.spec_file, 'r').readlines()
+
+        self.assertEquals(3, len(output))
+        self.assertEquals("Release: 1.git.%s.%s\n" % (commit_count, sha), output[1])
+        self.assertEquals("Source: hello-1.0.0.tar.gz\n", output[2])
+
 
 class VersionMathTest(unittest.TestCase):
     def test_increase_version_minor(self):
