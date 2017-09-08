@@ -16,6 +16,7 @@ Tito's Command Line Interface
 
 import sys
 import os
+import errno
 
 from optparse import OptionParser, SUPPRESS_HELP
 
@@ -237,10 +238,6 @@ class BaseCliModule(object):
             default=False)
 
         default_output_dir = lookup_build_dir(self.user_config)
-        if not os.path.exists(default_output_dir):
-            print("Creating output directory: %s" % default_output_dir)
-            run_command("mkdir %s" % default_output_dir)
-
         self.parser.add_option("-o", "--output", dest="output_dir",
                 metavar="OUTPUTDIR", default=default_output_dir,
                 help="Path to write temp files, tarballs and rpms to. "
@@ -255,6 +252,14 @@ class BaseCliModule(object):
         if len(argv) < 1:
             print(self.parser.error("Must supply an argument. "
                 "Try -h for help."))
+
+        build_dir = os.path.normpath(os.path.abspath(self.options.output_dir))
+        print("Creating output directory: %s" % build_dir)
+        try:
+            os.makedirs(build_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
 
     def load_config(self, package_name, build_dir, tag):
         self.config = ConfigLoader(package_name, build_dir, tag).load()
