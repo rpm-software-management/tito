@@ -29,7 +29,7 @@ Tito offers the following features:
 RELATED PROJECTS
 ================
 
-* `mockchain` from the [mock project](https://github.com/rpm-software-management/mock/wiki))
+* `mockchain` from the [mock project](https://github.com/rpm-software-management/mock/wiki)
 * `mock`'s built-in SCM support in `mock-scm`
 * Fedora's [Koji](https://koji.fedoraproject.org/koji/) build engine and [fedpkg](https://fedorahosted.org/fedpkg/) tools
 * The [OpenSUSE Build Service](https://build.opensuse.org/).
@@ -246,8 +246,8 @@ See:
 EXTERNAL DOCS
 =============
 
-[How to create new release of RPM package in 5 seconds]
-(http://miroslav.suchy.cz/blog/archives/2013/12/17/how_to_create_new_release_of_rpm_package_in_5_seconds)
+[How to create new release of RPM package in 5 seconds](
+http://miroslav.suchy.cz/blog/archives/2013/12/17/how_to_create_new_release_of_rpm_package_in_5_seconds)
 
-[How to build in Copr]
-(http://miroslav.suchy.cz/blog/archives/2013/12/29/how_to_build_in_copr)
+[How to build in Copr](
+http://miroslav.suchy.cz/blog/archives/2013/12/29/how_to_build_in_copr)
