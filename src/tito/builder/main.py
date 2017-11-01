@@ -225,7 +225,8 @@ class BuilderBase(object):
             ' "_binary_filedigest_algorithm md5" %s %s %s --nodeps -bs %s' % (
                 rpmbuild_options, self._get_rpmbuild_dir_options(),
                 define_dist, self.spec_file))
-        output = run_command_print(cmd)
+        run_command_func = run_command if self.quiet else run_command_print
+        output = run_command_func(cmd)
         self.srpm_location = find_wrote_in_rpmbuild_output(output)[0]
         self.artifacts.append(self.srpm_location)
 
@@ -1142,25 +1143,26 @@ class MockBuilder(Builder):
             self.normal_builder.cleanup()
 
     def _build_in_mock(self):
+        run_command_func = run_command if self.quiet else run_command_print
         if not self.speedup:
             print("Initializing mock...")
-            run_command("mock %s -r %s --init" % (self.mock_cmd_args, self.mock_tag))
+            run_command_func("mock %s -r %s --init" % (self.mock_cmd_args, self.mock_tag))
         else:
             print("Skipping mock --init due to speedup option.")
 
         print("Installing deps in mock...")
-        run_command("mock %s -r %s %s" % (
+        run_command_func("mock %s -r %s %s" % (
             self.mock_cmd_args, self.mock_tag, self.srpm_location))
         print("Building RPMs in mock...")
-        run_command('mock %s -r %s --rebuild %s' %
+        run_command_func('mock %s -r %s --rebuild %s' %
                 (self.mock_cmd_args, self.mock_tag, self.srpm_location))
         mock_output_dir = os.path.join(self.rpmbuild_dir, "mockoutput")
-        run_command("mock %s -r %s --copyout /builddir/build/RPMS/ %s" %
+        run_command_func("mock %s -r %s --copyout /builddir/build/RPMS/ %s" %
                 (self.mock_cmd_args, self.mock_tag, mock_output_dir))
 
         # Copy everything mock wrote out to /tmp/tito:
         files = os.listdir(mock_output_dir)
-        run_command("cp -v %s/*.rpm %s" %
+        run_command_func("cp -v %s/*.rpm %s" %
                 (mock_output_dir, self.rpmbuild_basedir))
         print
         info_out("Wrote:")

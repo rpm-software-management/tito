@@ -443,16 +443,29 @@ def run_command_print(command):
     output = []
     env = os.environ.copy()
     env['LC_ALL'] = 'C'
-    p = subprocess.Popen(shlex.split(command),
-        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env,
-        universal_newlines=True)
-    for line in run_subprocess(p):
-        line = line.rstrip('\n')
-        print(line)
-        output.append(line)
-    print("\n"),
-    if p.poll() > 0:
-        raise RunCommandException(command, p.poll(), "\n".join(output))
+    p = None
+    try:
+        p = subprocess.Popen(shlex.split(command),
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env,
+            universal_newlines=True)
+    except OSError as e:
+        status = e.errno
+        output = e.strerror
+    if p:
+        for line in run_subprocess(p):
+            line = line.rstrip('\n')
+            print(line)
+            output.append(line)
+        print("\n"),
+        status = p.poll()
+    if status > 0:
+        msgs = [
+            "Error running command: %s\n" % command,
+            "Status code: %s\n" % status,
+            "Command output: %s\n" % output,
+        ]
+        error_out(msgs, die=False)
+        raise RunCommandException(command, status, "\n".join(output))
     return '\n'.join(output)
 
 
@@ -462,7 +475,7 @@ def run_subprocess(p):
         line = p.stdout.readline()
         if len(line) > 0:
             yield line
-        if(retcode is not None):
+        if retcode is not None:
             break
 
 
