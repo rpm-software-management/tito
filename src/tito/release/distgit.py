@@ -49,7 +49,11 @@ class FedoraGitReleaser(Releaser):
         self.git_branches = \
             self.releaser_config.get(self.target, "branches").split(" ")
 
-        if self.config.has_option(self.target, "remote_git_name"):
+        # check .tito/releasers.conf
+        if self.releaser_config.has_option(self.target, "remote_git_name"):
+            overwrite_checkout = self.releaser_config.get(self.target, "remote_git_name")
+        # fallback to old, incorrect, location: .tito/packages/tito.props
+        elif self.config.has_option(self.target, "remote_git_name"):
             overwrite_checkout = self.config.get(self.target, "remote_git_name")
         else:
             overwrite_checkout = None
