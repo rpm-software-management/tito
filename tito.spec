@@ -17,7 +17,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{pythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.6.10
+Version: 0.6.11
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -120,6 +120,30 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Thu Dec 07 2017 Devan Goodwin <dgoodwin@rm-rf.ca> 0.6.11-1
+- Fixing remote_git_name (adammhaile@gmail.com)
+- Fix links in README.md file (mzalewsk@redhat.com)
+- Encourage usage of git push --follow-tags (mzalewsk@redhat.com)
+- Print mock output when building with MockBuilder (yuxzhu@redhat.com)
+- Fix a race condition when /tmp/tito doesn't exist (vfreex@gmail.com)
+- Don't append 'None' to Release line with no '%%{?dist}' part
+  (patrice.fournier@ifax.com)
+- python3's map() returns a map object, but we expect sources to be a list
+  (evgeni@golov.de)
+- Submitting was missing a t. (jmrodri@gmail.com)
+- update links (robberphex@gmail.com)
+- use LC_ALL=C.UTF-8 rather than plain C (msuchy@redhat.com)
+- make ReleaseTagger honour --use-version (egolov@redhat.com)
+- also verify that ReleaseTagger supports --use-release (egolov@redhat.com)
+- add test for ReleaseTagger together with --use-version (egolov@redhat.com)
+- Format package list more cleanly (skuznets@redhat.com)
+- Custom tag support in tito release (vrutkovs@redhat.com)
+- VersionTagger should support custom tag format (vrutkovs@redhat.com)
+- Remove createrepo_c BR from spec (ngompa13@gmail.com)
+- Use createrepo_c for creating rpm-md repos (ngompa13@gmail.com)
+- Fixup Fedora Dockerfiles to work correctly (ngompa13@gmail.com)
+- Remove useless EL5 stuff (ngompa13@gmail.com)
+
 * Wed Feb 01 2017 Devan Goodwin <dgoodwin@rm-rf.ca> 0.6.10-1
 - Do not undo tags when git state is dirty (skuznets@redhat.com)
 - Parse options in `tito init` (skuznets@redhat.com)
