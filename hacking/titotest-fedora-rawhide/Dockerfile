@@ -23,6 +23,7 @@ RUN dnf -y install          \
     python3-nose            \
     python3-blessings       \
     python3-pep8            \
+    rsync                   \
     createrepo_c
 
 RUN useradd sandbox
