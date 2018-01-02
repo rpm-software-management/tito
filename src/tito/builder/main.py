@@ -197,6 +197,21 @@ class BuilderBase(object):
             mkdir_p(d)
         self._check_build_dirs_access(build_dirs)
 
+    def _copy_extra_sources(self):
+        """
+        Copy extra %{SOURCEX} files to the SOURCE folder.
+        """
+        with open(self.spec_file, 'r') as spec:
+            for line in spec.readlines():
+                match = re.match(r'SOURCE[1-9]\d*:(?P<src>.*)', line, re.I)
+                if match is None:
+                    continue
+
+                src = os.path.join(self.rpmbuild_sourcedir, self.tgz_dir, match.group('src').strip())
+                debug("Copying %s -> %s" % (src, self.rpmbuild_sourcedir))
+                shutil.copy(src, self.rpmbuild_sourcedir)
+
+
     def srpm(self, dist=None):
         """
         Build a source RPM.
@@ -207,6 +222,8 @@ class BuilderBase(object):
 
         if self.test:
             self._setup_test_specfile()
+        
+        self._copy_extra_sources()
 
         debug("Creating srpm from spec file: %s" % self.spec_file)
         define_dist = ""
