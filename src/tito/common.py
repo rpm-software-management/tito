@@ -814,7 +814,7 @@ def get_project_name(tag=None, scl=None):
                 "rpm -q --qf '%%{name}\n' %s --specfile %s 2> /dev/null | grep -e '^$' -v | head -1" %
                 (scl_to_rpm_option(scl, silent=True), file_path))
             if not output:
-                error_out(["Unable to determine project name from spec file: %s foooooooo" % file_path,
+                error_out(["Unable to determine project name from spec file: %s" % file_path,
                     "Try rpm -q --specfile %s" % file_path,
                     "Try rpmlint -i %s" % file_path])
             return output
