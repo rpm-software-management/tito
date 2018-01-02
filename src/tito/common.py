@@ -445,7 +445,7 @@ def run_command_print(command):
     env['LC_ALL'] = 'C'
     p = None
     try:
-        p = subprocess.Popen(shlex.split(command),
+        p = subprocess.Popen(command, shell=True,
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env,
             universal_newlines=True)
     except OSError as e:
