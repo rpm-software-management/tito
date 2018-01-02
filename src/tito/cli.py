@@ -348,12 +348,15 @@ class BuildModule(BaseCliModule):
         self.parser.add_option("--scl", dest='scl',
                 default='',
                 metavar="COLLECTION", help="Build package for software collection.")
+        self.parser.add_option("--project-name", dest='project_name', default=None, help="Force project name. " +
+                "This can used to avoid early specfile parsing. If you have %include directive on" +
+                "your specfile this can help.")
 
     def main(self, argv):
         BaseCliModule.main(self, argv)
 
         build_dir = os.path.normpath(os.path.abspath(self.options.output_dir))
-        package_name = get_project_name(tag=self.options.tag)
+        package_name = get_project_name(tag=self.options.tag) if self.options.project_name is None else self.options.project_name
 
         build_tag = self.options.tag
 
