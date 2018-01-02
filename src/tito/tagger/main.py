@@ -236,6 +236,7 @@ class VersionTagger(ConfigObject):
                 found_changelog = True
 
                 old_version = get_latest_tagged_version(self.project_name)
+                debug("Got old_version: %s" % old_version)
 
                 fd, name = tempfile.mkstemp()
                 write(fd, "# Create your changelog entry below:\n")
@@ -258,6 +259,7 @@ class VersionTagger(ConfigObject):
                 else:
                     if old_version is not None:
                         last_tag = self._get_new_tag(old_version)
+                        debug("last_tag = %s" % last_tag)
                         output = self._generate_default_changelog(last_tag)
                     else:
                         output = self._new_changelog_msg
@@ -448,10 +450,13 @@ class VersionTagger(ConfigObject):
         file here stores the latest package version (for the git branch you
         are on) as well as the relative path to the project's code. (from the
         git root)
+
+        Release, and tag suffix, are included here, but package name is not.
         """
         self._clear_package_metadata()
 
-        new_version_w_suffix = self._get_suffixed_version(new_version)
+        # NOTE: This is actually version-release-suffix
+        new_version_w_suffix = '%s%s' % (new_version, self._get_suffix())
         # Write out our package metadata:
         metadata_file = os.path.join(self.rel_eng_dir, "packages",
                 self.project_name)
@@ -468,7 +473,6 @@ class VersionTagger(ConfigObject):
                '[%(name)s] %(release_type)s [%(version)s].')
         if self.config.has_option(BUILDCONFIG_SECTION, "tag_commit_message_format"):
             fmt = self.config.get(BUILDCONFIG_SECTION, "tag_commit_message_format")
-        new_version_w_suffix = self._get_suffixed_version(new_version)
         try:
             msg = fmt % {
                 'name': self.project_name,
@@ -550,9 +554,10 @@ class VersionTagger(ConfigObject):
 
     def _get_new_tag(self, version_and_release):
         """ Returns the actual tag we'll be creating. """
-        suffixed_version = self._get_suffixed_version(self._get_version(version_and_release))
+        version = self._get_version(version_and_release)
+        suffix = self._get_suffix()
         release = self._get_release(version_and_release)
-        return self._get_tag_for_version(suffixed_version, release)
+        return self._get_tag_for_version(version, release, suffix=suffix)
 
     def _get_release(self, version_and_release):
         return version_and_release.split('-')[-1]
@@ -560,14 +565,14 @@ class VersionTagger(ConfigObject):
     def _get_version(self, version_and_release):
         return version_and_release.split('-')[-2]
 
-    def _get_suffixed_version(self, version):
+    def _get_suffix(self):
         """ If global config specifies a tag suffix, use it """
         suffix = ""
         if self.config.has_option(BUILDCONFIG_SECTION, "tag_suffix"):
             suffix = self.config.get(BUILDCONFIG_SECTION, "tag_suffix")
-        return "{0}{1}".format(version, suffix)
+        return suffix
 
-    def _get_tag_for_version(self, version, release=''):
+    def _get_tag_for_version(self, version, release='', suffix=''):
         """
         Determine what the tag will look like for a given version.
         Can be overridden when custom taggers override counterpart,
@@ -576,11 +581,12 @@ class VersionTagger(ConfigObject):
         if self.config.has_option(BUILDCONFIG_SECTION, "tag_format"):
             tag_format = self.config.get(BUILDCONFIG_SECTION, "tag_format")
         else:
-            tag_format = "{component}-{version}-{release}"
+            tag_format = "{component}-{version}-{release}{suffix}"
         kwargs = {
             'component': self.project_name,
             'version': version,
-            'release': release
+            'release': release,
+            'suffix': suffix
         }
         # Strip extra dashes if one of the params is empty
         return tag_format.format(**kwargs).strip('-')

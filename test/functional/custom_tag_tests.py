@@ -58,15 +58,12 @@ class VersionTaggerTest(unittest.TestCase):
         tito("init")
         run_command('sed -i "s;tagger.*;tagger = tito.tagger.VersionTagger;g" .tito/tito.props')
         run_command('echo "offline = true" >> .tito/tito.props')
-        run_command('echo "tag_format = {component}-v{version}" >> .tito/tito.props')
         run_command('git add .tito/tito.props')
         run_command("git commit -m 'set offline in tito.props'")
 
         # Init RPM package
         self.create_rpm_package()
 
-        # Run tito release
-        tito("tag release --accept-auto-changelog")
 
     def write_file(self, path, contents):
         out_f = open(path, 'w')
@@ -83,5 +80,16 @@ class VersionTaggerTest(unittest.TestCase):
         """
         Check that the tag is correct
         """
+        # Run tito tag
+        run_command('echo "tag_format = {component}-v{version}" >> .tito/tito.props')
+        tito("tag --accept-auto-changelog")
         latest_tag = getoutput("git describe --abbrev=0 --tags")
-        assert latest_tag == 'hello_tito-v0.1.8'
+        self.assertEqual('hello_tito-v0.1.8', latest_tag)
+        # TODO: test package metadata looks correct
+
+    def test_tag_with_suffix(self):
+        run_command('echo "tag_suffix = .fc1_17" >> .tito/tito.props')
+        tito("tag --accept-auto-changelog")
+        latest_tag = getoutput("git describe --abbrev=0 --tags")
+        self.assertEqual('hello_tito-0.1.8-1.fc1_17', latest_tag)
+        # TODO: test package metadata looks correct
