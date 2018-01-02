@@ -29,7 +29,7 @@ setup(
     license='GPLv2+',
 
     package_dir={
-        'tito': 'src/tito',
+        '': 'src/',
     },
     packages=find_packages('src'),
     include_package_data=True,
