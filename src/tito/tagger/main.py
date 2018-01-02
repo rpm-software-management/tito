@@ -235,6 +235,9 @@ class VersionTagger(ConfigObject):
             if not found_changelog and line.startswith("%changelog"):
                 found_changelog = True
 
+                # WARNING: This is the last tag, minus the assumed "PKGNAME-" prefix. This complicates
+                # the appearance that we can control the package name in the tag with a custom tag_format,
+                # at present we cannot. (as it would break old/existing package metadata files)
                 old_version = get_latest_tagged_version(self.project_name)
                 debug("Got old_version: %s" % old_version)
 
@@ -258,7 +261,7 @@ class VersionTagger(ConfigObject):
                         write(fd, "\n")
                 else:
                     if old_version is not None:
-                        last_tag = self._get_new_tag(old_version)
+                        last_tag = "%s-%s" % (self.project_name, old_version)
                         debug("last_tag = %s" % last_tag)
                         output = self._generate_default_changelog(last_tag)
                     else:

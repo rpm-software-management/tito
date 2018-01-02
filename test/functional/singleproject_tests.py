@@ -14,7 +14,7 @@
 
 import os
 from tito.builder import Builder, UpstreamBuilder
-from tito.common import tag_exists_locally, check_tag_exists
+from tito.common import tag_exists_locally, check_tag_exists, run_command
 from tito.release import Releaser
 from tito.compat import getoutput
 from functional.fixture import TitoGitTestFixture, tito
@@ -57,6 +57,13 @@ class SingleProjectTests(TitoGitTestFixture):
     def test_tag(self):
         tito("tag --accept-auto-changelog --debug")
         check_tag_exists("%s-0.0.2-1" % PKG_NAME, offline=True)
+
+    def test_tag_with_suffix(self):
+        # Append a tag suffix to our global tito.props:
+        run_command('echo "tag_suffix = .fc1_17" >> .tito/tito.props')
+        # Create a 0.0.2 now with the addition of a tag suffix:
+        tito("tag --accept-auto-changelog --debug")
+        check_tag_exists("%s-0.0.2-1.fc1_17" % PKG_NAME, offline=True)
 
     def test_tag_with_version(self):
         tito("tag --accept-auto-changelog --debug --use-version 9.0.0")

@@ -64,7 +64,6 @@ class VersionTaggerTest(unittest.TestCase):
         # Init RPM package
         self.create_rpm_package()
 
-
     def write_file(self, path, contents):
         out_f = open(path, 'w')
         out_f.write(contents)
