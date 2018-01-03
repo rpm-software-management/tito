@@ -436,7 +436,7 @@ def run_command(command, print_on_success=False):
     return output
 
 
-def run_command_print(command):
+def run_command_print(command, print_on_success=False):
     """
     Simliar to run_command but prints each line of output on the fly.
     """
@@ -445,19 +445,25 @@ def run_command_print(command):
     env['LC_ALL'] = 'C'
     p = None
     try:
-        p = subprocess.Popen(shlex.split(command),
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env,
-            universal_newlines=True)
+        p = subprocess.Popen(command,
+                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env,
+                             universal_newlines=True, shell=True)
     except OSError as e:
         status = e.errno
         output = e.strerror
-    if p:
-        for line in run_subprocess(p):
-            line = line.rstrip('\n')
-            print(line)
-            output.append(line)
-        print("\n"),
-        status = p.poll()
+        msgs = [
+            "Error to run command: %s\n" % command,
+            "Error code: %s\n" % e.errno,
+            "Error description: %s\n" % e.strerror,
+        ]
+        error_out(msgs, die=False)
+        raise RunCommandException(command, status, "\n".join(output))
+    for line in run_subprocess(p):
+        line = line.rstrip('\n')
+        print(line)
+        output.append(line)
+    print("\n")
+    status = p.poll()
     if status > 0:
         msgs = [
             "Error running command: %s\n" % command,
@@ -466,6 +472,14 @@ def run_command_print(command):
         ]
         error_out(msgs, die=False)
         raise RunCommandException(command, status, "\n".join(output))
+    elif print_on_success:
+        print("Command: %s\n" % command)
+        print("Status code: %s\n" % status)
+        print("Command output: %s\n" % output)
+    else:
+        debug("Command: %s\n" % command)
+        debug("Status code: %s\n" % status)
+        debug("Command output: %s\n" % output)
     return '\n'.join(output)
 
 
