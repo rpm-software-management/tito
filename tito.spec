@@ -102,9 +102,6 @@ cp -a tito.8 %{buildroot}/%{_mandir}/man8/
 # bash completion facilities
 install -Dp -m 0644 share/tito_completion.sh %{buildroot}%{_datadir}/bash-completion/completions/tito
 
-%clean
-rm -rf $RPM_BUILD_ROOT
-
 
 %files
 %doc AUTHORS COPYING
