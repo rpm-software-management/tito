@@ -1150,9 +1150,6 @@ class MockBuilder(Builder):
         else:
             print("Skipping mock --init due to speedup option.")
 
-        print("Installing deps in mock...")
-        run_command_func("mock %s -r %s %s" % (
-            self.mock_cmd_args, self.mock_tag, self.srpm_location))
         print("Building RPMs in mock...")
         run_command_func('mock %s -r %s --rebuild %s' %
                 (self.mock_cmd_args, self.mock_tag, self.srpm_location))
