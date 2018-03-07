@@ -1159,12 +1159,13 @@ class MockBuilder(Builder):
 
         # Copy everything mock wrote out to /tmp/tito:
         files = os.listdir(mock_output_dir)
-        run_command_func("cp -v %s/*.rpm %s" %
-                (mock_output_dir, self.rpmbuild_basedir))
+
         print
         info_out("Wrote:")
         for rpm in files:
             rpm_path = os.path.join(self.rpmbuild_basedir, rpm)
+            run_command_func("cp -v %s %s" %
+                   (os.path.join(mock_output_dir,rpm), self.rpmbuild_basedir))
             print("  %s" % rpm_path)
             self.artifacts.append(rpm_path)
         print
