@@ -1282,6 +1282,43 @@ class GitAnnexBuilder(NoTgzBuilder):
         return compare_version(version, '5.20131213') >= 0
 
 
+class GitLfsBuilder(NoTgzBuilder):
+    """
+    Builder class for Git LFS support.
+    """
+
+    def _setup_sources(self):
+        super(GitLfsBuilder, self)._setup_sources()
+
+        self.old_cwd = os.getcwd()
+        os.chdir(os.path.join(self.old_cwd, self.relative_project_dir))
+        debug("learning %s" % self.relative_project_dir)
+        (status, output) = getstatusoutput("which git-lfs")
+        if status != 0:
+            msg = "Please run '%s' as root." % self.package_manager.install(["git-lfs"])
+            error_out('%s' % msg)
+
+        gitlfs_files = run_command("git-lfs ls-files").splitlines()
+        run_command("git-lfs fetch")
+        debug("  Lfs files: %s" % gitlfs_files)
+        for gfile in gitlfs_files:
+            m = re.search('(?<=' + self.relative_project_dir + ')(.*)', gfile)
+            if m:
+                filterfile = m.groups(0)
+                mstr = filterfile[0]
+                debug("Copying file %s " % mstr)
+                debug("To %s " % self.rpmbuild_gitcopy)
+                os.remove(os.path.join(self.rpmbuild_gitcopy, mstr))
+                shutil.copy(mstr, self.rpmbuild_gitcopy)
+
+        os.chdir(self.old_cwd)
+
+    def cleanup(self):
+        if hasattr(self, 'old_cwd'):
+            os.chdir(self.old_cwd)
+        super(GitLfsBuilder, self).cleanup()
+
+
 def package_manager():
     if os.path.isfile("/usr/bin/dnf"):
         return Dnf()
