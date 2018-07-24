@@ -12,6 +12,7 @@ from tito.builder.main import \
     MockBuilder, \
     BrewDownloadBuilder, \
     GitAnnexBuilder, \
+    GitLfsBuilder, \
     MeadBuilder
 
 from tito.builder.fetch import FetchBuilder
