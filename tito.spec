@@ -114,8 +114,8 @@ install -Dp -m 0644 share/tito_completion.sh %{buildroot}%{_datadir}/bash-comple
 %{_bindir}/generate-patches.pl
 %{_datadir}/bash-completion/completions/tito
 %dir %{python_sitelib}/tito
-%{python_sitelib}/tito/*
-%{python_sitelib}/tito-*.egg-info
+%{python2_sitelib}/tito/*
+%{python2_sitelib}/tito-*.egg-info
 
 
 %changelog
