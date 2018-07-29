@@ -35,7 +35,7 @@ Requires: python3-bugzilla
 Requires: python3-blessings
 Requires: rpm-python3
 %else
-BuildRequires: python-devel
+BuildRequires: python2-devel
 BuildRequires: python-setuptools
 Requires: python-setuptools
 Requires: python-bugzilla
