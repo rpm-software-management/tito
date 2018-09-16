@@ -68,7 +68,7 @@ class FedoraGitReleaser(Releaser):
         self.build_targets = build_target_parser.get_build_targets()
 
         # Files we should copy to git during a release:
-        self.copy_extensions = (".spec", ".patch")
+        self.copy_extensions = (".spec", ".changes", ".patch")
 
     def release(self, dry_run=False, no_build=False, scratch=False):
         self.scratch = scratch
