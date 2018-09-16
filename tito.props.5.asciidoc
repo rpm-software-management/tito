@@ -231,6 +231,10 @@ And it will push package into ruby193-rubygem-simple-navigation dist-git despite
 fact that it is in /rubygem-simple-navigation directory. And project name (as taken
 from spec file) is rubygem-simple-navigation.
 
+tito.susetagger.SUSETagger::
+Tagger which is based on VersionTagger and deal with SUSE / OBS specific
+separate changes file and format.
+
 EXAMPLE
 -------
  [buildconfig]
