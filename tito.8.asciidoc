@@ -65,6 +65,10 @@ patches applied within it), you can change the tagger class in
 branch; if you'd prefer to do this on a per-package basis you can do so in a
 package specific `tito.props`.
 
+If you work in a OBS style git with a separate .changes file for the changelog,
+change the tagger class to `tito.susetagger.SUSETagger`. The SUSETagger is based
+on the VersionTagger.
+
 -h, --help::
 show this help message and exit
 
