@@ -8,10 +8,10 @@ Tito offers the following features:
 
  - Tag new releases with incremented RPM version or release.
  - Auto-generate spec file changelog based on git history since last tag.
- - Create reliable tar.gz's with consistent checksums from any tag.
+ - Create reliable tar.gz files with consistent checksums from any tag.
  - Build source and binary rpms off any tag.
  - Build source and binary "test" rpms off most recently committed code.
- - Build multiple source rpms with appropriate disttag's for submission to the
+ - Build multiple source rpms with appropriate disttags for submission to the
    Koji build system
  - Build rpms via the "mock" tool.
  - On a per-branch basis in git:
@@ -73,7 +73,7 @@ From your git repository:
 
 This will create a top-level metadata directory called ".tito/" and commit it
 to git. This directory will store tito's configuration and package metadata on
-a per branch basis. It will be filtered out when creating .tar.gz's.
+a per branch basis. It will be filtered out when creating .tar.gz files.
 
 
 TAGGING PACKAGES
