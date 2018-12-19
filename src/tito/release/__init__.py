@@ -10,3 +10,4 @@ from tito.release.main import \
 from tito.release.distgit import FedoraGitReleaser, DistGitReleaser, DistGitMeadReleaser
 from tito.release.obs import ObsReleaser
 from tito.release.copr import CoprReleaser
+from tito.release.LocalYumRepo import LocalYumRepoReleaser
