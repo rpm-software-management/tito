@@ -64,9 +64,6 @@ BuildRequires: rpm-python3
 Requires: rpm-build
 Requires: rpmlint
 Requires: fedpkg
-%if 0%{?fedora} && 0%{?fedora} < 31
-Requires: fedora-cert
-%endif
 Requires: fedora-packager
 Requires: rpmdevtools
 # Cheetah doesn't exist for Python 3, but it's what Mead uses.  We
