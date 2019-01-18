@@ -64,7 +64,6 @@ BuildRequires: rpm-python3
 Requires: rpm-build
 Requires: rpmlint
 Requires: fedpkg
-Requires: fedora-cert
 Requires: fedora-packager
 Requires: rpmdevtools
 # Cheetah doesn't exist for Python 3, but it's what Mead uses.  We
