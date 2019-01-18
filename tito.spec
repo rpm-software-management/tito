@@ -23,8 +23,8 @@ Summary: A tool for managing rpm based git projects
 
 Group: Development/Tools
 License: GPLv2
-URL: http://rm-rf.ca/tito
-Source0: http://rm-rf.ca/files/tito/tito-%{version}.tar.gz
+URL: https://github.com/dgoodwin/tito
+Source0: https://github.com/dgoodwin/tito/archive/tito-%{version}-1.tar.gz
 
 BuildArch: noarch
 %if %{use_python3}
@@ -77,7 +77,10 @@ Tito is a tool for managing tarballs, rpms, and builds for projects using
 git.
 
 %prep
-%setup -q -n tito-%{version}
+# the weird directory name is because github makes the directory name
+# '(projectname)-(tag)', and the tags for tito have 'tito' in them and
+# '-1' on the end...
+%setup -q -n tito-tito-%{version}-1
 sed -i 1"s|#!.*|#!%{ourpythonbin}|" bin/tito
 
 %build
