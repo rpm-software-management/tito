@@ -1,20 +1,20 @@
 %if 0%{?rhel} > 7 || 0%{?fedora}
 %global use_python3 1
 %global use_python2 0
-%global pythonbin %{__python3}
-%global python_sitelib %{python3_sitelib}
+%global ourpythonbin %{__python3}
+%global our_sitelib %{python3_sitelib}
 %else
 %global use_python3 0
 %global use_python2 1
 %if 0%{?__python2:1}
-%global pythonbin %{__python2}
-%global python_sitelib %{python2_sitelib}
+%global ourpythonbin %{__python2}
+%global our_sitelib %{python2_sitelib}
 %else
-%global pythonbin %{__python}
-%global python_sitelib %{python_sitelib}
+%global ourpythonbin %{__python}
+%global our_sitelib %{our_sitelib}
 %endif
 %endif
-%{!?python_sitelib: %define python_sitelib %(%{pythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
+%{!?our_sitelib: %define our_sitelib %(%{ourpythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
 Version: 0.6.11
@@ -77,10 +77,10 @@ git.
 
 %prep
 %setup -q -n tito-%{version}
-sed -i 1"s|#!.*|#!%{pythonbin}|" bin/tito
+sed -i 1"s|#!.*|#!%{ourpythonbin}|" bin/tito
 
 %build
-%{pythonbin} setup.py build
+%{ourpythonbin} setup.py build
 # convert manages
 a2x -d manpage -f manpage titorc.5.asciidoc
 a2x -d manpage -f manpage tito.8.asciidoc
@@ -89,8 +89,8 @@ a2x -d manpage -f manpage releasers.conf.5.asciidoc
 
 %install
 rm -rf $RPM_BUILD_ROOT
-%{pythonbin} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT
-rm -f $RPM_BUILD_ROOT%{python_sitelib}/*egg-info/requires.txt
+%{ourpythonbin} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT
+rm -f $RPM_BUILD_ROOT%{our_sitelib}/*egg-info/requires.txt
 # manpages
 %{__mkdir_p} %{buildroot}%{_mandir}/man5
 %{__mkdir_p} %{buildroot}%{_mandir}/man8
@@ -110,9 +110,9 @@ install -Dp -m 0644 share/tito_completion.sh %{buildroot}%{_datadir}/bash-comple
 %{_bindir}/tito
 %{_bindir}/generate-patches.pl
 %{_datadir}/bash-completion/completions/tito
-%dir %{python_sitelib}/tito
-%{python2_sitelib}/tito/*
-%{python2_sitelib}/tito-*.egg-info
+%dir %{our_sitelib}/tito
+%{our_sitelib}/tito/*
+%{our_sitelib}/tito-*.egg-info
 
 
 %changelog
