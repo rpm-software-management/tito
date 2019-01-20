@@ -1,6 +1,7 @@
 import os.path
 import subprocess
 import shutil
+import pprint
 
 from tito.common import run_command, info_out, error_out, debug
 from tito.release import Releaser
@@ -36,16 +37,41 @@ class LocalYumRepoReleaser(Releaser):
     # Default name of the directory into which source RPMs are placed
     src_packages_dir = 'SPackages'
 
+    # By default run createrepo2 without any paramaters other than the current release directory
+    createrepo_command = "createrepo2"
+
     def __init__(self, name=None, tag=None, build_dir=None,
             config=None, user_config=None,
             target=None, releaser_config=None, no_cleanup=False,
             test=False, auto_accept=False, **kwargs):
+
+        print("dir(self) = " + pprint.pformat(dir(self), indent=4, width=256) + "\n")
+        print("Self = " + pprint.pformat(self.__dict__, indent=4, width=256) + "\n")
+
+        print("name = " + pprint.pformat(name))
+        print("tag = " + pprint.pformat(tag))
+        print("build_dir = " + pprint.pformat(build_dir))
+        print("config = [\n" + '\n    '.join(self.dumpConfig(config).splitlines()) + '\n]')
+        print("user_config = " + pprint.pformat(user_config))
+        print("target = " + pprint.pformat(target))
+        print("releaser_config = [\n" + '\n    '.join(self.dumpConfig(releaser_config).splitlines()) + '\n]')
+        print("test = " + pprint.pformat(test))
+        print("auto_accept = " + pprint.pformat(auto_accept))
+        print("kwargs = " + pprint.pformat(kwargs))
+        print("++++++++\n")
 
         Releaser.__init__(self, name, tag, build_dir, config,
                 user_config, target, releaser_config, no_cleanup, test,
                 auto_accept, **kwargs)
 
         self.build_dir = build_dir
+
+        print("++++++++\n")
+        print("self.config = [\n" + '\n    '.join(self.dumpConfig(self.config).splitlines()) + '\n]')
+        print("self.releaser_config = [\n" + '\n    '.join(self.dumpConfig(self.releaser_config).splitlines()) + '\n]')
+        print("createrepo_command = " + self.createrepo_command)
+        print("--------\n")
+
 
     def release(self, dry_run=False, no_build=False, scratch=False):
         """
@@ -94,6 +120,8 @@ class LocalYumRepoReleaser(Releaser):
         the noarch directory.
         """
 
+        if not os.path.exists(repo_root_dir):
+            raise EnvironmentError('Repository root directory "{!s}" does not exist or has been specified incorrectly.'.format(repo_root_dir))
         os.chdir(repo_root_dir)
 
         # overwrite default self.filetypes if filetypes option is specified in config
@@ -118,14 +146,36 @@ class LocalYumRepoReleaser(Releaser):
 
             if artifact_type in self.filetypes:
                 dest_dir = os.path.join(*(artifact_arch, packages_subdir))
+                if not os.path.exists(dest_dir):
+                    try:
+                        os.makedirs(dest_dir, mode=0o755)
+                    except OSError as exc:
+                        if exc.errno != os.errno.EEXIST:
+                            raise
                 print("copy: %s > %s" % (artifact, dest_dir))
                 shutil.copy(artifact, dest_dir)
+
+    def dumpConfig(self, config):
+        '''
+        Dump the specified configuration.
+        '''
+        cfg = {}
+        for section in config.sections():
+            cfg[section] = config.items(section)
+
+        return pprint.pformat(cfg, indent=4, width=256)
 
     def process_packages(self, repo_root_dir):
         """
         no-op. This will be overloaded by a subclass if needed.
         """
-        pass
+        print("dir(self) = " + pprint.pformat(dir(self), indent=4, width=256) + "\n")
+        print("Self = " + pprint.pformat(self.__dict__, indent=4, width=256) + "\n")
+        print("self.config = [\n" + '\n    '.join(self.dumpConfig(self.config).splitlines()) + '\n]')
+        print("self.releaser_config = [\n" + '\n    '.join(self.dumpConfig(self.releaser_config).splitlines()) + '\n]')
+        print("createrepo_command = " + self.createrepo_command)
+        print("repo_root_dir = " + pprint.pformat(repo_root_dir, indent=4, width=256) + "\n")
+        os.system(self.createrepo_command + " " + repo_root_dir)
 
     def cleanup(self):
         """
