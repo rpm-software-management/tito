@@ -21,7 +21,6 @@ Version: 0.6.11
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
-Group: Development/Tools
 License: GPLv2
 URL: https://github.com/dgoodwin/tito
 Source0: https://github.com/dgoodwin/tito/archive/tito-%{version}-1.tar.gz
