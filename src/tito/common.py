@@ -810,7 +810,7 @@ def get_project_name(tag=None, scl=None):
     current working directory. Error out if neither is present.
     """
     if tag is not None:
-        p = re.compile('(.*?)-(\d.*)')
+        p = re.compile('(.*?)-(\d[^-]*)(-[^-]*)?$')
         m = p.match(tag)
         if not m:
             error_out("Unable to determine project name in tag: %s" % tag)
