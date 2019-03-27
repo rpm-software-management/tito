@@ -193,9 +193,9 @@ class TarFixer(object):
                 field_size = int(re.match('(\d+)', member_template).group(1)) - 1
                 fmt = "%0" + str(field_size) + "o\x00"
                 as_string = fmt % chunk_props[member]
-                pack_values.append(as_string.encode("utf8"))
+                pack_values.append(as_string.decode("utf8").encode("utf8"))
             else:
-                pack_values.append(chunk_props[member].encode("utf8"))
+                pack_values.append(chunk_props[member].decode("utf8").encode("utf8"))
         return pack_values
 
     def process_header(self, chunk_props):
