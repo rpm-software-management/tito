@@ -26,26 +26,34 @@ if PY2:
     from ConfigParser import RawConfigParser
     from StringIO import StringIO
     import xmlrpclib
+    text_type = unicode
+    binary_type = str
 else:
     import subprocess
     from configparser import NoOptionError
     from configparser import RawConfigParser
     from io import StringIO
     import xmlrpc.client as xmlrpclib
+    text_type = str
+    binary_type = bytes
 
 
-def decode_bytes(x, source_encoding):
-    if PY2:
+def ensure_text(x, encoding="utf8"):
+    if isinstance(x, binary_type):
+        return x.decode(encoding)
+    elif isinstance(x, text_type):
         return x
     else:
-        return x.decode(source_encoding)
+        raise TypeError("Not expecting type '%s'" % type(x))
 
 
-def encode_bytes(x, destination_encoding):
-    if PY2:
+def ensure_binary(x, encoding="utf8"):
+    if isinstance(x, text_type):
+        return x.encode(encoding)
+    elif isinstance(x, binary_type):
         return x
     else:
-        return bytes(x, destination_encoding)
+        raise TypeError("Not expecting type '%s'" % type(x))
 
 
 def getstatusoutput(cmd):
