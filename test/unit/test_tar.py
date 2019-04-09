@@ -1,8 +1,11 @@
+# coding=utf-8
 import hashlib
 import os
+import tarfile
 import unittest
+import io
 
-from tito.compat import StringIO, encode_bytes
+from tito.compat import StringIO, ensure_binary
 from tito.tar import TarFixer
 from mock import Mock
 
@@ -12,8 +15,10 @@ EXPECTED_REF = "3518d720bff20db887b7a5e5dddd411d14dca1f9"
 
 class TarTest(unittest.TestCase):
     def setUp(self):
-        self.out = StringIO()
+        self.out = io.BytesIO()
         self.tarfixer = TarFixer(None, self.out, EXPECTED_TIMESTAMP, EXPECTED_REF)
+        self.utf8_containing_file = os.path.join(os.path.dirname(__file__), 'resources', 'les_misérables.tar')
+        self.utf8_file = os.path.join(os.path.dirname(__file__), 'resources', 'archivé.tar')
         self.test_file = os.path.join(os.path.dirname(__file__), 'resources', 'archive.tar')
         self.reference_file = os.path.join(os.path.dirname(__file__), 'resources', 'archive-fixed.tar')
         self.reference_hash = self.hash_file(self.reference_file)
@@ -65,7 +70,7 @@ class TarTest(unittest.TestCase):
         self.fh = open(self.test_file, 'rb')
         self.tarfixer.fh = self.fh
         self.tarfixer.fix()
-        self.assertEqual(self.reference_hash, self.hash_buffer(encode_bytes(self.out.getvalue(), "utf8")))
+        self.assertEqual(self.reference_hash, self.hash_buffer(self.out.getvalue()))
 
     def test_fix_fails_unless_file_in_binary_mode(self):
         self.fh = open(self.test_file, 'r')
@@ -96,8 +101,8 @@ class TarTest(unittest.TestCase):
         self.tarfixer.create_extended_header()
         header = self.out.getvalue()
         self.assertEqual(512, len(header))
-        self.assertEqual("52 comment=%s\n" % EXPECTED_REF, header[:52])
-        self.assertEqual("\x00" * (512 - 53), header[53:])
+        self.assertEqual(ensure_binary("52 comment=%s\n" % EXPECTED_REF), header[:52])
+        self.assertEqual(ensure_binary("\x00" * (512 - 53)), header[53:])
 
     def test_calculate_checksum(self):
         fields = {
@@ -119,5 +124,33 @@ class TarTest(unittest.TestCase):
         }
         result = self.tarfixer.encode_header(chunk, ['mode', 'name'])
         expected_result = ["%07o\x00" % mode, "hello"]
-        expected_result = list(map(lambda x: encode_bytes(x, "utf8"), expected_result))
+        expected_result = list(map(lambda x: ensure_binary(x), expected_result))
         self.assertEqual(expected_result, result)
+
+    def test_utf8_file(self):
+        # The goal of this test is to *not* throw a UnicodeDecodeError
+        self.fh = open(self.utf8_file, 'rb')
+        self.tarfixer.fh = self.fh
+        self.tarfixer.fix()
+
+        self.assertEqual(self.reference_hash, self.hash_buffer(self.out.getvalue()))
+
+        # rewind the buffer
+        self.out.seek(0)
+        try:
+            tarball = tarfile.open(fileobj=self.out, mode="r")
+        except tarfile.TarError:
+            self.fail("Unable to open generated tarball")
+
+    def test_utf8_containing_file(self):
+        # # The goal of this test is to *not* blow up due to a corrupted tarball
+        self.fh = open(self.utf8_containing_file, 'rb')
+        self.tarfixer.fh = self.fh
+        self.tarfixer.fix()
+
+        # rewind the buffer
+        self.out.seek(0)
+        try:
+            tarball = tarfile.open(fileobj=self.out, mode="r")
+        except tarfile.TarError as e:
+            self.fail("Unable to open generated tarball: %s" % e)
