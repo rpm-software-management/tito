@@ -14,8 +14,8 @@
 import re
 import struct
 import sys
-import codecs
-import tito.compat
+
+from tito.compat import decode_bytes, encode_bytes
 
 RECORD_SIZE = 512
 
@@ -120,7 +120,7 @@ class TarFixer(object):
     def full_read(self, read_size):
         read = self.fh.read(read_size)
         amount_read = len(read)
-        while amount_read < read_size:
+        while (amount_read < read_size):
             left_to_read = read_size - amount_read
             next_read = self.fh.read(left_to_read)
 
@@ -133,7 +133,13 @@ class TarFixer(object):
         return read
 
     def write(self, data):
-        self.out.write(tito.compat.ensure_binary(data))
+        """Write the data correctly depending on the mode of the file.  While binary mode
+        is preferred, we support text mode for streams like stdout."""
+        if hasattr(self.out, 'mode') and 'b' in self.out.mode:
+            data = bytearray(data)
+        else:
+            data = decode_bytes(data, "utf8")
+        self.out.write(data)
 
     def chunk_to_hash(self, chunk):
         # Our struct template is only 500 bytes, but the last 12 bytes are NUL
@@ -141,7 +147,7 @@ class TarFixer(object):
         # template as '12x'.  The unpack_from method will read the bytes our
         # template defines from chunk and discard the rest.
         unpacked = struct.unpack_from(self.struct_template, chunk)
-        unpacked = list(map(lambda x: tito.compat.ensure_text(x), unpacked))
+        unpacked = list(map(lambda x: decode_bytes(x, 'utf8'), unpacked))
         # Zip what we read together with the member names and create a dictionary
         chunk_props = dict(zip(self.struct_members, unpacked))
 
@@ -187,9 +193,9 @@ class TarFixer(object):
                 field_size = int(re.match('(\d+)', member_template).group(1)) - 1
                 fmt = "%0" + str(field_size) + "o\x00"
                 as_string = fmt % chunk_props[member]
-                pack_values.append(tito.compat.ensure_binary(as_string))
+                pack_values.append(as_string.encode("utf8"))
             else:
-                pack_values.append(tito.compat.ensure_binary(chunk_props[member]))
+                pack_values.append(chunk_props[member].encode("utf8"))
         return pack_values
 
     def process_header(self, chunk_props):
@@ -212,10 +218,10 @@ class TarFixer(object):
         # the size of the whole string (including the %u), the first %s is the
         # keyword, the second one is the value.
         #
-        # Since the git ref is always 40 ASCII characters we can pre-compute the length
-        # to put in the extended header
+        # Since the git ref is always 40 characters we can
+        # pre-compute the length to put in the extended header
         comment = "52 comment=%s\n" % self.gitref
-        data_out = struct.pack("=52s460x", tito.compat.ensure_binary(comment, "ascii"))
+        data_out = struct.pack("=52s460x", encode_bytes(comment, "ascii"))
         self.write(data_out)
         self.total_length += len(data_out)
 
@@ -235,9 +241,9 @@ class TarFixer(object):
         values = self.encode_header(chunk_props)
         new_chksum = 0
         for val in values:
-            val_bytes = bytearray(tito.compat.ensure_binary(val))
+            val_bytes = val.decode("utf8")
             for b in val_bytes:
-                new_chksum += b
+                new_chksum += ord(b)
         return "%07o\x00" % new_chksum
 
     def process_chunk(self, chunk):
@@ -330,8 +336,8 @@ class TarFixer(object):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 5:
-        sys.exit("Usage: %s UNIX_TIMESTAMP GIT_HASH TAR_FILE DESTINATION_FILE" % sys.argv[0])
+    if len(sys.argv) != 4:
+        sys.exit("Usage: %s UNIX_TIMESTAMP GIT_HASH TAR_FILE" % sys.argv[0])
 
     try:
         timestamp = int(sys.argv[1])
@@ -340,17 +346,11 @@ if __name__ == '__main__':
 
     gitref = sys.argv[2]
     tar_file = sys.argv[3]
-    destination_file = sys.argv[4]
-
-    try:
-        dfh = open(destination_file, 'wb')
-    except:
-        print("Could not open %s" % destination_file)
 
     try:
         fh = open(tar_file, 'rb')
     except:
         print("Could not read %s" % tar_file)
 
-    reader = TarFixer(fh, dfh, timestamp, gitref)
+    reader = TarFixer(fh, sys.stdout, timestamp, gitref)
     reader.fix()
