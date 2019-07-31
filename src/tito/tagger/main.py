@@ -488,7 +488,13 @@ class VersionTagger(ConfigObject):
                 (self.project_name, new_tag,
                         self.relative_project_dir)
 
-        run_command('git tag -m "%s" %s' % (tag_msg, new_tag))
+        # Optionally gpg sign the tag
+        sign_tag = ""
+        if self.config.has_option(BUILDCONFIG_SECTION, "sign_tag"):
+            if self.config.getboolean(BUILDCONFIG_SECTION, "sign_tag"):
+                sign_tag = "-s "
+
+        run_command('git tag %s -m "%s" %s' % (sign_tag, tag_msg, new_tag))
         print
         info_out("Created tag: %s" % new_tag)
         print("   View: git show HEAD")
