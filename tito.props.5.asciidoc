@@ -85,6 +85,9 @@ This option controls the format used in VersionTagger. If not specified
 default format would be '{component}-{version}-{release}'. It won't affect
 other taggers.
 
+sign_tag::
+This boolean enables GnuPG signed tags using 'git tag -s'.
+
 KOJI and COPR
 -------------
 
