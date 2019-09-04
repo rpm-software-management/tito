@@ -917,6 +917,7 @@ def get_commit_count(tag, commit_id):
         debug("going to use number of commits from initial commit")
         (status, output) = getstatusoutput(
             "git rev-list --max-parents=0 HEAD")
+        output = output.split("\n")[-1]
         if status == 0:
             # output is now inital commit
             (status, output) = getstatusoutput(
