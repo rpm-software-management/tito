@@ -35,7 +35,7 @@ Requires: python3-bugzilla
 Requires: python3-blessings
 Requires: rpm-python3
 %else
-BuildRequires: python-devel
+BuildRequires: python2-devel
 BuildRequires: python-setuptools
 Requires: python-setuptools
 Requires: python-bugzilla
@@ -54,7 +54,6 @@ BuildRequires: which
 # todo: add %check to spec file in accordance with
 # https://fedoraproject.org/wiki/QA/Testing_in_check
 BuildRequires: git
-BuildRequires: python-bugzilla
 BuildRequires: python3-devel
 BuildRequires: python3-setuptools
 BuildRequires: python3-bugzilla
@@ -64,13 +63,13 @@ BuildRequires: rpm-python3
 Requires: rpm-build
 Requires: rpmlint
 Requires: fedpkg
-Requires: fedora-cert
 Requires: fedora-packager
 Requires: rpmdevtools
-# Cheetah doesn't exist for Python 3, but it's what Mead uses.  We
+# Cheetah used not to exist for Python 3, but it's what Mead uses.  We
 # install it and call via the command line instead of importing the
-# potentially incompatible code
-Requires: python-cheetah
+# previously potentially incompatible code, as we have not yet got
+# around to changing this
+Requires: /usr/bin/cheetah
 
 %description
 Tito is a tool for managing tarballs, rpms, and builds for projects using
