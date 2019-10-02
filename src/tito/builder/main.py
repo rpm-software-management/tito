@@ -1340,7 +1340,10 @@ class Rpm(object):
         if not q:
             return False
 
-        iv = "%s-%s" % (q.version.decode("utf-8"), q.release.decode("utf-8"))
+        if isinstance(q.version, bytes):
+            iv = "%s-%s" % (q.version.decode("utf-8"), q.release.decode("utf-8"))
+        else:
+            iv = "%s-%s" % (q.version, q.release)
         iv_short = ".".join(iv.split(".")[:-1])
         return version == iv_short
 
