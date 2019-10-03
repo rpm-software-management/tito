@@ -51,7 +51,7 @@ BuildRequires: tar
 BuildRequires: which
 
 %if 0%{?fedora}
-# todo: add %check to spec file in accordance with
+# todo: add %%check to spec file in accordance with
 # https://fedoraproject.org/wiki/QA/Testing_in_check
 BuildRequires: git
 BuildRequires: python-bugzilla
