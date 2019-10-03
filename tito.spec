@@ -51,7 +51,7 @@ BuildRequires: tar
 BuildRequires: which
 
 %if 0%{?fedora}
-# todo: add %check to spec file in accordance with
+# todo: add %%check to spec file in accordance with
 # https://fedoraproject.org/wiki/QA/Testing_in_check
 BuildRequires: git
 BuildRequires: python-bugzilla
@@ -64,7 +64,9 @@ BuildRequires: rpm-python3
 Requires: rpm-build
 Requires: rpmlint
 Requires: fedpkg
+%if 0%{?fedora} && 0%{?fedora} < 31
 Requires: fedora-cert
+%endif
 Requires: fedora-packager
 Requires: rpmdevtools
 # Cheetah doesn't exist for Python 3, but it's what Mead uses.  We
