@@ -1,30 +1,29 @@
 %if 0%{?rhel} > 7 || 0%{?fedora}
 %global use_python3 1
 %global use_python2 0
-%global pythonbin %{__python3}
-%global python_sitelib %{python3_sitelib}
+%global ourpythonbin %{__python3}
+%global our_sitelib %{python3_sitelib}
 %else
 %global use_python3 0
 %global use_python2 1
 %if 0%{?__python2:1}
-%global pythonbin %{__python2}
-%global python_sitelib %{python2_sitelib}
+%global ourpythonbin %{__python2}
+%global our_sitelib %{python2_sitelib}
 %else
-%global pythonbin %{__python}
-%global python_sitelib %{python_sitelib}
+%global ourpythonbin %{__python}
+%global our_sitelib %{our_sitelib}
 %endif
 %endif
-%{!?python_sitelib: %define python_sitelib %(%{pythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
+%{!?our_sitelib: %define our_sitelib %(%{ourpythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
 Version: 0.6.11
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
-Group: Development/Tools
 License: GPLv2
-URL: http://rm-rf.ca/tito
-Source0: http://rm-rf.ca/files/tito/tito-%{version}.tar.gz
+URL: https://github.com/dgoodwin/tito
+Source0: https://github.com/dgoodwin/tito/archive/tito-%{version}-1.tar.gz
 
 BuildArch: noarch
 %if %{use_python3}
@@ -35,7 +34,7 @@ Requires: python3-bugzilla
 Requires: python3-blessings
 Requires: rpm-python3
 %else
-BuildRequires: python-devel
+BuildRequires: python2-devel
 BuildRequires: python-setuptools
 Requires: python-setuptools
 Requires: python-bugzilla
@@ -64,26 +63,27 @@ BuildRequires: rpm-python3
 Requires: rpm-build
 Requires: rpmlint
 Requires: fedpkg
-%if 0%{?fedora} && 0%{?fedora} < 31
-Requires: fedora-cert
-%endif
 Requires: fedora-packager
 Requires: rpmdevtools
-# Cheetah doesn't exist for Python 3, but it's what Mead uses.  We
+# Cheetah used not to exist for Python 3, but it's what Mead uses.  We
 # install it and call via the command line instead of importing the
-# potentially incompatible code
-Requires: python-cheetah
+# previously potentially incompatible code, as we have not yet got
+# around to changing this
+Requires: /usr/bin/cheetah
 
 %description
 Tito is a tool for managing tarballs, rpms, and builds for projects using
 git.
 
 %prep
-%setup -q -n tito-%{version}
-sed -i 1"s|#!.*|#!%{pythonbin}|" bin/tito
+# the weird directory name is because github makes the directory name
+# '(projectname)-(tag)', and the tags for tito have 'tito' in them and
+# '-1' on the end...
+%setup -q -n tito-tito-%{version}-1
+sed -i 1"s|#!.*|#!%{ourpythonbin}|" bin/tito
 
 %build
-%{pythonbin} setup.py build
+%{ourpythonbin} setup.py build
 # convert manages
 a2x -d manpage -f manpage titorc.5.asciidoc
 a2x -d manpage -f manpage tito.8.asciidoc
@@ -92,8 +92,8 @@ a2x -d manpage -f manpage releasers.conf.5.asciidoc
 
 %install
 rm -rf $RPM_BUILD_ROOT
-%{pythonbin} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT
-rm -f $RPM_BUILD_ROOT%{python_sitelib}/*egg-info/requires.txt
+%{ourpythonbin} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT
+rm -f $RPM_BUILD_ROOT%{our_sitelib}/*egg-info/requires.txt
 # manpages
 %{__mkdir_p} %{buildroot}%{_mandir}/man5
 %{__mkdir_p} %{buildroot}%{_mandir}/man8
@@ -101,9 +101,6 @@ cp -a titorc.5 tito.props.5 releasers.conf.5 %{buildroot}/%{_mandir}/man5/
 cp -a tito.8 %{buildroot}/%{_mandir}/man8/
 # bash completion facilities
 install -Dp -m 0644 share/tito_completion.sh %{buildroot}%{_datadir}/bash-completion/completions/tito
-
-%clean
-rm -rf $RPM_BUILD_ROOT
 
 
 %files
@@ -116,9 +113,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/tito
 %{_bindir}/generate-patches.pl
 %{_datadir}/bash-completion/completions/tito
-%dir %{python_sitelib}/tito
-%{python_sitelib}/tito/*
-%{python_sitelib}/tito-*.egg-info
+%dir %{our_sitelib}/tito
+%{our_sitelib}/tito/*
+%{our_sitelib}/tito-*.egg-info
 
 
 %changelog
