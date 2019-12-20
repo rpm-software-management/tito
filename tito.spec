@@ -17,7 +17,7 @@
 %{!?our_sitelib: %define our_sitelib %(%{ourpythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.6.11
+Version: 0.6.12
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -119,6 +119,28 @@ install -Dp -m 0644 share/tito_completion.sh %{buildroot}%{_datadir}/bash-comple
 
 
 %changelog
+* Fri Dec 20 2019 Jakub Kadlcik <frostyx@email.cz> 0.6.12-1
+- Remove obsolete Group tag (ignatenkobrain@fedoraproject.org)
+- Update URL and Source locations (awilliam@redhat.com)
+- Fix cheetah binary dependency (awilliam@redhat.com)
+- Correct and make less confusing the conditional Python macros (awilliam@redhat.com)
+- python-devel → python2-devel (ignatenkobrain@fedoraproject.org)
+- %%{python_sitelib} → %%{python2_sitelib} (ignatenkobrain@fedoraproject.org)
+- Remove %%clean section (ignatenkobrain@fedoraproject.org)
+- Use python3 on EPEL8 (frostyx@email.cz)
+- Do not require obsoleted fedora-cert (msuchy@redhat.com)
+- Fix tito build --test --rpm -i Traceback on Fedora 31 (sisi.chlupova@gmail.com)
+- Enable GnuPG signed tags (bcl@redhat.com)
+- Fix #335 handle source tarballs with UTF8 characters in the name (awood@redhat.com)
+- Remove deprecated BuildRoot macros from spec (awood@redhat.com)
+- Releaser: Ensure rpmlintrc files are copied when releasing (ngompa13@gmail.com)
+- Releaser: Ensure SUSE-style changes file is copied when releasing (ngompa13@gmail.com)
+- Tagger: Add SUSETagger to support SUSE-style detached changelogs (ngompa13@gmail.com)
+- Add support for building with Git LFS. (ntillman@barracuda.com)
+- use built-in shutil.copy2 instead of cp command (mtinberg@wisc.edu)
+- Avoid double builds with mock (tdockendorf@osc.edu)
+- Fix rsync failures in dockerized tests, update for F27. (dgoodwin@redhat.com)
+
 * Thu Dec 07 2017 Devan Goodwin <dgoodwin@rm-rf.ca> 0.6.11-1
 - Fixing remote_git_name (adammhaile@gmail.com)
 - Fix links in README.md file (mzalewsk@redhat.com)
