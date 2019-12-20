@@ -18,12 +18,16 @@
 
 Name: tito
 Version: 0.6.12
-Release: 1%{?dist}
+Release: 3%{?dist}
 Summary: A tool for managing rpm based git projects
 
 License: GPLv2
 URL: https://github.com/dgoodwin/tito
-Source0: https://github.com/dgoodwin/tito/archive/tito-%{version}-1.tar.gz
+# Sources can be obtained by
+# git clone https://github.com/dgoodwin/tito.git
+# cd tito
+# tito build --tgz
+Source0: %{name}-%{version}.tar.gz
 
 BuildArch: noarch
 %if %{use_python3}
@@ -76,10 +80,7 @@ Tito is a tool for managing tarballs, rpms, and builds for projects using
 git.
 
 %prep
-# the weird directory name is because github makes the directory name
-# '(projectname)-(tag)', and the tags for tito have 'tito' in them and
-# '-1' on the end...
-%setup -q -n tito-tito-%{version}-1
+%setup -q -n tito-%{version}
 sed -i 1"s|#!.*|#!%{ourpythonbin}|" bin/tito
 
 %build
@@ -119,6 +120,12 @@ install -Dp -m 0644 share/tito_completion.sh %{buildroot}%{_datadir}/bash-comple
 
 
 %changelog
+* Fri Dec 20 2019 Jakub Kadlčík <jkadlcik@redhat.com> - 0.6.12-3
+- The previous Source0 URL fix was not correct
+
+* Fri Dec 20 2019 Jakub Kadlčík <jkadlcik@redhat.com> - 0.6.12-2
+- Fix the Source0 URL and prep phase
+
 * Fri Dec 20 2019 Jakub Kadlcik <frostyx@email.cz> 0.6.12-1
 - Remove obsolete Group tag (ignatenkobrain@fedoraproject.org)
 - Update URL and Source locations (awilliam@redhat.com)
