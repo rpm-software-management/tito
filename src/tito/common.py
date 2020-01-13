@@ -28,7 +28,7 @@ import shlex
 import shutil
 import tempfile
 
-from blessings import Terminal
+from blessed import Terminal
 
 from bugzilla.rhbugzilla import RHBugzilla
 
