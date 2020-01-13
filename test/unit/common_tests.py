@@ -31,7 +31,7 @@ from mock import Mock, patch, call
 from tempfile import NamedTemporaryFile
 from textwrap import dedent
 from unit import open_mock, Capture
-from blessings import Terminal
+from blessed import Terminal
 
 
 class CommonTests(unittest.TestCase):

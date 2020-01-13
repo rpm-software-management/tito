@@ -34,7 +34,7 @@ setup(
     packages=find_packages('src'),
     include_package_data=True,
     install_requires=[
-        'blessings'
+        'blessed'
     ],
 
     # non-python scripts go here

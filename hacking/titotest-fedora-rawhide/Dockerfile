@@ -14,14 +14,13 @@ RUN dnf -y install          \
     python2-devel           \
     python-mock             \
     python-nose             \
-    python-blessings        \
     python-pep8             \
     python-setuptools       \
     python-bugzilla         \
     python2-rpm             \
     python3-mock            \
     python3-nose            \
-    python3-blessings       \
+    python3-blessed         \
     python3-pep8            \
     rsync                   \
     createrepo_c

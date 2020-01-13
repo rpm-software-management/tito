@@ -31,14 +31,14 @@ BuildRequires: python3-devel
 BuildRequires: python3-setuptools
 Requires: python3-setuptools
 Requires: python3-bugzilla
-Requires: python3-blessings
+Requires: python3-blessed
 Requires: rpm-python3
 %else
 BuildRequires: python2-devel
 BuildRequires: python-setuptools
 Requires: python-setuptools
 Requires: python-bugzilla
-Requires: python-blessings
+Requires: python-blessed
 Requires: rpm-python
 %endif
 BuildRequires: asciidoc
