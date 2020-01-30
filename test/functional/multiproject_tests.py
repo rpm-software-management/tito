@@ -41,6 +41,7 @@ def release_bumped(initial_version, new_version):
     new_release = new_version.split('-')[-1]
     return new_release == str(int(first_release) + 1)
 
+
 TEMPLATE_TAGGER_TITO_PROPS = """
 [buildconfig]
 tagger = tito.tagger.VersionTagger
