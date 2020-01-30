@@ -15,7 +15,7 @@ RUN dnf -y install          \
     python3-mock            \
     python3-nose            \
     python3-blessed         \
-    python3-pep8            \
+    python3-pycodestyle     \
     rsync                   \
     createrepo_c
 
