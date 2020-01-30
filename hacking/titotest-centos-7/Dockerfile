@@ -18,7 +18,7 @@ RUN yum -y install           \
            docbook-style-xsl \
            libxslt           \
            rpmdevtools       \
-           python-blessings  \
+           python-blessed    \
     && yum clean all
 
 RUN useradd sandbox
