@@ -21,7 +21,15 @@ Python 3 is picky about indentation:
 http://docs.python.org/3.3/reference/lexical_analysis.html
 """
 
-import pep8
+try:
+    # python-pep8 package is retired in Fedora because upstream
+    # moved to pycodestyle. Please see
+    # https://bugzilla.redhat.com/show_bug.cgi?id=1667200
+    import pep8
+except ImportError:
+    import pycodestyle as pep8
+
+
 from tito.compat import *  # NOQA
 from unit.fixture import TitoUnitTestFixture, REPO_DIR
 
