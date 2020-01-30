@@ -11,13 +11,7 @@ RUN dnf -y update
 RUN dnf -y install          \
     'dnf-command(builddep)' \
     git-annex               \
-    python2-devel           \
-    python-mock             \
-    python-nose             \
-    python-pep8             \
-    python-setuptools       \
-    python-bugzilla         \
-    python2-rpm             \
+    python3-devel           \
     python3-mock            \
     python3-nose            \
     python3-blessed         \
