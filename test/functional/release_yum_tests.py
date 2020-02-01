@@ -27,6 +27,20 @@ from functional.fixture import TitoGitTestFixture, tito
 from tito.compat import *  # NOQA
 from tito.common import run_command
 
+
+# There is not many simple options to check on what distribution this is running.
+# Fortunately, we only need to check for Fedora Rawhide and EPEL6, so we can
+# determine it from python version. This is compatible for all distributions.
+import sys
+is_rawhide = sys.version_info[:2] >= (3, 8)
+is_epel6 = sys.version_info[:2] == (2, 6)
+
+if is_epel6:
+    import unittest2 as unittest
+else:
+    import unittest
+
+
 PKG_NAME = "releaseme"
 
 RELEASER_CONF = """
@@ -63,6 +77,9 @@ class YumReleaserTests(TitoGitTestFixture):
         self.write_file(join(self.repo_dir, '.tito/releasers.conf'),
                 RELEASER_CONF % yum_repo_dir)
 
+    # createrepo_c (0.15.5+ which is in rawhide) currently coredumps
+    # https://github.com/rpm-software-management/createrepo_c/issues/202
+    @unittest.skipIf(is_rawhide, "Re-enable once createrepo_c #202 gets fixed")
     def test_with_releaser(self):
         yum_repo_dir = os.path.join(self.output_dir, 'yum')
         run_command('mkdir -p %s' % yum_repo_dir)
