@@ -9,6 +9,7 @@ MAINTAINER Paul Morgan <jumanjiman@gmail.com>
 # https://fedoraproject.org/wiki/QA/Testing_in_check
 # but some of the packages come from EPEL.
 RUN rpm -Uvh http://ftp.linux.ncsu.edu/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+RUN rpm -Uvh http://download-ib01.fedoraproject.org/pub/epel/6/x86_64/Packages/p/python-unittest2-0.5.1-3.el6.noarch.rpm
 RUN yum -y install \
     git \
     git-annex \
