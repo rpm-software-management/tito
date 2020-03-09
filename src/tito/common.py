@@ -810,11 +810,14 @@ def get_project_name(tag=None, scl=None):
     current working directory. Error out if neither is present.
     """
     if tag is not None:
-        p = re.compile('(.*?)-(\d.*)')
-        m = p.match(tag)
-        if not m:
-            error_out("Unable to determine project name in tag: %s" % tag)
-        return m.group(1)
+        try:
+            (package, _version, _release) = tag.rsplit('-', 2)
+        except ValueError:
+            try:
+                (package, _version) = tag.rsplit('-', 1)
+            except ValueError:
+                error_out("Unable to determine project name in tag: %s" % tag)
+        return package
     else:
         file_path = find_spec_like_file()
         if not os.path.exists(file_path):
