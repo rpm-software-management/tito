@@ -17,7 +17,7 @@ from tito.common import (replace_version, find_spec_like_file, increase_version,
     search_for, compare_version, run_command_print, find_wrote_in_rpmbuild_output,
     render_cheetah, increase_zstream, reset_release, find_file_with_extension,
     normalize_class_name, extract_sha1, BugzillaExtractor, DEFAULT_BUILD_DIR, munge_specfile,
-    munge_setup_macro,
+    munge_setup_macro, get_project_name,
     _out)
 
 from tito.compat import StringIO
@@ -221,6 +221,23 @@ class CommonTests(unittest.TestCase):
         _out('Hello world', None, Terminal().red, stream)
         # RHEL 6 doesn't have self.assertRegexpMatches unfortunately
         self.assertTrue(re.match('.+Hello world.+\n', stream.getvalue()))
+
+    def test_get_project_name(self):
+        TAGS = [
+            ('package-1.0-1', 'package'),
+            ('package-1.0', 'package'),
+            ('long-package-name-that-should-not-be-an-issue-0.1-1', 'long-package-name-that-should-not-be-an-issue'),
+            ('package-with-weird-version-0.1-0.1.beta1', 'package-with-weird-version'),
+            ('grub2-efi-ia32-1.0-1', 'grub2-efi-ia32'),
+            ('iwl5150-firmware-1.0-1', 'iwl5150-firmware'),
+            ('389-ds-base-1.0-1', '389-ds-base'),
+            ('avr-gcc-c++-1.0-1', 'avr-gcc-c++'),
+            ('java-1.8.0-openjdk-1.8.0.232.b09-0', 'java-1.8.0-openjdk'),
+            ('jsr-305-0-0.25.20130910svn', 'jsr-305')
+        ]
+
+        for (tag, package) in TAGS:
+            self.assertEquals(package, get_project_name(tag, None))
 
 
 class CheetahRenderTest(unittest.TestCase):
