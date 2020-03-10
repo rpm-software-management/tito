@@ -211,7 +211,6 @@ class BuilderBase(object):
                 debug("Copying %s -> %s" % (src, self.rpmbuild_sourcedir))
                 shutil.copy(src, self.rpmbuild_sourcedir)
 
-
     def srpm(self, dist=None):
         """
         Build a source RPM.
@@ -222,7 +221,7 @@ class BuilderBase(object):
 
         if self.test:
             self._setup_test_specfile()
-        
+
         self._copy_extra_sources()
 
         debug("Creating srpm from spec file: %s" % self.spec_file)
@@ -269,6 +268,7 @@ class BuilderBase(object):
         self._create_build_dirs()
         if not self.ran_tgz:
             self.tgz()
+        self._copy_extra_sources()
 
         cmd = 'rpmbuild {0}'.format(
             " ".join([
