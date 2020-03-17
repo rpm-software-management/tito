@@ -208,6 +208,9 @@ class BuilderBase(object):
                     continue
 
                 src = os.path.join(self.rpmbuild_sourcedir, self.tgz_dir, match.group('src').strip())
+                if os.path.islink(src) and os.path.isabs(src):
+                    src = os.path.join(self.start_dir, os.readlink(src))
+
                 debug("Copying %s -> %s" % (src, self.rpmbuild_sourcedir))
                 shutil.copy(src, self.rpmbuild_sourcedir)
 
