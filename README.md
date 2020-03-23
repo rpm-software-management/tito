@@ -41,19 +41,28 @@ INSTALL
 From Fedora:
 
     dnf install tito
-    
+
 From CentOS / RHEL:
 
     # Enable EPEL https://fedoraproject.org/wiki/EPEL#How_can_I_use_these_extra_packages.3F
     yum install tito
-    
-To install from source
 
-    git clone https://github.com/dgoodwin/tito.git
-    cd tito/
-    sudo yum install python-setuptools
-    ./setup.py build
-    sudo ./setup.py install
+From git's `master` branch:
+
+- First install Tito's dependencies for your architecture, i.e. `x86_64`:
+
+      sudo dnf install --setopt=install_weak_deps=False \
+          $(dnf repoquery --arch x86_64,noarch --requires tito --resolve -q)
+
+  _NOTE: This will install Tito's dependencies from Tito's latest release for
+  your system. If the `master` branch requires a new dependency, it will need to
+  be installed manually._
+
+- Then install Tito via so-called [User install](
+  https://pip.pypa.io/en/stable/user_guide/#user-installs) (i.e. isolated to the
+  current user):
+
+      pip install --user https://github.com/dgoodwin/tito/archive/master.tar.gz
 
 To make an rpm of tito to install elsewhere
 
