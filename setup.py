@@ -28,8 +28,9 @@ setup(
     url='http://rm-rf.ca/tito',
     license='GPLv2+',
 
+    # tell distutils packages are under src directory
     package_dir={
-        'tito': 'src/tito',
+        '': 'src',
     },
     packages=find_packages('src'),
     include_package_data=True,
@@ -37,9 +38,15 @@ setup(
         'blessed'
     ],
 
+    # automatically create console scripts
+    entry_points={
+        'console_scripts': [
+            'tito = tito.cli:main',
+        ],
+    },
+
     # non-python scripts go here
     scripts=[
-        'bin/tito',
         'bin/generate-patches.pl'
     ],
 

@@ -25,3 +25,4 @@ include
 lib
 local
 hacking/*/tito.spec
+tito-venv/

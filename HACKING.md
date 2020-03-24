@@ -106,8 +106,15 @@ Then from the root of the project:
 
 When developing code for tito there are a couple ways you can test:
 
-"bin/tito-dev" is a script that will run code from the local checkout
-rather than what is installed on the system.
+First install Tito's dependencies for your architecture, i.e. `x86_64`, like
+described in [README's INSTALL section](README.md#INSTALL), under installation
+from git's `master` branch.
+
+Then create a virtual environment and install tito in editable mode:
+
+    python3 -m venv --system-site-packages tito-venv
+    source tito-venv/bin/activate
+    pip install -e .
 
 And of course, you can always use the installed tito to replace
 itself with a test build of the latest *committed* code in your
