@@ -72,7 +72,7 @@ setup(
     description='tito test project',
     author='Nobody Knows',
     author_email='tito@example.com',
-    url='http://rm-rf.ca/tito',
+    url='https://example.com',
     license='GPLv2+',
 
     package_dir={

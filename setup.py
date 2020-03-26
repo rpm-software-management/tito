@@ -25,7 +25,7 @@ setup(
     description='A tool for managing rpm based git projects.',
     author='Devan Goodwin',
     author_email='dgoodwin@rm-rf.ca',
-    url='http://rm-rf.ca/tito',
+    url='https://github.com/dgoodwin/tito',
     license='GPLv2+',
 
     # tell distutils packages are under src directory
