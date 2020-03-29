@@ -34,7 +34,7 @@ from tito.common import scl_to_rpm_option, get_latest_tagged_version, \
     find_cheetah_template_file, render_cheetah, replace_spec_release, \
     find_spec_like_file, warn_out, get_commit_timestamp, chdir, mkdir_p, \
     find_git_root, info_out, munge_specfile, BUILDCONFIG_SECTION
-from tito.compat import getstatusoutput
+from tito.compat import getstatusoutput, getoutput
 from tito.exception import RunCommandException
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
@@ -197,6 +197,22 @@ class BuilderBase(object):
             mkdir_p(d)
         self._check_build_dirs_access(build_dirs)
 
+    def _copy_extra_sources(self):
+        """
+        Copy extra %{SOURCEX} files to the SOURCE folder.
+        """
+        cmd = "spectool -S '%s' --define '_sourcedir %s' | awk '{print $2}'"\
+            % (self.spec_file, self.start_dir)
+        sources = getoutput(cmd).split("\n")
+
+        for source in sources[1:]:
+            src = os.path.join(self.rpmbuild_sourcedir, self.tgz_dir, source)
+            if os.path.islink(src) and os.path.isabs(src):
+                src = os.path.join(self.start_dir, os.readlink(src))
+
+            debug("Copying %s -> %s" % (src, self.rpmbuild_sourcedir))
+            shutil.copy(src, self.rpmbuild_sourcedir)
+
     def srpm(self, dist=None):
         """
         Build a source RPM.
@@ -207,6 +223,8 @@ class BuilderBase(object):
 
         if self.test:
             self._setup_test_specfile()
+
+        self._copy_extra_sources()
 
         debug("Creating srpm from spec file: %s" % self.spec_file)
         define_dist = ""
@@ -252,6 +270,7 @@ class BuilderBase(object):
         self._create_build_dirs()
         if not self.ran_tgz:
             self.tgz()
+        self._copy_extra_sources()
 
         cmd = 'rpmbuild {0}'.format(
             " ".join([

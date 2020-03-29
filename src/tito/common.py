@@ -827,9 +827,12 @@ def get_project_name(tag=None, scl=None):
             name = search_for(file_path, r"\s*Name:\s*(.*?)\s*$")[0][0]
             return name
         else:
+            sourcedir = os.path.dirname(file_path)
             output = run_command(
-                "rpm -q --qf '%%{name}\n' %s --specfile %s 2> /dev/null | grep -e '^$' -v | head -1" %
-                (scl_to_rpm_option(scl, silent=True), file_path))
+                "rpm -q --qf '%%{name}\n' %s --specfile %s --define '_sourcedir %s' "
+                "2> /dev/null | grep -e '^$' -v | head -1" %
+                (scl_to_rpm_option(scl, silent=True), file_path, sourcedir))
+
             if not output:
                 error_out(["Unable to determine project name from spec file: %s" % file_path,
                     "Try rpm -q --specfile %s" % file_path,
