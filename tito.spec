@@ -16,8 +16,8 @@
 %{!?our_sitelib: %define our_sitelib %(%{ourpythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.6.12
-Release: 3%{?dist}
+Version: 0.6.13
+Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
 License: GPLv2
@@ -118,6 +118,17 @@ install -Dp -m 0644 share/tito_completion.sh %{buildroot}%{_datadir}/bash-comple
 
 
 %changelog
+* Sun Mar 29 2020 Jakub Kadlcik <frostyx@email.cz> 0.6.13-1
+- Add _copy_extra_sources() method to BuilderBase class.
+  (daniel@versatushpc.com.br)
+- Rename HACKING to HACKING.md so it renders on GitHub (tadej.j@nez.si)
+- Modernize developer installation (tadej.j@nez.si)
+- make get_project_name more resilient (evgeni@golov.de)
+- Use pycodestyle pacakge when pep8 is not available (frostyx@email.cz)
+- Move to python-blessed (ekulik@redhat.com)
+- Fix the Source0 URL and prep phase (frostyx@email.cz)
+- run_command_print should behave similar to run_command (yuxzhu@redhat.com)
+
 * Fri Dec 20 2019 Jakub Kadlčík <jkadlcik@redhat.com> - 0.6.12-3
 - The previous Source0 URL fix was not correct
 
