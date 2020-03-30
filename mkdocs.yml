@@ -1,5 +1,5 @@
 site_name: Tito
-repo_url: https://github.com/dgoodwin/tito
+repo_url: https://github.com/rpm-software-management/tito
 docs_dir: doc
 markdown_extensions:
   - codehilite
