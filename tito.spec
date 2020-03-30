@@ -21,9 +21,9 @@ Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
 License: GPLv2
-URL: https://github.com/dgoodwin/tito
+URL: https://github.com/rpm-software-management/tito
 # Sources can be obtained by
-# git clone https://github.com/dgoodwin/tito.git
+# git clone https://github.com/rpm-software-management/tito
 # cd tito
 # tito build --tgz
 Source0: %{name}-%{version}.tar.gz

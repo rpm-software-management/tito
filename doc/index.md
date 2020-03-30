@@ -34,7 +34,7 @@ Tito offers the following features:
 To install from source
 
 ```
-$ git clone https://github.com/dgoodwin/tito.git
+$ git clone https://github.com/rpm-software-management/tito.git
 $ cd tito/
 $ sudo yum install python-setuptools
 $ ./setup.py build
@@ -225,6 +225,6 @@ See:
 * `man 5 titorc`
 
 ## External Docs
-* [Tito release announcements](http://rm-rf.ca/blogs/dgoodwin)
+* [Tito release announcements](https://github.com/rpm-software-management/tito/releases)
 * [How to create new release of RPM package in 5 seconds](http://miroslav.suchy.cz/blog/archives/2013/12/17/how_to_create_new_release_of_rpm_package_in_5_seconds)
 * [How to build in Copr](http://miroslav.suchy.cz/blog/archives/2013/12/29/how_to_build_in_copr)

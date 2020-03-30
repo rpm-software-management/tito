@@ -2,7 +2,7 @@ Hacking
 =======
 
 This is the developer documentation for
-https://github.com/dgoodwin/tito
+https://github.com/rpm-software-management/tito
 
 Python versions
 ---------------
