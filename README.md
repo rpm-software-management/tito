@@ -62,7 +62,7 @@ From git's `master` branch:
   https://pip.pypa.io/en/stable/user_guide/#user-installs) (i.e. isolated to the
   current user):
 
-      pip install --user https://github.com/dgoodwin/tito/archive/master.tar.gz
+      pip install --user https://github.com/rpm-software-management/tito/archive/master.tar.gz
 
 To make an rpm of tito to install elsewhere
 
