@@ -697,7 +697,7 @@ class InitModule(BaseCliModule):
         propsfile = os.path.join(rel_eng_dir, TITO_PROPS)
         if not os.path.exists(propsfile):
             if not os.path.exists(rel_eng_dir):
-                getoutput("mkdir -p %s" % rel_eng_dir)
+                os.makedirs(rel_eng_dir)
                 print("   - created %s" % rel_eng_dir)
 
             # write out tito.props
@@ -720,7 +720,7 @@ class InitModule(BaseCliModule):
 
         if not os.path.exists(readme):
             if not os.path.exists(pkg_dir):
-                getoutput("mkdir -p %s" % pkg_dir)
+                os.makedirs(pkg_dir)
                 print("   - created %s" % pkg_dir)
 
             # write out readme file explaining what pkg_dir is for
