@@ -252,6 +252,13 @@ See:
     man 5 titorc
 
 
+COMMUNITY
+=========
+
+If you need an advice or want to chat with Tito developers, join us
+on `#tito` channel at [irc.freenode.net](https://webchat.freenode.net/).
+
+
 EXTERNAL DOCS
 =============
 
