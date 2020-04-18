@@ -698,14 +698,15 @@ class InitModule(BaseCliModule):
         should_commit = False
 
         rel_eng_dir = os.path.join(find_git_root(), '.tito')
-        print("Creating tito metadata in: %s" % rel_eng_dir)
+        if not os.path.exists(rel_eng_dir):
+            print("Creating tito metadata in: %s" % rel_eng_dir)
+            os.makedirs(rel_eng_dir)
+            print("   - created %s" % rel_eng_dir)
+        else:
+            print("Reinitializing existing tito metadata in %s" % rel_eng_dir)
 
         propsfile = os.path.join(rel_eng_dir, TITO_PROPS)
         if not os.path.exists(propsfile):
-            if not os.path.exists(rel_eng_dir):
-                os.makedirs(rel_eng_dir)
-                print("   - created %s" % rel_eng_dir)
-
             # write out tito.props
             out_f = open(propsfile, 'w')
             out_f.write("[buildconfig]\n")
