@@ -20,6 +20,7 @@ import errno
 
 from optparse import OptionParser, SUPPRESS_HELP
 
+from tito import __version__
 from tito.common import find_git_root, error_out, debug, get_class_by_name, \
     DEFAULT_BUILDER, BUILDCONFIG_SECTION, DEFAULT_TAGGER, \
     create_builder, get_project_name, get_relative_project_dir, \
@@ -32,6 +33,7 @@ from tito.exception import TitoException
 # before we try to dynamically import them based on a string name.
 import tito.tagger  # NOQA
 
+PROGNAME = "tito"
 TITO_PROPS = "tito.props"
 RELEASERS_CONF_FILENAME = "releasers.conf"
 ASSUMED_NO_TAR_GZ_PROPS = """
@@ -194,6 +196,10 @@ class CLI(object):
     """
 
     def main(self, argv):
+        if "--version" in sys.argv:
+            print(" ".join([PROGNAME, __version__]))
+            sys.exit(0)
+
         if len(argv) < 1 or not argv[0] in CLI_MODULES.keys():
             self._usage()
             sys.exit(1)
