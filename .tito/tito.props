@@ -8,3 +8,7 @@ disttag = el5
 
 [tag2]
 disttag = el5
+
+[version_template]
+destination_file = src/tito/__init__.py
+template_file = .tito/templates/__init__.py.tpl
