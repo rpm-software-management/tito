@@ -239,10 +239,10 @@ class BuilderBase(object):
 
         rpmbuild_options = self.rpmbuild_options + self._scl_to_rpmbuild_option()
 
-        cmd = ('rpmbuild --define "_source_filedigest_algorithm md5"  --define'
-            ' "_binary_filedigest_algorithm md5" %s %s %s --nodeps -bs %s' % (
-                rpmbuild_options, self._get_rpmbuild_dir_options(),
-                define_dist, self.spec_file))
+        cmd = ('rpmbuild %s %s %s --nodeps -bs %s' % (
+               rpmbuild_options, self._get_rpmbuild_dir_options(),
+               define_dist, self.spec_file))
+
         run_command_func = run_command if self.quiet else run_command_print
         output = run_command_func(cmd)
         self.srpm_location = find_wrote_in_rpmbuild_output(output)[0]
@@ -274,8 +274,6 @@ class BuilderBase(object):
 
         cmd = 'rpmbuild {0}'.format(
             " ".join([
-                '--define "_source_filedigest_algorithm md5"',
-                '--define "_binary_filedigest_algorithm md5"',
                 self.rpmbuild_options,
                 self._scl_to_rpmbuild_option(),
                 self._get_rpmbuild_dir_options(),
