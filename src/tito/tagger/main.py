@@ -68,7 +68,7 @@ class VersionTagger(ConfigObject):
                 self.spec_file_name)
         self.keep_version = keep_version
 
-        self.today = strftime("%a %b %d %Y")
+        self.today = self._changelog_date()
         (self.git_user, self.git_email) = self._get_git_user_info()
         git_email = self.git_email
         if git_email is None:
@@ -162,6 +162,12 @@ class VersionTagger(ConfigObject):
         # Everything looks good:
         print
         undo_tag(tag)
+
+    def _changelog_date(self):
+        option = (BUILDCONFIG_SECTION, "changelog_date_with_time")
+        if self.config.has_option(*option) and self.config.getboolean(*option):
+            return strftime("%a %b %d %T %Z %Y")
+        return strftime("%a %b %d %Y")
 
     def _changelog_remove_cherrypick(self, line):
         """

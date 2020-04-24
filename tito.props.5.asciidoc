@@ -69,6 +69,12 @@ changelog_do_not_remove_cherrypick::
 If set to 0, it will not remove from cherry picked commits the part "(cherry
 picked from commit ...)"
 
+changelog_date_with_time::
+By default, changelog dates don't contain time (e.g. Wed Nov 1 2017). When
+this option is set to `True`, changelog entries are generated in a datetime
+format (e.g. Wed Nov 1 11:08:13 EDT 2017). This feature requires RPM 4.14,
+therefore it is supported only on Fedora 27, EPEL8, openSUSE Leap 15 and higher.
+
 tag_suffix::
 An optional specification of a suffix to append to all tags created by tito
 for this repo. Can be useful for situations where one git repository is
