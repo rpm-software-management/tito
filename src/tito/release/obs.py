@@ -16,9 +16,10 @@ import tempfile
 import subprocess
 import sys
 
-from tito.common import run_command, debug, BugzillaExtractor
+from tito.common import run_command, debug
 from tito.compat import getoutput, write, getstatusoutput
 from tito.release.distgit import FedoraGitReleaser
+from tito.bugtracker import BugzillaExtractor
 
 
 class ObsReleaser(FedoraGitReleaser):

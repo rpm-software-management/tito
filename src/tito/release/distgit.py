@@ -16,13 +16,14 @@ import subprocess
 import sys
 import tempfile
 
-from tito.common import run_command, BugzillaExtractor, debug, extract_sources, \
-    MissingBugzillaCredsException, error_out, chdir, warn_out, info_out, find_mead_chain_file
+from tito.common import run_command, debug, extract_sources, \
+    error_out, chdir, warn_out, info_out, find_mead_chain_file
 from tito.compat import getoutput, getstatusoutput, write
 from tito.release import Releaser
 from tito.release.main import PROTECTED_BUILD_SYS_FILES
 from tito.buildparser import BuildTargetParser
 from tito.exception import RunCommandException
+from tito.bugtracker import BugzillaExtractor, MissingBugzillaCredsException
 import getpass
 from string import Template
 
