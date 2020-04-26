@@ -25,6 +25,16 @@ is_rawhide = sys.version_info[:2] >= (3, 8)
 is_epel6 = sys.version_info[:2] == (2, 6)
 
 
+if PY2:
+    builtins = "__builtin__"
+    builtins_open = "__builtin__.open"
+    builtins_input = "__builtin__.raw_input"
+else:
+    builtins = "builtins"
+    builtins_open = "builtins.open"
+    builtins_input = "builtins.input"
+
+
 file_spec = None
 
 
@@ -92,11 +102,7 @@ def open_mock(content, **kwargs):
 
     content_out = StringIO()
 
-    if PY2:
-        patch_module = "__builtin__.open"
-    else:
-        patch_module = "builtins.open"
-    with patch(patch_module, m, create=True, **kwargs) as mo:
+    with patch(builtins_open, m, create=True, **kwargs) as mo:
         stream = StringIO(content)
         rv = mo.return_value
         rv.write = lambda x: content_out.write(bytes(x, "utf-8"))
