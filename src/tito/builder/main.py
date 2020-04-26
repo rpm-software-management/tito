@@ -197,21 +197,11 @@ class BuilderBase(object):
             mkdir_p(d)
         self._check_build_dirs_access(build_dirs)
 
-    def _copy_extra_sources(self):
+    def copy_extra_sources(self):
         """
         Copy extra %{SOURCEX} files to the SOURCE folder.
         """
-        cmd = "spectool -S '%s' --define '_sourcedir %s' | awk '{print $2}'"\
-            % (self.spec_file, self.start_dir)
-        sources = getoutput(cmd).split("\n")
-
-        for source in sources[1:]:
-            src = os.path.join(self.rpmbuild_sourcedir, self.tgz_dir, source)
-            if os.path.islink(src) and os.path.isabs(src):
-                src = os.path.join(self.start_dir, os.readlink(src))
-
-            debug("Copying %s -> %s" % (src, self.rpmbuild_sourcedir))
-            shutil.copy(src, self.rpmbuild_sourcedir)
+        return NotImplemented
 
     def srpm(self, dist=None):
         """
@@ -224,7 +214,7 @@ class BuilderBase(object):
         if self.test:
             self._setup_test_specfile()
 
-        self._copy_extra_sources()
+        self.copy_extra_sources()
 
         debug("Creating srpm from spec file: %s" % self.spec_file)
         define_dist = ""
@@ -270,7 +260,7 @@ class BuilderBase(object):
         self._create_build_dirs()
         if not self.ran_tgz:
             self.tgz()
-        self._copy_extra_sources()
+        self.copy_extra_sources()
 
         cmd = 'rpmbuild {0}'.format(
             " ".join([
@@ -504,6 +494,22 @@ class Builder(ConfigObject, BuilderBase):
         }
         # Strip extra dashes if one of the params is empty
         return tag_format.format(**kwargs).strip('-')
+
+    def copy_extra_sources(self):
+        """
+        Copy extra %{SOURCEX} files to the SOURCE folder.
+        """
+        cmd = "spectool -S '%s' --define '_sourcedir %s' | awk '{print $2}'"\
+            % (self.spec_file, self.start_dir)
+        sources = getoutput(cmd).split("\n")
+
+        for source in sources[1:]:
+            src = os.path.join(self.rpmbuild_sourcedir, self.tgz_dir, source)
+            if os.path.islink(src) and os.path.isabs(src):
+                src = os.path.join(self.start_dir, os.readlink(src))
+
+            debug("Copying %s -> %s" % (src, self.rpmbuild_sourcedir))
+            shutil.copy(src, self.rpmbuild_sourcedir)
 
     def tgz(self):
         """
