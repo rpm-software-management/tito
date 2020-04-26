@@ -259,6 +259,27 @@ If you need an advice or want to chat with Tito developers, join us
 on `#tito` channel at [irc.freenode.net](https://webchat.freenode.net/).
 
 
+Projects managed with Tito
+==========================
+
+Here follows a list of projects managed with Tito. It is not trying to be a complete list
+of every project using tito but rather a few examples that potential users can check out.
+
+- [Mock](https://github.com/rpm-software-management/mock)
+- [Copr](https://pagure.io/copr/copr)
+- [Tito](https://github.com/dgoodwin/tito)
+- [Dnf](https://github.com/rpm-software-management/dnf)
+- [Candlepin](https://github.com/candlepin/candlepin)
+- [dnf-plugins-core](https://github.com/rpm-software-management/dnf-plugins-core)
+- [candlepin/subscription-manager](https://github.com/candlepin/subscription-manager)
+- [rho](https://github.com/candlepin/rho)
+- [sm-photo-tool](https://github.com/jmrodri/sm-photo-tool)
+- [vim-fugitive-pagure](https://github.com/FrostyX/vim-fugitive-pagure)
+
+
+If your project uses Tito, feel free to add it here.
+
+
 EXTERNAL DOCS
 =============
 
