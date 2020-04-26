@@ -102,12 +102,16 @@ class Releaser(ConfigObject):
     def _ask_yes_no(self, prompt="Y/N? ", default_auto_answer=True):
         if self.auto_accept:
             return default_auto_answer
-        else:
-            if PY2:
-                answer = raw_input(prompt)
-            else:
-                answer = input(prompt)
-            return answer.lower() in ['y', 'yes', 'ok', 'sure']
+
+        yes = ['y', 'yes', 'ok', 'sure']
+        no = ['n', 'no', 'nah', 'nope']
+        answers = yes + no
+
+        while True:
+            input_function = raw_input if PY2 else input
+            answer = input_function(prompt).lower()
+            if answer in answers:
+                return answer in yes
 
     def _check_releaser_config(self):
         """
