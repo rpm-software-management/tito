@@ -16,7 +16,7 @@
 %{!?our_sitelib: %define our_sitelib %(%{ourpythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.6.13
+Version: 0.6.14
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -118,6 +118,20 @@ install -Dp -m 0644 share/tito_completion.sh %{buildroot}%{_datadir}/bash-comple
 
 
 %changelog
+* Mon May 04 2020 Jakub Kadlcik <frostyx@email.cz> 0.6.14-1
+- Fix #367 - copy_extra_sources for alternative builders (frostyx@email.cz)
+- Fix #243 - Add a list of projects using tito (frostyx@email.cz)
+- Fix #364 - Make yes or no input less aggressive (frostyx@email.cz)
+- Fix #358 - Move bugzilla code to a separate file (frostyx@email.cz)
+- Fix #158 - Separate .tito directory creation from tito.props file creation (frostyx@email.cz)
+- Fix #338 - Use os.makedirs instead of running mkdir -p command (frostyx@email.cz)
+- Fix #331 - Do not specify file digest algorithms (frostyx@email.cz)
+- #305 - Add a possibility to have full datetime entries in changelog (frostyx@email.cz)
+- #252 - Use template to generate file with __version__ (frostyx@email.cz)
+- #187 - Implement --version parameter (frostyx@email.cz)
+- mention the #tito irc channel in the readme (frostyx@email.cz)
+- Describe how to release tito (frostyx@email.cz)
+- Move tito under rpm-software-management namespace (frostyx@email.cz)
 * Sun Mar 29 2020 Jakub Kadlcik <frostyx@email.cz> 0.6.13-1
 - Add _copy_extra_sources() method to BuilderBase class.
   (daniel@versatushpc.com.br)
