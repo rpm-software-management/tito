@@ -504,6 +504,10 @@ class Builder(ConfigObject, BuilderBase):
         sources = getoutput(cmd).split("\n")
 
         for source in sources[1:]:
+            dst_file = os.path.join(self.rpmbuild_sourcedir, source)
+            if os.path.isfile(dst_file):
+                debug('Source file "%s" already exists. Skiping.' % dst_file)
+                continue
             src = os.path.join(self.rpmbuild_sourcedir, self.tgz_dir, source)
             if os.path.islink(src) and os.path.isabs(src):
                 src = os.path.join(self.start_dir, os.readlink(src))
