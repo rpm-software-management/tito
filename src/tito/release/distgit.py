@@ -93,6 +93,7 @@ class FedoraGitReleaser(Releaser):
         # Mead builds need to be in the git_root.  Other builders are agnostic.
         with chdir(self.git_root):
             self.builder.tgz()
+            self.builder.copy_extra_sources()
 
         if self.test:
             self.builder._setup_test_specfile()
