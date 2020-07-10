@@ -16,7 +16,7 @@
 %{!?our_sitelib: %define our_sitelib %(%{ourpythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.6.14
+Version: 0.6.15
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -118,6 +118,12 @@ install -Dp -m 0644 share/tito_completion.sh %{buildroot}%{_datadir}/bash-comple
 
 
 %changelog
+* Fri Jul 10 2020 Jakub Kadlcik <frostyx@email.cz> 0.6.15-1
+- FedoraGitReleaser: upload extra sources to lookaside cache
+  (praiskup@redhat.com)
+- When extra source file exist, then do not copy it
+  (jhnidek@redhat.com)
+
 * Mon May 04 2020 Jakub Kadlcik <frostyx@email.cz> 0.6.14-1
 - Fix #367 - copy_extra_sources for alternative builders (frostyx@email.cz)
 - Fix #243 - Add a list of projects using tito (frostyx@email.cz)
