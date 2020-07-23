@@ -224,6 +224,161 @@ future releases, meaning that your custom implementations may occasionally need
 to be updated.
 
 
+DOCKER
+======
+
+A `Dockerfile` is provided to build and run a container
+for running the tito utility against a local or upstream git repository.
+
+It is currently using `centos` as a base image.
+
+## Provide a repository to be built
+
+A volume can be mapped at `/workspace` to provide the git repository that will be
+used by tito. It is also used as the container workdir.
+
+Alternatively, one can set the `GIT_URL` env variable to clone a repository to /workspace.
+This will only be done if /workspace is empty (not mapped by a volume).
+
+## Variables
+
+Env variables can be set for git user and email: `GIT_USERNAME`, `GIT_EMAIL`.
+They default to ***user*** and ***user@example.com*** respectively.
+
+## Build arguments
+
+- **CENTOS_VERSION**: defaults to `8.2`
+    - Sets the centos:[version] for the container base image
+- **GIT_DOMAIN**: defaults to `github.com`
+    - Used to set ~/.ssh/known_hosts of the target repository
+    - ***Note***: it might be a good idea to do this step inside entrypoint.sh
+                  so we can infer the domain from the git remote.
+
+## Entrypoint
+
+> The entrypoint currently only supports the SSH clone method when using `tito tag`</br>
+> since we are not offering a way to provide a password inside the container.
+
+The entrypoint will:
+
+- Parse command line arguments and environment variables.
+- Set git config `user.name` and `user.email`.
+- Clone the `GIT_URL` into `/workspace` if directory is empty and env var is set.
+- Install build dependencies using `dnf builddep` when run with the `build` command
+- Run tito, passing command line arguments to it.
+
+## Example
+
+Here is an example of a complete workflow using the current directory as the repository to use with tito:
+
+```bash
+docker build -t tito /path/to/tito
+
+docker run --rm -v "$(pwd):/workspace" \
+                -e GIT_USERNAME="user" \
+                -e GIT_EMAIL="user@example.com" \
+                tito init
+
+docker run --rm -v "$(pwd):/workspace" \
+                -e GIT_USERNAME="user" \
+                -e GIT_EMAIL="user@example.com" \
+                tito build --rpm --test
+
+# We use -it here to map stdin/stdout from your current shell
+# to the prompt for editing the changelog when tagging
+docker run --rm -v "$(pwd):/workspace" \
+                -e GIT_USERNAME="user" \
+                -e GIT_EMAIL="user@example.com" \
+                -it \
+                tito build tag
+
+git push --follow-tags
+
+docker run --rm -v "$(pwd):/workspace" \
+                -v "$(readlink -f ${SSH_AUTH_SOCK}):/ssh-agent" -e SSH_AUTH_SOCK=/ssh-agent \
+                -e GIT_USERNAME="user" \
+                -e GIT_EMAIL="user@example.com" \
+                tito build --rpm
+```
+
+Alternatively, using `GIT_URL`:
+
+```bash
+docker build -t tito .
+
+docker run --rm -e GIT_URL="git@github.com:rpm-software-management/tito.git" \
+                tito init
+
+docker run --rm -e GIT_URL="git@github.com:rpm-software-management/tito.git" \
+                tito build --rpm --test
+
+# Here, it only makes sense to use tito tag if you map the /workspace volume
+# to an empty local dir, let the entrypoint clone the GIT_URL
+# and then run git push --follow-tags locally.
+#
+# It should be added aa a conditional to the entrypoint so that it is
+# performed automatically.
+#
+# We use -it here to map stdin/stdout from your current shell
+# to the prompt for editing changelog when tagging.
+#
+# Note: see below section(Git with SSH) for instructions
+#       about the ssh-agent mapping inside the container
+docker run --rm -v "/path/to/empty/directory:/workspace" \
+                -v "$(readlink -f ${SSH_AUTH_SOCK}):/ssh-agent" -e SSH_AUTH_SOCK=/ssh-agent \
+                -e GIT_URL="git@github.com:rpm-software-management/tito.git" \
+                -e GIT_USERNAME="user" \
+                -e GIT_EMAIL="user@example.com" \
+                -it \
+                tito tag
+
+pushd /path/to/empty/directory && git push --follow-tags origin && popd
+
+docker run --rm -v "$(readlink -f ${SSH_AUTH_SOCK}):/ssh-agent" -e SSH_AUTH_SOCK=/ssh-agent \
+                -e GIT_URL="git@github.com:rpm-software-management/tito.git" \
+                tito build --rpm
+```
+
+## Extract RPM
+
+By default, tito outputs the built RPM to TMPDIR(/tmp).
+
+To access a built rpm, you can use a mapped volume and specify the output directory to tito like so:
+
+```bash
+tito build --rpm -o .
+```
+
+Example:
+
+```bash
+$ docker run --rm -v "$(pwd):/workspace" tito build --rpm -o .
+Parse env vars
+Setup git config
+Cloning into '/workspace'...
+...
+Successfully built: /workspace/tito-0.6.15-1.git.0.2a9178d.el8.src.rpm
+        - /workspace/noarch/tito-0.6.15-1.git.0.2a9178d.el8.noarch.rpm
+```
+
+## Debugging
+
+For debugging purposes, one can use an interactive session and enter a tito container like so:
+
+```bash
+docker run --rm -v "$(pwd):/workspace" --entrypoint=/bin/bash -it tito
+```
+
+## Git with SSH
+
+If using a Git remote with SSH, use this snippet so that you can forward
+your ssh-agent socket inside the container:
+
+```bash
+-v "$(readlink -f ${SSH_AUTH_SOCK}):/ssh-agent" -e SSH_AUTH_SOCK=/ssh-agent
+```
+
+
 TROUBLESHOOTING
 ===============
 
