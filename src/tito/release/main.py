@@ -484,8 +484,12 @@ class KojiReleaser(Releaser):
         if 'KOJI_OPTIONS' in self.builder.user_config:
             koji_opts = self.builder.user_config['KOJI_OPTIONS']
 
-        if self.scratch or ('SCRATCH' in os.environ and os.environ['SCRATCH'] == '1'):
+        scratch = self.scratch or ('SCRATCH' in os.environ and os.environ['SCRATCH'] == '1')
+        if scratch:
             koji_opts = ' '.join([koji_opts, '--scratch'])
+
+        if scratch and (self.test or self.builder.test):
+            koji_opts = ' '.join([koji_opts, '--no-rebuild-srpm'])
 
         if self.profile:
             koji_opts = ' '.join(['--profile', self.profile, koji_opts])
