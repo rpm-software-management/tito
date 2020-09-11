@@ -492,8 +492,8 @@ class Builder(ConfigObject, BuilderBase):
             'version': version,
             'release': release
         }
-        # Strip extra dashes if one of the params is empty
-        return tag_format.format(**kwargs).strip('-')
+        # Strip extra dashes if one of the params is empty and replace ~ by @
+        return tag_format.format(**kwargs).strip('-').replace("~", "@")
 
     def copy_extra_sources(self):
         """
