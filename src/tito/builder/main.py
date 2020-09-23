@@ -34,7 +34,7 @@ from tito.common import scl_to_rpm_option, get_latest_tagged_version, \
     find_cheetah_template_file, render_cheetah, replace_spec_release, \
     find_spec_like_file, warn_out, get_commit_timestamp, chdir, mkdir_p, \
     find_git_root, info_out, munge_specfile, BUILDCONFIG_SECTION
-from tito.compat import getstatusoutput, getoutput
+from tito.compat import getstatusoutput, getoutput, urlparse
 from tito.exception import RunCommandException
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
@@ -508,6 +508,15 @@ class Builder(ConfigObject, BuilderBase):
             if os.path.isfile(dst_file):
                 debug('Source file "%s" already exists. Skiping.' % dst_file)
                 continue
+
+            parse = urlparse(source)
+            if parse.scheme and parse.netloc:
+                # If macro `%_disable_source_fetch 0` is defined, the file will
+                # be automatically downloaded by rpmbuild to the SOURCES
+                # directory. We can safely skip it here.
+                debug('Source "%s" is not a local file. Skiping.' % source)
+                continue
+
             src = os.path.join(self.rpmbuild_sourcedir, self.tgz_dir, source)
             if os.path.islink(src) and os.path.isabs(src):
                 src = os.path.join(self.start_dir, os.readlink(src))
