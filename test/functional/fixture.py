@@ -13,6 +13,7 @@
 # in this software or its documentation.
 
 import os
+import sys
 import shutil
 import tempfile
 import unittest
@@ -22,7 +23,50 @@ from tito.common import run_command
 
 # NOTE: No Name in test spec file as we re-use it for several packages.
 # Name must be written first.
-TEST_SPEC = """
+TEST_SPEC_3 = """
+%{!?python3_sitelib: %define python3_sitelib %(%{__python3} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
+
+Version:        0.0.1
+Release:        1%{?dist}
+Summary:        Tito test package.
+URL:            https://example.com
+Group:          Applications/Internet
+License:        GPLv2
+BuildRoot:      %{_tmppath}/%{name}-root-%(%{__id_u} -n)
+BuildArch:      noarch
+BuildRequires:  python3-devel
+BuildRequires:  python3-setuptools
+Source0:        %{name}-%{version}.tar.gz
+
+%description
+Nobody cares.
+
+%prep
+#nothing to do here
+%setup -q -n %{name}-%{version}
+
+%build
+%{__python3} setup.py build
+
+%install
+rm -rf $RPM_BUILD_ROOT
+%{__python3} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT
+rm -f $RPM_BUILD_ROOT%{python3_sitelib}/*egg-info/requires.txt
+
+%clean
+rm -rf %{buildroot}
+
+%files
+%defattr(-,root,root)
+#%dir %{python3_sitelib}/%{name}
+%{python3_sitelib}/%{name}-*.egg-info
+
+%changelog
+"""
+
+# NOTE: No Name in test spec file as we re-use it for several packages.
+# Name must be written first.
+TEST_SPEC_2 = """
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Version:        0.0.1
@@ -165,8 +209,9 @@ class TitoGitTestFixture(unittest.TestCase):
         self.write_file(os.path.join(full_pkg_dir, 'a.txt'), "BLERG\n")
 
         # Write the test spec file:
+        spec = TEST_SPEC_3 if sys.version_info[0] == 3 else TEST_SPEC_2
         self.write_file(os.path.join(full_pkg_dir, "%s.spec" % pkg_name),
-            "Name: %s\n%s" % (pkg_name, TEST_SPEC))
+            "Name: %s\n%s" % (pkg_name, spec))
 
         # Write test setup.py:
         self.write_file(os.path.join(full_pkg_dir, "setup.py"),

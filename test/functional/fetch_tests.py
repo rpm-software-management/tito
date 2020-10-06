@@ -17,6 +17,7 @@ Functional Tests for the FetchBuilder.
 
 import glob
 import os
+import sys
 import shutil
 import tempfile
 
@@ -49,7 +50,11 @@ class FetchBuilderTests(TitoGitTestFixture):
     def setUp(self):
         TitoGitTestFixture.setUp(self)
         self.pkg_dir = join(self.repo_dir, EXT_SRC_PKG)
-        spec = join(os.path.dirname(__file__), "specs/extsrc.spec")
+
+        specname = "extsrc-3.spec" if sys.version_info[0] == 3 else "extsrc-2.spec"
+        spec = join(os.path.dirname(__file__), "specs", specname)
+        shutil.copyfile(spec, os.path.join(self.repo_dir, "extsrc.spec"))
+        spec = join(self.repo_dir, "extsrc.spec")
 
         # Setup test config:
         self.config = RawConfigParser()

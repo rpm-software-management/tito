@@ -18,6 +18,7 @@ Functional Tests for the GitAnnexBuilder.
 import os
 import glob
 import tempfile
+import sys
 import shutil
 from nose.plugins.skip import SkipTest
 from os.path import join
@@ -56,7 +57,8 @@ class GitAnnexBuilderTests(TitoGitTestFixture):
                 "true")
 
         os.chdir(self.repo_dir)
-        spec = join(os.path.dirname(__file__), "specs/extsrc.spec")
+        specname = "extsrc-3.spec" if sys.version_info[0] == 3 else "extsrc-2.spec"
+        spec = join(os.path.dirname(__file__), "specs", specname)
         self.create_project_from_spec(PKG_NAME, self.config,
                 spec=spec)
         self.source_filename = 'extsrc-0.0.2.tar.gz'
