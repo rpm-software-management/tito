@@ -499,7 +499,7 @@ class Builder(ConfigObject, BuilderBase):
         """
         Copy extra %{SOURCEX} files to the SOURCE folder.
         """
-        cmd = "spectool -S '%s' --define '_sourcedir %s' | awk '{print $2}'"\
+        cmd = "spectool -S '%s' --define '_sourcedir %s' 2> /dev/null | awk '{print $2}'"\
             % (self.spec_file, self.start_dir)
         sources = getoutput(cmd).split("\n")
 
