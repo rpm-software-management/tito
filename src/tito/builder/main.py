@@ -517,6 +517,10 @@ class Builder(ConfigObject, BuilderBase):
                 debug('Source "%s" is not a local file. Skiping.' % source)
                 continue
 
+            if not os.path.exists(source):
+                debug('Source "%s" file does not exist. Skiping.' % source)
+                continue
+
             src = os.path.join(self.rpmbuild_sourcedir, self.tgz_dir, source)
             if os.path.islink(src) and os.path.isabs(src):
                 src = os.path.join(self.start_dir, os.readlink(src))
