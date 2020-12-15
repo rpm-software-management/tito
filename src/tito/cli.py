@@ -327,7 +327,7 @@ class BuildModule(BaseCliModule):
 
         self.parser.add_option("--test", dest="test", action="store_true",
                 help="use current branch HEAD instead of latest package tag")
-        self.parser.add_option("--test-version", dest="test_version", action="store_true",
+        self.parser.add_option("--test-version", dest="test_version", metavar="TESTVERSION",
                 help="overrides the commit count number in the produced artifact name in test build")
         self.parser.add_option("--no-cleanup", dest="no_cleanup",
                 action="store_true",
