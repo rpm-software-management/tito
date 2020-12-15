@@ -53,7 +53,6 @@ class Releaser(ConfigObject):
         config_builder_args = self._parse_builder_args(releaser_config, target)
         if test:
             config_builder_args['test'] = [True]  # builder must know to build from HEAD
-            self.test_version = self._get_optional_arg(kwargs, 'test_version', 0)
 
 
         # Override with builder args from command line if any were given:

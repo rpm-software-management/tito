@@ -87,11 +87,11 @@ class BuilderBase(object):
             self.rpmbuild_options = self._get_optional_arg(kwargs, 'rpmbuild_options', '')
 
         self.test = self._get_optional_arg(kwargs, 'test', False)
+        self.test_version = self._get_optional_arg(kwargs, 'test_version', 0)
         # Allow a builder arg to override the test setting passed in, used by
         # releasers in their config sections.
         if args and 'test' in args:
             self.test = True
-            self.test_version = self._get_optional_arg(kwargs, 'test_version', 0)
 
         # Location where we do all tito work and store resulting rpms:
         self.rpmbuild_basedir = build_dir
