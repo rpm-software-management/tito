@@ -327,6 +327,8 @@ class BuildModule(BaseCliModule):
 
         self.parser.add_option("--test", dest="test", action="store_true",
                 help="use current branch HEAD instead of latest package tag")
+        self.parser.add_option("--test-version", dest="test_version", action="store_true",
+                help="overrides the commit count number in the produced artifact name in test build")
         self.parser.add_option("--no-cleanup", dest="no_cleanup",
                 action="store_true",
                 help="do not clean up temporary tito build directories/files, and disable rpmbuild %clean")
@@ -369,6 +371,7 @@ class BuildModule(BaseCliModule):
         kwargs = {
             'dist': self.options.dist,
             'test': self.options.test,
+            'test_version': self.options.test_version,
             'offline': self.options.offline,
             'auto_install': self.options.auto_install,
             'rpmbuild_options': self.options.rpmbuild_options,
@@ -446,6 +449,9 @@ class ReleaseModule(BaseCliModule):
 
         self.parser.add_option("--test", action="store_true",
                 help="use current branch HEAD instead of latest package tag")
+
+        self.parser.add_option("--test_version", action="store_true",
+                help="overrides the commit count number in the produced artifact name in test build")
 
         self.parser.add_option("-y", "--yes", dest="auto_accept", action="store_true",
                 help="Do not require input, just accept commits and builds")
@@ -594,6 +600,7 @@ class ReleaseModule(BaseCliModule):
                 releaser_config=releaser_config,
                 no_cleanup=self.options.no_cleanup,
                 test=self.options.test,
+                test_version=self.options.test_version,
                 auto_accept=self.options.auto_accept,
                 **kwargs)
 

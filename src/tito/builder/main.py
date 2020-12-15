@@ -91,6 +91,7 @@ class BuilderBase(object):
         # releasers in their config sections.
         if args and 'test' in args:
             self.test = True
+            self.test_version = self._get_optional_arg(kwargs, 'test_version', 0)
 
         # Location where we do all tito work and store resulting rpms:
         self.rpmbuild_basedir = build_dir
@@ -598,12 +599,12 @@ class Builder(ConfigObject, BuilderBase):
             munge_specfile(
                 self.spec_file,
                 sha,
-                self.commit_count,
+                self.test_version,
                 fullname,
                 self.tgz_filename,
             )
 
-            self.build_version += ".git." + str(self.commit_count) + "." + str(sha)
+            self.build_version += ".git." + str(self.test_version) + "." + str(sha)
             self.ran_setup_test_specfile = True
 
     def _get_rpmbuild_dir_options(self):
@@ -681,11 +682,11 @@ class NoTgzBuilder(Builder):
             # file we're building off. (note that this is a temp copy of the
             # spec) Swap out the actual release for one that includes the git
             # SHA1 we're building for our test package:
-            debug("setup_test_specfile:commit_count = %s" % str(self.commit_count))
+            debug("setup_test_specfile:test_version = %s" % str(self.test_version))
             munge_specfile(
                 self.spec_file,
                 self.git_commit_id[:7],
-                self.commit_count
+                self.test_version
             )
 
 
@@ -1101,7 +1102,7 @@ class MeadBuilder(Builder):
             # file we're building off. (note that this is a temp copy of the
             # spec) Swap out the actual release for one that includes the git
             # SHA1 we're building for our test package:
-            self.build_version += ".git." + str(self.commit_count) + "." + str(self.git_commit_id[:7])
+            self.build_version += ".git." + str(self.test_version) + "." + str(self.git_commit_id[:7])
             replace_spec_release(self.spec_file, self.spec_release)
             self.ran_setup_test_specfile = True
 
