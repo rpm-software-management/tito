@@ -54,7 +54,6 @@ class Releaser(ConfigObject):
         if test:
             config_builder_args['test'] = [True]  # builder must know to build from HEAD
 
-
         # Override with builder args from command line if any were given:
         if 'builder_args' in kwargs:
             # (in case of dupes, last one wins)
