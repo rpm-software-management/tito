@@ -87,7 +87,7 @@ class BuilderBase(object):
             self.rpmbuild_options = self._get_optional_arg(kwargs, 'rpmbuild_options', '')
 
         self.test = self._get_optional_arg(kwargs, 'test', False)
-        self.test_version = self._get_optional_arg(kwargs, 'test_version', 0)
+        self.test_version = self._get_optional_arg(kwargs, 'test_version', None)
         # Allow a builder arg to override the test setting passed in, used by
         # releasers in their config sections.
         if args and 'test' in args:
@@ -633,8 +633,9 @@ class Builder(ConfigObject, BuilderBase):
         if self.test:
             # should get latest commit for given directory *NOT* HEAD
             latest_commit = get_latest_commit(".")
-            self.commit_count = get_commit_count(self.build_tag, latest_commit)
-            version = "git-%s.%s" % (self.commit_count, latest_commit[:7])
+            if self.test_version is None:
+                self.test_version = get_commit_count(self.build_tag, latest_commit)
+            version = "git-%s.%s" % (self.test_version, latest_commit[:7])
         else:
             version = self.build_version.split("-")[0]
         return version
