@@ -84,10 +84,10 @@ git.
 %build
 %{ourpythonbin} setup.py build
 # convert manages
-a2x -d manpage -f manpage titorc.5.asciidoc
-a2x -d manpage -f manpage tito.8.asciidoc
-a2x -d manpage -f manpage tito.props.5.asciidoc
-a2x -d manpage -f manpage releasers.conf.5.asciidoc
+a2x --no-xmllint -d manpage -f manpage titorc.5.asciidoc
+a2x --no-xmllint -d manpage -f manpage tito.8.asciidoc
+a2x --no-xmllint -d manpage -f manpage tito.props.5.asciidoc
+a2x --no-xmllint -d manpage -f manpage releasers.conf.5.asciidoc
 
 %install
 rm -rf $RPM_BUILD_ROOT
