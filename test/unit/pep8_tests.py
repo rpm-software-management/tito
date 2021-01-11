@@ -31,6 +31,7 @@ except ImportError:
 
 
 from tito.compat import *  # NOQA
+from tito.compat import StringIO, redirect_stdout
 from unit.fixture import TitoUnitTestFixture, REPO_DIR
 
 
@@ -66,9 +67,15 @@ class TestPep8(TitoUnitTestFixture):
 
         try:
             checker = pep8.StyleGuide(select=tests, paths=[REPO_DIR], reporter=pep8.StandardReport)
-            report = checker.check_files()
-            result = report.total_errors
-            output = "\n".join(report.get_statistics())
+            # Unfortunatelly, IMHO the most interesting information
+            # `checker.check_files()` prints to the STDOUT and doesn't provide
+            # API to get it - the list of _bad_ files. Let's just read it from
+            # the output
+            with StringIO() as buf, redirect_stdout(buf):
+                report = checker.check_files()
+                result = report.total_errors
+                output = buf.getvalue()
+
         except AttributeError:
             # We don't have pep8.StyleGuide, so we must be
             # using pep8 older than git tag 1.1-72-gf20d656.

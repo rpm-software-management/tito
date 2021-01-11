@@ -18,6 +18,7 @@ Compatibility library for Python 2.4 up through Python 3.
 """
 import os
 import sys
+import contextlib
 ENCODING = sys.getdefaultencoding()
 PY2 = sys.version_info[0] == 2
 if PY2:
@@ -35,6 +36,7 @@ else:
     from configparser import RawConfigParser
     from io import StringIO
     from urllib.parse import urlparse
+    from contextlib import redirect_stdout
     import xmlrpc.client as xmlrpclib
     text_type = str
     binary_type = bytes
@@ -98,3 +100,14 @@ def write(fd, str):
         os.write(fd, str)
     else:
         os.write(fd, bytes(str, ENCODING))
+
+
+if PY2:
+    @contextlib.contextmanager
+    def redirect_stdout(target):
+        original = sys.stdout
+        try:
+            sys.stdout = target
+            yield
+        finally:
+            sys.stdout = original
