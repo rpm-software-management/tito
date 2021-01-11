@@ -62,11 +62,10 @@
 readonly default_python2_distros=(
     centos-6
     centos-7
-    fedora-27
 )
 
 readonly default_python3_distros=(
-    fedora-27
+    fedora-33
     fedora-rawhide
 )
 
