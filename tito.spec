@@ -16,7 +16,7 @@
 %{!?our_sitelib: %define our_sitelib %(%{ourpythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.6.15
+Version: 0.6.16
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -118,6 +118,13 @@ install -Dp -m 0644 share/tito_completion.sh %{buildroot}%{_datadir}/bash-comple
 
 
 %changelog
+* Tue Jan 26 2021 Jakub Kadlcik <frostyx@email.cz> 0.6.16-1
+- Fix manpage generation on Fedora Rawhide (F34)
+- Ignore spectool warnings
+- Skip nonexisting extra sources
+- Fix copy_extra_sources for remote URLs
+- Use --no-rebuild-srpm for scratch builds in KojiReleaser
+
 * Fri Jul 10 2020 Jakub Kadlcik <frostyx@email.cz> 0.6.15-1
 - FedoraGitReleaser: upload extra sources to lookaside cache
   (praiskup@redhat.com)

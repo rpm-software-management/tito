@@ -19,4 +19,4 @@
 Infrastructure for building Spacewalk and Satellite packages from git tags.
 """
 
-__version__ = '0.6.15'
+__version__ = '0.6.16'
