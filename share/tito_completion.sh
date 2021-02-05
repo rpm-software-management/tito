@@ -31,6 +31,7 @@ __tito_build_opts='
     --tag=
     --test
     --tgz
+    --verbose
 '
 
 __tito_release_opts='
