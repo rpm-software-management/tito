@@ -34,7 +34,7 @@ tito.props can contain several sections:
 
 BUILDCONFIG
 ------------
-This section and a couple of it's properties are required.
+This section and a couple of its properties are required.
 You can use following variables:
 
 builder::
