@@ -7,6 +7,6 @@ from tito.release.main import \
     KojiReleaser, \
     KojiGitReleaser
 
-from tito.release.distgit import FedoraGitReleaser, DistGitReleaser, DistGitMeadReleaser
+from tito.release.distgit import FedoraGitReleaser, DistGitReleaser, DistGitMeadReleaser, CentosGitReleaser
 from tito.release.obs import ObsReleaser
 from tito.release.copr import CoprReleaser
