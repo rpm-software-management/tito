@@ -10,7 +10,7 @@
 # Red Hat trademarks are not licensed under GPLv2. No permission is
 # granted to use or replicate Red Hat trademarks that are incorporated
 # in this software or its documentation.
-
+import datetime
 import os.path
 import subprocess
 import sys
@@ -423,6 +423,129 @@ class DistGitReleaser(FedoraGitReleaser):
         else:
             self.cli_tool = "rhpkg"
 
+class CentosGitReleaser(FedoraGitReleaser):
+    def __init__(self, name=None, tag=None, build_dir=None,
+            config=None, user_config=None,
+            target=None, releaser_config=None, no_cleanup=False,
+            test=False, auto_accept=False, **kwargs):
+        FedoraGitReleaser.__init__(self, name, tag, build_dir, config,
+                user_config, target, releaser_config, no_cleanup, test,
+                auto_accept, **kwargs)
+        # Override the cli_tool config from Fedora:
+        if "CENTPKG_USER" in user_config:
+            self.cli_tool = "centpkg --user={user}".format(user=user_config["CENTPKG_USER"])
+            self.username = user_config["CENTPKG_USER"]
+        else:
+            self.cli_tool = "centpkg"
+            self.username = getpass.getuser()
+
+    def _git_release(self):
+        getoutput("mkdir -p {working_dir}".format(working_dir=self.working_dir))
+        with chdir(self.working_dir):
+            run_command("{cli_tool} clone {project_name}".format(cli_tool=self.cli_tool,
+                                                                 project_name=self.project_name))
+
+        with chdir(self.package_workdir):
+            run_command("{cli_tool} fork".format(cli_tool=self.cli_tool))
+            run_command("git fetch {username}".format(username=self.username))
+            self.new_branch_name = "release-branch-{timestamp}".format(
+                timestamp=int(datetime.datetime.utcnow().timestamp()))
+            run_command("git checkout -b {new_branch_name} {username}/{branch}".format(
+                new_branch_name=self.new_branch_name,
+                username=self.username,
+                branch=self.git_branches[0]))
+
+        # Mead builds need to be in the git_root.  Other builders are agnostic.
+        with chdir(self.git_root):
+            self.builder.tgz()
+            self.builder.copy_extra_sources()
+
+        if self.test:
+            self.builder._setup_test_specfile()
+
+        self._git_sync_files(self.package_workdir)
+        self._git_upload_sources(self.package_workdir)
+        self._git_user_confirm_commit(self.package_workdir)
+
+    def _git_user_confirm_commit(self, project_checkout):
+        """ Prompt user if they wish to proceed with commit. """
+        print("")
+        text = "Running 'git diff' in: {project_checkout}".format(project_checkout=project_checkout)
+        print("#" * len(text))
+        print(text)
+        print("#" * len(text))
+        print("")
+
+        main_branch = self.git_branches[0]
+
+        os.chdir(project_checkout)
+
+        # Newer versions of git don't seem to want --cached here? Try both:
+        (unused, diff_output) = getstatusoutput("git diff --cached")
+        if diff_output.strip() == "":
+            debug("git diff --cached returned nothing, falling back to git diff.")
+            (unused, diff_output) = getstatusoutput("git diff")
+
+        if diff_output.strip() == "":
+            print("No changes in main branch, skipping commit for: {main_branch}".format(main_branch=main_branch))
+        else:
+            print(diff_output)
+            print("")
+            print("##### Please review the above diff #####")
+            if not self._ask_yes_no("Do you wish to proceed with commit? [y/n] "):
+                print("Fine, you're on your own!")
+                self.cleanup()
+                sys.exit(1)
+
+            print("Proceeding with commit.")
+            commit_msg_file = self._confirm_commit_msg(diff_output)
+            cmd = '{cli_tool} commit -F {commit_msg_file}'.format(cli_tool=self.cli_tool,
+                                                                  commit_msg_file=commit_msg_file)
+            debug("git commit command: {cmd}".format(cmd=cmd))
+            print
+            if self.dry_run:
+                self.print_dry_run_warning(cmd)
+            else:
+                print("Proceeding with commit.")
+                os.chdir(self.package_workdir)
+                run_command(cmd)
+
+            os.unlink(commit_msg_file)
+
+        cmd = "git push {username} {new_branch_name}".format(username=self.username,
+                                                             new_branch_name=self.new_branch_name)
+        if self.dry_run:
+            self.print_dry_run_warning(cmd)
+        else:
+            # Push
+            print(cmd)
+            try:
+                run_command(cmd)
+            except RunCommandException as e:
+                error_out("`{cmd}` failed with: {output}".format(cmd=cmd, output=e.output))
+
+        if not self.no_build:
+            self._build(main_branch)
+
+        for branch in self.git_branches[1:]:
+            info_out("Merging branch: '{main_branch}' -> '{branch}'".format(main_branch=main_branch, branch=branch))
+            run_command("{cli_tool} switch-branch {branch}".format(cli_tool=self.cli_tool, branch=branch))
+            self._merge(main_branch)
+
+            cmd = "git push origin {branch}:{branch}".format(branch=branch)
+            if self.dry_run:
+                self.print_dry_run_warning(cmd)
+            else:
+                print(cmd)
+                try:
+                    run_command(cmd)
+                except RunCommandException as e:
+                    error_out("`{cmd}` failed with: {output}".format(cmd=cmd, output=e.output))
+
+            if not self.no_build:
+                self._build(branch)
+
+            print
 
 class DistGitMeadReleaser(DistGitReleaser):
     REQUIRED_CONFIG = ['mead_scm', 'branches']
