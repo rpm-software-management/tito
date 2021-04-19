@@ -10,7 +10,7 @@
 # Red Hat trademarks are not licensed under GPLv2. No permission is
 # granted to use or replicate Red Hat trademarks that are incorporated
 # in this software or its documentation.
-
+import datetime
 import os.path
 import subprocess
 import sys
@@ -215,7 +215,7 @@ class FedoraGitReleaser(Releaser):
 
             os.unlink(commit_msg_file)
 
-        cmd = "%s push" % self.cli_tool
+        cmd = self._push_command()
         if self.dry_run:
             self.print_dry_run_warning(cmd)
         else:
@@ -248,6 +248,9 @@ class FedoraGitReleaser(Releaser):
                 self._build(branch)
 
             print
+
+    def _push_command(self):
+        return "%s push" % self.cli_tool
 
     def _merge(self, main_branch):
         try:
@@ -422,6 +425,68 @@ class DistGitReleaser(FedoraGitReleaser):
             self.cli_tool = "rhpkg --user=%s" % user_config["RHPKG_USER"]
         else:
             self.cli_tool = "rhpkg"
+
+
+class CentosGitReleaser(FedoraGitReleaser):
+    """
+    This process follows the choreography defined for the Centos9 Stream.
+    It will create a branch on the user's fork of the main repo.
+    That branch is merged to the main repo via pull request on the
+    web interface. There is no build option usable from this process
+    because it is not synchronous.
+
+    It is limited to only acting on a single Centos stream. Only the first
+    entry in 'branches' in the conf file will be used.
+    """
+
+    def __init__(self, name=None, tag=None, build_dir=None,
+            config=None, user_config=None,
+            target=None, releaser_config=None, no_cleanup=False,
+            test=False, auto_accept=False, **kwargs):
+        FedoraGitReleaser.__init__(self, name, tag, build_dir, config,
+                user_config, target, releaser_config, no_cleanup, test,
+                auto_accept, **kwargs)
+        # Override the cli_tool config from Fedora:
+        if "CENTPKG_USER" in user_config:
+            self.cli_tool = "centpkg --user={user}".format(user=user_config["CENTPKG_USER"])
+            self.username = user_config["CENTPKG_USER"]
+        else:
+            self.cli_tool = "centpkg"
+            self.username = getpass.getuser()
+
+    def _git_release(self):
+        os.makedirs(self.working_dir, exist_ok=True)
+        with chdir(self.working_dir):
+            run_command("{cli_tool} clone {project_name}".format(cli_tool=self.cli_tool,
+                                                                 project_name=self.project_name))
+
+        with chdir(self.package_workdir):
+            run_command("{cli_tool} fork".format(cli_tool=self.cli_tool))
+            run_command("git fetch {username}".format(username=self.username))
+            self.new_branch_name = "release-branch-{timestamp}".format(
+                timestamp=int(datetime.datetime.utcnow().timestamp()))
+            run_command("git checkout -b {new_branch_name} {username}/{branch}".format(
+                new_branch_name=self.new_branch_name,
+                username=self.username,
+                branch=self.git_branches[0]))
+
+        # Mead builds need to be in the git_root.  Other builders are agnostic.
+        with chdir(self.git_root):
+            self.builder.tgz()
+            self.builder.copy_extra_sources()
+
+        if self.test:
+            self.builder._setup_test_specfile()
+
+        self._git_sync_files(self.package_workdir)
+        self._git_upload_sources(self.package_workdir)
+        self.no_build = True
+        self.git_branches = self.git_branches[:1]
+        self._git_user_confirm_commit(self.package_workdir)
+
+    def _push_command(self):
+        return "git push {username} {new_branch_name}".format(username=self.username,
+                                                             new_branch_name=self.new_branch_name)
 
 
 class DistGitMeadReleaser(DistGitReleaser):

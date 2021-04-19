@@ -80,6 +80,25 @@ The 'placeholder_bz' property can be specified to use if no bugs were found in t
  required_bz_flags = myos-1.1.0+ pm_ack+
  placeholder_bz = 100000
 +
+
+tito.release.CentosGitReleaser::
+Releaser which will checkout your fork in the project in the Centos Stream git using centpkg.
+A new branch off your fork is then created for the changes. This is produced in the same way
+as the FedoraGitReleaser with a .tar file that is loaded to the lookaside. The branch gets
+pushed to the forked repo and tito is done. The process then requires the manual creation of
+a merge request against the main repo of the release which is done in the web UI. 
++
+The 'required_bz_flags' property can be specified to have tito check Red Hat Bugzilla to see if each bug number extracted from the changelog has appropriate flags. If it does not, it will be skipped in the commit message. If no bugs are found with the required tags, a 'placeholder_bz' can be specified (see below), otherwise the release will abort.
++
+The 'placeholder_bz' property can be specified to use if no bugs were found in the changelog with the required flags.
++
+ [centos-git]
+ releaser = tito.release.CentosGitReleaser
+ branches = c9s
+ required_bz_flags = release+
+ placeholder_bz = 100000
++
+
 If you would like to build (ie - koji) against a different target than what is
 default for the FedoraGit/DistGit branch currently being worked on it can be
 done like the following example.
