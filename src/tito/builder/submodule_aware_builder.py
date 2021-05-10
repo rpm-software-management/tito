@@ -18,39 +18,8 @@ and rpms.
 import os
 
 from tito.builder import Builder
-from tito.common import debug, run_command, create_tgz, find_spec_like_file, get_commit_timestamp
+from tito.common import chdir, debug, run_command, create_tgz, find_spec_like_file, get_commit_timestamp
 from tito.tar import TarFixer
-
-
-class PushDir(object):
-    """
-    Helper class to change directories and restore the same way pushd/popd work in the shell.
-    Usage:
-    # cwd = 'current'
-    with PushDir("into"):
-        # cwd = 'current/into'
-        do_command # cwd is into.
-    # cwd = 'current'
-    """
-
-    def __init__(self, subdir):
-        self.old_wd = os.getcwd()
-        self.new_wd = None
-        if subdir:
-            self.new_wd = os.path.join(self.old_wd, subdir)
-
-    def __enter__(self):
-        if self.new_wd:
-            self.chdir(self.old_wd, self.new_wd)
-
-    def __exit__(self, type, value, traceback):
-        if self.new_wd:
-            self.chdir(self.new_wd, self.old_wd)
-
-    def chdir(self, old_dir, new_dir):
-        if new_dir:
-            debug('Changing directory from %s to %s' % (old_dir, new_dir))
-            os.chdir(new_dir)
 
 
 class SubmoduleAwareBuilder(Builder):
@@ -61,33 +30,6 @@ class SubmoduleAwareBuilder(Builder):
     It expectes `git submodule--helper list` to exist and work.
     """
     REQUIRED_ARGS = []
-
-    # TODO: drop version
-    def __init__(self, name=None, tag=None, build_dir=None,
-                 config=None, user_config=None,
-                 args=None, **kwargs):
-        # call the parent super class and let it configure everything
-        Builder.__init__(self, name=name, build_dir=build_dir, config=config,
-                         user_config=user_config, args=args, **kwargs)
-        """
-        name - Package name that is being built.
-
-        version - Version and release being built.
-
-        tag - The git tag being built.
-
-        build_dir - Temporary build directory where we can safely work.
-
-        config - Merged configuration. (global plus package specific)
-
-        user_config - User configuration from ~/.titorc.
-
-        args - Optional arguments specific to each builder. Can be passed
-        in explicitly by user on the CLI, or via a release target config
-        entry. Only for things which vary on invocations of the builder,
-        avoid using these if possible.  *Given in the format of a dictionary
-        of lists.*
-        """
 
     def _setup_sources(self):
         """
@@ -130,7 +72,7 @@ class SubmoduleAwareBuilder(Builder):
         git_archive_cmd = 'git archive --format=tar --prefix=%s/ %s:%s --output=%s' % (
             prefix, commit, relative_git_dir, dest_tar)
 
-        with PushDir(subdir) as p:
+        with chdir(subdir) as p:
             run_command(git_archive_cmd)
 
             # Run git-archive separately if --debug was specified.
