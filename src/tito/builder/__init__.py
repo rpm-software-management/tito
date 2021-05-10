@@ -19,4 +19,3 @@ from tito.builder.submodule_aware_builder import \
     SubmoduleAwareBuilder
 
 from tito.builder.fetch import FetchBuilder
-
