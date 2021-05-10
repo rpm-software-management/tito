@@ -66,3 +66,18 @@ Files can be added with the "web" remote, useful for RPM sources.  The downside 
     git annex addurl --file tito-0.4.18.tar.gz http://pkgs.fedoraproject.org/repo/pkgs/tito/tito-0.4.18.tar.gz/318e6f546c9b331317c94ea5d178876a/tito-0.4.18.tar.gz
 
 More information in the [git-annex walkthrough](http://git-annex.branchable.com/walkthrough/) and [special remotes](http://git-annex.branchable.com/special_remotes/) documentation.
+
+
+## tito.builder.SubmoduleAwareBuilder
+
+A builder for packages that use `git submodules`.  git submodules can be contensious, however, in some places they are in use, so this Builder attempts to help with that.
+The SubmoduleAwareBuilder was written and tested with a single submodule at the root of the repo, and it might break in other scenarios.
+
+This builder will collect the files that are in git submodules using  `git submodule--helper list` 
+
+Configuration for SubmoduleAwareBuilder in .tito/tito.props would look like:
+
+    [buildconfig]
+    builder = tito.builder.SubmoduleAwareBuilder
+
+The only noticeable difference over `tito.builder.Builder` is that the SRPM will contain the submodule directories, and that the spec file can now contain files that are within a submodule.
