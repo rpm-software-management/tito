@@ -16,7 +16,7 @@
 %{!?our_sitelib: %define our_sitelib %(%{ourpythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.6.16
+Version: 0.6.17
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -118,6 +118,21 @@ install -Dp -m 0644 share/tito_completion.sh %{buildroot}%{_datadir}/bash-comple
 
 
 %changelog
+* Mon May 17 2021 Jakub Kadlcik <frostyx@email.cz> 0.6.17-1
+- Update releasers.conf (frostyx@email.cz)
+- Make build --verbose autocompletable (nmoumoul@redhat.com)
+- Add support for centpkg (wpoteat@redhat.com)
+- Remove extraneous extra newline (areese@users.noreply.github.com)
+- Add some documentation for tito.builder.SubmoduleAwareBuilder
+  (areese999@apple.com)
+- Update based on feedback: 1. Remove PushDir, tito.common.chdir has the same
+  functionality so use that instead. 2. Remove useless override of constructor,
+  it's just extra noise. (areese999@apple.com)
+- 150 Add support for repos that use submodules. Allow though submodules are a
+  contentious topic, this adds a submodule_aware_builder (areese999@apple.com)
+- doc: fix typo tito.props (subpop@users.noreply.github.com)
+- Update fedora releaser in .tito/releasers.conf (frostyx@email.cz)
+
 * Tue Jan 26 2021 Jakub Kadlcik <frostyx@email.cz> 0.6.16-1
 - Fix manpage generation on Fedora Rawhide (F34)
 - Ignore spectool warnings
