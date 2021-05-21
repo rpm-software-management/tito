@@ -32,6 +32,7 @@ __tito_build_opts='
     --test
     --tgz
     --verbose
+    --fetch-sources
 '
 
 __tito_release_opts='
