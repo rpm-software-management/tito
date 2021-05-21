@@ -21,6 +21,7 @@ import sys
 import re
 import shutil
 import rpm
+import urllib.request
 from pkg_resources import require
 from distutils.version import LooseVersion as loose_version
 from tempfile import mkdtemp
@@ -79,12 +80,16 @@ class BuilderBase(object):
 
         self.quiet = self._get_optional_arg(kwargs, 'quiet', False)
         self.verbose = self._get_optional_arg(kwargs, 'verbose', False)
+        self.fetch_sources = self._get_optional_arg(kwargs, 'fetch_sources', False)
 
         rpmbuildopts = self._get_optional_arg(args, 'rpmbuild_options', None)
         if rpmbuildopts:
             self.rpmbuild_options = ' '.join(rpmbuildopts)
         else:
             self.rpmbuild_options = self._get_optional_arg(kwargs, 'rpmbuild_options', '')
+
+        if self.fetch_sources:
+            self.rpmbuild_options += "--define '%_disable_source_fetch 0'"
 
         self.test = self._get_optional_arg(kwargs, 'test', False)
         # Allow a builder arg to override the test setting passed in, used by

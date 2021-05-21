@@ -274,6 +274,9 @@ class BaseCliModule(object):
                 "offline"):
             self.options.offline = True
 
+        if self.config.has_option(BUILDCONFIG_SECTION, "fetch-sources"):
+            self.options.fetch_sources = self.config.get(BUILDCONFIG_SECTION, "fetch-sources")
+
         # TODO: Not ideal:
         if self.options.debug:
             os.environ['DEBUG'] = "true"
@@ -355,6 +358,10 @@ class BuildModule(BaseCliModule):
                 default='',
                 metavar="COLLECTION", help="Build package for software collection.")
 
+        self.parser.add_option("--fetch-sources", dest='fetch_sources',
+                               action="store_true",
+                               help="Download sources from predefined Source<N> addresses to the SOURCE folder")
+
     def main(self, argv):
         BaseCliModule.main(self, argv)
 
@@ -375,6 +382,7 @@ class BuildModule(BaseCliModule):
             'scl': self.options.scl,
             'quiet': self.options.quiet,
             'verbose': self.options.verbose,
+            'fetch_sources': self.options.fetch_sources,
         }
 
         builder = create_builder(package_name, build_tag,
