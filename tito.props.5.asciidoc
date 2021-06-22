@@ -94,6 +94,11 @@ other taggers.
 sign_tag::
 This boolean enables GnuPG signed tags using 'git tag -s'.
 
+fetch_sources::
+If true, download sources from predefined Source<N> addresses to the
+SOURCE folder.
+
+
 KOJI and COPR
 -------------
 
