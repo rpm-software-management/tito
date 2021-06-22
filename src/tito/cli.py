@@ -274,8 +274,8 @@ class BaseCliModule(object):
                 "offline"):
             self.options.offline = True
 
-        if self.config.has_option(BUILDCONFIG_SECTION, "fetch-sources"):
-            self.options.fetch_sources = self.config.get(BUILDCONFIG_SECTION, "fetch-sources")
+        if self.config.has_option(BUILDCONFIG_SECTION, "fetch_sources"):
+            self.options.fetch_sources = self.config.get(BUILDCONFIG_SECTION, "fetch_sources")
 
         # TODO: Not ideal:
         if self.options.debug:
