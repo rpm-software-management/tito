@@ -16,7 +16,7 @@
 %{!?our_sitelib: %define our_sitelib %(%{ourpythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.6.17
+Version: 0.6.18
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -118,6 +118,13 @@ install -Dp -m 0644 share/tito_completion.sh %{buildroot}%{_datadir}/bash-comple
 
 
 %changelog
+* Wed Jun 23 2021 Jakub Kadlcik <frostyx@email.cz> 0.6.18-1
+- Document fetch_sources option in tito.props (frostyx@email.cz)
+- Rename fetch-sources to fetch_sources in the tito.props config
+  (frostyx@email.cz)
+- Adding option to fetch sources (sisi.chlupova@gmail.com)
+- Change the master branch in releasers.conf to rawhide (frostyx@email.cz)
+
 * Mon May 17 2021 Jakub Kadlcik <frostyx@email.cz> 0.6.17-1
 - Update releasers.conf (frostyx@email.cz)
 - Make build --verbose autocompletable (nmoumoul@redhat.com)
