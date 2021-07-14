@@ -21,7 +21,6 @@ import sys
 import re
 import shutil
 import rpm
-import urllib.request
 from pkg_resources import require
 from distutils.version import LooseVersion as loose_version
 from tempfile import mkdtemp
