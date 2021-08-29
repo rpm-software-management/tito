@@ -37,7 +37,8 @@ from tito.common import (debug, error_out, run_command,
         get_spec_version_and_release, replace_version,
         tag_exists_locally, tag_exists_remotely, head_points_to_tag, undo_tag,
         increase_version, reset_release, increase_zstream, warn_out,
-        BUILDCONFIG_SECTION, get_relative_project_dir_cwd, info_out)
+        BUILDCONFIG_SECTION, get_relative_project_dir_cwd, info_out,
+        get_git_user_info)
 from tito.compat import write, StringIO, getstatusoutput
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
@@ -69,7 +70,7 @@ class VersionTagger(ConfigObject):
         self.keep_version = keep_version
 
         self.today = self._changelog_date()
-        (self.git_user, self.git_email) = self._get_git_user_info()
+        (self.git_user, self.git_email) = get_git_user_info()
         git_email = self.git_email
         if git_email is None:
             git_email = ''
@@ -545,20 +546,6 @@ class VersionTagger(ConfigObject):
                     warn_out("%s also references %s" % (filename, self.relative_project_dir))
                     print("Assuming package has been renamed and removing it.")
                     run_command("git rm %s" % metadata_file)
-
-    def _get_git_user_info(self):
-        """ Return the user.name and user.email git config values. """
-        try:
-            name = run_command('git config --get user.name')
-        except:
-            warn_out('user.name in ~/.gitconfig not set.\n')
-            name = 'Unknown name'
-        try:
-            email = run_command('git config --get user.email')
-        except:
-            warn_out('user.email in ~/.gitconfig not set.\n')
-            email = None
-        return (name, email)
 
     def _get_new_tag(self, version_and_release):
         """ Returns the actual tag we'll be creating. """

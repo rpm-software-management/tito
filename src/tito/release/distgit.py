@@ -16,8 +16,17 @@ import subprocess
 import sys
 import tempfile
 
-from tito.common import run_command, debug, extract_sources, \
-    error_out, chdir, warn_out, info_out, find_mead_chain_file
+from tito.common import (
+    run_command,
+    debug,
+    extract_sources,
+    error_out,
+    chdir,
+    warn_out,
+    info_out,
+    find_mead_chain_file,
+    get_git_user_info,
+)
 from tito.compat import getoutput, getstatusoutput, write
 from tito.release import Releaser
 from tito.release.main import PROTECTED_BUILD_SYS_FILES
@@ -90,6 +99,9 @@ class FedoraGitReleaser(Releaser):
         with chdir(self.package_workdir):
             run_command("%s switch-branch %s" % (self.cli_tool, self.git_branches[0]))
 
+        # Set git user config to the distgit clone based on the current project
+        self._git_set_user_config()
+
         # Mead builds need to be in the git_root.  Other builders are agnostic.
         with chdir(self.git_root):
             self.builder.tgz()
@@ -101,6 +113,13 @@ class FedoraGitReleaser(Releaser):
         self._git_sync_files(self.package_workdir)
         self._git_upload_sources(self.package_workdir)
         self._git_user_confirm_commit(self.package_workdir)
+
+    def _git_set_user_config(self):
+        fullname, email = get_git_user_info()
+        email = email or ""
+        with chdir(self.package_workdir):
+            run_command("git config user.name '{0}'".format(fullname))
+            run_command("git config user.email '{0}'".format(email))
 
     def _get_bz_flags(self):
         required_bz_flags = None

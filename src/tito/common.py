@@ -899,6 +899,25 @@ def get_git_repo_url():
     return run_command("git config remote.origin.url")
 
 
+def get_git_user_info():
+    """
+    Return the `user.name` and `user.email` git config values.
+    The `--global` parameter is not specified and therefore the returned values
+    are current-working-directory specific.
+    """
+    try:
+        name = run_command('git config --get user.name')
+    except:
+        warn_out('user.name in ~/.gitconfig not set.\n')
+        name = 'Unknown name'
+    try:
+        email = run_command('git config --get user.email')
+    except:
+        warn_out('user.email in ~/.gitconfig not set.\n')
+        email = None
+    return (name, email)
+
+
 def get_latest_tagged_version(package_name):
     """
     Return the latest git tag for this package in the current branch.
