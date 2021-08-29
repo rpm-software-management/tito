@@ -892,6 +892,7 @@ class UpstreamBuilder(NoTgzBuilder):
         (status, output) = getstatusoutput(
             "grep 'Binary files .* differ' %s " % patch_file)
         if status == 0 and output != "":
+            print(output)
             error_out("You are doomed. Diff contains binary files. You can not use this builder")
 
         # Creating two copies of the patch here in the temp build directories

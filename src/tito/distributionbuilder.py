@@ -35,6 +35,7 @@ class DistributionBuilder(UpstreamBuilder):
             (status, output) = getstatusoutput(
                 "grep 'Binary files .* differ' %s/%s " % (self.rpmbuild_gitcopy, p_file))
             if status == 0 and output != "":
+                print(output)
                 error_out("You are doomed. Diff contains binary files. You can not use this builder")
 
             run_command("cp %s/%s %s" % (self.rpmbuild_gitcopy, p_file, self.rpmbuild_sourcedir))
