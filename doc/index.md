@@ -228,3 +228,4 @@ See:
 * [Tito release announcements](https://github.com/rpm-software-management/tito/releases)
 * [How to create new release of RPM package in 5 seconds](http://miroslav.suchy.cz/blog/archives/2013/12/17/how_to_create_new_release_of_rpm_package_in_5_seconds)
 * [How to build in Copr](http://miroslav.suchy.cz/blog/archives/2013/12/29/how_to_build_in_copr)
+* [Building RHEL packages with Tito](http://frostyx.cz/posts/building-rhel-packages-with-tito)
