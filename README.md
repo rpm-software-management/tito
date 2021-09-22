@@ -288,3 +288,5 @@ http://miroslav.suchy.cz/blog/archives/2013/12/17/how_to_create_new_release_of_r
 
 [How to build in Copr](
 http://miroslav.suchy.cz/blog/archives/2013/12/29/how_to_build_in_copr)
+
+[Building RHEL packages with Tito](http://frostyx.cz/posts/building-rhel-packages-with-tito)
