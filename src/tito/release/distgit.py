@@ -552,7 +552,7 @@ class DistGitMeadReleaser(DistGitReleaser):
             self.push_url = self.push_url.replace(MEAD_SCM_USERNAME, user)
 
     def _sync_mead_scm(self):
-        cmd = "git push %s %s" % (self.push_url, self.builder.build_tag)
+        cmd = "git push --follow-tags %s %s" % (self.push_url, self.git_branches[0])
 
         if self.dry_run:
             self.print_dry_run_warning(cmd)
@@ -565,9 +565,9 @@ class DistGitMeadReleaser(DistGitReleaser):
             except RunCommandException as e:
                 if "rejected" in e.output:
                     if self._ask_yes_no("The remote rejected a push.  Force push? [y/n] ", False):
-                        run_command("git push --force %s %s" % (self.mead_scm, self.builder.build_tag))
+                        run_command("git push --force --follow-tags %s %s" % (self.push_url, self.git_branches[0]))
                     else:
-                        error_out("Could not sync with %s" % self.mead_scm)
+                        error_out("Could not sync with %s" % self.push_url)
                 raise
 
     def _git_release(self):
