@@ -21,7 +21,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="tito",
-    version='0.6.19',
+    version='0.6.20',
     description='A tool for managing rpm based git projects.',
     author='rpm-software-management',
     url='https://github.com/rpm-software-management/tito',

@@ -16,7 +16,7 @@
 %{!?our_sitelib: %define our_sitelib %(%{ourpythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.6.19
+Version: 0.6.20
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -118,6 +118,13 @@ install -Dp -m 0644 share/tito_completion.sh %{buildroot}%{_datadir}/bash-comple
 
 
 %changelog
+* Wed Feb 23 2022 Jakub Kadlcik <frostyx@email.cz> 0.6.20-1
+- Sync repo (in addition to tag) during mead build (nmoumoul@redhat.com)
+- Add 'Building RHEL packages with Tito' as external doc (frostyx@email.cz)
+- Consider the current project git config when releasing to DistGit
+  (frostyx@email.cz)
+- Print the problematic binary files (frostyx@email.cz)
+
 * Sun Aug 15 2021 Jakub Kadlcik <frostyx@email.cz> 0.6.19-1
 - Drop unused urllib.request import (frostyx@email.cz)
 
