@@ -47,6 +47,10 @@ From CentOS / RHEL:
     # Enable EPEL https://fedoraproject.org/wiki/EPEL#How_can_I_use_these_extra_packages.3F
     yum install tito
 
+From [PyPI](https://pypi.org/project/tito/):
+
+    pip install tito
+
 From git's `master` branch:
 
 - First install Tito's dependencies for your architecture, i.e. `x86_64`:
