@@ -19,10 +19,16 @@ Tito Setup Script
 from setuptools import setup, find_packages
 
 
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+
+
 setup(
     name="tito",
     version='0.6.20',
     description='A tool for managing rpm based git projects.',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     author='rpm-software-management',
     url='https://github.com/rpm-software-management/tito',
     license='GPLv2+',
