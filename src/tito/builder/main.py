@@ -34,7 +34,7 @@ from tito.common import scl_to_rpm_option, get_latest_tagged_version, \
     find_cheetah_template_file, render_cheetah, replace_spec_release, \
     find_spec_like_file, warn_out, get_commit_timestamp, chdir, mkdir_p, \
     find_git_root, info_out, munge_specfile, BUILDCONFIG_SECTION
-from tito.compat import getstatusoutput, getoutput, urlparse
+from tito.compat import getstatusoutput, getoutput, urlparse, urlretrieve
 from tito.exception import RunCommandException
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
@@ -79,7 +79,12 @@ class BuilderBase(object):
 
         self.quiet = self._get_optional_arg(kwargs, 'quiet', False)
         self.verbose = self._get_optional_arg(kwargs, 'verbose', False)
-        self.fetch_sources = self._get_optional_arg(kwargs, 'fetch_sources', False)
+
+        # The default for the builder instantiated from Releasers
+        config_fetch_default = False
+        if self.config.has_option(BUILDCONFIG_SECTION, "fetch_sources"):
+            config_fetch_default = self.config.get(BUILDCONFIG_SECTION, "fetch_sources")
+        self.fetch_sources = self._get_optional_arg(kwargs, 'fetch_sources', config_fetch_default)
 
         rpmbuildopts = self._get_optional_arg(args, 'rpmbuild_options', None)
         if rpmbuildopts:
@@ -499,10 +504,29 @@ class Builder(ConfigObject, BuilderBase):
         # Strip extra dashes if one of the params is empty
         return tag_format.format(**kwargs).strip('-')
 
+    def copy_and_download_extra_sources(self):
+        """
+        Copy extra %{SOURCEX} files to the SOURCE folder, and when
+        self.fetch_sources is configured download external sources as well.
+        """
+        return self._copy_extra_sources(download_sources=True)
+
     def copy_extra_sources(self):
         """
         Copy extra %{SOURCEX} files to the SOURCE folder.
         """
+        return self._copy_extra_sources()
+
+    def _download_one_source(self, source):
+        target = os.path.join(
+            self.rpmbuild_sourcedir,
+            os.path.basename(source),
+        )
+        info_out("Downloading %s into %s" % (source, target))
+        urlretrieve(source, target)
+        self.sources.append(target)
+
+    def _copy_extra_sources(self, download_sources=False):
         cmd = "spectool -S '%s' --define '_sourcedir %s' 2> /dev/null | awk '{print $2}'"\
             % (self.spec_file, self.start_dir)
         sources = getoutput(cmd).split("\n")
@@ -515,9 +539,17 @@ class Builder(ConfigObject, BuilderBase):
 
             parse = urlparse(source)
             if parse.scheme and parse.netloc:
-                # If macro `%_disable_source_fetch 0` is defined, the file will
-                # be automatically downloaded by rpmbuild to the SOURCES
-                # directory. We can safely skip it here.
+                # For self.srpm() and self.rpm() we call
+                # self.download_sources() and later rpmbuild.  We know we can
+                # rely on defined macro `%_disable_source_fetch 0`, and the
+                # file will be automatically downloaded by rpmbuild to the
+                # SOURCES directory. We can safely skip the download here.
+                # For other use-cases (e.g. releasing to Fedora DistGit) we
+                # don't run rpmbuild at all, and we need to download the file
+                # right now (and add it to self.sources).
+                if self.fetch_sources and download_sources:
+                    self._download_one_source(source)
+                    continue
                 debug('Source "%s" is not a local file. Skiping.' % source)
                 continue
 
