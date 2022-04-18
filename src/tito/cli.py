@@ -908,6 +908,9 @@ def main():
     """Command line's entry point."""
     try:
         CLI().main(sys.argv[1:])
+    except TitoException:
+        e = sys.exc_info()[1]
+        error_out(e.message)
     except KeyboardInterrupt:
         pass
 
