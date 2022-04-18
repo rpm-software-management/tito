@@ -1129,6 +1129,19 @@ class MockBuilder(Builder):
             builder_class="tito.builder.Builder",
             **kwargs)
 
+        # TODO This is certainly not optimal. There are many more mock-related
+        # arguments that should be covered but I don't want to do that right
+        # now. It is really bad idea to let each *Builder to read the [builder]
+        # section of the tito.props config and decide how to handle its options.
+        # Besides here, we do it also in FetchBuilder and maybe somewhere else.
+        # We need to unify that, and do it for all (recognized) options, not
+        # only the hardcoded ones.
+        if ("mock" not in args
+            and "builder" in config
+            and "mock" in config["builder"]
+            ):
+            args["mock"] = [config.get("builder", "mock")]
+
         Builder.__init__(self, name=name, tag=tag,
                 build_dir=build_dir, config=config,
                 user_config=user_config,
