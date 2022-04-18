@@ -154,6 +154,10 @@ tito.builder.Builder::
 Basic package builder. It create tar.gz of whole directory and create src.rpm
 and build rpm using some supported method.
 
+tito.builder.MockBuilder::
+Use `mock` instead of `rpmbuild` for building an RPM package.
+See doc/builders.md.
+
 tito.builder.NoTgzBuilder::
 Builder for packages that do not require the creation of tarball.
 Usually these package have source files checked directly into git.
