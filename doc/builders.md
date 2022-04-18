@@ -1,5 +1,24 @@
 # Tito Builders
 
+## tito.builder.MockBuilder
+
+By default, Tito internally uses `rpmbuild` for building SRPM and RPM
+packages. This imposes some requirements on the host system - all the
+build dependencies need to be installed. Also, building RPM packages
+can potentially be dangerous and a badly written spec file can cause
+damage to the host system. If you prefer to use `mock` instead,
+configure `.tito/tito.props` like this:
+
+    [buildconfig]
+    builder = tito.builder.MockBuilder
+
+    [builder]
+    mock = fedora-rawhide-x86_64
+
+Alternatively, you can specify a mock chroot in the command line:
+
+    tito build --rpm --arg=mock=fedora-rawhide-x86_64
+
 ## tito.builder.FetchBuilder
 
 An unorthodox builder which can build packages for a git repo which does not actually have any tito footprint. The location of sources, and the version/release to assume we're building, come from a configurable strategy.
