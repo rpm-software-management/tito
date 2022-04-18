@@ -1124,8 +1124,10 @@ class MockBuilder(Builder):
 
         # Mock builders need to use the packages normally configured builder
         # to get at a proper SRPM:
-        self.normal_builder = create_builder(name, tag, config,
-                build_dir, user_config, args, **kwargs)
+        self.normal_builder = create_builder(
+            name, tag, config, build_dir, user_config, args,
+            builder_class="tito.builder.Builder",
+            **kwargs)
 
         Builder.__init__(self, name=name, tag=tag,
                 build_dir=build_dir, config=config,
