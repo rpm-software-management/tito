@@ -16,7 +16,7 @@
 %{!?our_sitelib: %define our_sitelib %(%{ourpythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.6.20
+Version: 0.6.21
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -118,6 +118,15 @@ install -Dp -m 0644 share/tito_completion.sh %{buildroot}%{_datadir}/bash-comple
 
 
 %changelog
+* Thu Jul 21 2022 Jakub Kadlcik <frostyx@email.cz> 0.6.21-1
+- Properly catch TitoException (frostyx@email.cz)
+- Add documentation for the MockBuilder (frostyx@email.cz)
+- Allow to define mock chroot in tito.props (frostyx@email.cz)
+- Fix recursion error in MockBuilder (frostyx@email.cz)
+- DistGitReleasers: don't nuke external sources with fetch_sources (praiskup@redhat.com)
+- Add installation instructions from PyPI (frostyx@email.cz)
+- Add long_description to setup.py (frostyx@email.cz)
+
 * Wed Feb 23 2022 Jakub Kadlcik <frostyx@email.cz> 0.6.20-1
 - Sync repo (in addition to tag) during mead build (nmoumoul@redhat.com)
 - Add 'Building RHEL packages with Tito' as external doc (frostyx@email.cz)
