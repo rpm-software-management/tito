@@ -17,6 +17,8 @@ If you are releasing a new version of Tito, please follow these steps:
 6. Push new version into Fedora DistGit and build it in Koji
    `tito release fedora`
 7. Make sure those builds succeeds and submit updates into Bodhi
+8. Release into PyPI with `python3 setup.py sdist` and `twine upload
+   dist/<NAME-VERSION>.tar.gz`
 
 
 
