@@ -27,7 +27,7 @@ if PY2:
     from ConfigParser import RawConfigParser
     from StringIO import StringIO
     from urlparse import urlparse
-    from urlparse import urlretrieve
+    from urllib import urlretrieve
     import xmlrpclib
     text_type = unicode
     binary_type = str
