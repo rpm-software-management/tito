@@ -67,14 +67,13 @@ class SubmoduleAwareBuilder(Builder):
         self.spec_file = os.path.join(
             self.rpmbuild_gitcopy, self.spec_file_name)
 
-    def run_git_archive(self, relative_git_dir, prefix, commit, dest_tar, subdir):
+    def run_git_archive(self, relative_git_dir, prefix, commit, dest_tar, subdir=None):
         # command to generate a git-archive
         git_archive_cmd = 'git archive --format=tar --prefix=%s/ %s:%s --output=%s' % (
             prefix, commit, relative_git_dir, dest_tar)
 
         if subdir is None:
-            run_command(git_archive_cmd)
-            return
+            return run_command(git_archive_cmd)
 
         with chdir(subdir) as p:
             run_command(git_archive_cmd)
@@ -132,7 +131,7 @@ class SubmoduleAwareBuilder(Builder):
             # git rev-parse <commit>:./<submodule>
             rev_parse_cmd = 'git rev-parse %s:./%s' % (commit, submodule)
             submodule_commit = run_command(rev_parse_cmd)
-            submodule_tar_file = '%s.%s' % (initial_tar, submodule)
+            submodule_tar_file = '%s.%s' % (initial_tar, submodule.replace("/","_"))
             # prefix should be <prefix>/<submodule>
             submodule_prefix = '%s/%s' % (prefix, submodule)
 
