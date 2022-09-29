@@ -72,6 +72,10 @@ class SubmoduleAwareBuilder(Builder):
         git_archive_cmd = 'git archive --format=tar --prefix=%s/ %s:%s --output=%s' % (
             prefix, commit, relative_git_dir, dest_tar)
 
+        if subdir is None:
+            run_command(git_archive_cmd)
+            return
+
         with chdir(subdir) as p:
             run_command(git_archive_cmd)
 
