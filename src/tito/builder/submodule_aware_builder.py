@@ -140,8 +140,9 @@ class SubmoduleAwareBuilder(Builder):
             submodule_tar_files.append(submodule_tar_file)
 
         # we need to append all of the submodule tar files onto the initial
-        tarfiles = ' '.join(submodule_tar_files)
-        run_command("tar -Af %s" % tarfiles)
+        # Tar can concatenate only 2 archives at a time
+        for tar_file in submodule_tar_files:
+            run_command("tar -Af %s %s" % (initial_tar, tar_file))
 
         fixed_tar = "%s.tar" % basename
         fixed_tar_fh = open(fixed_tar, 'wb')
