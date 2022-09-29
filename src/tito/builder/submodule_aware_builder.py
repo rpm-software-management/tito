@@ -18,7 +18,14 @@ and rpms.
 import os
 
 from tito.builder import Builder
-from tito.common import chdir, debug, run_command, create_tgz, find_spec_like_file, get_commit_timestamp
+from tito.common import (
+    chdir,
+    debug,
+    run_command,
+    create_tgz,
+    find_spec_like_file,
+    get_commit_timestamp,
+)
 from tito.tar import TarFixer
 
 
@@ -29,6 +36,7 @@ class SubmoduleAwareBuilder(Builder):
     This builder is aware of submodules and will package the contents of the submodules as well.
     It expectes `git submodule--helper list` to exist and work.
     """
+
     REQUIRED_ARGS = []
 
     def _setup_sources(self):
@@ -43,34 +51,47 @@ class SubmoduleAwareBuilder(Builder):
         """
         self._create_build_dirs()
 
-        debug("Creating %s from git tag: %s..." % (self.tgz_filename,
-                                                   self.git_commit_id))
+        debug(
+            "Creating %s from git tag: %s..." % (self.tgz_filename, self.git_commit_id)
+        )
 
         # call our create_tgz, instead of the global one.
-        self.create_tgz(self.git_root, self.tgz_dir, self.git_commit_id,
-                        self.relative_project_dir,
-                        os.path.join(self.rpmbuild_sourcedir, self.tgz_filename))
+        self.create_tgz(
+            self.git_root,
+            self.tgz_dir,
+            self.git_commit_id,
+            self.relative_project_dir,
+            os.path.join(self.rpmbuild_sourcedir, self.tgz_filename),
+        )
 
         # Extract the source so we can get at the spec file, etc.
         debug("Copying git source to: %s" % self.rpmbuild_gitcopy)
-        run_command("cd %s/ && tar xzf %s" % (self.rpmbuild_sourcedir,
-                                              self.tgz_filename))
+        run_command(
+            "cd %s/ && tar xzf %s" % (self.rpmbuild_sourcedir, self.tgz_filename)
+        )
 
-        debug("Show contents of the directory structure we just extracted:\n%s"
-              % os.listdir(self.rpmbuild_gitcopy))
+        debug(
+            "Show contents of the directory structure we just extracted:\n%s"
+            % os.listdir(self.rpmbuild_gitcopy)
+        )
 
         # NOTE: The spec file we actually use is the one exported by git
         # archive into the temp build directory. This is done so we can
         # modify the version/release on the fly when building test rpms
         # that use a git SHA1 for their version.
-        self.spec_file_name = os.path.basename(find_spec_like_file(self.rpmbuild_gitcopy))
-        self.spec_file = os.path.join(
-            self.rpmbuild_gitcopy, self.spec_file_name)
+        self.spec_file_name = os.path.basename(
+            find_spec_like_file(self.rpmbuild_gitcopy)
+        )
+        self.spec_file = os.path.join(self.rpmbuild_gitcopy, self.spec_file_name)
 
     def run_git_archive(self, relative_git_dir, prefix, commit, dest_tar, subdir=None):
         # command to generate a git-archive
-        git_archive_cmd = 'git archive --format=tar --prefix=%s/ %s:%s --output=%s' % (
-            prefix, commit, relative_git_dir, dest_tar)
+        git_archive_cmd = "git archive --format=tar --prefix=%s/ %s:%s --output=%s" % (
+            prefix,
+            commit,
+            relative_git_dir,
+            dest_tar,
+        )
 
         if subdir is None:
             return run_command(git_archive_cmd)
@@ -81,18 +102,19 @@ class SubmoduleAwareBuilder(Builder):
             # Run git-archive separately if --debug was specified.
             # This allows us to detect failure early.
             # On git < 1.7.4-rc0, `git archive ... commit:./` fails!
-            debug('git-archive fails if relative dir is not in git tree',
-                  '%s > /dev/null' % git_archive_cmd)
+            debug(
+                "git-archive fails if relative dir is not in git tree",
+                "%s > /dev/null" % git_archive_cmd,
+            )
 
-    def create_tgz(self, git_root, prefix, commit, relative_dir,
-                   dest_tgz):
+    def create_tgz(self, git_root, prefix, commit, relative_dir, dest_tgz):
         """
         Create a .tar.gz from a projects source in git.
         And include submodules
         """
 
         git_root_abspath = os.path.abspath(git_root)
-        gitmodules_path = os.path.join(git_root_abspath, '.gitmodules')
+        gitmodules_path = os.path.join(git_root_abspath, ".gitmodules")
 
         # if .gitmodules does not exist, just call the existing create_tgz function
         # as there is nothing to see here.
@@ -104,7 +126,7 @@ class SubmoduleAwareBuilder(Builder):
 
         # Accommodate standalone projects with specfile in root of git repo:
         relative_git_dir = "%s" % relative_dir
-        if relative_git_dir in ['/', './']:
+        if relative_git_dir in ["/", "./"]:
             relative_git_dir = ""
 
         basename = os.path.splitext(dest_tgz)[0]
@@ -116,12 +138,14 @@ class SubmoduleAwareBuilder(Builder):
 
         # 2. all of the submodules
         # then combine those into a single archive.
-        submodules_cmd = 'git submodule--helper list'
+        submodules_cmd = "git submodule--helper list"
         submodules_output = run_command(submodules_cmd)
 
         # split submodules output on newline
         # then on tab, and the directory is the last entry
-        submodules_list = [line.split('\t')[-1] for line in submodules_output.split('\n')]
+        submodules_list = [
+            line.split("\t")[-1] for line in submodules_output.split("\n")
+        ]
 
         submodule_tar_files = [initial_tar]
         # We ignore the hash in the sub modules list as we'll have to get the correct one
@@ -129,14 +153,19 @@ class SubmoduleAwareBuilder(Builder):
         for submodule in submodules_list:
             # to find the submodule shars:
             # git rev-parse <commit>:./<submodule>
-            rev_parse_cmd = 'git rev-parse %s:./%s' % (commit, submodule)
+            rev_parse_cmd = "git rev-parse %s:./%s" % (commit, submodule)
             submodule_commit = run_command(rev_parse_cmd)
-            submodule_tar_file = '%s.%s' % (initial_tar, submodule.replace("/","_"))
+            submodule_tar_file = "%s.%s" % (initial_tar, submodule.replace("/", "_"))
             # prefix should be <prefix>/<submodule>
-            submodule_prefix = '%s/%s' % (prefix, submodule)
+            submodule_prefix = "%s/%s" % (prefix, submodule)
 
-            self.run_git_archive(relative_git_dir, submodule_prefix, submodule_commit,
-                                 submodule_tar_file, submodule)
+            self.run_git_archive(
+                relative_git_dir,
+                submodule_prefix,
+                submodule_commit,
+                submodule_tar_file,
+                submodule,
+            )
             submodule_tar_files.append(submodule_tar_file)
 
         # we need to append all of the submodule tar files onto the initial
@@ -145,9 +174,11 @@ class SubmoduleAwareBuilder(Builder):
             run_command("tar -Af %s %s" % (initial_tar, tar_file))
 
         fixed_tar = "%s.tar" % basename
-        fixed_tar_fh = open(fixed_tar, 'wb')
+        fixed_tar_fh = open(fixed_tar, "wb")
         try:
-            tarfixer = TarFixer(open(initial_tar, 'rb'), fixed_tar_fh, timestamp, commit)
+            tarfixer = TarFixer(
+                open(initial_tar, "rb"), fixed_tar_fh, timestamp, commit
+            )
             tarfixer.fix()
         finally:
             fixed_tar_fh.close()
