@@ -96,7 +96,7 @@ class SubmoduleAwareBuilder(Builder):
         if subdir is None:
             return run_command(git_archive_cmd)
 
-        with chdir(subdir) as p:
+        with chdir(subdir):
             run_command(git_archive_cmd)
 
             # Run git-archive separately if --debug was specified.
@@ -106,6 +106,36 @@ class SubmoduleAwareBuilder(Builder):
                 "git-archive fails if relative dir is not in git tree",
                 "%s > /dev/null" % git_archive_cmd,
             )
+
+    def _submodule_archives(self, relative_git_dir, prefix, commit, initial_tar):
+        submodules_cmd = "git submodule--helper list"
+        submodules_output = run_command(submodules_cmd)
+
+        # split submodules output on newline
+        # then on tab, and the directory is the last entry
+        submodules_list = [
+            line.split("\t")[-1] for line in submodules_output.split("\n")
+        ]
+
+        # We ignore the hash in the sub modules list as we'll have to get the correct one
+        # from the commit id in commit
+        for submodule in submodules_list:
+            # to find the submodule shars:
+            # git rev-parse <commit>:./<submodule>
+            rev_parse_cmd = "git rev-parse %s:./%s" % (commit, submodule)
+            submodule_commit = run_command(rev_parse_cmd)
+            submodule_tar_file = "%s.%s" % (initial_tar, submodule.replace("/", "_"))
+            # prefix should be <prefix>/<submodule>
+            submodule_prefix = "%s/%s" % (prefix, submodule)
+
+            self.run_git_archive(
+                relative_git_dir,
+                submodule_prefix,
+                submodule_commit,
+                submodule_tar_file,
+                submodule,
+            )
+            yield (submodule_tar_file)
 
     def create_tgz(self, git_root, prefix, commit, relative_dir, dest_tgz):
         """
@@ -138,40 +168,10 @@ class SubmoduleAwareBuilder(Builder):
 
         # 2. all of the submodules
         # then combine those into a single archive.
-        submodules_cmd = "git submodule--helper list"
-        submodules_output = run_command(submodules_cmd)
-
-        # split submodules output on newline
-        # then on tab, and the directory is the last entry
-        submodules_list = [
-            line.split("\t")[-1] for line in submodules_output.split("\n")
-        ]
-
-        submodule_tar_files = [initial_tar]
-        # We ignore the hash in the sub modules list as we'll have to get the correct one
-        # from the commit id in commit
-        for submodule in submodules_list:
-            # to find the submodule shars:
-            # git rev-parse <commit>:./<submodule>
-            rev_parse_cmd = "git rev-parse %s:./%s" % (commit, submodule)
-            submodule_commit = run_command(rev_parse_cmd)
-            submodule_tar_file = "%s.%s" % (initial_tar, submodule.replace("/", "_"))
-            # prefix should be <prefix>/<submodule>
-            submodule_prefix = "%s/%s" % (prefix, submodule)
-
-            self.run_git_archive(
-                relative_git_dir,
-                submodule_prefix,
-                submodule_commit,
-                submodule_tar_file,
-                submodule,
-            )
-            submodule_tar_files.append(submodule_tar_file)
-
-        # we need to append all of the submodule tar files onto the initial
-        # Tar can concatenate only 2 archives at a time
-        for tar_file in submodule_tar_files:
-            run_command("tar -Af %s %s" % (initial_tar, tar_file))
+        for submodule_tar_file in self._submodule_archives(
+            relative_git_dir, prefix, commit, initial_tar
+        ):
+            run_command("tar -Af %s %s" % (initial_tar, submodule_tar_file))
 
         fixed_tar = "%s.tar" % basename
         fixed_tar_fh = open(fixed_tar, "wb")
