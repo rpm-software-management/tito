@@ -16,7 +16,7 @@
 %{!?our_sitelib: %define our_sitelib %(%{ourpythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
-Version: 0.6.21
+Version: 0.6.22
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -118,6 +118,13 @@ install -Dp -m 0644 share/tito_completion.sh %{buildroot}%{_datadir}/bash-comple
 
 
 %changelog
+* Mon Nov 14 2022 Jakub Kadlcik <frostyx@email.cz> 0.6.22-1
+- Fix python2 urlretrieve import (frostyx@email.cz)
+- Fixed submodule archives concatenation (jerzy.drozdz@jdsieci.pl)
+- Fixed issue #414 (jerzy.drozdz@jdsieci.pl)
+- Fixed issue #413 (jerzy.drozdz@jdsieci.pl)
+- Revert 45d431ad149cb33e2462a990c4c4f29e6bb2bb7e (nmoumoul@redhat.com)
+
 * Thu Jul 21 2022 Jakub Kadlcik <frostyx@email.cz> 0.6.21-1
 - Properly catch TitoException (frostyx@email.cz)
 - Add documentation for the MockBuilder (frostyx@email.cz)
