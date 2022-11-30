@@ -20,7 +20,7 @@ Version: 0.6.22
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
-License: GPLv2
+License: GPL-2.0-only
 URL: https://github.com/rpm-software-management/tito
 # Sources can be obtained by
 # git clone https://github.com/rpm-software-management/tito
