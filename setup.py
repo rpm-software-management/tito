@@ -32,7 +32,7 @@ setup(
     long_description_content_type="text/markdown",
     author='rpm-software-management',
     url='https://github.com/rpm-software-management/tito',
-    license='GPLv2+',
+    license='GPLv2',
 
     # tell distutils packages are under src directory
     package_dir={
