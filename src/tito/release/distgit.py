@@ -327,13 +327,16 @@ class FedoraGitReleaser(Releaser):
         Upload any tarballs to the lookaside directory. (if necessary)
         Uses the "fedpkg new-sources" command.
         """
-        if not self.builder.sources:
+        sources = [x for x in self.builder.sources
+                   if not x.endswith(self.copy_extensions)]
+
+        if not sources:
             debug("No sources need to be uploaded.")
             return
 
         print("Uploading sources to lookaside:")
         os.chdir(project_checkout)
-        cmd = '%s new-sources %s' % (self.cli_tool, " ".join(self.builder.sources))
+        cmd = '%s new-sources %s' % (self.cli_tool, " ".join(sources))
         debug(cmd)
 
         if self.dry_run:
@@ -342,8 +345,8 @@ class FedoraGitReleaser(Releaser):
 
         output = run_command(cmd)
         debug(output)
-        debug("Removing write-only permission on:")
-        for filename in self.builder.sources:
+        debug("Adding write permission for:")
+        for filename in sources:
             run_command("chmod u+w %s" % filename)
 
     def _list_files_to_copy(self):
