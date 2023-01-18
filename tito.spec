@@ -11,9 +11,9 @@
 %global our_sitelib %{python2_sitelib}
 %else
 %global ourpythonbin %{__python}
+%global our_sitelib %(%{ourpythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")
 %endif
 %endif
-%{!?our_sitelib: %define our_sitelib %(%{ourpythonbin} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name: tito
 Version: 0.6.22
