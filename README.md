@@ -26,6 +26,11 @@ Tito offers the following features:
  - Manage all of the above for a git repository with many disjoint packages
    within it.
 
+STATUS
+======
+
+Copr build: [![badge](https://copr.fedorainfracloud.org/coprs/g/copr/copr/package/copr-frontend/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/g/rpm-software-management/tito/package/tito/)
+
 RELATED PROJECTS
 ================
 
@@ -50,6 +55,11 @@ From CentOS / RHEL:
 From [PyPI](https://pypi.org/project/tito/):
 
     pip install tito
+
+[Pre-release versions for Fedora](https://copr.fedorainfracloud.org/coprs/g/rpm-software-management/tito/) (built from git `master` branch):
+
+    dnf copr enable @rpm-software-management/tito
+    dnf install tito
 
 From git's `master` branch:
 

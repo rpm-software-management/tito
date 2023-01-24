@@ -1,9 +1,17 @@
 ---
 jobs:
-  - job: copr_build
+  - &copr
+    job: copr_build
     trigger: pull_request
     metadata:
       targets:
         - fedora-all
         - epel-7-x86_64
         - epel-8-x86_64
+
+  - <<: *copr
+    trigger: commit
+    metadata:
+      owner: "@rpm-software-management"
+      project: "tito"
+      branch: master
