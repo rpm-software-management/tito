@@ -62,6 +62,7 @@ class SubmoduleAwareBuilder(Builder):
             self.git_commit_id,
             self.relative_project_dir,
             os.path.join(self.rpmbuild_sourcedir, self.tgz_filename),
+            self.tgz_method, self.tgz_include_git
         )
 
         # Extract the source so we can get at the spec file, etc.
@@ -137,7 +138,7 @@ class SubmoduleAwareBuilder(Builder):
             )
             yield (submodule_tar_file)
 
-    def create_tgz(self, git_root, prefix, commit, relative_dir, dest_tgz):
+    def create_tgz(self, git_root, prefix, commit, relative_dir, dest_tgz, method='git', add_git_folder=False):
         """
         Create a .tar.gz from a projects source in git.
         And include submodules
@@ -149,7 +150,7 @@ class SubmoduleAwareBuilder(Builder):
         # if .gitmodules does not exist, just call the existing create_tgz function
         # as there is nothing to see here.
         if not os.path.exists(gitmodules_path):
-            return create_tgz(git_root, prefix, commit, relative_dir, dest_tgz)
+            return create_tgz(git_root, prefix, commit, relative_dir, dest_tgz, method, add_git_folder)
 
         os.chdir(git_root_abspath)
         timestamp = get_commit_timestamp(commit)
