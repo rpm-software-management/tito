@@ -868,20 +868,19 @@ def create_tgz(git_root, prefix, commit, relative_dir,
     initial_tar = "%s.initial" % basename
 
     # command to generate a git-archive
-    match method:
-        case 'git':
-            git_archive_cmd = 'git archive --format=tar --prefix=%s/ %s:%s --output=%s' % (
-                prefix, commit, relative_git_dir, initial_tar)
-            run_command(git_archive_cmd)
-            if add_git_folder:
-                tar_append_cmd = f"tar --append -f {initial_tar}  --transform 's|^{relative_git_dir}|{prefix}/|' {relative_git_dir}/.git"
-                run_command(tar_append_cmd)
-        case 'tar':
-            # Assuming no folder paths contain '|' so we don't need to create escaped versions
-            git_archive_cmd = f"tar --create -f {initial_tar} --transform 's|^{relative_git_dir}|{prefix}/|' {relative_git_dir}"
-            run_command(git_archive_cmd)
-        case _:
-            raise Exception(f"Unknown tar create method passed: {method}")
+    if method == 'git':
+        git_archive_cmd = 'git archive --format=tar --prefix=%s/ %s:%s --output=%s' % (
+            prefix, commit, relative_git_dir, initial_tar)
+        run_command(git_archive_cmd)
+        if add_git_folder:
+            tar_append_cmd = f"tar --append -f {initial_tar}  --transform 's|^{relative_git_dir}|{prefix}/|' {relative_git_dir}/.git"
+            run_command(tar_append_cmd)
+    elif method == 'tar':
+        # Assuming no folder paths contain '|' so we don't need to create escaped versions
+        git_archive_cmd = f"tar --create -f {initial_tar} --transform 's|^{relative_git_dir}|{prefix}/|' {relative_git_dir}"
+        run_command(git_archive_cmd)
+    else:
+        raise Exception(f"Unknown tar create method passed: {method}")
 
     # Run git-archive separately if --debug was specified.
     # This allows us to detect failure early.
