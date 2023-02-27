@@ -868,7 +868,7 @@ def create_tgz(git_root, prefix, commit, relative_dir,
     initial_tar = "%s.initial" % basename
 
     # command to generate a git-archive
-    git_archive_cmd = 'git archive --format=tar --prefix=%s/ %s:%s --output=%s' % (
+    git_archive_cmd = 'git archive --format=tar --prefix=%s/ %s %s --output=%s' % (
         prefix, commit, relative_git_dir, initial_tar)
     run_command(git_archive_cmd)
 
