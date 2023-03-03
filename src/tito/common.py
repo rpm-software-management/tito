@@ -868,8 +868,8 @@ def create_tgz(git_root, prefix, commit, relative_dir,
     initial_tar = "%s.initial" % basename
 
     # command to generate a git-archive
-    git_archive_cmd = 'git archive --format=tar --prefix=%s/ %s %s --output=%s' % (
-        prefix, commit, relative_git_dir, initial_tar)
+    git_archive_cmd = 'git archive --format=tar %s %s --output=%s' % (
+        commit, relative_git_dir, initial_tar)
     run_command(git_archive_cmd)
 
     # Run git-archive separately if --debug was specified.
@@ -878,13 +878,32 @@ def create_tgz(git_root, prefix, commit, relative_dir,
     debug('git-archive fails if relative dir is not in git tree',
         '%s > /dev/null' % git_archive_cmd)
 
-    fixed_tar = "%s.tar" % basename
-    fixed_tar_fh = open(fixed_tar, 'wb')
+    fixed_timestamp_tar = "%s.fixed_timestamp" % basename
+    fixed_tar_fh = open(fixed_timestamp_tar, 'wb')
     try:
         tarfixer = TarFixer(open(initial_tar, 'rb'), fixed_tar_fh, timestamp, commit)
         tarfixer.fix()
     finally:
         fixed_tar_fh.close()
+
+    # Fix tar archive locations
+    fixed_tar = "%s.tar" % basename
+    # First normalize paths
+    relative_git_dir = relative_git_dir.removeprefix("/").removeprefix("./")
+    if relative_git_dir and not relative_git_dir.endswith("/"):
+        # Note: if relative_git_dir is empty, it should remain empty
+        relative_git_dir += "/"
+    prefix = prefix.removeprefix("/").removeprefix("./")
+    if not prefix.endswith("/"):
+        prefix += "/"
+    # Extract archive to a temp folder
+    tar_extract_transform_cmd = 'tar -xf %s --transform="s|^%s|tmp_extract/%s|g"' % (
+        fixed_timestamp_tar, relative_git_dir, prefix)
+    run_command(tar_extract_transform_cmd)
+    # Re-compress the archive
+    tar_create_cmd = 'tar -cf %s -C tmp_extract/ %s' % (
+        fixed_tar, prefix)
+    run_command(tar_create_cmd)
 
     # It's a pity we can't use Python's gzip, but it doesn't offer an equivalent of -n
     return run_command("gzip -n -c < %s > %s" % (fixed_tar, dest_tgz))
