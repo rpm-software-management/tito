@@ -29,7 +29,8 @@ from tito.exception import TitoException
 from tito.config_object import ConfigObject
 
 # List of files to protect when syncing:
-PROTECTED_BUILD_SYS_FILES = ('branch', 'Makefile', 'sources', ".git", ".gitignore", ".osc", "tito-mead-url", "tests", "gating.yaml")
+PROTECTED_BUILD_SYS_FILES = ('branch', 'Makefile', 'sources', ".git", ".gitignore", ".osc", "tito-mead-url",
+                             "tests", "gating.yaml", ".packit.yaml", ".packit.yml", "packit.yaml", "packit.yml")
 
 RSYNC_USERNAME = 'RSYNC_USERNAME'  # environment variable name
 
