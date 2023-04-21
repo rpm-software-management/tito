@@ -108,13 +108,13 @@ class SubmoduleAwareBuilder(Builder):
             )
 
     def _submodule_archives(self, relative_git_dir, prefix, commit, initial_tar):
-        submodules_cmd = "git submodule--helper list"
+        submodules_cmd = "git config --file .gitmodules --get-regexp path"
         submodules_output = run_command(submodules_cmd)
 
         # split submodules output on newline
         # then on tab, and the directory is the last entry
         submodules_list = [
-            line.split("\t")[-1] for line in submodules_output.split("\n")
+            line.split(" ")[-1] for line in submodules_output.split("\n")
         ]
 
         # We ignore the hash in the sub modules list as we'll have to get the correct one
