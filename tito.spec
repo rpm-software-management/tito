@@ -16,7 +16,7 @@
 %endif
 
 Name: tito
-Version: 0.6.22
+Version: 0.6.23
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -118,6 +118,13 @@ install -Dp -m 0644 share/tito_completion.sh %{buildroot}%{_datadir}/bash-comple
 
 
 %changelog
+* Tue Jun 13 2023 Jakub Kadlcik <frostyx@email.cz> 0.6.23-1
+- Replace `submodule--helper list` with `git config --get-regexp`
+- do not overwrite packit.yaml and its variants (msuchy@redhat.com)
+- packit: fixing the Fedora build failures (praiskup@redhat.com)
+- Don't upload patches to the lookaside cache (frostyx@email.cz)
+- use spdx license (msuchy@redhat.com)
+
 * Mon Nov 14 2022 Jakub Kadlcik <frostyx@email.cz> 0.6.22-1
 - Fix python2 urlretrieve import (frostyx@email.cz)
 - Fixed submodule archives concatenation (jerzy.drozdz@jdsieci.pl)
