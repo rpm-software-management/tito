@@ -44,7 +44,7 @@ class DistributionBuilder(UpstreamBuilder):
 
         for patch in self.patch_files:
             lines.insert(patch_insert_index, "Patch%s: %s\n" % (patch_number, patch))
-            lines.insert(patch_apply_index, "%%patch%s -p1\n" % (patch_number))
+            lines.insert(patch_apply_index, "%%patch %s -p1\n" % (patch_number))
             patch_number += 1
             patch_insert_index += 1
             patch_apply_index += 2

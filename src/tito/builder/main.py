@@ -938,7 +938,7 @@ class UpstreamBuilder(NoTgzBuilder):
         lines.insert(patch_insert_index, "Patch%s: %s\n" % (patch_number,
             patch_filename))
         if patch_apply_index > 0:
-            lines.insert(patch_apply_index, "%%patch%s -p1\n" % (patch_number))
+            lines.insert(patch_apply_index, "%%patch %s -p1\n" % (patch_number))
         self._write_spec(lines)
 
     def _write_spec(self, lines):
