@@ -19,6 +19,11 @@ Alternatively, you can specify a mock chroot in the command line:
 
     tito build --rpm --arg=mock=fedora-rawhide-x86_64
 
+It is possible to specify additional Mock parameters in the config or
+in the command line:
+
+    tito build --rpm --arg mock_args="--no-clean --no-cleanup-after"
+
 ## tito.builder.FetchBuilder
 
 An unorthodox builder which can build packages for a git repo which does not actually have any tito footprint. The location of sources, and the version/release to assume we're building, come from a configurable strategy.
