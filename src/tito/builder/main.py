@@ -527,14 +527,14 @@ class Builder(ConfigObject, BuilderBase):
         self.sources.append(target)
 
     def _copy_extra_sources(self, download_sources=False):
-        cmd = "spectool -S '%s' --define '_sourcedir %s' 2> /dev/null | awk '{print $2}'"\
+        cmd = "spectool -S -P '%s' --define '_sourcedir %s' 2> /dev/null | awk '{print $2}'"\
             % (self.spec_file, self.start_dir)
         sources = getoutput(cmd).split("\n")
 
         for source in sources[1:]:
             dst_file = os.path.join(self.rpmbuild_sourcedir, source)
             if os.path.isfile(dst_file):
-                debug('Source file "%s" already exists. Skiping.' % dst_file)
+                debug('Source file "%s" already exists. Skipping.' % dst_file)
                 continue
 
             parse = urlparse(source)
@@ -550,11 +550,11 @@ class Builder(ConfigObject, BuilderBase):
                 if self.fetch_sources and download_sources:
                     self._download_one_source(source)
                     continue
-                debug('Source "%s" is not a local file. Skiping.' % source)
+                debug('Source "%s" is not a local file. Skipping.' % source)
                 continue
 
             if not os.path.exists(source):
-                debug('Source "%s" file does not exist. Skiping.' % source)
+                debug('Source "%s" file does not exist. Skipping.' % source)
                 continue
 
             src = os.path.join(self.rpmbuild_sourcedir, self.tgz_dir, source)
