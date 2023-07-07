@@ -16,7 +16,7 @@
 %endif
 
 Name: tito
-Version: 0.6.23
+Version: 0.6.24
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -118,6 +118,11 @@ install -Dp -m 0644 share/tito_completion.sh %{buildroot}%{_datadir}/bash-comple
 
 
 %changelog
+* Sat Jul 08 2023 Jakub Kadlcik <frostyx@email.cz> 0.6.24-1
+- Will now copy both source files and patch files declared in the spec
+- Fix UpstreamBuilder deprecation warning (#461) (frostyx@email.cz)
+- Fix the setup.py license according to tito.spec (#433) (frostyx@email.cz)
+
 * Tue Jun 13 2023 Jakub Kadlcik <frostyx@email.cz> 0.6.23-1
 - Replace `submodule--helper list` with `git config --get-regexp`
 - do not overwrite packit.yaml and its variants (msuchy@redhat.com)
