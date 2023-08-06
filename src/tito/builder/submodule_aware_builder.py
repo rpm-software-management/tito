@@ -155,7 +155,7 @@ class SubmoduleAwareBuilder(Builder):
                 for archive in self._submodule_archives(
                         relative_git_dir, submodule_prefix, submodule_commit,
                         submodule_tar_file, submodule_dir
-                    ):
+                ):
                     yield archive
 
     def create_tgz(self, git_root, prefix, commit, relative_dir, dest_tgz):
