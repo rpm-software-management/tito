@@ -258,7 +258,7 @@ class TarFixer(object):
 
         # Delete the old checksum since it's now invalid and we don't want even
         # an inadvertent reference to it.
-        del(chunk_props['checksum'])
+        del chunk_props['checksum']
 
         # Remove the trailing NUL byte(s) on the end of members
         for k, v in chunk_props.items():

@@ -363,7 +363,7 @@ def run_command_print(command, print_on_success=False):
 
 
 def run_subprocess(p):
-    while(True):
+    while True:
         retcode = p.poll()
         line = p.stdout.readline()
         if len(line) > 0:
