@@ -344,7 +344,7 @@ class BuilderBase(object):
 
             print
             reinstall = self.package_manager.is_installed(self.project_name, self.build_version)
-            cmd = self.package_manager.install(do_install, reinstall=reinstall, auto=True, offline=True,
+            cmd = self.package_manager.install(do_install, reinstall=reinstall, auto=True,
                                                escalate=self.escalate_privileges)
             print("%s" % cmd)
             try:
@@ -1446,10 +1446,10 @@ class Rpm(object):
 
 
 class Dnf(Rpm):
-    def install(self, packages, reinstall=False, auto=False, offline=False, escalate=True, **kwargs):
+    def install(self, packages, reinstall=False, auto=False, escalate=True, **kwargs):
         action = "reinstall" if reinstall else "install"
         args = list(filter(lambda x: x, [
-            "-C" if offline else None,
+            "-C" if self.cacheonly else None,
             "-y" if auto else None,
         ]))
         escalation_cmd = "sudo" if escalate else ""
@@ -1458,6 +1458,24 @@ class Dnf(Rpm):
 
     def builddep(self, spec):
         return "dnf builddep %s" % spec
+
+    @property
+    def cacheonly(self):
+        """
+        Should a DNF command be as -C/--cacheonly?
+        """
+        # AFAIK metadata refreshing is one of the areas where DNF5 brings the most performance
+        # improvements. It will help us fix #466 but also a long-time annoying #363.
+        if self.dnf_version == 5:
+            return False
+        return True
+
+    @property
+    def dnf_version(self):
+        """
+        What DNF version is used?
+        """
+        return 5 if os.readlink("/usr/bin/dnf") == "dnf5" else 4
 
 
 class Yum(Rpm):
