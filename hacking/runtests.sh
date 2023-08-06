@@ -131,5 +131,5 @@ done
 
 header 'Summary'
 cat $summary
-egrep '\bFAIL' $summary &> /dev/null
+grep -E '\bFAIL' $summary &> /dev/null
 [[ $? -eq 0 ]] && exit 1 || exit 0
