@@ -97,17 +97,17 @@ class UglyHackishTest(TitoUnitTestFixture):
     def test_exceptions_3(self):
         # detect 'except rpm.error, e:'
         regex = "'^[[:space:]]*except [^,]+,[[:space:]]*[[:alpha:]]+:'"
-        cmd = "find . -type f -regex '.*\.py$' -exec egrep %s {} + | wc -l" % regex
+        cmd = "find . -type f -regex '.*\.py$' -exec grep -E %s {} + | wc -l" % regex
         result = int(getoutput(cmd))
         self.assertEqual(result, 0, "Found except clause not supported in Python 3")
 
     def test_import_commands(self):
-        cmd = "find . -type f -regex '.*\.py$' -exec egrep '^(import|from) commands\.' {} + | grep -v 'compat\.py' | wc -l"
+        cmd = "find . -type f -regex '.*\.py$' -exec grep -E '^(import|from) commands\.' {} + | grep -v 'compat\.py' | wc -l"
         result = int(getoutput(cmd))
         self.assertEqual(result, 0, "Found commands module (not supported in Python 3)")
 
     def test_use_commands(self):
-        cmd = "find . -type f -regex '.*\.py$' -exec egrep 'commands\.' {} + | grep -v 'compat\.py' | wc -l"
+        cmd = "find . -type f -regex '.*\.py$' -exec grep -E 'commands\.' {} + | grep -v 'compat\.py' | wc -l"
         result = int(getoutput(cmd))
         self.assertEqual(result, 0, "Found commands module (not supported in Python 3)")
 
