@@ -96,6 +96,7 @@ class BuilderBase(object):
             self.rpmbuild_options += "--define '%_disable_source_fetch 0'"
 
         self.test = self._get_optional_arg(kwargs, 'test', False)
+        self.test_version = self._get_optional_arg(kwargs, 'test_version', None)
         # Allow a builder arg to override the test setting passed in, used by
         # releasers in their config sections.
         if args and 'test' in args:
@@ -634,12 +635,12 @@ class Builder(ConfigObject, BuilderBase):
             munge_specfile(
                 self.spec_file,
                 sha,
-                self.commit_count,
+                self.test_version,
                 fullname,
                 self.tgz_filename,
             )
 
-            self.build_version += ".git." + str(self.commit_count) + "." + str(sha)
+            self.build_version += ".git." + str(self.test_version) + "." + str(sha)
             self.ran_setup_test_specfile = True
 
     def _get_rpmbuild_dir_options(self):
@@ -668,8 +669,9 @@ class Builder(ConfigObject, BuilderBase):
         if self.test:
             # should get latest commit for given directory *NOT* HEAD
             latest_commit = get_latest_commit(".")
-            self.commit_count = get_commit_count(self.build_tag, latest_commit)
-            version = "git-%s.%s" % (self.commit_count, latest_commit[:7])
+            if self.test_version is None:
+                self.test_version = get_commit_count(self.build_tag, latest_commit)
+            version = "git-%s.%s" % (self.test_version, latest_commit[:7])
         else:
             version = self.build_version.split("-")[0]
         return version
@@ -717,11 +719,11 @@ class NoTgzBuilder(Builder):
             # file we're building off. (note that this is a temp copy of the
             # spec) Swap out the actual release for one that includes the git
             # SHA1 we're building for our test package:
-            debug("setup_test_specfile:commit_count = %s" % str(self.commit_count))
+            debug("setup_test_specfile:test_version = %s" % str(self.test_version))
             munge_specfile(
                 self.spec_file,
                 self.git_commit_id[:7],
-                self.commit_count
+                self.test_version
             )
 
 
@@ -1138,7 +1140,7 @@ class MeadBuilder(Builder):
             # file we're building off. (note that this is a temp copy of the
             # spec) Swap out the actual release for one that includes the git
             # SHA1 we're building for our test package:
-            self.build_version += ".git." + str(self.commit_count) + "." + str(self.git_commit_id[:7])
+            self.build_version += ".git." + str(self.test_version) + "." + str(self.git_commit_id[:7])
             replace_spec_release(self.spec_file, self.spec_release)
             self.ran_setup_test_specfile = True
 
