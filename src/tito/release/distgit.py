@@ -11,6 +11,7 @@
 # granted to use or replicate Red Hat trademarks that are incorporated
 # in this software or its documentation.
 import datetime
+import requests
 import os.path
 import subprocess
 import sys
@@ -33,6 +34,7 @@ from tito.release.main import PROTECTED_BUILD_SYS_FILES
 from tito.buildparser import BuildTargetParser
 from tito.exception import RunCommandException
 from tito.bugtracker import BugzillaExtractor, MissingBugzillaCredsException
+from tito.exception import TitoException
 import getpass
 from string import Template
 
@@ -40,8 +42,6 @@ MEAD_SCM_USERNAME = 'MEAD_SCM_USERNAME'
 
 
 class FedoraGitReleaser(Releaser):
-
-    REQUIRED_CONFIG = ['branches']
 
     def __init__(self, name=None, tag=None, build_dir=None,
             config=None, user_config=None,
@@ -56,8 +56,16 @@ class FedoraGitReleaser(Releaser):
         else:
             self.cli_tool = "fedpkg"
 
-        self.git_branches = \
-            self.releaser_config.get(self.target, "branches").split(" ")
+        if self.releaser_config.has_option(self.target, "branches"):
+            self.git_branches = \
+                self.releaser_config.get(self.target, "branches").split(" ")
+
+        # This is a bit hacky because our inheritence hierarchy is messed up.
+        # RHEL, and CentOS releasers inherits from the Fedora releaser instead
+        # of all of them having a common ancestor. We only want to use the
+        # current implementation of dynamic branches for the `FedoraGitReleaser`
+        elif self.cli_tool == "fedpkg":
+            self.git_branches = self._dynamic_branches(name)
 
         # check .tito/releasers.conf
         if self.releaser_config.has_option(self.target, "remote_git_name"):
@@ -85,6 +93,42 @@ class FedoraGitReleaser(Releaser):
         self.dry_run = dry_run
         self.no_build = no_build
         self._git_release()
+
+    def _dynamic_branches(self, pkgname):
+        active_branches = set(self._pdc_active_branches())
+        package_branches = set(self._fedora_distgit_branches(pkgname))
+        return list(active_branches.intersection(package_branches))
+
+    def _pdc_active_branches(self):
+        """
+        https://pdc.fedoraproject.org/rest_api/v1/product-versions/
+        """
+        pdc = "https://pdc.fedoraproject.org"
+        url = "{0}/rest_api/v1/product-versions/?active=true".format(pdc)
+        response = requests.get(url)
+
+        if not response.ok:
+            raise TitoException("Failed to get active branches from PDC")
+
+        products = response.json()["results"]
+        return [self._pdc_product_to_branch(x) for x in products]
+
+    def _pdc_product_to_branch(self, product):
+        if product["short"] == "fedora":
+            if product["version"] == "rawhide":
+                return "rawhide"
+            abbrev = "f"
+        elif product["short"] == "epel":
+            abbrev = "epel"
+        return "{}{}".format(abbrev, product["version"])
+
+    def _fedora_distgit_branches(self, pkgname):
+        url = "https://src.fedoraproject.org/api/0/rpms/copr-cli/git/branches"
+        response = requests.get(url)
+        if not response.ok:
+            msg = "Failed to get DistGit branches for '{}'".format(pkgname)
+            raise TitoException(msg)
+        return response.json()["branches"]
 
     def _get_build_target_for_branch(self, branch):
         if branch in self.build_targets:
@@ -435,6 +479,9 @@ class FedoraGitReleaser(Releaser):
 
 
 class DistGitReleaser(FedoraGitReleaser):
+
+    REQUIRED_CONFIG = ['branches']
+
     def __init__(self, name=None, tag=None, build_dir=None,
             config=None, user_config=None,
             target=None, releaser_config=None, no_cleanup=False,
@@ -460,6 +507,8 @@ class CentosGitReleaser(FedoraGitReleaser):
     It is limited to only acting on a single Centos stream. Only the first
     entry in 'branches' in the conf file will be used.
     """
+
+    REQUIRED_CONFIG = ['branches']
 
     def __init__(self, name=None, tag=None, build_dir=None,
             config=None, user_config=None,
