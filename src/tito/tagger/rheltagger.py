@@ -37,7 +37,7 @@ class RHELTagger(ReleaseTagger):
             line = line.replace('%', '%%')
 
             # prepend Related/Resolves if subject contains BZ number
-            m = re.match("(\d+)\s+-\s+(.*)", line)
+            m = re.match(r"(\d+)\s+-\s+(.*)", line)
             if m:
                 bz_number = m.group(1)
                 if bz_number in BZ:

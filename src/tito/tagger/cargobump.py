@@ -46,9 +46,9 @@ class CargoBump:
     @staticmethod
     def process_cargo_toml(input_string, new_version):
         file_buffer = []
-        pkg_label = re.compile('^\[package\]$')
-        label = re.compile('^\[.*\]$')
-        version = re.compile('(^version\s*=\s*)["\'](.+)["\'](.*$)')
+        pkg_label = re.compile(r'^\[package\]$')
+        label = re.compile(r'^\[.*\]$')
+        version = re.compile(r'(^version\s*=\s*)["\'](.+)["\'](.*$)')
         lines = [line.rstrip('\n') for line in input_string]
         state = 1
         for line in lines:

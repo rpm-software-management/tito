@@ -74,8 +74,8 @@ class VersionTagger(ConfigObject):
         git_email = self.git_email
         if git_email is None:
             git_email = ''
-        self.changelog_regex = re.compile('\\*\s%s\s%s(\s<%s>)?' % (self.today,
-            self.git_user, git_email.replace("+", "\+").replace(".", "\.")))
+        self.changelog_regex = re.compile(r'\\*\s{0}\s{1}(\s<{2}>)?'.format(self.today,
+            self.git_user, git_email))
 
         self._no_auto_changelog = False
         self._accept_auto_changelog = False
@@ -178,7 +178,7 @@ class VersionTagger(ConfigObject):
         if not (self.config.has_option(BUILDCONFIG_SECTION, "changelog_do_not_remove_cherrypick")
             and self.config.get(BUILDCONFIG_SECTION, "changelog_do_not_remove_cherrypick")
             and self.config.get(BUILDCONFIG_SECTION, "changelog_do_not_remove_cherrypick").strip() != '0'):
-            m = re.match("(.+)(\(cherry picked from .*\))", line)
+            m = re.match(r"(.+)(\(cherry picked from .*\))", line)
             if m:
                 line = m.group(1)
         return line
@@ -394,8 +394,8 @@ class VersionTagger(ConfigObject):
         if old_version is None:
             old_version = "untagged"
         if not self.keep_version:
-            version_regex = re.compile("^(version:\s*)(.+)$", re.IGNORECASE)
-            release_regex = re.compile("^(release:\s*)(.+)$", re.IGNORECASE)
+            version_regex = re.compile(r"^(version:\s*)(.+)$", re.IGNORECASE)
+            release_regex = re.compile(r"^(release:\s*)(.+)$", re.IGNORECASE)
 
             in_f = open(self.spec_file, 'r')
             out_f = open(self.spec_file + ".new", 'w')
