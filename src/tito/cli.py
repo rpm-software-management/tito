@@ -90,8 +90,9 @@ class ConfigLoader(object):
         rel_eng_dir = os.path.join(find_git_root(), tito_config_dir())
         filename = os.path.join(rel_eng_dir, TITO_PROPS)
         if not os.path.exists(filename):
-            error_out("Unable to locate branch configuration: %s"
-                "\nPlease run 'tito init'" % filename)
+            error_out("Unable to locate branch configuration: %s\n"
+                      "Please run 'tito init' or use '--without-init' parameter"
+                      % filename)
 
         # Load the global config. Later, when we know what tag/package we're
         # building, we may also load that and potentially override some global
@@ -267,8 +268,25 @@ class BaseCliModule(object):
             if e.errno != errno.EEXIST:
                 raise
 
+    @property
+    def initial_config(self):
+        """
+        Configuration that is dumped into `.tito/tito.props`
+        """
+        config = RawConfigParser()
+        config.setdefault(BUILDCONFIG_SECTION, {
+            "builder": "tito.builder.Builder",
+            "tagger": "tito.tagger.VersionTagger",
+            "changelog_do_not_remove_cherrypick": 0,
+            "changelog_format": "%s (%ae)",
+        })
+        return config
+
     def load_config(self, package_name, build_dir, tag):
-        self.config = ConfigLoader(package_name, build_dir, tag).load()
+        if self.options.without_init:
+            self.config = self.initial_config
+        else:
+            self.config = ConfigLoader(package_name, build_dir, tag).load()
 
         if self.config.has_option(BUILDCONFIG_SECTION,
                 "offline"):
@@ -330,6 +348,8 @@ class BuildModule(BaseCliModule):
 
         self.parser.add_option("--test", dest="test", action="store_true",
                 help="use current branch HEAD instead of latest package tag")
+        self.parser.add_option("--without-init", action="store_true",
+                help="Ignore missing .tito directory")
         self.parser.add_option("--no-cleanup", dest="no_cleanup",
                 action="store_true",
                 help="do not clean up temporary tito build directories/files, and disable rpmbuild %clean")
@@ -376,6 +396,7 @@ class BuildModule(BaseCliModule):
         kwargs = {
             'dist': self.options.dist,
             'test': self.options.test,
+            'without_init': self.options.without_init,
             'offline': self.options.offline,
             'auto_install': self.options.auto_install,
             'rpmbuild_options': self.options.rpmbuild_options,
@@ -715,15 +736,9 @@ class InitModule(BaseCliModule):
 
         propsfile = os.path.join(rel_eng_dir, TITO_PROPS)
         if not os.path.exists(propsfile):
-            # write out tito.props
-            out_f = open(propsfile, 'w')
-            out_f.write("[buildconfig]\n")
-            out_f.write("builder = %s\n" % 'tito.builder.Builder')
-            out_f.write(
-                "tagger = %s\n" % 'tito.tagger.VersionTagger')
-            out_f.write("changelog_do_not_remove_cherrypick = 0\n")
-            out_f.write("changelog_format = %s (%ae)\n")
-            out_f.close()
+            with open(propsfile, 'w') as fp:
+                self.initial_config.write(fp)
+
             print("   - wrote %s" % TITO_PROPS)
 
             getoutput('git add %s' % propsfile)
