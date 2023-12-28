@@ -56,16 +56,7 @@ class FedoraGitReleaser(Releaser):
         else:
             self.cli_tool = "fedpkg"
 
-        if self.releaser_config.has_option(self.target, "branches"):
-            self.git_branches = \
-                self.releaser_config.get(self.target, "branches").split(" ")
-
-        # This is a bit hacky because our inheritence hierarchy is messed up.
-        # RHEL, and CentOS releasers inherits from the Fedora releaser instead
-        # of all of them having a common ancestor. We only want to use the
-        # current implementation of dynamic branches for the `FedoraGitReleaser`
-        elif self.cli_tool == "fedpkg":
-            self.git_branches = self._dynamic_branches(name)
+        self.git_branches = self._branches(name)
 
         # check .tito/releasers.conf
         if self.releaser_config.has_option(self.target, "remote_git_name"):
@@ -93,6 +84,30 @@ class FedoraGitReleaser(Releaser):
         self.dry_run = dry_run
         self.no_build = no_build
         self._git_release()
+
+    def _branches(self, pkgname):
+        branches = []
+        if self.releaser_config.has_option(self.target, "branches"):
+            branches = \
+                self.releaser_config.get(self.target, "branches").split(" ")
+
+        # This is a bit hacky because our inheritence hierarchy is messed up.
+        # RHEL, and CentOS releasers inherits from the Fedora releaser instead
+        # of all of them having a common ancestor. We only want to use the
+        # current implementation of dynamic branches for the `FedoraGitReleaser`
+        if self.cli_tool != "fedpkg":
+            if not branches:
+                raise TitoException("No branches specified in the config and "
+                                    "dynamic branches not supported by '{0}'"
+                                    .format(self.__class__.__name__))
+            return branches
+
+        excluded = [x.lstrip("!") for x in branches if x.startswith("!")]
+        if branches and not excluded:
+            return branches
+
+        branches = set(self._dynamic_branches(pkgname)) - set(excluded)
+        return list(branches)
 
     def _dynamic_branches(self, pkgname):
         active_branches = set(self._pdc_active_branches())
