@@ -41,8 +41,8 @@ class SUSETagger(VersionTagger):
         self.changes_file = os.path.join(self.full_project_dir,
                 self.changes_file_name)
         self._new_changelog_msg = "Initial package release"
-        self.changelog_regex = re.compile('^\s%s\s%s(\s<%s>)?' % (self.today,
-            self.git_user, self.git_email.replace("+", "\+").replace(".", "\.")))
+        self.changelog_regex = re.compile(r'^\s{0}\s{1}(\s<{2}>)?'.format(self.today,
+            self.git_user, self.git_email))
 
     def _make_changelog(self):
         """
@@ -135,7 +135,7 @@ class SUSETagger(VersionTagger):
         buf = StringIO()
         found_match = False
         done = False
-        empty_line_regex = re.compile('^\s*$')
+        empty_line_regex = re.compile(r'^\s*$')
 
         for line in f.readlines():
             if not done and not found_match and self.changelog_regex.match(line):

@@ -184,7 +184,7 @@ class TarFixer(object):
             if member in self.octal_members:
                 # Pad out the octal value to the right length
                 member_template = self.struct_hash[member]
-                field_size = int(re.match('(\d+)', member_template).group(1)) - 1
+                field_size = int(re.match(r'(\d+)', member_template).group(1)) - 1
                 fmt = "%0" + str(field_size) + "o\x00"
                 as_string = fmt % chunk_props[member]
                 pack_values.append(tito.compat.ensure_binary(as_string))

@@ -78,7 +78,7 @@ def extract_sources(spec_file_lines):
     location as the spec file, mostly used with NoTgzBuilder packages.
     """
     filenames = []
-    source_pattern = re.compile('^Source\d+?:\s*(.*)')
+    source_pattern = re.compile(r'^Source\d+?:\s*(.*)')
     for line in spec_file_lines:
         match = source_pattern.match(line)
         if match:
@@ -729,7 +729,7 @@ def replace_version(line, new_version):
     whitespace, and optional use of single/double quotes.
     """
     # Mmmmm pretty regex!
-    ver_regex = re.compile("(\s*)(version)(\s*)(=)(\s*)(['\"])(.*)(['\"])(.*)",
+    ver_regex = re.compile(r"(\s*)(version)(\s*)(=)(\s*)(['\"])(.*)(['\"])(.*)",
             re.IGNORECASE)
     m = ver_regex.match(line)
     if m:

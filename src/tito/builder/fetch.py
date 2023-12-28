@@ -149,13 +149,13 @@ class ArgSourceStrategy(SourceStrategy):
             self.sources.append(dest_filepath)
 
             # Add a line to replace in the spec for each source:
-            source_regex = re.compile("^(source%s:\s*)(.+)$" % i, re.IGNORECASE)
+            source_regex = re.compile(r"^(source%s:\s*)(.+)$" % i, re.IGNORECASE)
             new_line = "Source%s: %s\n" % (i, base_name)
             replacements.append((source_regex, new_line))
 
         # Replace version and release in spec:
-        version_regex = re.compile("^(version:\s*)(.+)$", re.IGNORECASE)
-        release_regex = re.compile("^(release:\s*)(.+)$", re.IGNORECASE)
+        version_regex = re.compile(r"^(version:\s*)(.+)$", re.IGNORECASE)
+        release_regex = re.compile(r"^(release:\s*)(.+)$", re.IGNORECASE)
 
         (self.version, self.release) = self._get_version_and_release()
         print("Building version: %s" % self.version)
@@ -180,7 +180,7 @@ class ArgSourceStrategy(SourceStrategy):
         release = "1%{?dist}"
 
         # Example filename: tito-0.4.18.tar.gz:
-        simple_version_re = re.compile(".*-(.*).(tar.gz|tgz|zip|bz2)")
+        simple_version_re = re.compile(r".*-(.*).(tar.gz|tgz|zip|bz2)")
         match = re.search(simple_version_re, base_name)
         if match:
             version = match.group(1)
