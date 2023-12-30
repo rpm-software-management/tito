@@ -16,6 +16,13 @@ import subprocess
 import sys
 import tempfile
 
+try:
+    # Optional dependency available on Fedora and EPEL9+
+    # Without it, branch aliases in releasers.conf won't work.
+    from fedora_distro_aliases import get_distro_aliases
+except ImportError:
+    get_distro_aliases = None
+
 from tito.common import (
     run_command,
     debug,
@@ -56,8 +63,7 @@ class FedoraGitReleaser(Releaser):
         else:
             self.cli_tool = "fedpkg"
 
-        self.git_branches = \
-            self.releaser_config.get(self.target, "branches").split(" ")
+        self.git_branches = self._branches()
 
         # check .tito/releasers.conf
         if self.releaser_config.has_option(self.target, "remote_git_name"):
@@ -85,6 +91,31 @@ class FedoraGitReleaser(Releaser):
         self.dry_run = dry_run
         self.no_build = no_build
         self._git_release()
+
+    def _branches(self):
+        names = self.releaser_config.get(self.target, "branches").split(" ")
+
+        # This is a bit hacky because our inheritence hierarchy is messed up.
+        # RHEL, and CentOS releasers inherits from the Fedora releaser instead
+        # of all of them having a common ancestor. For now, we only want the
+        # support for branch aliases in the `FedoraGitReleaser`. There is no
+        # reason to query Fedora PDC in RHEL and CentOS releasers.
+        if self.cli_tool != "fedpkg":
+            return names
+
+        if not get_distro_aliases:
+            warn_out("Missing optional dependency `fedora-distro-aliases'")
+            warn_out("Branch aliases in releasers.conf won't be evaluated.")
+            return names
+
+        aliases = get_distro_aliases()
+        result = []
+        for name in names:
+            branches = [name]
+            if name in aliases:
+                branches = [x.branch for x in aliases[name]]
+            result.extend(branches)
+        return result
 
     def _get_build_target_for_branch(self, branch):
         if branch in self.build_targets:
