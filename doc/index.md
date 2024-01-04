@@ -237,6 +237,27 @@ consistent behavior. Also, there are no guarantees that tito will not change in
 future releases, meaning that your custom implementations may occasionally need
 to be updated.
 
+BODHI UPDATES
+=============
+
+If you want to automate [Bodhi updates](https://bodhi.fedoraproject.org/), you
+can utilize [Packit](https://packit.dev/). Create `packit.yaml` in your dist-git
+repository with this content:
+
+    jobs:
+    - job: bodhi_update
+      trigger: commit
+      dist_git_branches:
+        - fedora-all
+        - epel-7
+        - epel-8
+        - epel-9
+
+Obviously, you can alter the list of branches to follow.
+
+For more information, see the documentation of
+[bodhi_update job](https://packit.dev/docs/configuration/downstream/bodhi_update).
+
 
 TROUBLESHOOTING
 ===============
