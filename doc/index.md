@@ -1,4 +1,6 @@
-## About
+ABOUT
+=====
+
 Tito is a tool for managing RPM based projects using git for their source code
 repository.
 
@@ -6,10 +8,10 @@ Tito offers the following features:
 
  - Tag new releases with incremented RPM version or release.
  - Auto-generate spec file changelog based on git history since last tag.
- - Create reliable tar.gz's with consistent checksums from any tag.
+ - Create reliable tar.gz files with consistent checksums from any tag.
  - Build source and binary rpms off any tag.
  - Build source and binary "test" rpms off most recently committed code.
- - Build multiple source rpms with appropriate disttag's for submission to the
+ - Build multiple source rpms with appropriate disttags for submission to the
    Koji build system
  - Build rpms via the "mock" tool.
  - On a per-branch basis in git:
@@ -24,80 +26,114 @@ Tito offers the following features:
  - Manage all of the above for a git repository with many disjoint packages
    within it.
 
-## Related Projects
-* `mockchain` from the [mock project](http://fedoraproject.org/wiki/Projects/Mock)
+STATUS
+======
+
+Copr build: [![badge](https://copr.fedorainfracloud.org/coprs/g/copr/copr/package/copr-frontend/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/g/rpm-software-management/tito/package/tito/)
+
+RELATED PROJECTS
+================
+
+* `mockchain` from the [mock project](https://github.com/rpm-software-management/mock/wiki)
 * `mock`'s built-in SCM support in `mock-scm`
-* Fedora's [Koji](http://koji.fedoraproject.org/koji/) build engine and [fedpkg](https://fedorahosted.org/fedpkg/) tools
+* Fedora's [Koji](https://koji.fedoraproject.org/koji/) build engine and [fedpkg](https://fedorahosted.org/fedpkg/) tools
 * The [OpenSUSE Build Service](https://build.opensuse.org/).
+* See also [Fedora wiki page for layered build tools](https://fedoraproject.org/wiki/Layered_build_scripts_for_package_maintainers)
 
-## Install
-To install from source
+INSTALL
+=======
 
-```
-$ git clone https://github.com/rpm-software-management/tito.git
-$ cd tito/
-$ sudo yum install python-setuptools
-$ ./setup.py build
-$ sudo ./setup.py install
-```
+From Fedora:
+
+    dnf install tito
+
+From CentOS / RHEL:
+
+    # Enable EPEL https://fedoraproject.org/wiki/EPEL#How_can_I_use_these_extra_packages.3F
+    yum install tito
+
+From [PyPI](https://pypi.org/project/tito/):
+
+    pip install tito
+
+[Pre-release versions for Fedora](https://copr.fedorainfracloud.org/coprs/g/rpm-software-management/tito/) (built from git `master` branch):
+
+    dnf copr enable @rpm-software-management/tito
+    dnf install tito
+
+From git's `master` branch:
+
+- First install Tito's dependencies for your architecture, i.e. `x86_64`:
+
+      sudo dnf install --setopt=install_weak_deps=False \
+          $(dnf repoquery --arch x86_64,noarch --requires tito --resolve -q)
+
+  _NOTE: This will install Tito's dependencies from Tito's latest release for
+  your system. If the `master` branch requires a new dependency, it will need to
+  be installed manually._
+
+- Then install Tito via so-called [User install](
+  https://pip.pypa.io/en/stable/user_guide/#user-installs) (i.e. isolated to the
+  current user):
+
+      pip install --user https://github.com/rpm-software-management/tito/archive/master.tar.gz
 
 To make an rpm of tito to install elsewhere
 
-```
-$ sudo yum install python-devel asciidoc
-$ tito build --rpm
-# see what's in the package
-$ rpm -ql -p /tmp/tito/noarch/tito-*.noarch.rpm
-```
+    sudo yum install python-devel asciidoc
+    tito build --rpm
+    # see what's in the package
+    rpm -ql -p /tmp/tito/noarch/tito-*.noarch.rpm
 
-## Getting Started
+
+GETTING STARTED
+===============
+
+
 From your git repository:
 
-```
-$ tito init
-```
+    tito init
 
-This will create a top-level metadata directory called `.tito/` and commit it
+This will create a top-level metadata directory called ".tito/" and commit it
 to git. This directory will store tito's configuration and package metadata on
-a per branch basis. It will be filtered out when creating .tar.gz's.
+a per branch basis. It will be filtered out when creating .tar.gz files.
 
-## Tagging Packages
+
+TAGGING PACKAGES
+================
+
 Before doing most everything you'll need to tag your package(s).
 
-First, ensure that your package spec files are at the top of the relative source tree for that package.
+Before doing this you'll need to ensure that your package spec files are at the top of the relative source tree for that package.
 
-The most common case, a single project git repository, has the spec file
-and root of the project at the top level of the git repository:
+For the most common case, a single project git repository has the spec file and
+root of the project at the top level of the git repository:
 
-```
-docs/
-mypackage.spec
-README
-.tito/
-src/
-test/
-```
+    docs/
+    mypackage.spec
+    README
+    .tito/
+    src/
+    test/
 
 For a multi-project git repository, packages can be defined in various
 sub-directories, provided they do not nest (i.e. walking up the tree, two spec
 files will never be encountered):
 
-```
-.tito/
-  package1/
-    docs/
-    mypackage.spec
-    README
-    src/
-    test/
-subdir/
-  package2/
-    anotherpkg.spec
-    docs/
-    README
-    src/
-    test/
-```
+    .tito/
+    package1/
+        docs/
+        mypackage.spec
+        README
+        src/
+        test/
+    subdir/
+        package2/
+            anotherpkg.spec
+            docs/
+            README
+            src/
+            test/
 
 The packages can be organized in any hierarchy you like and even be moved
 around and re-tagged, we only need to have the spec file in the top level
@@ -105,9 +141,7 @@ directory for that package.
 
 Tagging packages is normally done with:
 
-```
-$ tito tag
-```
+    tito tag
 
 This will:
 
@@ -125,107 +159,148 @@ patches applied within it), you can change the 'tagger' class in
 branch, if you'd prefer to do this on a per-package basis you can do so in a
 package specific tito.props. (see section below)
 
-Once a package is tagged you will need to push both the auto-commit and the
-tag to your remote git repository before tito will let you build it. (better
-support for standalone git repositories is coming, for now --offline will
-help)
+Once a package is tagged you will need to push both the auto-commit and the tag
+to your remote git repository before tito will let you build it. (better
+support for standalone git repositories is coming, for now --offline will help)
 
-See `man tito` for more options.
+See "man tito" for more options.
 
-## Building Packages
-To build the most recent .tar.gz for a package, cd into that packages
-directory and run:
+BUILDING PACKAGES
+=================
 
-```
-$ tito build --tgz
-```
+To build the most recent .tar.gz for a package, cd into that packages directory
+and run:
+
+    tito build --tgz
 
 Note that this tarball will have a consistent checksum every time.
 
-Likewise the `--srpm` and `--rpm` options allow you to build both binary and
-source rpms.
+Likewise the --srpm and --rpm options allow you to build both binary and source
+rpms.
 
-Add in the `--tag=TAG` option to build any of the above for any past tag.
+Add in the --tag=TAG option to build any of the above for any past tag.
 
 If you're working on something locally and would like to check that your
-package is still building correctly without pushing your changes to the remote
-repository, add the `--test` option. This will build a test rpm from your most
-recently committed work. (**NOTE: does *not* include uncommitted changes**)
+package is still building ok without pushing your changes to the remote
+repository, add the --test option. This will build a test rpm from your most
+recently committed work. (NOTE: does *not* include uncommitted changes)
 
 TODO: Document the use of --release, which is complicated and untested against
 Fedora's Koji.
 
-See `man tito` for more options.
+See "man tito" for more options.
 
-## Releasing Packages
+
+RELEASING PACKAGES
+==================
+
 Tito supports a mechanism where you can define multiple release targets.
 
-In `.tito/releasers.conf`, create a section like:
+In .tito/releasers.conf, create a section like:
 
-```
-[yum-f15-x86_64]
-releaser = tito.release.YumRepoReleaser
-builder = tito.builder.MockBuilder
-builder.mock = fedora-15-x86_64
-rsync = fedorapeople.org:/srv/repos/dgoodwin/tito/fedora-15/x86_64/
-```
+    [yum-f15-x86_64]
+    releaser = tito.release.YumRepoReleaser
+    builder = tito.builder.MockBuilder
+    builder.mock = fedora-15-x86_64
+    rsync = fedorapeople.org:/srv/repos/dgoodwin/tito/fedora-15/x86_64/
 
-You can define as many release targets as you like with various
-configurations.  To publish the most recently tagged build in your current
-branch you would run:
+You can define as many release targets as you like with various configurations.
+To publish the most recently tagged build in your current branch you would run:
 
-```
-$ tito release yum-f15-x86_64
-```
+    tito release yum-f15-x86_64
 
 You can specify multiple targets on the CLI.
 
-See `man 8 releasers.conf` for more information on defining release targets.
+See "man 8 releasers.conf" for more information on defining release targets.
 
-See `man tito` for more information on CLI arguments to `tito release`.
+See "man tito" for more information on CLI arguments to "tito release".
 
-## Custom Builders / Taggers / Releasers
+
+
+CUSTOM BUILDERS / TAGGERS / RELEASERS
+=====================================
+
 If the existing implementations Tito provides are not sufficient for
-your needs, it is possible to define a lib_dir in tito.props globalconfig
+your needs, it is possible to define a lib_dir in tito.props buildconfig
 section. This is a directory that tito will add to the python path during
 execution, allowing you a place to define your own custom implementations of
 builders, taggers, and releasers.
 
-The process of actually writing a custom Builder/Tagger/Releaser is an
-exercise left to the reader, but essentially you will want to work off the
-code in the tito.builder module. Inherit from the base Builder, and override
-the methods you need to.
+The process of actually writing a custom Builder/Tagger/Releaser is an exercise
+left to the reader, but essentially you will want to work off the code in the
+tito.builder module. Inherit from the base Builder, and override the methods
+you need to.
 
 Please note that if you store your custom implementations inside your source
 tree, they will need to be kept in sync in all branches you are using for
-consistent behavior. Also, there are no guarantees that tito will not change
-in future releases, meaning that your custom implementations may occasionally
-need to be updated.
+consistent behavior. Also, there are no guarantees that tito will not change in
+future releases, meaning that your custom implementations may occasionally need
+to be updated.
 
-## Troubleshooting
+
+TROUBLESHOOTING
+===============
+
 If you create a tag accidentally or that you wish to re-do, make sure you have
 not git pushed the tag yet, the auto-commit is the most recent in your git
 history, and run:
 
-```
-git tag -d YOURNEWTAG
-git reset --hard HEAD^1
-```
+    git tag -d YOURNEWTAG
+    git reset --hard HEAD^1
 
 If your project is standalone (no remote reference you communicate with as
-authoritative) you may wish to set `offline = "true"` in `.tito/tito.props`
-under the globalconfig section, so you do not need to specify `--offline`
-with each invocation.
+authoritative) you may wish to set offline = "true" in .tito/tito.props under
+the buildconfig section, so you do not need to specify --offline with each
+invocation.
 
-## Configuration
+
+CONFIGURATION
+=============
+
 See:
 
-* `man 5 tito.props`
-* `man 5 releasers.conf`
-* `man 5 titorc`
+    man 5 tito.props
 
-## External Docs
-* [Tito release announcements](https://github.com/rpm-software-management/tito/releases)
-* [How to create new release of RPM package in 5 seconds](http://miroslav.suchy.cz/blog/archives/2013/12/17/how_to_create_new_release_of_rpm_package_in_5_seconds)
-* [How to build in Copr](http://miroslav.suchy.cz/blog/archives/2013/12/29/how_to_build_in_copr)
-* [Building RHEL packages with Tito](http://frostyx.cz/posts/building-rhel-packages-with-tito)
+    man 5 releasers.conf
+
+    man 5 titorc
+
+
+COMMUNITY
+=========
+
+If you need an advice or want to chat with Tito developers, join us
+on `#tito` channel at [irc.freenode.net](https://webchat.freenode.net/).
+
+
+Projects managed with Tito
+==========================
+
+Here follows a list of projects managed with Tito. It is not trying to be a complete list
+of every project using tito but rather a few examples that potential users can check out.
+
+- [Mock](https://github.com/rpm-software-management/mock)
+- [Copr](https://pagure.io/copr/copr)
+- [Tito](https://github.com/dgoodwin/tito)
+- [Dnf](https://github.com/rpm-software-management/dnf)
+- [Candlepin](https://github.com/candlepin/candlepin)
+- [dnf-plugins-core](https://github.com/rpm-software-management/dnf-plugins-core)
+- [candlepin/subscription-manager](https://github.com/candlepin/subscription-manager)
+- [rho](https://github.com/candlepin/rho)
+- [sm-photo-tool](https://github.com/jmrodri/sm-photo-tool)
+- [vim-fugitive-pagure](https://github.com/FrostyX/vim-fugitive-pagure)
+
+
+If your project uses Tito, feel free to add it here.
+
+
+EXTERNAL DOCS
+=============
+
+[How to create new release of RPM package in 5 seconds](
+http://miroslav.suchy.cz/blog/archives/2013/12/17/how_to_create_new_release_of_rpm_package_in_5_seconds)
+
+[How to build in Copr](
+http://miroslav.suchy.cz/blog/archives/2013/12/29/how_to_build_in_copr)
+
+[Building RHEL packages with Tito](http://frostyx.cz/posts/building-rhel-packages-with-tito)
