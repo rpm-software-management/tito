@@ -476,7 +476,7 @@ class Builder(ConfigObject, BuilderBase):
                     error_out(["Unable to lookup latest package info.",
                                "Perhaps you need to tag first?"])
                 if not self.without_init:
-                    warn_out("unable to lookup latest package "
+                    warn_out("Unable to lookup latest package "
                              "tag, building untagged test project")
                 build_version = get_spec_version_and_release(self.start_dir,
                     find_spec_like_file(self.start_dir))
