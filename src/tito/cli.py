@@ -78,6 +78,14 @@ class ConfigLoader(object):
         self._check_required_config(self.config)
         return self.config
 
+    @property
+    def tito_props_path(self):
+        """
+        Return absolute path to the `tito.props` file
+        """
+        rel_eng_dir = os.path.join(find_git_root(), tito_config_dir())
+        return os.path.join(rel_eng_dir, TITO_PROPS)
+
     def _read_config(self):
         """
         Read global build.py configuration from the .tito dir of the git
@@ -86,14 +94,6 @@ class ConfigLoader(object):
         NOTE: We always load the latest config file, not tito.props as it
         was for the tag being operated on.
         """
-        # List of filepaths to config files we'll be loading:
-        rel_eng_dir = os.path.join(find_git_root(), tito_config_dir())
-        filename = os.path.join(rel_eng_dir, TITO_PROPS)
-        if not os.path.exists(filename):
-            error_out("Unable to locate branch configuration: %s\n"
-                      "Please run 'tito init' or use '--without-init' parameter"
-                      % filename)
-
         # Load the global config. Later, when we know what tag/package we're
         # building, we may also load that and potentially override some global
         # settings.
@@ -282,11 +282,29 @@ class BaseCliModule(object):
         })
         return config
 
+    def _check_config_and_load(self, loader):
+        path = loader.tito_props_path
+        if os.path.exists(path):
+            self.config = loader.load()
+            return
+
+        # When working in non-initialized project, only building is allowed
+        if not isinstance(self, BuildModule):
+            error_out("Unable to locate branch configuration: %s\n"
+                      "Please run 'tito init'" % loader.tito_props_path)
+
+        if not self.options.without_init:
+            warn_out("Tito project wasn't initialized, "
+                     "using the default configuration")
+            warn_out("Consider `tito init' or the `--without-init' "
+                     "parameter to silent the warnings")
+
+        self.config = self.initial_config
+
+
     def load_config(self, package_name, build_dir, tag):
-        if self.options.without_init:
-            self.config = self.initial_config
-        else:
-            self.config = ConfigLoader(package_name, build_dir, tag).load()
+        loader = ConfigLoader(package_name, build_dir, tag)
+        self._check_config_and_load(loader)
 
         if self.config.has_option(BUILDCONFIG_SECTION,
                 "offline"):
@@ -349,7 +367,8 @@ class BuildModule(BaseCliModule):
         self.parser.add_option("--test", dest="test", action="store_true",
                 help="use current branch HEAD instead of latest package tag")
         self.parser.add_option("--without-init", action="store_true",
-                help="Ignore missing .tito directory")
+                help=("Acknowledge working in non-initialized project "
+                      "and silencing all related warnings"))
         self.parser.add_option("--no-cleanup", dest="no_cleanup",
                 action="store_true",
                 help="do not clean up temporary tito build directories/files, and disable rpmbuild %clean")
