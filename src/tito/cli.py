@@ -293,10 +293,10 @@ class BaseCliModule(object):
             error_out("Unable to locate branch configuration: %s\n"
                       "Please run 'tito init'" % loader.tito_props_path)
 
-        if not self.options.without_init:
+        if not self.options.ignore_missing_config:
             warn_out("Tito project wasn't initialized, "
                      "using the default configuration")
-            warn_out("Consider `tito init' or the `--without-init' "
+            warn_out("Consider `tito init' or the `--ignore-missing-config' "
                      "parameter to silent the warnings")
 
         self.config = self.initial_config
@@ -366,7 +366,7 @@ class BuildModule(BaseCliModule):
 
         self.parser.add_option("--test", dest="test", action="store_true",
                 help="use current branch HEAD instead of latest package tag")
-        self.parser.add_option("--without-init", action="store_true",
+        self.parser.add_option("--ignore-missing-config", action="store_true",
                 help=("Acknowledge working in non-initialized project "
                       "and silencing all related warnings"))
         self.parser.add_option("--no-cleanup", dest="no_cleanup",
@@ -415,7 +415,7 @@ class BuildModule(BaseCliModule):
         kwargs = {
             'dist': self.options.dist,
             'test': self.options.test,
-            'without_init': self.options.without_init,
+            'ignore_missing_config': self.options.ignore_missing_config,
             'offline': self.options.offline,
             'auto_install': self.options.auto_install,
             'rpmbuild_options': self.options.rpmbuild_options,

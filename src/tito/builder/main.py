@@ -101,7 +101,8 @@ class BuilderBase(object):
         if args and 'test' in args:
             self.test = True
 
-        self.without_init = self._get_optional_arg(kwargs, "without_init", False)
+        self.ignore_missing_config = \
+            self._get_optional_arg(kwargs, "ignore_missing_config", False)
 
         # Location where we do all tito work and store resulting rpms:
         self.rpmbuild_basedir = build_dir
@@ -419,7 +420,7 @@ class Builder(ConfigObject, BuilderBase):
         self.relative_project_dir = get_relative_project_dir(
             project_name=self.project_name, commit=self.git_commit_id)
         if self.relative_project_dir is None and self.test:
-            if not self.without_init:
+            if not self.ignore_missing_config:
                 warn_out(".tito/packages/%s doesn't exist "
                     "in git, using current directory" % self.project_name)
             self.relative_project_dir = get_relative_project_dir_cwd(
@@ -475,7 +476,7 @@ class Builder(ConfigObject, BuilderBase):
                 if not self.test:
                     error_out(["Unable to lookup latest package info.",
                                "Perhaps you need to tag first?"])
-                if not self.without_init:
+                if not self.ignore_missing_config:
                     warn_out("Unable to lookup latest package "
                              "tag, building untagged test project")
                 build_version = get_spec_version_and_release(self.start_dir,
