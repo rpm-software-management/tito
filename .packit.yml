@@ -1,4 +1,15 @@
 ---
+srpm_build_deps:
+  - tito
+  - git
+
+actions:
+  create-archive:
+    - bash -c "tito build --tgz --test -o ."
+    - bash -c "ls -1t ./*.tar.gz | head -n 1"
+  get-current-version:
+    - bash -c "grep ^Version tito.spec | awk '{ print $2 }'"
+
 jobs:
   - &copr
     job: copr_build
