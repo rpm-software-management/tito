@@ -97,6 +97,14 @@ class ConfigLoader(object):
         # Load the global config. Later, when we know what tag/package we're
         # building, we may also load that and potentially override some global
         # settings.
+        # List of filepaths to config files we'll be loading:
+        rel_eng_dir = os.path.join(find_git_root(), tito_config_dir())
+        filename = os.path.join(rel_eng_dir, TITO_PROPS)
+        if not os.path.exists(filename):
+            error_out("Unable to locate branch configuration: %s\n"
+                      "Please run 'tito init' or use '--without-init' parameter"
+                      % filename)
+
         config = RawConfigParser()
         config.read(filename)
 
