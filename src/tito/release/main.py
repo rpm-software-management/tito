@@ -400,7 +400,8 @@ class YumRepoReleaser(RsyncReleaser):
                     header = self._read_rpm_header(rpm_ts, artifact)
                 except rpm.error:
                     continue
-                self.new_rpm_dep_sets[header['name']] = header.dsOfHeader()
+                rpm_ds = rpm.ds(header, rpm.RPMTAG_NEVR)
+                self.new_rpm_dep_sets[header['name']] = rpm_ds
 
         # Now cleanout any other version of the package we just built,
         # both older or newer. (can be used to downgrade the contents
@@ -416,7 +417,7 @@ class YumRepoReleaser(RsyncReleaser):
                 print("error reading rpm header in '%s': %s" % (full_path, e))
                 continue
             if hdr['name'] in self.new_rpm_dep_sets:
-                dep_set = hdr.dsOfHeader()
+                dep_set = rpm.ds(header, rpm.RPMTAG_NEVR)
                 if dep_set.EVR() < self.new_rpm_dep_sets[hdr['name']].EVR():
                     print("Deleting old package: %s" % filename)
                     run_command("rm %s" % os.path.join(temp_dir,
