@@ -16,7 +16,7 @@
 %endif
 
 Name: tito
-Version: 0.6.24.post1
+Version: 0.6.25
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -119,6 +119,17 @@ install -Dp -m 0644 share/tito_completion.sh %{buildroot}%{_datadir}/bash-comple
 
 
 %changelog
+* Sun Jan 28 2024 Jakub Kadlcik <frostyx@email.cz>
+- Use rpm.ds instead of deprecated hdr.dsFromHeader (frostyx@email.cz)
+- Support branch aliases in releasers (frostyx@email.cz)
+- Document how to automate bodhi updates (msuchy@redhat.com)
+- Use raw strings for regex patterns (frostyx@email.cz)
+- Allow tito build without .tito directory (frostyx@email.cz)
+- Unify README and index.md (msuchy@redhat.com)
+- Fix PEP8 issues found by runtests.py (frostyx@email.cz)
+- Replace egrep with grep -E (frostyx@email.cz)
+- Don't use --cacheonly on DNF5 (frostyx@email.cz)
+
 * Sat Jul 08 2023 Jakub Kadlcik <frostyx@email.cz> 0.6.24-1
 - Will now copy both source files and patch files declared in the spec
 - Fix UpstreamBuilder deprecation warning (#461) (frostyx@email.cz)
