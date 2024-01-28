@@ -16,7 +16,7 @@
 %endif
 
 Name: tito
-Version: 0.6.25
+Version: 0.6.25.post1
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
