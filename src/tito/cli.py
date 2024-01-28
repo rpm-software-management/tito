@@ -98,7 +98,7 @@ class ConfigLoader(object):
         # building, we may also load that and potentially override some global
         # settings.
         config = RawConfigParser()
-        config.read(filename)
+        config.read(self.tito_props_path)
 
         self._check_legacy_globalconfig(config)
         return config
