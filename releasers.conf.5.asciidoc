@@ -70,13 +70,18 @@ are then synced to the first branch your releaser lists. After this tito will
 git merge the first branch into all other listed branches, triggering builds
 in each.
 +
+The 'branches' property can contain aliases such as `fedora-all`,
+`fedora-stable`, `fedora-latest`, `epel-all`, etc. For the complete list of
+aliases and their explanations, see
+https://github.com/rpm-software-management/fedora-distro-aliases
++
 The 'required_bz_flags' property can be specified to have tito check Red Hat Bugzilla to see if each bug number extracted from the changelog has appropriate flags. If it does not, it will be skipped in the commit message. If no bugs are found with the required tags, a 'placeholder_bz' can be specified (see below), otherwise the release will abort.
 +
 The 'placeholder_bz' property can be specified to use if no bugs were found in the changelog with the required flags.
 +
  [fedora-git]
  releaser = tito.release.FedoraGitReleaser
- branches = master el5 el6 f14 f15 f16
+ branches = fedora-all epel7 epel8 epel9
  required_bz_flags = myos-1.1.0+ pm_ack+
  placeholder_bz = 100000
 +
