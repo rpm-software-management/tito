@@ -115,6 +115,12 @@ class FedoraGitReleaser(Releaser):
             if name in aliases:
                 branches = [x.branch for x in aliases[name]]
             result.extend(branches)
+
+        # It is probably a good idea to release into rawhide first
+        if "rawhide" in result:
+            result.remove("rawhide")
+            result.insert(0, "rawhide")
+
         return result
 
     def _get_build_target_for_branch(self, branch):
