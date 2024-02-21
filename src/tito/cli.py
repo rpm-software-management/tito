@@ -813,7 +813,12 @@ class ReportModule(BaseCliModule):
                     "which packages are in need of a re-tag.",
                 ))
 
+        self.parser.add_option("--nvr", action="store_true")
+
     def main(self, argv):
+        # TODO:
+        # --release|--version options
+        # --test option (now default)
         BaseCliModule.main(self, argv)
 
         if self.options.untagged_report:
@@ -823,6 +828,19 @@ class ReportModule(BaseCliModule):
         if self.options.untagged_commits:
             self._run_untagged_commits(self.config)
             sys.exit(1)
+
+        if self.options.nvr:
+            build_dir = self.options.output_dir
+            package_name = get_project_name()
+            build_tag = None
+            self.load_config(package_name, build_dir, build_tag)
+            builder = create_builder(package_name, None, self.config,
+                                     build_dir, self.user_config, {}, test=True)
+            sha = builder.git_commit_id[:7]
+            rel_suffix = f'.git.{builder.commit_count}.{sha}'
+            print(f"{builder.project_name}-{builder.get_raw_version_release()}{rel_suffix}")
+            sys.exit(0)
+
         return []
 
     def _run_untagged_commits(self, config):
