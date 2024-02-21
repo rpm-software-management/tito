@@ -1,0 +1,14 @@
+#! /bin/sh
+
+gitrootdir=$(readlink -f "$(dirname "$0")")
+run_python=${PYTHON-python3}
+
+echo >&2 "\
+Warning: Running Tito from a git repository is not supported.
+If you are not a developer working on Tito code, please install it properly
+https://github.com/rpm-software-management/tito/blob/master/doc/index.md#install
+"
+
+export PYTHONPATH
+PYTHONPATH=$gitrootdir/src/${PYTHONPATH+:"$PYTHONPATH"}
+exec $run_python -c 'from tito.cli import main; main()' "$@"
