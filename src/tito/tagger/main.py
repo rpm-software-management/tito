@@ -74,7 +74,7 @@ class VersionTagger(ConfigObject):
         git_email = self.git_email
         if git_email is None:
             git_email = ''
-        self.changelog_regex = re.compile(r'\\*\s{0}\s{1}(\s<{2}>)?'.format(self.today,
+        self.changelog_regex = re.compile(r'\*\s{0}\s{1}(\s<{2}>)?'.format(self.today,
             self.git_user, git_email))
 
         self._no_auto_changelog = False
