@@ -16,7 +16,7 @@
 %endif
 
 Name: tito
-Version: 0.6.25.post1
+Version: 0.6.26
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -119,6 +119,10 @@ install -Dp -m 0644 share/tito_completion.sh %{buildroot}%{_datadir}/bash-comple
 
 
 %changelog
+* Tue Mar 05 2024 Jakub Kadlcik <frostyx@email.cz> 0.6.26-1
+- Fix issue with missing version numbers in the changelog (frostyx@email.cz)
+- Tito wrapper for easier development (praiskup@redhat.com)
+
 * Sun Jan 28 2024 Jakub Kadlcik <frostyx@email.cz>
 - Use rpm.ds instead of deprecated hdr.dsFromHeader (frostyx@email.cz)
 - Support branch aliases in releasers (frostyx@email.cz)
