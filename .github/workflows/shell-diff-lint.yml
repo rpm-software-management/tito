@@ -3,7 +3,7 @@ name: Lint Shell issues
 
 on:
   pull_request:
-    branches: [master]
+    branches: [main]
 
 permissions:
   contents: read

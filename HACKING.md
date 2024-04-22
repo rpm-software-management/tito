@@ -108,7 +108,7 @@ When developing code for tito there are a couple ways you can test:
 
 First install Tito's dependencies for your architecture, i.e. `x86_64`, like
 described in [README's INSTALL section](README.md#INSTALL), under installation
-from git's `master` branch.
+from git's `main` branch.
 
 Then create a virtual environment and install tito in editable mode:
 
