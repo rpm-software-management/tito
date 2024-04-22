@@ -3,7 +3,7 @@ name: Lint Python issues
 
 on:
   pull_request:
-    branches: [master]
+    branches: [main]
 
 jobs:
   python-lint-job:

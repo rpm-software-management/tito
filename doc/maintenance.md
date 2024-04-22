@@ -5,7 +5,7 @@
 If you are releasing a new version of Tito, please follow these steps:
 
 1. Make sure Travis tests are passing
-2. Make sure it is possible to build tito package from `master` branch for all
+2. Make sure it is possible to build tito package from `main` branch for all
    currently supported Fedora versions. Either by using [mock][mock], or using
    Copr `tito release copr --test`
 3. Make sure that `[fedora]` releaser in `.tito/releasers.conf` contains all

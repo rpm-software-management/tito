@@ -25,4 +25,4 @@ jobs:
     metadata:
       owner: "@rpm-software-management"
       project: "tito"
-      branch: master
+      branch: main

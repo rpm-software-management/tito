@@ -56,12 +56,12 @@ From [PyPI](https://pypi.org/project/tito/):
 
     pip install tito
 
-[Pre-release versions for Fedora](https://copr.fedorainfracloud.org/coprs/g/rpm-software-management/tito/) (built from git `master` branch):
+[Pre-release versions for Fedora](https://copr.fedorainfracloud.org/coprs/g/rpm-software-management/tito/) (built from git `main` branch):
 
     dnf copr enable @rpm-software-management/tito
     dnf install tito
 
-From git's `master` branch:
+From git's `main` branch:
 
 - First install Tito's dependencies for your architecture, i.e. `x86_64`:
 
@@ -69,14 +69,14 @@ From git's `master` branch:
           $(dnf repoquery --arch x86_64,noarch --requires tito --resolve -q)
 
   _NOTE: This will install Tito's dependencies from Tito's latest release for
-  your system. If the `master` branch requires a new dependency, it will need to
+  your system. If the `main` branch requires a new dependency, it will need to
   be installed manually._
 
 - Then install Tito via so-called [User install](
   https://pip.pypa.io/en/stable/user_guide/#user-installs) (i.e. isolated to the
   current user):
 
-      pip install --user https://github.com/rpm-software-management/tito/archive/master.tar.gz
+      pip install --user https://github.com/rpm-software-management/tito/archive/main.tar.gz
 
 To make an rpm of tito to install elsewhere
 
