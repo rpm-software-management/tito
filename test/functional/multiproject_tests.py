@@ -104,7 +104,7 @@ class MultiProjectTests(TitoGitTestFixture):
         os.chdir(os.path.join(self.repo_dir, 'pkg3'))
         tito('tag --debug --accept-auto-changelog')
         new_ver = get_latest_tagged_version(TEST_PKG_3)
-        self.assertEquals("0.0.2-1", new_ver)
+        self.assertEqual("0.0.2-1", new_ver)
 
         dest_file = os.path.join(self.repo_dir, 'pkg3', "version.txt")
         self.assertTrue(os.path.exists(dest_file))
@@ -133,7 +133,7 @@ class MultiProjectTests(TitoGitTestFixture):
         os.chdir(os.path.join(self.repo_dir, 'pkg2'))
         tito('tag --debug --accept-auto-changelog --use-release 42')
         new_ver = get_latest_tagged_version(TEST_PKG_2)
-        self.assertEquals(new_ver.split('-')[-1], "42")
+        self.assertEqual(new_ver.split('-')[-1], "42")
 
     def test_release_tagger_use_version(self):
         os.chdir(os.path.join(self.repo_dir, 'pkg2'))
@@ -141,16 +141,16 @@ class MultiProjectTests(TitoGitTestFixture):
         tito('tag --debug --accept-auto-changelog --use-version 1.3.37')
         new_ver = get_latest_tagged_version(TEST_PKG_2)
         self.assertFalse(release_bumped(start_ver, new_ver))
-        self.assertEquals(new_ver, "1.3.37-1")
+        self.assertEqual(new_ver, "1.3.37-1")
 
     def test_build_tgz(self):
         os.chdir(os.path.join(self.repo_dir, 'pkg1'))
         artifacts = tito('build --tgz')
-        self.assertEquals(1, len(artifacts))
-        self.assertEquals('%s-0.0.1.tar.gz' % TEST_PKG_1,
+        self.assertEqual(1, len(artifacts))
+        self.assertEqual('%s-0.0.1.tar.gz' % TEST_PKG_1,
                 os.path.basename(artifacts[0]))
 
     def test_build_rpm(self):
         os.chdir(os.path.join(self.repo_dir, 'pkg1'))
         artifacts = tito('build --rpm')
-        self.assertEquals(3, len(artifacts))
+        self.assertEqual(3, len(artifacts))

@@ -88,9 +88,9 @@ class FetchBuilderTests(TitoGitTestFixture):
 
         tito('build --rpm --output=%s --no-cleanup --debug --arg=source=%s ' %
                 (self.output_dir, self.source_filename))
-        self.assertEquals(1, len(glob.glob(join(self.output_dir,
+        self.assertEqual(1, len(glob.glob(join(self.output_dir,
             "extsrc-0.0.2-1.*src.rpm"))))
-        self.assertEquals(1, len(glob.glob(join(self.output_dir,
+        self.assertEqual(1, len(glob.glob(join(self.output_dir,
             "noarch/extsrc-0.0.2-1.*noarch.rpm"))))
 
     def test_tag_rejected(self):
@@ -113,7 +113,7 @@ class FetchBuilderTests(TitoGitTestFixture):
         tito('release --debug yum-test --arg source=%s' %
                 self.source_filename)
 
-        self.assertEquals(1, len(glob.glob(join(yum_repo_dir,
+        self.assertEqual(1, len(glob.glob(join(yum_repo_dir,
             "extsrc-0.0.2-1.*noarch.rpm"))))
-        self.assertEquals(1, len(glob.glob(join(yum_repo_dir,
+        self.assertEqual(1, len(glob.glob(join(yum_repo_dir,
             "repodata/repomd.xml"))))

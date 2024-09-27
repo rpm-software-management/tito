@@ -96,5 +96,5 @@ class CoprReleaserTests(TitoGitTestFixture):
         releaser.release()
         args = mock.call('/usr/bin/copr-cli build --nowait releaseme %s' %
                 releaser.builder.srpm_location)
-        self.assertEquals(args, run_command.mock_calls[0])
-        self.assertEquals(args, run_command.mock_calls[1])
+        self.assertEqual(args, run_command.mock_calls[0])
+        self.assertEqual(args, run_command.mock_calls[1])

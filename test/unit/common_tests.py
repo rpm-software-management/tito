@@ -42,66 +42,66 @@ class CommonTests(unittest.TestCase):
 
     def test_normalize_class_name(self):
         """ Test old spacewalk.releng namespace is converted to tito. """
-        self.assertEquals("tito.builder.Builder",
+        self.assertEqual("tito.builder.Builder",
                 normalize_class_name("tito.builder.Builder"))
-        self.assertEquals("tito.builder.Builder",
+        self.assertEqual("tito.builder.Builder",
                 normalize_class_name("spacewalk.releng.builder.Builder"))
-        self.assertEquals("tito.tagger.VersionTagger",
+        self.assertEqual("tito.tagger.VersionTagger",
                 normalize_class_name("spacewalk.releng.tagger.VersionTagger"))
 
     def test_replace_version_leading_whitespace(self):
         line = "    version='1.0'\n"
         expected = "    version='2.5.3'\n"
-        self.assertEquals(expected, replace_version(line, "2.5.3"))
+        self.assertEqual(expected, replace_version(line, "2.5.3"))
 
     def test_replace_version_no_whitespace(self):
         line = "version='1.0'\n"
         expected = "version='2.5.3'\n"
-        self.assertEquals(expected, replace_version(line, "2.5.3"))
+        self.assertEqual(expected, replace_version(line, "2.5.3"))
 
     def test_replace_version_some_whitespace(self):
         line = "version = '1.0'\n"
         expected = "version = '2.5.3'\n"
-        self.assertEquals(expected, replace_version(line, "2.5.3"))
+        self.assertEqual(expected, replace_version(line, "2.5.3"))
 
     def test_replace_version_double_quote(self):
         line = 'version="1.0"\n'
         expected = 'version="2.5.3"\n'
-        self.assertEquals(expected, replace_version(line, "2.5.3"))
+        self.assertEqual(expected, replace_version(line, "2.5.3"))
 
     def test_replace_version_trailing_chars(self):
         line = "version = '1.0', blah blah blah\n"
         expected = "version = '2.5.3', blah blah blah\n"
-        self.assertEquals(expected, replace_version(line, "2.5.3"))
+        self.assertEqual(expected, replace_version(line, "2.5.3"))
 
     def test_replace_version_crazy_old_version(self):
         line = "version='1.0asjhd82371kjsdha98475h87asd7---asdai.**&'\n"
         expected = "version='2.5.3'\n"
-        self.assertEquals(expected, replace_version(line, "2.5.3"))
+        self.assertEqual(expected, replace_version(line, "2.5.3"))
 
     def test_replace_version_crazy_new_version(self):
         line = "version='1.0'\n"
         expected = "version='91asj.;]][[a]sd[]'\n"
-        self.assertEquals(expected, replace_version(line,
+        self.assertEqual(expected, replace_version(line,
             "91asj.;]][[a]sd[]"))
 
     def test_replace_version_uppercase(self):
         line = "VERSION='1.0'\n"
         expected = "VERSION='2.5.3'\n"
-        self.assertEquals(expected, replace_version(line, "2.5.3"))
+        self.assertEqual(expected, replace_version(line, "2.5.3"))
 
     def test_replace_version_no_match(self):
         line = "this isn't a version fool.\n"
-        self.assertEquals(line, replace_version(line, "2.5.3"))
+        self.assertEqual(line, replace_version(line, "2.5.3"))
 
     def test_extract_sha1(self):
         ls_remote_output = "Could not chdir to home directory\n" + \
                            "fe87e2b75ed1850718d99c797cc171b88bfad5ca ref/origin/sometag"
-        self.assertEquals("fe87e2b75ed1850718d99c797cc171b88bfad5ca",
+        self.assertEqual("fe87e2b75ed1850718d99c797cc171b88bfad5ca",
                           extract_sha1(ls_remote_output))
 
     def test_compare_version(self):
-        self.assertEquals(0, compare_version("1", "1"))
+        self.assertEqual(0, compare_version("1", "1"))
         self.assertTrue(compare_version("2.1", "2.2") < 0)
         self.assertTrue(compare_version("3.0.4.10", "3.0.4.2") > 0)
         self.assertTrue(compare_version("4.08", "4.08.01") < 0)
@@ -111,15 +111,15 @@ class CommonTests(unittest.TestCase):
         self.assertTrue(compare_version("2.1", "1.2") > 0)
         self.assertTrue(compare_version("1.0", "1.0.1") < 0)
         self.assertTrue(compare_version("1.0.1", "1.0") > 0)
-        self.assertEquals(0, compare_version("5.6.7", "5.6.7"))
-        self.assertEquals(0, compare_version("1.01.1", "1.1.1"))
-        self.assertEquals(0, compare_version("1.1.1", "1.01.1"))
-        self.assertEquals(0, compare_version("1", "1.0"))
-        self.assertEquals(0, compare_version("1.0", "1"))
-        self.assertEquals(0, compare_version("1.0.2.0", "1.0.2"))
+        self.assertEqual(0, compare_version("5.6.7", "5.6.7"))
+        self.assertEqual(0, compare_version("1.01.1", "1.1.1"))
+        self.assertEqual(0, compare_version("1.1.1", "1.01.1"))
+        self.assertEqual(0, compare_version("1", "1.0"))
+        self.assertEqual(0, compare_version("1.0", "1"))
+        self.assertEqual(0, compare_version("1.0.2.0", "1.0.2"))
 
     def test_run_command_print(self):
-        self.assertEquals('', run_command_print("sleep 0.1"))
+        self.assertEqual('', run_command_print("sleep 0.1"))
 
     def test_rpmbuild_claims_to_be_successful(self):
         succeeded_result = "success"
@@ -127,7 +127,7 @@ class CommonTests(unittest.TestCase):
 
         success_line = find_wrote_in_rpmbuild_output(output)
 
-        self.assertEquals(succeeded_result, success_line[0])
+        self.assertEqual(succeeded_result, success_line[0])
 
     @patch("tito.common.error_out")
     def test_rpmbuild_which_ended_with_error_is_described_with_the_analyzed_line(self, mock_error):
@@ -142,35 +142,35 @@ class CommonTests(unittest.TestCase):
     def test_find_spec_like_file_tmpl(self, mock_find):
         mock_find.side_effect = [None, "result.spec.tmpl"]
         result = find_spec_like_file()
-        self.assertEquals("result.spec.tmpl", result)
-        self.assertEquals(2, len(mock_find.mock_calls))
+        self.assertEqual("result.spec.tmpl", result)
+        self.assertEqual(2, len(mock_find.mock_calls))
 
     @patch("tito.common.find_file_with_extension")
     def test_find_spec_like_file_spec(self, mock_find):
         mock_find.side_effect = ["result.spec"]
         result = find_spec_like_file()
-        self.assertEquals("result.spec", result)
-        self.assertEquals(1, len(mock_find.mock_calls))
+        self.assertEqual("result.spec", result)
+        self.assertEqual(1, len(mock_find.mock_calls))
 
     @patch("tito.common.find_file_with_extension")
     def test_find_spec_like_file_no_match(self, mock_find):
         mock_find.side_effect = [None, None]
         with Capture(silent=True):
             self.assertRaises(SystemExit, find_spec_like_file)
-            self.assertEquals(2, len(mock_find.mock_calls))
+            self.assertEqual(2, len(mock_find.mock_calls))
 
     @patch("os.listdir")
     def test_find_file_with_extension(self, mock_listdir):
         mock_listdir.return_value = ["hello.txt"]
         result = find_file_with_extension("/tmp", ".txt")
-        self.assertEquals(mock_listdir.mock_calls[0], call("/tmp"))
-        self.assertEquals("/tmp/hello.txt", result)
+        self.assertEqual(mock_listdir.mock_calls[0], call("/tmp"))
+        self.assertEqual("/tmp/hello.txt", result)
 
     @patch("os.listdir")
     def test_find_file_with_extension_no_match(self, mock_listdir):
         mock_listdir.return_value = ["hello.txt"]
         result = find_file_with_extension("/tmp", ".foo")
-        self.assertEquals(mock_listdir.mock_calls[0], call("/tmp"))
+        self.assertEqual(mock_listdir.mock_calls[0], call("/tmp"))
         self.assertEqual(None, result)
 
     @patch("os.listdir")
@@ -186,8 +186,8 @@ class CommonTests(unittest.TestCase):
         """)
         with open_mock(content):
             results = search_for("foo", r"(Hello\s+World)", r"(HelloWorld)")
-            self.assertEquals(("Hello World",), results[0])
-            self.assertEquals(("HelloWorld",), results[1])
+            self.assertEqual(("Hello World",), results[0])
+            self.assertEqual(("HelloWorld",), results[1])
 
     def test_search_for_gets_first_match(self):
         content = dedent("""
@@ -196,7 +196,7 @@ class CommonTests(unittest.TestCase):
         """)
         with open_mock(content):
             results = search_for("foo", r"(Hello.*)")
-            self.assertEquals(("HelloWorld",), results[0])
+            self.assertEqual(("HelloWorld",), results[0])
 
     def test_search_for_no_match(self):
         content = dedent("""
@@ -212,7 +212,7 @@ class CommonTests(unittest.TestCase):
         mock_user_conf.return_value = {'COLOR': '0'}
         stream = StringIO()
         _out('Hello world', None, Terminal().red, stream)
-        self.assertEquals('Hello world\n', stream.getvalue())
+        self.assertEqual('Hello world\n', stream.getvalue())
 
     @patch("tito.common.read_user_config")
     def test_colors(self, mock_user_conf):
@@ -237,7 +237,7 @@ class CommonTests(unittest.TestCase):
         ]
 
         for (tag, package) in TAGS:
-            self.assertEquals(package, get_project_name(tag, None))
+            self.assertEqual(package, get_project_name(tag, None))
 
 
 class CheetahRenderTest(unittest.TestCase):
@@ -255,10 +255,10 @@ class CheetahRenderTest(unittest.TestCase):
 
         render_cheetah("foo.spec.tmpl", "/tmp", {})
         expected = "cheetah fill --flat --pickle=temp_pickle --odir=/tmp --oext=cheetah foo.spec.tmpl"
-        self.assertEquals(call(expected), mock_run_command.mock_calls[0])
-        self.assertEquals(call("/tmp/*.cheetah"), mock_glob.mock_calls[0])
-        self.assertEquals(call("/tmp/foo.spec.cheetah", "/tmp/foo.spec"), mock_move.mock_calls[0])
-        self.assertEquals(call("temp_pickle"), mock_unlink.mock_calls[0])
+        self.assertEqual(call(expected), mock_run_command.mock_calls[0])
+        self.assertEqual(call("/tmp/*.cheetah"), mock_glob.mock_calls[0])
+        self.assertEqual(call("/tmp/foo.spec.cheetah", "/tmp/foo.spec"), mock_move.mock_calls[0])
+        self.assertEqual(call("temp_pickle"), mock_unlink.mock_calls[0])
 
     @patch("os.unlink")
     @patch("glob.glob")
@@ -273,10 +273,10 @@ class CheetahRenderTest(unittest.TestCase):
         with Capture(silent=True):
             self.assertRaises(SystemExit, render_cheetah, "foo.spec.tmpl", "/tmp", {})
             expected = "cheetah fill --flat --pickle=temp_pickle --odir=/tmp --oext=cheetah foo.spec.tmpl"
-            self.assertEquals(call(expected), mock_run_command.mock_calls[0])
+            self.assertEqual(call(expected), mock_run_command.mock_calls[0])
 
-            self.assertEquals(call("/tmp/*.cheetah"), mock_glob.mock_calls[0])
-            self.assertEquals(call("temp_pickle"), mock_unlink.mock_calls[0])
+            self.assertEqual(call("/tmp/*.cheetah"), mock_glob.mock_calls[0])
+            self.assertEqual(call("temp_pickle"), mock_unlink.mock_calls[0])
 
 
 class CargoTransformTest(unittest.TestCase):
@@ -293,11 +293,11 @@ class CargoTransformTest(unittest.TestCase):
                  'authors = ["you@example.com"]']
         output = CargoBump.process_cargo_toml(input, "2.2.2")
 
-        self.assertEquals(4, len(output))
-        self.assertEquals("[package]", output[0])
-        self.assertEquals("name = \"hello_world\" # the name of the package", output[1])
-        self.assertEquals("version = \"2.2.2\"    # the current version, obeying semver", output[2])
-        self.assertEquals("authors = [\"you@example.com\"]", output[3])
+        self.assertEqual(4, len(output))
+        self.assertEqual("[package]", output[0])
+        self.assertEqual("name = \"hello_world\" # the name of the package", output[1])
+        self.assertEqual("version = \"2.2.2\"    # the current version, obeying semver", output[2])
+        self.assertEqual("authors = [\"you@example.com\"]", output[3])
 
     def test_complicated_case(self):
         input = ['[package]',
@@ -312,10 +312,10 @@ class CargoTransformTest(unittest.TestCase):
                  'version = "0.1.0"']
         output = CargoBump.process_cargo_toml(input, "3.3.3")
 
-        self.assertEquals(10, len(output))
-        self.assertEquals("version = \"3.3.3\"", output[2])
-        self.assertEquals("regex = \"1.0.0\"", output[6])
-        self.assertEquals("version = \"0.1.0\"", output[9])
+        self.assertEqual(10, len(output))
+        self.assertEqual("version = \"3.3.3\"", output[2])
+        self.assertEqual("regex = \"1.0.0\"", output[6])
+        self.assertEqual("version = \"0.1.0\"", output[9])
 
 
 class SpecTransformTest(unittest.TestCase):
@@ -345,13 +345,13 @@ class SpecTransformTest(unittest.TestCase):
         munge_specfile(self.spec_file, sha, commit_count, fullname, "%s.tar.gz" % fullname)
         output = open(self.spec_file, 'r').readlines()
 
-        self.assertEquals(8, len(output))
-        self.assertEquals("Release: 1.git.%s.%s%%{?dist}\n" % (commit_count, sha), output[3])
-        self.assertEquals("Source: %s.tar.gz\n" % fullname, output[4])
-        self.assertEquals("%%setup -q -n %s\n" % fullname, output[7])
+        self.assertEqual(8, len(output))
+        self.assertEqual("Release: 1.git.%s.%s%%{?dist}\n" % (commit_count, sha), output[3])
+        self.assertEqual("Source: %s.tar.gz\n" % fullname, output[4])
+        self.assertEqual("%%setup -q -n %s\n" % fullname, output[7])
 
         # Spot check some things that should not change
-        self.assertEquals("Name: Hello\n", output[1])
+        self.assertEqual("Name: Hello\n", output[1])
         self.assertEqual("%prep\n", output[6])
 
     def test_transform_release_only(self):
@@ -368,10 +368,10 @@ class SpecTransformTest(unittest.TestCase):
         munge_specfile(self.spec_file, sha, commit_count)
         output = open(self.spec_file, 'r').readlines()
 
-        self.assertEquals(4, len(output))
-        self.assertEquals("Release: 1.git.%s.%s%%{?dist}\n" % (commit_count, sha), output[1])
-        self.assertEquals("Source: hello-1.0.0.tar.gz\n", output[2])
-        self.assertEquals("%setup -q\n", output[3])
+        self.assertEqual(4, len(output))
+        self.assertEqual("Release: 1.git.%s.%s%%{?dist}\n" % (commit_count, sha), output[1])
+        self.assertEqual("Source: hello-1.0.0.tar.gz\n", output[2])
+        self.assertEqual("%setup -q\n", output[3])
 
     def test_transform_no_whitespace_modifications(self):
         simple_spec = dedent("""
@@ -386,9 +386,9 @@ class SpecTransformTest(unittest.TestCase):
         munge_specfile(self.spec_file, sha, commit_count)
         output = open(self.spec_file, 'r').readlines()
 
-        self.assertEquals(3, len(output))
-        self.assertEquals("Release:    1.git.%s.%s%%{?dist}\n" % (commit_count, sha), output[1])
-        self.assertEquals("Source:     hello-1.0.0.tar.gz\n", output[2])
+        self.assertEqual(3, len(output))
+        self.assertEqual("Release:    1.git.%s.%s%%{?dist}\n" % (commit_count, sha), output[1])
+        self.assertEqual("Source:     hello-1.0.0.tar.gz\n", output[2])
 
     def test_complex_setup_transform(self):
         simple_spec = dedent("""
@@ -404,7 +404,7 @@ class SpecTransformTest(unittest.TestCase):
         munge_specfile(self.spec_file, sha, commit_count, fullname, "%s.tar.gz" % fullname)
         output = open(self.spec_file, 'r').readlines()
 
-        self.assertEquals("%%setup -q -n %s\n" % fullname, output[1])
+        self.assertEqual("%%setup -q -n %s\n" % fullname, output[1])
 
     def test_transform_no_dist_tag(self):
         simple_spec = dedent("""
@@ -419,81 +419,81 @@ class SpecTransformTest(unittest.TestCase):
         munge_specfile(self.spec_file, sha, commit_count)
         output = open(self.spec_file, 'r').readlines()
 
-        self.assertEquals(3, len(output))
-        self.assertEquals("Release: 1.git.%s.%s\n" % (commit_count, sha), output[1])
-        self.assertEquals("Source: hello-1.0.0.tar.gz\n", output[2])
+        self.assertEqual(3, len(output))
+        self.assertEqual("Release: 1.git.%s.%s\n" % (commit_count, sha), output[1])
+        self.assertEqual("Source: hello-1.0.0.tar.gz\n", output[2])
 
 
 class VersionMathTest(unittest.TestCase):
     def test_increase_version_minor(self):
         line = "1.0.0"
         expected = "1.0.1"
-        self.assertEquals(expected, increase_version(line))
+        self.assertEqual(expected, increase_version(line))
 
     def test_increase_version_major(self):
         line = "1.0"
         expected = "1.1"
-        self.assertEquals(expected, increase_version(line))
+        self.assertEqual(expected, increase_version(line))
 
     def test_increase_release(self):
         line = "1"
         expected = "2"
-        self.assertEquals(expected, increase_version(line))
+        self.assertEqual(expected, increase_version(line))
 
     def test_underscore_release(self):
         line = "1_PG5"
         expected = "2_PG5"
-        self.assertEquals(expected, increase_version(line))
+        self.assertEqual(expected, increase_version(line))
 
     def test_increase_versionless(self):
         line = "%{app_version}"
         expected = "%{app_version}"
-        self.assertEquals(expected, increase_version(line))
+        self.assertEqual(expected, increase_version(line))
 
     def test_increase_release_with_rpm_cruft(self):
         line = "1%{?dist}"
         expected = "2%{?dist}"
-        self.assertEquals(expected, increase_version(line))
+        self.assertEqual(expected, increase_version(line))
 
     def test_increase_release_with_zstream(self):
         line = "1%{?dist}.1"
         expected = "1%{?dist}.2"
-        self.assertEquals(expected, increase_version(line))
+        self.assertEqual(expected, increase_version(line))
 
     def test_unknown_version(self):
         line = "somethingstrange"
         expected = "somethingstrange"
-        self.assertEquals(expected, increase_version(line))
+        self.assertEqual(expected, increase_version(line))
 
     def test_empty_string(self):
         line = ""
         expected = ""
-        self.assertEquals(expected, increase_version(line))
+        self.assertEqual(expected, increase_version(line))
 
     def test_increase_zstream(self):
         line = "1%{?dist}"
         expected = "1%{?dist}.1"
-        self.assertEquals(expected, increase_zstream(line))
+        self.assertEqual(expected, increase_zstream(line))
 
     def test_increase_zstream_already_appended(self):
         line = "1%{?dist}.1"
         expected = "1%{?dist}.2"
-        self.assertEquals(expected, increase_zstream(line))
+        self.assertEqual(expected, increase_zstream(line))
 
     def test_reset_release_with_rpm_cruft(self):
         line = "2%{?dist}"
         expected = "1%{?dist}"
-        self.assertEquals(expected, reset_release(line))
+        self.assertEqual(expected, reset_release(line))
 
     def test_reset_release_with_more_rpm_cruft(self):
         line = "2.beta"
         expected = "1.beta"
-        self.assertEquals(expected, reset_release(line))
+        self.assertEqual(expected, reset_release(line))
 
     def test_reset_release(self):
         line = "2"
         expected = "1"
-        self.assertEquals(expected, reset_release(line))
+        self.assertEqual(expected, reset_release(line))
 
 
 class MungeSetupMacroTests(unittest.TestCase):
