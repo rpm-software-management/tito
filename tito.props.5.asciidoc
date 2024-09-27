@@ -98,6 +98,13 @@ fetch_sources::
 If true, download sources from predefined Source<N> addresses to the
 SOURCE folder.
 
+test_version_suffix::
+Append a given suffix (string, e.g., `.post`) to the `Version:` tag in the
+generated spec file when building with `--test`. This ensures that any `--test`
+NEVRA is higher than the NEVRA of the previous release. Simply modifying the
+`Release:` tag doesn't guarantee this, as downstream `Release:` numbers are
+often incremented, which would take precedence (e.g., `foo-1.0-1.git.3.60fe05a`
+< `foo-1.0-2`).
 
 KOJI and COPR
 -------------

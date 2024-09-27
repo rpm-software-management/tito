@@ -86,6 +86,9 @@ class BuilderBase(object):
             config_fetch_default = self.config.get(BUILDCONFIG_SECTION, "fetch_sources")
         self.fetch_sources = self._get_optional_arg(kwargs, 'fetch_sources', config_fetch_default)
 
+        self.test_version_suffix = self.config.get(
+                BUILDCONFIG_SECTION, "test_version_suffix", fallback="")
+
         rpmbuildopts = self._get_optional_arg(args, 'rpmbuild_options', None)
         if rpmbuildopts:
             self.rpmbuild_options = ' '.join(rpmbuildopts)
@@ -642,6 +645,7 @@ class Builder(ConfigObject, BuilderBase):
                 self.commit_count,
                 fullname,
                 self.tgz_filename,
+                self.test_version_suffix,
             )
 
             self.build_version += ".git." + str(self.commit_count) + "." + str(sha)
