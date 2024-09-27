@@ -1,5 +1,5 @@
 import unittest
-import mock
+from unittest import mock
 from datetime import datetime
 from tito.tagger import VersionTagger
 from tito.compat import PY2, RawConfigParser

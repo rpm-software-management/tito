@@ -1,5 +1,5 @@
 import unittest
-import mock
+from unittest import mock
 from tito.compat import PY2, RawConfigParser
 from tito.release import Releaser
 from unit import builtins_input
