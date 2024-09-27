@@ -14,7 +14,7 @@
 import sys
 
 from contextlib import contextmanager
-from mock import patch, MagicMock
+from unittest.mock import patch, MagicMock
 from tito.compat import PY2, StringIO
 
 

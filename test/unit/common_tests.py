@@ -27,7 +27,7 @@ import os
 import re
 import unittest
 
-from mock import Mock, patch, call
+from unittest.mock import Mock, patch, call
 from tempfile import NamedTemporaryFile
 from textwrap import dedent
 from unit import open_mock, Capture

@@ -1,6 +1,6 @@
 import unittest
 from tito.bugtracker import BugzillaExtractor
-from mock import Mock, patch
+from unittest.mock import Mock, patch
 
 
 class ExtractBugzillasTest(unittest.TestCase):
