@@ -82,12 +82,12 @@ class GitAnnexBuilderTests(TitoGitTestFixture):
         builder = GitAnnexBuilder(PKG_NAME, None, self.output_dir,
             self.config, {}, {}, **{'offline': True})
         builder.rpm()
-        self.assertEquals(1, len(list(builder.sources)))
+        self.assertEqual(1, len(list(builder.sources)))
 
-        self.assertEquals(2, len(builder.artifacts))
-        self.assertEquals(1, len(glob.glob(join(self.output_dir,
+        self.assertEqual(2, len(builder.artifacts))
+        self.assertEqual(1, len(glob.glob(join(self.output_dir,
             "extsrc-0.0.2-1.*src.rpm"))))
-        self.assertEquals(1, len(glob.glob(join(self.output_dir, 'noarch',
+        self.assertEqual(1, len(glob.glob(join(self.output_dir, 'noarch',
             "extsrc-0.0.2-1.*.noarch.rpm"))))
         builder.cleanup()
 

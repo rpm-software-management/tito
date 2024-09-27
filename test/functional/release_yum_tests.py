@@ -86,7 +86,7 @@ class YumReleaserTests(TitoGitTestFixture):
         self._setup_fetchbuilder_releaser(yum_repo_dir)
         tito('release --debug yum-test')
 
-        self.assertEquals(1, len(glob.glob(join(yum_repo_dir,
+        self.assertEqual(1, len(glob.glob(join(yum_repo_dir,
             "releaseme-0.0.1-1.*noarch.rpm"))))
-        self.assertEquals(1, len(glob.glob(join(yum_repo_dir,
+        self.assertEqual(1, len(glob.glob(join(yum_repo_dir,
             "repodata/repomd.xml"))))

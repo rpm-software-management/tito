@@ -9,49 +9,49 @@ class ExtractBugzillasTest(unittest.TestCase):
         commit_log = "- 123456: Did something interesting."
         extractor = BugzillaExtractor(commit_log)
         results = extractor.extract()
-        self.assertEquals(1, len(results))
-        self.assertEquals("Resolves: #123456 - Did something interesting.",
+        self.assertEqual(1, len(results))
+        self.assertEqual("Resolves: #123456 - Did something interesting.",
                 results[0])
 
     def test_single_with_dash(self):
         commit_log = "- 123456 - Did something interesting."
         extractor = BugzillaExtractor(commit_log)
         results = extractor.extract()
-        self.assertEquals(1, len(results))
-        self.assertEquals("Resolves: #123456 - Did something interesting.",
+        self.assertEqual(1, len(results))
+        self.assertEqual("Resolves: #123456 - Did something interesting.",
                 results[0])
 
     def test_single_with_no_spaces(self):
         commit_log = "- 123456-Did something interesting."
         extractor = BugzillaExtractor(commit_log)
         results = extractor.extract()
-        self.assertEquals(1, len(results))
-        self.assertEquals("Resolves: #123456 - Did something interesting.",
+        self.assertEqual(1, len(results))
+        self.assertEqual("Resolves: #123456 - Did something interesting.",
                 results[0])
 
     def test_diff_format(self):
         commit_log = "+- 123456: Did something interesting."
         extractor = BugzillaExtractor(commit_log)
         results = extractor.extract()
-        self.assertEquals(1, len(results))
-        self.assertEquals("Resolves: #123456 - Did something interesting.",
+        self.assertEqual(1, len(results))
+        self.assertEqual("Resolves: #123456 - Did something interesting.",
                 results[0])
 
     def test_single_line_no_bz(self):
         commit_log = "- Did something interesting."
         extractor = BugzillaExtractor(commit_log)
         results = extractor.extract()
-        self.assertEquals(0, len(results))
+        self.assertEqual(0, len(results))
 
     def test_multi_line(self):
         commit_log = "- 123456: Did something interesting.\n- Another commit.\n" \
             "- 456789: A third commit."
         extractor = BugzillaExtractor(commit_log)
         results = extractor.extract()
-        self.assertEquals(2, len(results))
-        self.assertEquals("Resolves: #123456 - Did something interesting.",
+        self.assertEqual(2, len(results))
+        self.assertEqual("Resolves: #123456 - Did something interesting.",
                 results[0])
-        self.assertEquals("Resolves: #456789 - A third commit.",
+        self.assertEqual("Resolves: #456789 - A third commit.",
                 results[1])
 
     def test_single_required_flag_found(self):
@@ -68,12 +68,12 @@ class ExtractBugzillasTest(unittest.TestCase):
 
         results = extractor.extract()
 
-        self.assertEquals(1, len(extractor.bzs))
-        self.assertEquals(bug1[0], extractor.bzs[0][0])
-        self.assertEquals(bug1[1], extractor.bzs[0][1])
+        self.assertEqual(1, len(extractor.bzs))
+        self.assertEqual(bug1[0], extractor.bzs[0][0])
+        self.assertEqual(bug1[1], extractor.bzs[0][1])
 
-        self.assertEquals(1, len(results))
-        self.assertEquals("Resolves: #123456 - Did something interesting.",
+        self.assertEqual(1, len(results))
+        self.assertEqual("Resolves: #123456 - Did something interesting.",
                 results[0])
 
     def test_required_flags_found(self):
@@ -99,16 +99,16 @@ class ExtractBugzillasTest(unittest.TestCase):
 
         results = extractor.extract()
 
-        self.assertEquals(2, len(extractor.bzs))
-        self.assertEquals(bug1[0], extractor.bzs[0][0])
-        self.assertEquals(bug1[1], extractor.bzs[0][1])
-        self.assertEquals(bug3[0], extractor.bzs[1][0])
-        self.assertEquals(bug3[1], extractor.bzs[1][1])
+        self.assertEqual(2, len(extractor.bzs))
+        self.assertEqual(bug1[0], extractor.bzs[0][0])
+        self.assertEqual(bug1[1], extractor.bzs[0][1])
+        self.assertEqual(bug3[0], extractor.bzs[1][0])
+        self.assertEqual(bug3[1], extractor.bzs[1][1])
 
-        self.assertEquals(2, len(results))
-        self.assertEquals("Resolves: #123456 - Did something interesting.",
+        self.assertEqual(2, len(results))
+        self.assertEqual("Resolves: #123456 - Did something interesting.",
                 results[0])
-        self.assertEquals("Resolves: #987654 - Such amaze!",
+        self.assertEqual("Resolves: #987654 - Such amaze!",
                 results[1])
 
     @patch("tito.bugtracker.error_out")
@@ -134,8 +134,8 @@ class ExtractBugzillasTest(unittest.TestCase):
 
         results = extractor.extract()
 
-        self.assertEquals(0, len(extractor.bzs))
-        self.assertEquals(0, len(results))
+        self.assertEqual(0, len(extractor.bzs))
+        self.assertEqual(0, len(results))
         mock_error.assert_called_once_with("No bugzillas found with required flags: %s" % required_flags)
 
     def test_required_flags_missing_with_placeholder(self):
@@ -152,10 +152,10 @@ class ExtractBugzillasTest(unittest.TestCase):
 
         results = extractor.extract()
 
-        self.assertEquals(0, len(extractor.bzs))
+        self.assertEqual(0, len(extractor.bzs))
 
-        self.assertEquals(1, len(results))
-        self.assertEquals("Related: #54321", results[0])
+        self.assertEqual(1, len(results))
+        self.assertEqual("Related: #54321", results[0])
 
     def test_same_id_multiple_times(self):
 
@@ -172,16 +172,16 @@ class ExtractBugzillasTest(unittest.TestCase):
 
         results = extractor.extract()
 
-        self.assertEquals(2, len(extractor.bzs))
-        self.assertEquals(bug1[0], extractor.bzs[0][0])
-        self.assertEquals(bug1[1], extractor.bzs[0][1])
-        self.assertEquals(bug3[0], extractor.bzs[1][0])
-        self.assertEquals(bug3[1], extractor.bzs[1][1])
+        self.assertEqual(2, len(extractor.bzs))
+        self.assertEqual(bug1[0], extractor.bzs[0][0])
+        self.assertEqual(bug1[1], extractor.bzs[0][1])
+        self.assertEqual(bug3[0], extractor.bzs[1][0])
+        self.assertEqual(bug3[1], extractor.bzs[1][1])
 
-        self.assertEquals(2, len(results))
-        self.assertEquals("Resolves: #123456 - Did something interesting.",
+        self.assertEqual(2, len(results))
+        self.assertEqual("Resolves: #123456 - Did something interesting.",
                 results[0])
-        self.assertEquals("Resolves: #123456 - Oops, lets try again.",
+        self.assertEqual("Resolves: #123456 - Oops, lets try again.",
                 results[1])
 
     @patch("tito.bugtracker.error_out")
@@ -198,8 +198,8 @@ class ExtractBugzillasTest(unittest.TestCase):
 
         results = extractor.extract()
 
-        self.assertEquals(0, len(extractor.bzs))
-        self.assertEquals(0, len(results))
+        self.assertEqual(0, len(extractor.bzs))
+        self.assertEqual(0, len(results))
         mock_error.assert_called_once_with("No bugzillas found with required flags: %s" % required_flags)
 
 
