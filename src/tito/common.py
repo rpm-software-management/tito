@@ -585,7 +585,8 @@ def replace_spec_release(file_name, release):
             print(line.rstrip('\n'))
 
 
-def munge_specfile(spec_file, commit_id, commit_count, fullname=None, tgz_filename=None):
+def munge_specfile(spec_file, commit_id, commit_count, fullname=None,
+                   tgz_filename=None, version_suffix=None):
     # If making a test rpm we need to get a little crazy with the spec
     # file we're building off. (Note we are modifying a temp copy of the
     # spec) Swap out the actual release for one that includes the git
@@ -603,6 +604,12 @@ def munge_specfile(spec_file, commit_id, commit_count, fullname=None, tgz_filena
                 m.group(3) or '',
             ))
             continue
+
+        if version_suffix:
+            m = re.match(r'^(\s*Version:\s*)(.+?)\s*$', line)
+            if m:
+                print(m.group(1) + m.group(2) + version_suffix)
+                continue
 
         m = re.match(r'^(\s*Source0?):\s*(.+?)$', line)
         if tgz_filename and m:
