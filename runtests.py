@@ -36,8 +36,8 @@ os.environ['TITO_SRC_BIN_DIR'] = SRC_BIN_DIR
 if __name__ == '__main__':
     import nose
 
-    print("Using Python %s" % sys.version[0:3])
-    print("Using nose %s" % nose.__version__[0:3])
+    print("Using Python %s" % sys.version)
+    print("Using nose %s" % nose.__version__)
     print("Running tito tests against: %s" % SRC_DIR)
 
     # Make sure no older test directories exist
