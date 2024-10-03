@@ -220,9 +220,11 @@ class CommonTests(unittest.TestCase):
     def test_colors(self, mock_user_conf):
         mock_user_conf.return_value = {}
         stream = StringIO()
-        _out('Hello world', None, Terminal().red, stream)
-        # RHEL 6 doesn't have self.assertRegexpMatches unfortunately
-        self.assertTrue(re.match('.+Hello world.+\n', stream.getvalue()))
+        with patch("blessed.terminal.os.isatty") as isatty:
+            _out('Hello world', None, Terminal().red, stream)
+            isatty.return_value = True
+            # RHEL 6 doesn't have self.assertRegexpMatches unfortunately
+            self.assertTrue(re.match('.+Hello world.+\n', stream.getvalue()))
 
     def test_get_project_name(self):
         TAGS = [

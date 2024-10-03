@@ -20,8 +20,8 @@ import glob
 import tempfile
 import sys
 import shutil
-from nose.plugins.skip import SkipTest
 from os.path import join
+from pytest import skip
 
 from functional.fixture import TitoGitTestFixture, tito
 
@@ -41,12 +41,9 @@ class GitAnnexBuilderTests(TitoGitTestFixture):
         # Guess based on python version.
         # Do not use anything based on uname in case we are in container.
         # Do not use `lsb_release` to avoid dependencies.
-        if sys.version[0:3] == '2.4':
-            raise SkipTest('git-annex is not available in epel-5')
-
         status, ga_version = getstatusoutput('rpm -q git-annex')
         if status != 0:
-            raise SkipTest("git-annex is missing")
+            skip("git-annex is missing")
 
         # Setup test config:
         self.config = RawConfigParser()
