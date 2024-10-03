@@ -1,4 +1,3 @@
-#
 # Copyright (c) 2008-2009 Red Hat, Inc.
 #
 # This software is licensed to you under the GNU General Public License,
@@ -13,6 +12,18 @@
 # in this software or its documentation.
 
 """ Pure unit tests for tito's common module. """
+
+import os
+import re
+import unittest
+
+from unittest.mock import patch, call
+from tempfile import NamedTemporaryFile
+from textwrap import dedent
+from unit import open_mock, Capture
+from blessed import Terminal
+
+# Pure unit tests for tito's common module
 from tito.common import (replace_version, find_spec_like_file, increase_version,
     search_for, compare_version, run_command_print, find_wrote_in_rpmbuild_output,
     render_cheetah, increase_zstream, reset_release, find_file_with_extension,
@@ -23,15 +34,6 @@ from tito.common import (replace_version, find_spec_like_file, increase_version,
 from tito.compat import StringIO
 from tito.tagger import CargoBump
 
-import os
-import re
-import unittest
-
-from unittest.mock import Mock, patch, call
-from tempfile import NamedTemporaryFile
-from textwrap import dedent
-from unit import open_mock, Capture
-from blessed import Terminal
 
 
 class CommonTests(unittest.TestCase):

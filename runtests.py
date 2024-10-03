@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 #
 # Copyright (c) 2008-2009 Red Hat, Inc.
 #
@@ -19,6 +19,7 @@ import os
 import shutil
 import sys
 import tempfile
+import nose
 
 # Make sure we run from the source, this is tricky because the functional
 # tests need to find both the location of the 'tito' executable script,
@@ -34,7 +35,6 @@ SRC_BIN_DIR = os.path.abspath(os.path.join(TEST_SCRIPT_DIR, "bin/"))
 os.environ['TITO_SRC_BIN_DIR'] = SRC_BIN_DIR
 
 if __name__ == '__main__':
-    import nose
 
     print("Using Python %s" % sys.version)
     print("Using nose %s" % nose.__version__)
