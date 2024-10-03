@@ -11,10 +11,13 @@
 # granted to use or replicate Red Hat trademarks that are incorporated
 # in this software or its documentation.
 
+import os
 import sys
 
 from contextlib import contextmanager
 from unittest.mock import patch, MagicMock
+from pytest import skip
+
 from tito.compat import PY2, StringIO
 
 
@@ -36,6 +39,19 @@ else:
 
 
 file_spec = None
+
+srcdir = os.path.join(os.path.dirname(__file__), '..', '..')
+titodir = os.path.join(srcdir, '.test-titodir')
+titodirpatch = patch("tito.cli.DEFAULT_BUILD_DIR", titodir)
+titodirpatch.start()
+
+
+def skip_if_rpmbuild():
+    """ some tests can't work during rpmbuild """
+    # don't do "isdir()", worktrees have .git as a plain file
+    if os.path.exists(os.path.join(srcdir, ".git")):
+        return
+    skip("not supported for rpmbuild")
 
 
 class Capture(object):

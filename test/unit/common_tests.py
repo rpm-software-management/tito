@@ -20,14 +20,14 @@ import unittest
 from unittest.mock import patch, call
 from tempfile import NamedTemporaryFile
 from textwrap import dedent
-from unit import open_mock, Capture
+from unit import open_mock, Capture, titodir
 from blessed import Terminal
 
 # Pure unit tests for tito's common module
 from tito.common import (replace_version, find_spec_like_file, increase_version,
     search_for, compare_version, run_command_print, find_wrote_in_rpmbuild_output,
     render_cheetah, increase_zstream, reset_release, find_file_with_extension,
-    normalize_class_name, extract_sha1, DEFAULT_BUILD_DIR, munge_specfile,
+    normalize_class_name, extract_sha1, munge_specfile,
     munge_setup_macro, get_project_name,
     _out)
 
@@ -40,7 +40,7 @@ class CommonTests(unittest.TestCase):
     def setUp(self):
         # Start in a known location to prevent problems with tests that
         # end in a temp directory that is subsequently deleted.
-        os.chdir(DEFAULT_BUILD_DIR)
+        os.chdir(titodir)
 
     def test_normalize_class_name(self):
         """ Test old spacewalk.releng namespace is converted to tito. """
@@ -221,10 +221,11 @@ class CommonTests(unittest.TestCase):
         mock_user_conf.return_value = {}
         stream = StringIO()
         with patch("blessed.terminal.os.isatty") as isatty:
-            _out('Hello world', None, Terminal().red, stream)
-            isatty.return_value = True
-            # RHEL 6 doesn't have self.assertRegexpMatches unfortunately
-            self.assertTrue(re.match('.+Hello world.+\n', stream.getvalue()))
+            with patch.dict(os.environ, {"TERM": "xterm"}):
+                _out('Hello world', None, Terminal().red, stream)
+                isatty.return_value = True
+                # RHEL 6 doesn't have self.assertRegexpMatches unfortunately
+                self.assertTrue(re.match('.+Hello world.+\n', stream.getvalue()))
 
     def test_get_project_name(self):
         TAGS = [

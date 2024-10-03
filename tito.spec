@@ -15,6 +15,12 @@
 %endif
 %endif
 
+%if 0%{?rhel} == 7
+%bcond_with check
+%else
+%bcond_without check
+%endif
+
 Name: tito
 Version: 0.6.26
 Release: 1%{?dist}
@@ -53,15 +59,15 @@ BuildRequires: rpm-build
 BuildRequires: tar
 BuildRequires: which
 
-%if 0%{?fedora}
-# todo: add %%check to spec file in accordance with
-# https://fedoraproject.org/wiki/QA/Testing_in_check
+%if %{with check}
+BuildRequires: createrepo_c
 BuildRequires: git
-BuildRequires: python-bugzilla
-BuildRequires: python3-devel
-BuildRequires: python3-setuptools
+BuildRequires: rsync
+BuildRequires: python3-blessed
 BuildRequires: python3-bugzilla
-BuildRequires: rpm-python3
+BuildRequires: python3-pycodestyle
+BuildRequires: python3-pytest
+BuildRequires: python3-rpm
 %endif
 
 Requires: rpm-build
@@ -101,6 +107,14 @@ cp -a titorc.5 tito.props.5 releasers.conf.5 %{buildroot}/%{_mandir}/man5/
 cp -a tito.8 %{buildroot}/%{_mandir}/man8/
 # bash completion facilities
 install -Dp -m 0644 share/tito_completion.sh %{buildroot}%{_datadir}/bash-completion/completions/tito
+
+
+%if %{with check}
+%check
+git config --global user.email "you@example.com"
+git config --global user.name "Your Name"
+./runtests.sh --no-cov
+%endif
 
 
 %files

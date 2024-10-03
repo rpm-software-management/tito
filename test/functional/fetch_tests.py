@@ -26,7 +26,7 @@ from os.path import join
 from tito.common import run_command
 from tito.compat import *  # NOQA
 from functional.fixture import TitoGitTestFixture, tito
-from unit import Capture, is_epel6, is_rawhide
+from unit import Capture, is_epel6, is_rawhide, skip_if_rpmbuild
 
 if is_epel6:
     import unittest2 as unittest
@@ -83,6 +83,8 @@ class FetchBuilderTests(TitoGitTestFixture):
 
     def test_simple_build_no_tag(self):
         # We have not tagged here. Build --rpm should just work:
+        skip_if_rpmbuild()
+
         self.assertFalse(os.path.exists(
             join(self.pkg_dir, '.tito/packages/extsrc')))
 
