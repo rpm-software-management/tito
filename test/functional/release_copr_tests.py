@@ -15,12 +15,12 @@
 Functional Tests for the CoprReleaser.
 """
 
+from unittest import mock
+
 from functional.fixture import TitoGitTestFixture
 
-from unittest import mock
 from tito.compat import *  # NOQA
 from tito.release import CoprReleaser
-from unit import Capture
 
 PKG_NAME = "releaseme"
 
