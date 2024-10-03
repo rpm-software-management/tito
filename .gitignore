@@ -14,6 +14,7 @@ dist
 build
 .build
 .coverage
+.test-titodir
 titorc.5
 titorc.5.xml
 tito.8

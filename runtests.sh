@@ -7,4 +7,4 @@ case $arg in
 *) args+=( "$arg" )
 esac
 done
-exec python3 -m pytest -vv $cov "${args[@]}"
+PYTHONPATH=$PWD/src exec python3 -m pytest -vv $cov "${args[@]}"

@@ -2,7 +2,7 @@ import unittest
 from unittest import mock
 from tito.compat import PY2, RawConfigParser
 from tito.release import Releaser
-from unit import builtins_input
+from unit import builtins_input, titodir, skip_if_rpmbuild
 
 
 class ReleaserTests(unittest.TestCase):
@@ -10,6 +10,7 @@ class ReleaserTests(unittest.TestCase):
     @mock.patch("tito.release.main.create_builder")
     @mock.patch("tito.release.main.mkdtemp")
     def setUp(self, mkdtemp, create_builder):
+        skip_if_rpmbuild()
         self.config = RawConfigParser()
 
         self.releaser_config = RawConfigParser()
@@ -17,7 +18,7 @@ class ReleaserTests(unittest.TestCase):
         self.releaser_config.set('test', "releaser",
             "tito.release.Releaser")
 
-        self.releaser = Releaser("titotestpkg", None, "/tmp/tito/",
+        self.releaser = Releaser("titotestpkg", None, titodir,
             self.config, {}, "test", self.releaser_config, False,
             False, False, **{"offline": True})
 

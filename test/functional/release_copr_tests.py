@@ -19,6 +19,8 @@ from unittest import mock
 
 from functional.fixture import TitoGitTestFixture
 
+from unit import titodir
+
 from tito.compat import *  # NOQA
 from tito.release import CoprReleaser
 
@@ -58,7 +60,7 @@ class CoprReleaserTests(TitoGitTestFixture):
             'http://example.com/~someuser/my_srpm/')
 
     def test_with_releaser(self):
-        releaser = CoprReleaser(PKG_NAME, None, '/tmp/tito/',
+        releaser = CoprReleaser(PKG_NAME, None, titodir,
             self.config, {}, 'test', self.releaser_config, False,
             False, False, **{'offline': True})
         releaser.release(dry_run=True)
@@ -67,7 +69,7 @@ class CoprReleaserTests(TitoGitTestFixture):
     def test_with_remote_defined_in_user_conf(self):
         self.releaser_config.remove_option("test", "remote_location")
         user_config = {'COPR_REMOTE_LOCATION': 'http://example.com/~otheruser/'}
-        releaser = CoprReleaser(PKG_NAME, None, '/tmp/tito/',
+        releaser = CoprReleaser(PKG_NAME, None, titodir,
             self.config, user_config, 'test', self.releaser_config, False,
             False, False, **{'offline': True})
         releaser.release(dry_run=True)
@@ -77,7 +79,7 @@ class CoprReleaserTests(TitoGitTestFixture):
     @mock.patch("tito.release.CoprReleaser._upload")
     def test_no_remote_defined(self, upload, submit):
         self.releaser_config.remove_option("test", "remote_location")
-        releaser = CoprReleaser(PKG_NAME, None, '/tmp/tito/',
+        releaser = CoprReleaser(PKG_NAME, None, titodir,
             self.config, {}, 'test', self.releaser_config, False,
             False, False, **{'offline': True})
         releaser.release(dry_run=True)
@@ -90,7 +92,7 @@ class CoprReleaserTests(TitoGitTestFixture):
         self.releaser_config.remove_option("test", "remote_location")
         self.releaser_config.set('test', 'project_name', "%s %s" % (PKG_NAME,
             PKG_NAME))
-        releaser = CoprReleaser(PKG_NAME, None, '/tmp/tito/',
+        releaser = CoprReleaser(PKG_NAME, None, titodir,
             self.config, {}, 'test', self.releaser_config, False,
             False, False, **{'offline': True})
         releaser.release()
