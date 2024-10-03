@@ -94,19 +94,19 @@ class SingleProjectTests(TitoGitTestFixture):
 
     def test_undo_tag(self):
         os.chdir(self.repo_dir)
-        original_head = getoutput('git show-ref -s refs/heads/master')
+        original_head = getoutput('git show-ref -s refs/heads/main')
 
         # Create tito tag, which adds a new commit and moves head.
         tito("tag --accept-auto-changelog --debug")
         tag = "%s-0.0.2-1" % PKG_NAME
         check_tag_exists(tag, offline=True)
-        new_head = getoutput('git show-ref -s refs/heads/master')
+        new_head = getoutput('git show-ref -s refs/heads/main')
         self.assertNotEqual(original_head, new_head)
 
         # Undo tito tag, which rewinds one commit to original head.
         tito("tag -u")
         self.assertFalse(tag_exists_locally(tag))
-        new_head = getoutput('git show-ref -s refs/heads/master')
+        new_head = getoutput('git show-ref -s refs/heads/main')
         self.assertEqual(original_head, new_head)
 
     def test_tag_with_custom_message(self):
