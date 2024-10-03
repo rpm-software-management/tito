@@ -4,7 +4,6 @@
 *$py.class
 *.swp
 *.swo
-.noseids
 *.patch
 *#
 *~
@@ -14,6 +13,7 @@ MANIFEST
 dist
 build
 .build
+.coverage
 titorc.5
 titorc.5.xml
 tito.8
