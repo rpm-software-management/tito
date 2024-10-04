@@ -12,6 +12,7 @@
 # in this software or its documentation.
 
 # flake8: noqa
+# pylint: disable=unused-import,deprecated-module,function-redefined
 
 """
 Compatibility library for Python 2.4 up through Python 3.
@@ -19,6 +20,12 @@ Compatibility library for Python 2.4 up through Python 3.
 import os
 import sys
 import contextlib
+
+try:
+    from packaging.version import Version
+except ImportError:
+    from distutils.version import LooseVersion as Version
+
 ENCODING = sys.getdefaultencoding()
 PY2 = sys.version_info[0] == 2
 if PY2:

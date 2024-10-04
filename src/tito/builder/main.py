@@ -22,7 +22,6 @@ import re
 import shutil
 import rpm
 from pkg_resources import require
-from distutils.version import LooseVersion as loose_version
 from tempfile import mkdtemp
 
 from tito.common import scl_to_rpm_option, get_latest_tagged_version, \
@@ -34,7 +33,8 @@ from tito.common import scl_to_rpm_option, get_latest_tagged_version, \
     find_cheetah_template_file, render_cheetah, replace_spec_release, \
     find_spec_like_file, warn_out, get_commit_timestamp, chdir, mkdir_p, \
     find_git_root, info_out, munge_specfile, BUILDCONFIG_SECTION
-from tito.compat import getstatusoutput, getoutput, urlparse, urlretrieve
+from tito.compat import (getstatusoutput, getoutput, urlparse, urlretrieve,
+                         Version)
 from tito.exception import RunCommandException
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
@@ -406,8 +406,8 @@ class Builder(ConfigObject, BuilderBase):
 
         if self.config.has_section("requirements"):
             if self.config.has_option("requirements", "tito"):
-                if loose_version(self.config.get("requirements", "tito")) > \
-                        loose_version(require('tito')[0].version):
+                if Version(self.config.get("requirements", "tito")) > \
+                        Version(require('tito')[0].version):
                     error_out([
                         "tito version %s or later is needed to build this project." %
                         self.config.get("requirements", "tito"),
