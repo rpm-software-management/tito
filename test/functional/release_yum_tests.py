@@ -19,19 +19,19 @@ import glob
 import os
 import shutil
 import tempfile
+import sys
 
 from os.path import join
 
 from functional.fixture import TitoGitTestFixture, tito
 
-from tito.compat import *  # NOQA
+from tito.compat import RawConfigParser
 from tito.common import run_command
 
 
 # There is not many simple options to check on what distribution this is running.
 # Fortunately, we only need to check for Fedora Rawhide and EPEL6, so we can
 # determine it from python version. This is compatible for all distributions.
-import sys
 is_rawhide = sys.version_info[:2] >= (3, 8)
 is_epel6 = sys.version_info[:2] == (2, 6)
 

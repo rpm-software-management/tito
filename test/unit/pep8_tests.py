@@ -21,6 +21,9 @@ Python 3 is picky about indentation:
 http://docs.python.org/3.3/reference/lexical_analysis.html
 """
 
+import os
+import unittest
+
 try:
     # python-pep8 package is retired in Fedora because upstream
     # moved to pycodestyle. Please see
@@ -29,13 +32,10 @@ try:
 except ImportError:
     import pycodestyle as pep8
 
-
-import unittest
-
 from unit.fixture import TitoUnitTestFixture, REPO_DIR
 from unit import skip_if_tox
 
-from tito.compat import *  # NOQA
+from tito.compat import getoutput
 from tito.compat import StringIO, redirect_stdout
 
 
