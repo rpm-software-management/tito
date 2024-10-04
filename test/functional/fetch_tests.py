@@ -23,10 +23,11 @@ import tempfile
 
 from os.path import join
 
-from tito.common import run_command
-from tito.compat import *  # NOQA
 from functional.fixture import TitoGitTestFixture, tito
 from unit import Capture, is_epel6, is_rawhide, skip_if_rpmbuild
+
+from tito.common import run_command
+from tito.compat import RawConfigParser
 
 if is_epel6:
     import unittest2 as unittest

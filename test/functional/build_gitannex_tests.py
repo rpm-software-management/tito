@@ -25,7 +25,7 @@ from pytest import skip
 
 from functional.fixture import TitoGitTestFixture, tito
 
-from tito.compat import *  # NOQA
+from tito.compat import (getstatusoutput, RawConfigParser)
 from tito.common import run_command
 from tito.builder import GitAnnexBuilder
 

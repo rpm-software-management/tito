@@ -21,7 +21,7 @@ from functional.fixture import TitoGitTestFixture
 
 from unit import titodir
 
-from tito.compat import *  # NOQA
+from tito.compat import RawConfigParser
 from tito.release import CoprReleaser
 
 PKG_NAME = "releaseme"
