@@ -12,13 +12,28 @@ jobs:
   tox_test:
     name: Tox test
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Run Tox tests
         id: test
         uses: fedora-python/tox-github-action@main
         with:
           tox_env: ${{ matrix.tox_env }}
-          dnf_install: python3-rpm
+          dnf_install: >
+            asciidoc
+            createrepo_c
+            docbook-style-xsl
+            git
+            git
+            git-annex
+            libxslt
+            python3-bugzilla
+            python3-rpm
+            rpm-build
+            rpmdevtools
+            rsync
+            which
     strategy:
       matrix:
         tox_env:

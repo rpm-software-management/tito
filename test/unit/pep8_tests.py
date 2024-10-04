@@ -32,9 +32,11 @@ except ImportError:
 
 import unittest
 
+from unit.fixture import TitoUnitTestFixture, REPO_DIR
+from unit import skip_if_tox
+
 from tito.compat import *  # NOQA
 from tito.compat import StringIO, redirect_stdout
-from unit.fixture import TitoUnitTestFixture, REPO_DIR
 
 
 class TestPep8(TitoUnitTestFixture):
@@ -94,6 +96,8 @@ class TestPep8(TitoUnitTestFixture):
 
 class UglyHackishTest(TitoUnitTestFixture):
     def setUp(self):
+        # These tests give false-positives for .tox/ directory
+        skip_if_tox()
         TitoUnitTestFixture.setUp(self)
         os.chdir(REPO_DIR)
 
