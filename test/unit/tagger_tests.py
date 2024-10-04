@@ -1,10 +1,11 @@
+import os
 import unittest
-import mock
+from unittest import mock
 from datetime import datetime
 from tito.tagger import VersionTagger
 from tito.compat import PY2, RawConfigParser
 
-from unit import is_epel6
+from unit import is_epel6, skip_if_rpmbuild, srcdir
 if is_epel6:
     import unittest2 as unittest
 else:
@@ -21,6 +22,8 @@ def strftime_mock(s):
 
 class TestVersionTagger(unittest.TestCase):
     def setUp(self):
+        skip_if_rpmbuild()
+        os.chdir(srcdir)
         self.config = RawConfigParser()
 
     @mock.patch("tito.tagger.main.strftime", strftime_mock)

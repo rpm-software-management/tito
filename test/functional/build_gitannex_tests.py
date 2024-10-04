@@ -20,12 +20,12 @@ import glob
 import tempfile
 import sys
 import shutil
-from nose.plugins.skip import SkipTest
 from os.path import join
+from pytest import skip
 
 from functional.fixture import TitoGitTestFixture, tito
 
-from tito.compat import *  # NOQA
+from tito.compat import (getstatusoutput, RawConfigParser)
 from tito.common import run_command
 from tito.builder import GitAnnexBuilder
 
@@ -41,12 +41,9 @@ class GitAnnexBuilderTests(TitoGitTestFixture):
         # Guess based on python version.
         # Do not use anything based on uname in case we are in container.
         # Do not use `lsb_release` to avoid dependencies.
-        if sys.version[0:3] == '2.4':
-            raise SkipTest('git-annex is not available in epel-5')
-
         status, ga_version = getstatusoutput('rpm -q git-annex')
         if status != 0:
-            raise SkipTest("git-annex is missing")
+            skip("git-annex is missing")
 
         # Setup test config:
         self.config = RawConfigParser()
@@ -82,12 +79,12 @@ class GitAnnexBuilderTests(TitoGitTestFixture):
         builder = GitAnnexBuilder(PKG_NAME, None, self.output_dir,
             self.config, {}, {}, **{'offline': True})
         builder.rpm()
-        self.assertEquals(1, len(list(builder.sources)))
+        self.assertEqual(1, len(list(builder.sources)))
 
-        self.assertEquals(2, len(builder.artifacts))
-        self.assertEquals(1, len(glob.glob(join(self.output_dir,
+        self.assertEqual(2, len(builder.artifacts))
+        self.assertEqual(1, len(glob.glob(join(self.output_dir,
             "extsrc-0.0.2-1.*src.rpm"))))
-        self.assertEquals(1, len(glob.glob(join(self.output_dir, 'noarch',
+        self.assertEqual(1, len(glob.glob(join(self.output_dir, 'noarch',
             "extsrc-0.0.2-1.*.noarch.rpm"))))
         builder.cleanup()
 

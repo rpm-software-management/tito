@@ -29,10 +29,6 @@ from tito.common import find_git_root, error_out, debug, get_class_by_name, \
 from tito.compat import RawConfigParser, getstatusoutput, getoutput
 from tito.exception import TitoException
 
-# Hack for Python 2.4, seems to require we import these so they get compiled
-# before we try to dynamically import them based on a string name.
-import tito.tagger  # NOQA
-
 PROGNAME = "tito"
 TITO_PROPS = "tito.props"
 RELEASERS_CONF_FILENAME = "releasers.conf"

@@ -19,7 +19,7 @@ from tito.release import Releaser
 from tito.compat import getoutput
 from functional.fixture import TitoGitTestFixture, tito
 from tito.compat import RawConfigParser
-from unit import Capture
+from unit import Capture, titodir, skip_if_rpmbuild
 
 PKG_NAME = "titotestpkg"
 
@@ -93,20 +93,22 @@ class SingleProjectTests(TitoGitTestFixture):
         self.assertTrue('- Fake' in changelog)
 
     def test_undo_tag(self):
+        skip_if_rpmbuild()
+
         os.chdir(self.repo_dir)
-        original_head = getoutput('git show-ref -s refs/heads/master')
+        original_head = getoutput('git show-ref -s refs/heads/main')
 
         # Create tito tag, which adds a new commit and moves head.
         tito("tag --accept-auto-changelog --debug")
         tag = "%s-0.0.2-1" % PKG_NAME
         check_tag_exists(tag, offline=True)
-        new_head = getoutput('git show-ref -s refs/heads/master')
+        new_head = getoutput('git show-ref -s refs/heads/main')
         self.assertNotEqual(original_head, new_head)
 
         # Undo tito tag, which rewinds one commit to original head.
         tito("tag -u")
         self.assertFalse(tag_exists_locally(tag))
-        new_head = getoutput('git show-ref -s refs/heads/master')
+        new_head = getoutput('git show-ref -s refs/heads/main')
         self.assertEqual(original_head, new_head)
 
     def test_tag_with_custom_message(self):
@@ -162,7 +164,7 @@ class SingleProjectTests(TitoGitTestFixture):
             self.repo_dir))
 
     def test_release(self):
-        releaser = Releaser(PKG_NAME, None, '/tmp/tito/',
+        releaser = Releaser(PKG_NAME, None, titodir,
             self.config, {}, 'test', self.releaser_config, False,
             False, False, **{'offline': True})
         self.assertTrue(isinstance(releaser.builder, Builder))
@@ -171,7 +173,7 @@ class SingleProjectTests(TitoGitTestFixture):
     def test_release_override_builder(self):
         self.releaser_config.set('test', 'builder',
             'tito.builder.UpstreamBuilder')
-        releaser = Releaser(PKG_NAME, None, '/tmp/tito/',
+        releaser = Releaser(PKG_NAME, None, titodir,
             self.config, {}, 'test', self.releaser_config, False,
             False, False, **{'offline': True})
         self.assertTrue(isinstance(releaser.builder,

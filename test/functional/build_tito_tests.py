@@ -25,16 +25,20 @@ from functional.fixture import tito
 from glob import glob
 from os.path import join
 
+from unit import skip_if_rpmbuild
+
 
 class BuildTitoTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
         'Run tito build before _all_ tests in this class.'
+        skip_if_rpmbuild()
+
         self.output_dir = tempfile.mkdtemp("-titotestoutput")
         os.chdir(os.path.abspath(join(__file__, '..', '..', '..')))
         self.artifacts = tito(
-            'build --rpm --test --output=%s --offline --no-cleanup --debug' %
+            'build --rpm --rpmbuild-options=--without=check --output=%s --offline --no-cleanup --debug' %
             self.output_dir
         )
 

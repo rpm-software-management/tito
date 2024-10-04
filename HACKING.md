@@ -86,8 +86,8 @@ an authoring environment, too.
 
 To run all tests, install these packages:
 
-* python-nose,  python-pep8,  python-mock (for epl-6 and fedora) and rpm-python
-* python3-nose, python3-pep8,  python3-mock (for epl-6 and fedora) , and rpm-python3
+* pytest, python-pep8,  python-mock (for epl-6 and fedora) and rpm-python
+* pytest, python3-pep8,  python3-mock (for epl-6 and fedora) , and rpm-python3
 * createrepo_c
 * git-annex
 
@@ -98,8 +98,7 @@ for python 2.4 - 2.7 (in case you don't have pip, install via yum python-pip pac
 
 Then from the root of the project:
 
-    python  ./runtests.py -vv
-    python3 ./runtests.py -vv
+    ./runtests.sh
 
 
 ### Advanced
