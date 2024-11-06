@@ -152,12 +152,12 @@ class SubmoduleAwareBuilder(Builder):
         timestamp = get_commit_timestamp(commit)
 
         # Accommodate standalone projects with specfile in root of git repo:
-        relative_git_dir = "%s" % relative_dir
+        relative_git_dir = str(relative_dir)
         if relative_git_dir in ["/", "./"]:
             relative_git_dir = ""
 
         basename = os.path.splitext(dest_tgz)[0]
-        initial_tar = "%s.initial" % basename
+        initial_tar = "{0}.initial".format(basename)
 
         # We need to tar up the following:
         # 1. the current repo
@@ -166,11 +166,11 @@ class SubmoduleAwareBuilder(Builder):
         # 2. all of the submodules
         # then combine those into a single archive.
         for submodule_tar_file in self._submodule_archives(
-            relative_git_dir, prefix, commit, initial_tar
+            relative_git_dir, prefix, initial_tar
         ):
-            run_command("tar -Af %s %s" % (initial_tar, submodule_tar_file))
+            run_command("tar -Af {0} {1}".format(initial_tar, submodule_tar_file))
 
-        fixed_tar = "%s.tar" % basename
+        fixed_tar = "{0}.tar".format(basename)
         fixed_tar_fh = open(fixed_tar, "wb")
         try:
             tarfixer = TarFixer(
@@ -181,4 +181,4 @@ class SubmoduleAwareBuilder(Builder):
             fixed_tar_fh.close()
 
         # It's a pity we can't use Python's gzip, but it doesn't offer an equivalent of -n
-        return run_command("gzip -n -c < %s > %s" % (fixed_tar, dest_tgz))
+        return run_command("gzip -n -c < {0} > {1}".format(fixed_tar, dest_tgz))
