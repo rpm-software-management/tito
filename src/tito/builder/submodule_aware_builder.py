@@ -27,7 +27,6 @@ from tito.common import (
     find_spec_like_file,
     get_commit_timestamp,
 )
-from tito.exception import TitoException
 from tito.tar import TarFixer
 
 
@@ -109,54 +108,31 @@ class SubmoduleAwareBuilder(Builder):
                 "%s > /dev/null" % git_archive_cmd,
             )
 
-    # pylint: disable=too-many-locals, too-many-arguments, consider-using-f-string
-    def _submodule_archives(self, relative_git_dir, prefix, commit, initial_tar,
-                            submodule_tree="."):
-        with chdir(submodule_tree):
-            submodules_cmd = "git config --file .gitmodules --get-regexp path"
-            submodules_output = run_command(submodules_cmd)
+    def _submodule_archives(self, relative_git_dir, prefix, initial_tar, source_tree="."):
+        with chdir(source_tree):
+            # Let git handle edge cases for .gitmodules (eg: empty files etc)
+            submodules_status_cmd = "git submodule status --recursive"
+            submodules_status_output = run_command(submodules_status_cmd)
 
-        # split submodules output on newline
-        # then on tab, and the directory is the last entry
-        submodules_list = [
-            line.split(" ")[-1] for line in submodules_output.split("\n")
-        ]
+        for line in submodules_status_output.strip().split("\n"):
+            row = line.split()
+            submodule_commit, submodule_relative_dir = row[0], row[1]
 
-        # We ignore the hash in the sub modules list as we'll have to get the correct one
-        # from the commit id in commit
-        for submodule in submodules_list:
-            with chdir(submodule_tree):
-                submodule_git_dir = os.path.join(submodule, ".git")
-                if not os.path.exists(submodule_git_dir):
-                    raise TitoException("%r path does not contain '.git'. "
-                                        "Have you cloned the repository recursively?\n"
-                                        "Try `git submodule update --init --recursive`!" %
-                                        os.path.abspath(submodule))
-                # to find the submodule shars:
-                # git rev-parse <commit>:./<submodule>
-                rev_parse_cmd = "git rev-parse %s:./%s" % (commit, submodule)
-                submodule_commit = run_command(rev_parse_cmd)
-                submodule_tar_file = "%s.%s" % (initial_tar, submodule.replace("/", "_"))
-                # prefix should be <prefix>/<submodule>
-                submodule_prefix = "%s/%s" % (prefix, submodule)
+            submodule_tar_file_suffix = submodule_relative_dir.replace("/", "_")
+            submodule_tar_file = "{0}.{1}".format(initial_tar, submodule_tar_file_suffix)
 
-                self.run_git_archive(
-                    relative_git_dir,
-                    submodule_prefix,
-                    submodule_commit,
-                    submodule_tar_file,
-                    submodule,
-                )
-            yield (submodule_tar_file)
+            # prefix should be <prefix>/<submodule>
+            submodule_prefix = "{0}/{1}".format(prefix, submodule_relative_dir)
 
-            submodule_dir = os.path.join(submodule_tree, submodule)
-            gitmodules_path = os.path.join(submodule_dir, ".gitmodules")
-            if os.path.exists(gitmodules_path):
-                for archive in self._submodule_archives(
-                        relative_git_dir, submodule_prefix, submodule_commit,
-                        submodule_tar_file, submodule_dir
-                ):
-                    yield archive
+            self.run_git_archive(
+                relative_git_dir,
+                submodule_prefix,
+                submodule_commit,
+                submodule_tar_file,
+                submodule_relative_dir,
+            )
+
+            yield submodule_tar_file
 
     def create_tgz(self, git_root, prefix, commit, relative_dir, dest_tgz):
         """
