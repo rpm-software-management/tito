@@ -26,7 +26,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="tito",
-    version='0.6.26',
+    version='0.6.27',
     description='A tool for managing rpm based git projects.',
     long_description=long_description,
     long_description_content_type="text/markdown",

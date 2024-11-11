@@ -22,7 +22,7 @@
 %endif
 
 Name: tito
-Version: 0.6.26
+Version: 0.6.27
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -133,6 +133,11 @@ git config --global user.name "Your Name"
 
 
 %changelog
+* Mon Nov 11 2024 Jakub Kadlčík <frostyx@email.cz>
+- Defer submodule detection to git
+- Many improvements to tests and they now run during package build
+- New config option `buildconfig.test_version_suffix`
+
 * Tue Mar 05 2024 Jakub Kadlcik <frostyx@email.cz> 0.6.26-1
 - Fix issue with missing version numbers in the changelog (frostyx@email.cz)
 - Tito wrapper for easier development (praiskup@redhat.com)
