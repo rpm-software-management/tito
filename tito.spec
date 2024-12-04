@@ -61,7 +61,7 @@ BuildRequires: which
 
 %if %{with check}
 BuildRequires: createrepo_c
-BuildRequires: git
+BuildRequires: git-core
 BuildRequires: rsync
 BuildRequires: python3-blessed
 BuildRequires: python3-bugzilla
