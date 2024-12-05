@@ -434,6 +434,10 @@ class Builder(ConfigObject, BuilderBase):
         self.tgz_dir = tgz_base
         self.artifacts = []
 
+        # Details of how to make the tar repo
+        self.tgz_method = self.config.get('archiver', 'method', fallback='git')
+        self.tgz_include_git = self.config.getboolean('archiver', 'include_git', fallback=False)
+
         # A copy of the git code from commit we're building:
         self.rpmbuild_gitcopy = os.path.join(self.rpmbuild_sourcedir,
                 self.tgz_dir)
@@ -613,7 +617,8 @@ class Builder(ConfigObject, BuilderBase):
             self.git_commit_id))
         create_tgz(self.git_root, self.tgz_dir, self.git_commit_id,
                 self.relative_project_dir,
-                os.path.join(self.rpmbuild_sourcedir, self.tgz_filename))
+                os.path.join(self.rpmbuild_sourcedir, self.tgz_filename),
+                self.tgz_method, self.tgz_include_git)
 
         # Extract the source so we can get at the spec file, etc.
         debug("Copying git source to: %s" % self.rpmbuild_gitcopy)
@@ -755,7 +760,8 @@ class GemBuilder(NoTgzBuilder):
             self.git_commit_id))
         create_tgz(self.git_root, self.tgz_dir, self.git_commit_id,
                 self.relative_project_dir,
-                os.path.join(self.rpmbuild_sourcedir, self.tgz_filename))
+                os.path.join(self.rpmbuild_sourcedir, self.tgz_filename),
+                self.tgz_method, self.tgz_include_git)
 
         # Extract the source so we can get at the spec file, etc.
         debug("Copying git source to: %s" % self.rpmbuild_gitcopy)
@@ -853,7 +859,8 @@ class UpstreamBuilder(NoTgzBuilder):
         tgz_fullpath = os.path.join(self.rpmbuild_sourcedir, tgz_filename)
         print("Creating %s from git tag: %s..." % (tgz_filename, commit))
         create_tgz(self.git_root, prefix, commit, relative_dir,
-                tgz_fullpath)
+                tgz_fullpath,
+                self.tgz_method, self.tgz_include_git)
         self.ran_tgz = True
         self.sources.append(tgz_fullpath)
 
@@ -1086,7 +1093,8 @@ class MeadBuilder(Builder):
                 "No Maven generated tarball found.",
                 "Please set up the assembly plugin in your pom.xml to generate a .tar.gz"])
             full_path = os.path.join(self.rpmbuild_sourcedir, self.tgz_filename)
-            create_tgz(self.git_root, self.tgz_dir, self.git_commit_id, self.relative_project_dir, full_path)
+            create_tgz(self.git_root, self.tgz_dir, self.git_commit_id, self.relative_project_dir, full_path,
+                self.tgz_method, self.tgz_include_git)
             print("Creating %s from git tag: %s..." % (self.tgz_filename, self.build_tag))
             shutil.copy(full_path, destination_file)
 
