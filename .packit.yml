@@ -19,10 +19,10 @@ jobs:
         - fedora-all
         - epel-7-x86_64
         - epel-8-x86_64
-        - epel-9-x86_64
-      owner: "@rpm-software-management"
-      project: "tito"
-      branch: main
 
   - <<: *copr
     trigger: commit
+    metadata:
+      owner: "@rpm-software-management"
+      project: "tito"
+      branch: main
