@@ -39,7 +39,7 @@ jobs:
         tox_env:
           # sync with /tox.ini
           - py36
-          - py37
+          - py39
           - py311
           - py312
           - py313
