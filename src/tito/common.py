@@ -399,7 +399,7 @@ def render_cheetah(template_file, destination_directory, cheetah_input):
 
 
 def tag_exists_locally(tag):
-    (status, output) = getstatusoutput("git tag | grep %s" % tag)
+    (status, output) = getstatusoutput("git tag | grep %s" % tag.replace("~", "@"))
     if status > 0:
         return False
     else:
@@ -423,7 +423,7 @@ def tag_exists_remotely(tag):
 def get_local_tag_sha1(tag):
     tag_sha1 = run_command(
         "git ls-remote ./. --tag %s | awk '{ print $1 ; exit }'"
-        % tag)
+        % tag.replace("~", "@"))
     tag_sha1 = extract_sha1(tag_sha1)
     return tag_sha1
 
@@ -438,7 +438,7 @@ def head_points_to_tag(tag):
     """
     debug("Checking that HEAD commit is %s" % tag)
     head_sha1 = run_command("git rev-list --max-count=1 HEAD")
-    tag_sha1 = run_command("git rev-list --max-count=1 %s" % tag)
+    tag_sha1 = run_command("git rev-list --max-count=1 %s" % tag.replace("~", "@"))
     debug("   head_sha1 = %s" % head_sha1)
     debug("   tag_sha1 = %s" % tag_sha1)
     return head_sha1 == tag_sha1
@@ -455,7 +455,7 @@ def undo_tag(tag):
 
     # Using --merge here as it appears to undo the changes in the commit,
     # but preserve any modified files:
-    output = run_command("git tag -d %s && git reset --merge HEAD^1" % tag)
+    output = run_command("git tag -d %s && git reset --merge HEAD^1" % tag.replace("~", "@"))
     print(output)
 
 
@@ -483,7 +483,7 @@ def get_remote_tag_sha1(tag):
     repo_url = get_git_repo_url()
     print("Checking for tag [%s] in git repo [%s]" % (tag, repo_url))
     cmd = "git ls-remote %s --tag %s | awk '{ print $1 ; exit }'" % \
-            (repo_url, tag)
+            (repo_url, tag.replace("~", "@"))
     upstream_tag_sha1 = run_command(cmd)
     upstream_tag_sha1 = extract_sha1(upstream_tag_sha1)
     return upstream_tag_sha1
@@ -795,7 +795,7 @@ def get_build_commit(tag, test=False):
     else:
         tag_sha1 = run_command(
             "git ls-remote ./. --tag %s | awk '{ print $1 ; exit }'"
-            % tag)
+            % tag.replace("~", "@"))
         tag_sha1 = extract_sha1(tag_sha1)
         commit_id = run_command('git rev-list --max-count=1 %s' % tag_sha1)
         return commit_id
@@ -807,7 +807,7 @@ def get_commit_count(tag, commit_id):
     # just the tag.
     #
     # so we need to pass in the tag as well.
-    # output = run_command("git describe --match=%s %s" % (tag, commit_id))
+    # output = run_command("git describe --match=%s %s" % (tag.replace("~", "@"), commit_id))
     # if tag == output:
     #     return 0
     # else:

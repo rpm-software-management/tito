@@ -490,7 +490,7 @@ class VersionTagger(ConfigObject):
         run_command('git commit -m {0} -m {1} -m {2}'.format(
             quote(msg), quote("Created by command:"), quote(" ".join(sys.argv[:]))))
 
-        new_tag = self._get_new_tag(new_version)
+        new_tag = self._get_new_tag(new_version).replace('~', '@')
         tag_msg = "Tagging package [%s] version [%s] in directory [%s]." % \
                 (self.project_name, new_tag,
                         self.relative_project_dir)
