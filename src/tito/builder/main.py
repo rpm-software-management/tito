@@ -492,6 +492,14 @@ class Builder(ConfigObject, BuilderBase):
             check_tag_exists(self.build_tag, offline=self.offline)
         return build_version
 
+    def get_raw_version_release(self):
+        """
+        Parse the spec file in git, and report version-release
+        """
+        return get_spec_version_and_release(
+                self.start_dir,
+                find_spec_like_file(self.start_dir))
+
     def _get_tag_for_version(self, version_and_release):
         """
         Determine what the tag will look like for a given version.
