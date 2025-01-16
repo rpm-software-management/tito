@@ -859,25 +859,35 @@ def get_commit_timestamp(sha1_or_tag):
 
 
 def create_tgz(git_root, prefix, commit, relative_dir,
-    dest_tgz):
+    dest_tgz, method='git', add_git_folder=False):
     """
     Create a .tar.gz from a projects source in git.
     """
     os.chdir(os.path.abspath(git_root))
     timestamp = get_commit_timestamp(commit)
 
-    # Accomodate standalone projects with specfile i root of git repo:
+    # Accommodate standalone projects with specfile in root of git repo:
     relative_git_dir = "%s" % relative_dir
-    if relative_git_dir in ['/', './']:
-        relative_git_dir = ""
+    if relative_git_dir in ['/', '']:
+        relative_git_dir = "./"
 
     basename = os.path.splitext(dest_tgz)[0]
     initial_tar = "%s.initial" % basename
 
     # command to generate a git-archive
-    git_archive_cmd = 'git archive --format=tar --prefix=%s/ %s:%s --output=%s' % (
-        prefix, commit, relative_git_dir, initial_tar)
-    run_command(git_archive_cmd)
+    if method == 'git':
+        git_archive_cmd = 'git archive --format=tar --prefix=%s/ %s:%s --output=%s' % (
+            prefix, commit, relative_git_dir, initial_tar)
+        run_command(git_archive_cmd)
+        if add_git_folder:
+            tar_append_cmd = f"tar --append -f {initial_tar}  --transform 's|^{relative_git_dir}|{prefix}/|' {relative_git_dir}/.git"
+            run_command(tar_append_cmd)
+    elif method == 'tar':
+        # Assuming no folder paths contain '|' so we don't need to create escaped versions
+        git_archive_cmd = f"tar --create -f {initial_tar} --transform 's|^{relative_git_dir}|{prefix}/|' {relative_git_dir}"
+        run_command(git_archive_cmd)
+    else:
+        raise Exception(f"Unknown tar create method passed: {method}")
 
     # Run git-archive separately if --debug was specified.
     # This allows us to detect failure early.
