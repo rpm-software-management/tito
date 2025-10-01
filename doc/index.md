@@ -49,7 +49,7 @@ From Fedora:
 
 From CentOS / RHEL:
 
-    # Enable EPEL https://fedoraproject.org/wiki/EPEL#How_can_I_use_these_extra_packages.3F
+    # Enable EPEL https://docs.fedoraproject.org/en-US/epel/getting-started
     yum install tito
 
 From [PyPI](https://pypi.org/project/tito/):
