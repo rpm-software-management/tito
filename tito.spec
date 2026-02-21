@@ -40,7 +40,9 @@ BuildRequires: python3-devel
 BuildRequires: python3-setuptools
 Requires: python3-setuptools
 Requires: python3-bugzilla
+%if 0%{?fedora} || (1%{?rhel} > 10 && 1%{?rhel} < 110)
 Requires: python3-blessed
+%endif
 Requires: rpm-python3
 Recommends: python3-fedora-distro-aliases
 %else
@@ -63,7 +65,9 @@ BuildRequires: which
 BuildRequires: createrepo_c
 BuildRequires: git-core
 BuildRequires: rsync
+%if 0%{?fedora} || (1%{?rhel} > 10 && 1%{?rhel} < 110)
 BuildRequires: python3-blessed
+%endif
 BuildRequires: python3-bugzilla
 BuildRequires: python3-pycodestyle
 BuildRequires: python3-pytest
