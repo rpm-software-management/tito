@@ -28,7 +28,14 @@ import shlex
 import shutil
 import tempfile
 
-from blessed import Terminal
+try:
+    from blessed import Terminal
+except ImportError:
+    class Terminal(object):
+        def __getattr__(self, name):
+            def wrapper(text, *args, **kwargs):
+                return text
+            return wrapper
 
 from tito.compat import getstatusoutput
 from tito.exception import RunCommandException
