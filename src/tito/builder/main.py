@@ -23,14 +23,6 @@ import shutil
 from tempfile import mkdtemp
 import rpm
 
-try:
-    from importlib.metadata import version as metadata_version
-    PYTHON_SETUPTOOLS_82 = True
-except ImportError:
-    # A fallback for EPEL8
-    from pkg_resources import require
-    PYTHON_SETUPTOOLS_82 = False
-
 from tito.common import scl_to_rpm_option, get_latest_tagged_version, \
     find_wrote_in_rpmbuild_output, debug, error_out, run_command_print, \
     find_spec_file, run_command, get_build_commit, get_relative_project_dir, \
@@ -46,6 +38,7 @@ from tito.exception import RunCommandException
 from tito.exception import TitoException
 from tito.config_object import ConfigObject
 from tito.tar import TarFixer
+from tito import __version__
 
 
 class BuilderBase(object):
@@ -413,7 +406,7 @@ class Builder(ConfigObject, BuilderBase):
 
         if self.config.has_section("requirements"):
             if self.config.has_option("requirements", "tito"):
-                installed_version = tito_version()
+                installed_version = Version(__version__)
                 if Version(self.config.get("requirements", "tito")) > installed_version:
                     error_out([
                         "tito version %s or later is needed to build this project." %
@@ -1501,16 +1494,3 @@ class Yum(Rpm):
 
     def builddep(self, spec):
         return "yum-builddep %s" % spec
-
-
-def tito_version():
-    """
-    A backwards-compatible way to figure out the currently installed and
-    running tito version.
-    """
-    if PYTHON_SETUPTOOLS_82:
-        return Version(metadata_version("tito"))
-
-    # A fallback for EPEL8
-    # pylint: disable=used-before-assignment
-    return Version(require('tito')[0].version)
