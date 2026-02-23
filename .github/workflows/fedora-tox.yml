@@ -30,6 +30,7 @@ jobs:
             libxslt
             python3-bugzilla
             python3-rpm
+            python3-setuptools
             rpm-build
             rpmdevtools
             rsync
