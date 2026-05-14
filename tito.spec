@@ -38,11 +38,9 @@ BuildArch: noarch
 %if %{use_python3}
 BuildRequires: python3-devel
 BuildRequires: python3-setuptools
-BuildRequires: python3-pkg-resources
 Requires: python3-setuptools
 Requires: python3-bugzilla
 Requires: python3-blessed
-Requires: python3-pkg-resources
 Requires: rpm-python3
 Recommends: python3-fedora-distro-aliases
 %else
