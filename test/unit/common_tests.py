@@ -21,7 +21,16 @@ from unittest.mock import patch, call
 from tempfile import NamedTemporaryFile
 from textwrap import dedent
 from unit import open_mock, Capture, titodir
-from blessed import Terminal
+try:
+    from blessed import Terminal
+    BLESSED_AVAILABLE = True
+except ImportError:
+    BLESSED_AVAILABLE = False
+    class Terminal(object):
+        def __getattr__(self, name):
+            def wrapper(text, *args, **kwargs):
+                return text
+            return wrapper
 
 # Pure unit tests for tito's common module
 from tito.common import (replace_version, find_spec_like_file, increase_version,
@@ -216,6 +225,7 @@ class CommonTests(unittest.TestCase):
         _out('Hello world', None, Terminal().red, stream)
         self.assertEqual('Hello world\n', stream.getvalue())
 
+    @unittest.skipUnless(BLESSED_AVAILABLE, "blessed module not available")
     @patch("tito.common.read_user_config")
     def test_colors(self, mock_user_conf):
         mock_user_conf.return_value = {}
