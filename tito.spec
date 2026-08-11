@@ -41,6 +41,7 @@ BuildRequires: python3-setuptools
 Requires: python3-setuptools
 Requires: python3-bugzilla
 Requires: python3-blessed
+Requires: python3-packaging
 Requires: rpm-python3
 Recommends: python3-fedora-distro-aliases
 %else
