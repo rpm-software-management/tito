@@ -22,7 +22,7 @@
 %endif
 
 Name: tito
-Version: 0.6.27
+Version: 0.6.28
 Release: 1%{?dist}
 Summary: A tool for managing rpm based git projects
 
@@ -134,6 +134,14 @@ git config --global user.name "Your Name"
 
 
 %changelog
+* Wed Aug 26 2026 Jakub Kadlcik <frostyx@email.cz> 0.6.28-1
+- Add dependency on packaging (frostyx@email.cz)
+- Avoid using setuptools for version checking (pavel@raiskup.cz)
+- Fix version checking with setuptools 82 (frostyx@email.cz)
+- index.md: Update EPEL link (osalbahr@gmail.com)
+- Don't run tests for python3.7 (frostyx@email.cz)
+- depend on git-core instead of git (msuchy@redhat.com)
+
 * Mon Nov 11 2024 Jakub Kadlčík <frostyx@email.cz>
 - Defer submodule detection to git
 - Many improvements to tests and they now run during package build
