@@ -87,7 +87,7 @@ class SubmoduleAwareBuilder(Builder):
 
     def run_git_archive(self, relative_git_dir, prefix, commit, dest_tar, subdir=None):
         # command to generate a git-archive
-        git_archive_cmd = "git archive --format=tar --prefix=%s/ %s:%s --output=%s" % (
+        git_archive_cmd = "git archive --format=tar --prefix=%s/ %s %s --output=%s" % (
             prefix,
             commit,
             relative_git_dir,
