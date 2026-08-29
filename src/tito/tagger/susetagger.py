@@ -192,7 +192,7 @@ class SUSETagger(VersionTagger):
                 (self.project_name, new_version_w_suffix,
                         self.relative_project_dir)
 
-        new_tag = self._get_new_tag(new_version)
+        new_tag = self._get_new_tag(new_version).replace('~', '@')
         run_command('git tag -m "%s" %s' % (tag_msg, new_tag))
         print
         print("Created tag: %s" % new_tag)
